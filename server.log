@@ -1,0 +1,6 @@
+
+> tasarim-teknesi-crm-mvp@1.0.0 dev
+> tsx watch src/server.ts
+
+Server running on port 3000
+::1 - - [27/Feb/2026:19:35:54 +0000] "POST /webhooks/whatsapp HTTP/1.1" 200 11 "-" "curl/8.7.1"
