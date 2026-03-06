@@ -1,0 +1,128 @@
+project:
+  name: "Tasarim Teknesi CRM WhatsApp MVP"
+  owner: "Umit"
+  language: "tr"
+  status: "active"
+
+goal:
+  summary: "WhatsApp ve Meta webhook mesajlarini alip Zoho CRM'e otomatik musteri adayi (Lead) olarak yazmak."
+  success_criteria:
+    - "Meta webhook verify basarili"
+    - "WhatsApp mesaji geldiginde parse edilip Zoho Leads'e kayit acilmasi/guncellenmesi"
+    - "Segment ve stage kurallarinin dogru uygulanmasi"
+    - "Takip gorevlerinin (3/10/30/180 gun) olusmasi"
+
+tech_stack:
+  runtime: "Node.js 20+"
+  language: "TypeScript"
+  backend: ["Express", "zod", "axios"]
+  storage: "local json db (MVP)"
+  tests: "vitest"
+  deploy: "Railway"
+
+endpoints:
+  - method: "GET"
+    path: "/webhooks/whatsapp"
+    purpose: "Meta verify challenge"
+  - method: "POST"
+    path: "/webhooks/whatsapp"
+    purpose: "WhatsApp message events"
+  - method: "GET"
+    path: "/webhooks/meta"
+    purpose: "Meta verify challenge"
+  - method: "POST"
+    path: "/webhooks/meta"
+    purpose: "Instagram/Facebook events"
+
+business_rules:
+  unit_price_tl: 600
+  segmentation:
+    S1: "< 7500"
+    S2: "7500-24999"
+    S3: "25000-49999"
+    S4: ">= 50000"
+  extraction:
+    qty_patterns: ["10 adet", "50 tane"]
+    product_code_pattern: "4-6 haneli sayi"
+    logo_default: true
+    logo_false_keyword: "logosuz"
+  stage_logic:
+    no_qty:
+      stage: "On Bilgi Bekleniyor"
+      segment: "UNKN"
+    qty_no_product:
+      stage: "Urun Netlesiyor"
+    qty_and_product:
+      stage: "Teklif Verilecek"
+  follow_up_tasks:
+    trigger_stage: "Teklif Verilecek"
+    days_after: [3, 10, 30, 180]
+
+zoho:
+  module: "Leads"
+  upsert_key: "Phone"
+  fields_expected:
+    - "Company"
+    - "Last_Name"
+    - "Phone"
+    - "Description"
+    - "Lead_Source"
+    - "product_code"
+    - "qty"
+    - "segment"
+    - "stage"
+  oauth:
+    token_url: "https://accounts.zoho.eu/oauth/v2/token"
+    api_domain: "https://www.zohoapis.eu"
+
+env_required:
+  PORT: "3000"
+  META_VERIFY_TOKEN: "<your_verify_token>"
+  META_APP_SECRET: "<your_meta_app_secret>"
+  ZOHO_ENABLED: "true"
+  ZOHO_CLIENT_ID: "<zoho_client_id>"
+  ZOHO_CLIENT_SECRET: "<zoho_client_secret>"
+  ZOHO_REFRESH_TOKEN: "<zoho_refresh_token>"
+  ZOHO_API_DOMAIN: "https://www.zohoapis.eu"
+
+known_failure_patterns:
+  - error: "Zoho token refresh failed: invalid_code"
+    meaning: "ZOHO_REFRESH_TOKEN gecersiz/expire"
+    action: "Yeni grant code alip yeni refresh token uret, Railway env'e guncelle, redeploy et"
+  - error: "Cannot find module /app/dist/server.js"
+    meaning: "Start/build path uyusmazligi"
+    action: "start komutu dist/src/server.js ile uyumlu olmali"
+
+operations_checklist:
+  before_test:
+    - "Railway service: Online"
+    - "Railway env degerleri guncel"
+    - "Meta webhook verify: saved"
+    - "messages alanina subscribe: on"
+  live_test:
+    - "Telefondan WhatsApp mesaji at: '29 adet 10516 logosuz'"
+    - "Railway HTTP Logs: POST /webhooks/whatsapp 200"
+    - "Railway Deploy Logs: zoho upsert error yok"
+    - "Zoho > Musteri Adaylari: yeni/guncellenen kayit gorunmeli"
+
+chatgpt_work_protocol:
+  role: "Senior teknik yonlendirici + operasyon asistan"
+  user_level: "No-code"
+  response_style:
+    - "Kisa ve net"
+    - "Tek seferde tek adim"
+    - "Kopyala-yapistir komut"
+  always_include:
+    - "Nereye tiklanacak"
+    - "Ne yazilacak"
+    - "Beklenen sonuc"
+    - "Hata olursa B plani"
+  forbidden:
+    - "Gizli tokenlari acik metinle tekrar yazma"
+    - "Ayni adimi tekrarlatmadan once log kontrol etmeden karar verme"
+
+next_actions_priority:
+  - "Stage/segment alanlarini Zoho liste gorunumune ekle"
+  - "Takip gorevlerini Zoho Tasks'a yazma dogrulamasi"
+  - "Instagram/Facebook webhook akisini ac"
+  - "Runbook ve failover notlarini README'ye ekle"

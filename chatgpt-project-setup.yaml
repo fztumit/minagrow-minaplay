@@ -1,0 +1,111 @@
+project:
+  name: "Tasarim Teknesi CRM WhatsApp MVP"
+  goal: "WhatsApp mesajlarini alip Zoho CRM'e otomatik musteri adayi olarak yazmak"
+  owner: "Umit"
+  stack:
+    runtime: "Node.js 20+"
+    language: "TypeScript"
+    framework: "Express"
+    validation: "zod"
+    http_client: "axios"
+    deploy: "Railway"
+
+current_status:
+  webhook_meta_verify: "active"
+  railway_service: "online"
+  zoho_insert: "works_when_refresh_token_valid"
+  note: "Ana risk: ZOHO_REFRESH_TOKEN gecersiz olursa kayit akisi durur"
+
+architecture:
+  incoming:
+    - "GET /webhooks/whatsapp -> verify"
+    - "POST /webhooks/whatsapp -> message event"
+    - "GET /webhooks/meta -> verify"
+    - "POST /webhooks/meta -> message event"
+  processing:
+    - "Mesajdan adet yakala (or: 10 adet, 50 tane)"
+    - "Mesajdan urun_kodu yakala (4-6 haneli)"
+    - "logosuz geciyorsa logo=false, degilse true"
+    - "segment + stage hesapla"
+  output:
+    - "Zoho Leads upsert (telefon bazli)"
+    - "Follow-up task planlama (3/10/30/180 gun)"
+
+business_rules:
+  avg_unit_price_tl: 600
+  segments:
+    S1: "< 7500"
+    S2: "7500-24999"
+    S3: "25000-49999"
+    S4: ">= 50000"
+  stage_logic:
+    - condition: "adet yok"
+      segment: "UNKN"
+      stage: "On Bilgi Bekleniyor"
+    - condition: "adet var, urun_kodu yok"
+      stage: "Urun Netlesiyor"
+    - condition: "adet + urun_kodu var"
+      stage: "Teklif Verilecek"
+  follow_up_tasks:
+    trigger_stage: "Teklif Verildi"
+    days_after: [3, 10, 30, 180]
+
+env_vars_required:
+  PORT: "3000"
+  META_VERIFY_TOKEN: "meta verify token"
+  META_APP_SECRET: "meta app secret"
+  ZOHO_ENABLED: "true"
+  ZOHO_CLIENT_ID: "zoho client id"
+  ZOHO_CLIENT_SECRET: "zoho client secret"
+  ZOHO_REFRESH_TOKEN: "zoho refresh token"
+  ZOHO_API_DOMAIN: "https://www.zohoapis.eu"
+
+ops_checklist_daily:
+  - "Railway service Online mi?"
+  - "Railway HTTP Logs'ta POST /webhooks/whatsapp geliyor mu?"
+  - "Deploy Logs'ta 'zoho token refresh failed' var mi?"
+  - "Zoho > Musteri Adaylari'nda yeni kayit olusuyor mu?"
+  - "Test mesaji: '29 adet 10516 logosuz' ile dogrula"
+
+incident_playbook:
+  no_new_leads:
+    - "Railway HTTP Logs kontrol et"
+    - "POST yoksa: Meta webhook subscription / callback kontrol et"
+    - "POST var ama Zoho kayit yoksa: Deploy Logs'ta Zoho hata metnini ara"
+  zoho_invalid_code:
+    symptom: "Zoho token refresh failed: {\"error\":\"invalid_code\"}"
+    fix:
+      - "Zoho'dan yeni grant code al"
+      - "oauth/v2/token ile yeni refresh_token uret"
+      - "Railway ZOHO_REFRESH_TOKEN guncelle"
+      - "Redeploy / Restart"
+  meta_forbidden_on_verify:
+    symptom: "GET verify'da forbidden"
+    fix:
+      - "Railway META_VERIFY_TOKEN ile Meta Verify Token birebir ayni mi?"
+      - "Callback URL dogru mu? /webhooks/whatsapp"
+      - "Save + re-verify"
+
+chatgpt_protocol:
+  language: "Turkce, sade, adim adim"
+  user_level: "yazilim bilmiyor"
+  response_style:
+    - "Her adim tek satir"
+    - "Kopyala-yapistir komut ver"
+    - "Her adimdan sonra beklenen cikti yaz"
+  debugging_rule:
+    - "Once log kaniti al, sonra cozum uygula"
+    - "Gizli tokenlari asla tam acik yazma"
+
+terminal_commands_reference:
+  run_local: "cd '/Users/umitaydin/Documents/New project' && npm run dev"
+  free_port_3000: "lsof -ti :3000 | xargs kill -9 2>/dev/null"
+  test_webhook_local: "curl -X POST 'http://localhost:3000/webhooks/whatsapp' -H 'Content-Type: application/json' -d '{\"entry\":[{\"changes\":[{\"value\":{\"messages\":[{\"from\":\"905327157195\",\"type\":\"text\",\"text\":{\"body\":\"20 adet 10516 logosuz\"},\"timestamp\":\"1730000000\"}],\"contacts\":[{\"wa_id\":\"905327157195\"}]}}]}]}'"
+  test_webhook_railway: "curl -X POST 'https://tasarimteknesi-crm-production.up.railway.app/webhooks/whatsapp' -H 'Content-Type: application/json' -d '{\"entry\":[{\"changes\":[{\"value\":{\"messages\":[{\"from\":\"905327157195\",\"type\":\"text\",\"text\":{\"body\":\"20 adet 10516 logosuz\"},\"timestamp\":\"1730000000\"}],\"contacts\":[{\"wa_id\":\"905327157195\"}]}}]}]}'"
+
+handover_note:
+  summary: "Sistem temel olarak calisiyor. En kritik operasyonel nokta Zoho refresh token gecerliligi."
+  next_focus:
+    - "Stage alanini Zoho listede gorunur hale getirme"
+    - "Task'lari (3/10/30/180) CRM tarafinda otomatik olusturma"
+    - "Instagram/Facebook webhook akisini etkinlestirme"

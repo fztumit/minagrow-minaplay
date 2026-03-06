@@ -1,0 +1,693 @@
+Original prompt: Konuşu-yorum gibi özel bir isim bulalım.
+
+Küçük bir oyun yazalım. 
+Bu oyunda herkes kendine özel karakterler oluştursun.
+Bu oyunun amacı: Konuşmayı öğrenmek.
+Tabet ve telefon içindir.
+Dokunduğu nesne kelimesini tekrarlar.
+
+Baba karakteri ile baba
+Anne karakteri ile anne
+1 bardak dökülen su ile su kelimesi tekrar tekrar edilir.
+Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karakter ve nesneler çocukla iletişim kurar.
+
+## Progress Notes
+- Skill selected: develop-web-game.
+- Initial repo scan completed; current project is Express TypeScript backend.
+- Plan: add mobile/tablet-friendly HTML5 canvas speech-learning game under `public/`, serve from Express, and validate with Playwright client.
+- TODO: implement profile-based custom characters, touch interactions (`baba`, `anne`, `su` repetition), and deterministic hooks (`render_game_to_text`, `advanceTime`).
+- Implemented mobile/tablet-ready `public/index.html` with a single canvas scene, profile creation, touch interactions for `baba`, `anne`, and repeated `su` on spilled water.
+- Added speech synthesis loop and on-canvas communication visuals (speech bubble + animated characters/objects).
+- Added deterministic hooks: `window.render_game_to_text` and `window.advanceTime(ms)`.
+- Updated Express app to serve static files from `public`.
+- Verified backend integrity: `npm run build` and `npm test` both pass.
+- TODO: run Playwright client loop, inspect screenshots/state, and fix any visual/interaction issues.
+- Added default profile name value (`Minik`) to support automated Playwright setup without keyboard text input.
+- Installed Playwright in both project (`devDependencies`) and skill client directory; installed Chromium browser binaries.
+- Started local server and ran official skill client with multi-step action choreography.
+- Verified screenshots visually for all target interactions:
+  - `output/web-game-baba/shot-0.png` shows `baba` bubble and matching character.
+  - `output/web-game-anne/shot-0.png` shows `anne` bubble and matching character.
+  - `output/web-game-su/shot-0.png` shows tipped glass + spilled water and `su` bubble.
+- Verified state outputs from `render_game_to_text`:
+  - Baba scenario => `last_word: baba`, `water_spilled: false`.
+  - Anne scenario => `last_word: anne`, `water_spilled: false`.
+  - Su scenario => `last_word: su`, `water_spilled: true`.
+- No `errors-*.json` files were produced during Playwright runs (no new console/page errors captured).
+
+## Remaining TODOs / Suggestions
+- If desired, add more learning objects (top, kitap, kedi) with selectable lesson packs.
+- Add parent settings for per-word repeat count and speech rate.
+
+## New Request: Modular PWA Build
+- Reworked project into a modular PWA named `Konuşu-Yorum` with a child-friendly UI and independent feature modules.
+- Added PWA surface files:
+  - `public/index.html`
+  - `public/style.css`
+  - `public/manifest.webmanifest`
+  - `public/sw.js`
+  - `public/assets/phoenix.svg`, `icon-192.svg`, `icon-512.svg`
+- Added modular frontend TypeScript architecture:
+  - `src/modules/speech/index.ts`
+  - `src/modules/sleep/index.ts`
+  - `src/modules/family/index.ts`
+  - `src/modules/dailyword/index.ts`
+  - `src/modules/mascot/index.ts`
+  - `src/modules/data/vocabulary.ts`
+  - `src/modules/main.ts`
+- Added root `server.ts` entry and separate client build config `tsconfig.client.json`.
+- Updated scripts for split build (`build:server`, `build:client`) and Playwright e2e (`test:e2e`).
+- Adjusted lint/test pipeline to support mixed TS targets (server + browser modules + playwright specs).
+- Updated env default so app can run locally without forcing `META_VERIFY_TOKEN`.
+
+## Feature Coverage (MVP)
+- Speech Game:
+  - Vocabulary: `su, anne, baba, top, araba, kitap, elma, süt, ekmek`
+  - Web Speech API trigger on tap
+  - `su` repeats 3 times
+  - glass tip + spill animation
+- Sleep Mode:
+  - Starry dark stage + sleeping phoenix
+  - Sounds: white, rain, wind, ocean, vacuum, heartbeat, pış pış
+  - Timer: 30m, 1h, 2h, all night
+- Family Avatar Creator:
+  - name, color, camera photo input
+  - localStorage persistence
+- Daily Word:
+  - deterministic per-day highlighted word
+- Mascot Guidance:
+  - `Hadi dokun.`, `Aferin.`, `Tekrar söyle.` messages
+
+## Verification
+- `npm run build` ✅
+- `npm run lint` ✅
+- `npm test` ✅
+- `npm run test:e2e` (Playwright examples) ✅
+  - page load
+  - object interaction
+  - speech trigger
+- Ran official skill client: `web_game_playwright_client.js` ✅
+  - output states in `output/web-game-pwa/state-0.json` and `state-1.json`
+  - no `errors-*.json` produced
+
+## Remaining TODOs / Suggestions
+- Add offline fallback page for richer no-network guidance.
+- Add parent panel for per-word repeat count and speech rate presets.
+- Add optional language packs (`TR/EN`) while keeping Turkish default.
+
+## Continuation Update: Parent Settings
+- Added parent controls to speech module UI:
+  - Repeat mode selector (`default`, `1`, `2`, `3`)
+  - Speech rate slider (`0.60` to `1.20`)
+- Implemented speech settings persistence via localStorage key `konusu_yorum_speech_settings_v1`.
+- Applied settings to runtime speech behavior:
+  - Repeat override now affects all tapped words.
+  - Speech synthesis rate now uses saved slider value.
+- Extended speech state attributes for testability:
+  - `data-repeat-mode`
+  - `data-speech-rate`
+- Extended `render_game_to_text` payload to include speech settings (`repeat_mode`, `rate`).
+- Added Playwright coverage for parent settings override:
+  - `tests/playwright/parent-settings.spec.ts`
+
+## Validation (Continuation)
+- `npm run build` ✅
+- `npm run lint` ✅
+- `npm test` ✅
+- `npm run test:e2e` ✅ (4 tests)
+- Official skill client run ✅ (`output/web-game-parent-settings/*`)
+  - `state-0.json` and `state-1.json` include speech settings fields.
+  - No `errors-*.json` produced.
+
+## Notes
+- Skill client screenshots capture the largest canvas element; in this DOM-first app that may show the sleep stars canvas rather than full page UI.
+
+## Continuation Update: Stories Module
+- Added new `Hikayeler` tab and dedicated module view in `public/index.html`.
+- Added story UI flow:
+  - story list selection
+  - sentence display
+  - controls: `Dinle`, `Tekrar Et`, `Sonraki Cümle`
+- Implemented independent stories module:
+  - `src/modules/stories/data.ts`
+  - `src/modules/stories/index.ts`
+- Integrated stories module in app bootstrap and tab router.
+- Extended testing hook payload (`render_game_to_text`) with `stories` state:
+  - `story_count`
+  - `active_story_id`
+  - `sentence_index`
+  - `last_spoken_sentence`
+- Added Playwright e2e test for stories flow:
+  - `tests/playwright/stories.spec.ts`
+
+## Validation (Stories)
+- `npm run build` ✅
+- `npm run lint` ✅
+- `npm test` ✅
+- `npm run test:e2e` ✅ (5 tests)
+- Official skill client run ✅ (`output/web-game-stories/*`)
+  - state confirms `active_view: view-stories`
+  - stories payload present and valid
+  - no `errors-*.json`
+
+## Notes
+- Skill client screenshots still capture the sleep canvas because it is the largest canvas element; state JSON is the reliable assertion source for module checks.
+
+## Continuation Update: Stories Easy Level
+- Added `Kolay (2 kelime)` level selector to stories UI.
+- Added easy-level starter sentence stories with frequent early phrases:
+  - `Su iç`
+  - `Top at`
+  - `Anne gel`
+  - `Abla al`
+  - plus additional two-word starters (`Süt iç`, `Kitap aç`, `Ekmek al`, `Baba gel`).
+- Refactored stories data model to level-based catalog (`easy` + `standard`).
+- Updated Stories module runtime to switch levels dynamically and sync state attributes:
+  - `data-story-level`
+  - `data-story-count`
+  - `data-active-story-id`
+  - `data-sentence-index`
+  - `data-last-spoken-sentence`
+- Extended `render_game_to_text` stories payload with `level`.
+- Updated stories e2e test to verify easy-level two-word sentence behavior.
+
+## Validation (Easy Level)
+- `npm run build` ✅
+- `npm run lint` ✅
+- `npm test` ✅
+- `npm run test:e2e` ✅ (5 tests)
+- Official skill client run ✅ (`output/web-game-stories-easy/*`)
+  - state confirms `stories.level: easy`
+  - state confirms `story_count: 2`
+  - no `errors-*.json`
+
+## Notes
+- Skill client screenshots still show the largest canvas element (sleep stars). JSON state remains the primary verification for module-level interactions.
+
+## Continuation Update: Easy Sentence Add/Delete (Parent Editor)
+- Added `Kolay Cümle Ekle/Sil` panel under Stories module.
+- Implemented localStorage-backed easy sentence editor:
+  - add custom two-word sentences
+  - delete custom sentences
+  - duplicate prevention
+  - strict two-word validation for easy level
+- Added dynamic custom story injection for easy level:
+  - `Özel Cümleler` story appears when custom entries exist
+  - removed automatically when custom list becomes empty
+- Added stories module state attribute:
+  - `data-custom-easy-sentence-count`
+- Extended `render_game_to_text` stories payload with:
+  - `custom_easy_sentence_count`
+- Added Playwright e2e test:
+  - `tests/playwright/easy-sentence-editor.spec.ts`
+
+## Validation (Easy Editor)
+- `npm run build` ✅
+- `npm run lint` ✅
+- `npm test` ✅
+- `npm run test:e2e` ✅ (6 tests)
+- Official skill client run ✅ (`output/web-game-stories-editor/*`)
+  - state confirms `custom_easy_sentence_count` field
+  - no `errors-*.json`
+
+## Notes
+- Skill client screenshots still reflect the largest canvas element; JSON state remains the reliable module behavior source.
+
+## Continuation Update: Pronunciation Fix
+- Adjusted Stories speech synthesis text preprocessing for clearer Turkish articulation.
+- Two-word sentences are now spoken with an inserted pause punctuation (e.g. `Dede, gel.`) before TTS.
+- Slowed easy-level story speech rate from `0.83` to `0.74` for better clarity.
+- Verified build/lint/unit/e2e and official skill client run after change.
+
+## Continuation Update: Pronunciation Fix (Turkish Voice + Word Queue)
+- Reworked story sentence TTS pipeline for two-word easy sentences to reduce misreads like `gel -> ger` and `iç -> iş`.
+- Added Turkish voice selection in `StoriesModule`:
+  - detect available voices from `speechSynthesis.getVoices()`
+  - keep a preferred Turkish voice (`tr*` lang) with name-priority scoring.
+- Replaced comma-joined speech text with word-level utterance queue:
+  - two-word sentence now enqueues two utterances (`Word1.` then `Word2.`), creating a cleaner pause and articulation boundary.
+- Added Turkish-aware capitalization helper before speech (`toLocaleUpperCase('tr-TR')` / `toLocaleLowerCase('tr-TR')`).
+- Tuned story speech rates:
+  - easy: `0.70`
+  - standard: `0.82`
+
+## Validation (Pronunciation Fix v2)
+- `npm run build` ✅
+- `npm run lint` ✅
+- `npm test` ✅
+- `npm run test:e2e` ✅ (6 tests)
+- Official skill client run ✅ (`output/web-game-stories-pronunciation-v2/*`)
+  - state confirms `active_view: view-stories`
+  - no `errors-*.json`
+
+## Notes
+- Skill client screenshot still captures the largest canvas (sleep stars). For stories correctness, `state-0.json` is the reliable assertion artifact.
+
+## Continuation Update: Cache Bust for PWA TTS Fix
+- Increased service worker cache name in `public/sw.js` from `konusu-yorum-v1` to `konusu-yorum-v2`.
+- This forces clients to drop old cached JS and load updated pronunciation logic.
+
+## Validation (After Cache Bust)
+- `npm run build` ✅
+- `npm run test:e2e` ✅ (6 tests)
+
+## Continuation Update: Turkish Voice Profile (Global TTS)
+- Added shared voice utility module:
+  - `src/modules/speech/voice.ts`
+  - provides Turkish-focused voice scoring, picker sorting, and persisted voice preference helpers.
+- Added parent voice selector UI in speech settings:
+  - `public/index.html`: `#speech-voice-select`, `#speech-voice-hint`
+  - `public/style.css`: `.voice-hint`
+- Updated `SpeechGameModule`:
+  - loads/stores selected voice preference in localStorage
+  - lists available voices with Turkish voices prioritized
+  - shows warning when Turkish voice is unavailable
+  - applies selected voice to all spoken words
+  - exposes voice metadata via DOM attrs:
+    - `data-speech-voice-uri`
+    - `data-speech-active-voice`
+    - `data-has-turkish-voice`
+- Updated `StoriesModule`:
+  - now resolves and uses the same stored voice preference during story TTS.
+- Updated `SleepModeModule` (`pış pış`) to use the same stored voice preference.
+- Extended testing hook payload (`render_game_to_text`) with speech voice fields:
+  - `voice_uri`, `active_voice`, `has_turkish_voice`
+- Bumped service worker cache name:
+  - `public/sw.js`: `konusu-yorum-v3` to force fresh JS after voice-system changes.
+- Updated Playwright coverage:
+  - `tests/playwright/page-load.spec.ts` now also checks `#speech-voice-select`.
+
+## Validation (Turkish Voice Profile)
+- `npm run build` ✅
+- `npm run lint` ✅
+- `npm test` ✅
+- `npm run test:e2e` ✅ (6 tests)
+- Official skill client run ✅ (`output/web-game-voice-selector/*`)
+  - state includes `speech.active_voice` and `speech.has_turkish_voice`
+  - no `errors-*.json`
+
+## Continuation Update: Parent Recorded Audio Fallback
+- Added custom recorded-audio storage helper:
+  - `src/modules/speech/customAudio.ts`
+  - supports normalize/load/save/get operations via localStorage.
+- Added parent UI for recording fallback audio:
+  - `public/index.html` under speech parent settings:
+    - `#custom-audio-text`
+    - `#custom-audio-record-start`
+    - `#custom-audio-record-stop`
+    - `#custom-audio-play`
+    - `#custom-audio-delete`
+    - `#custom-audio-status`
+  - styles in `public/style.css` (`.custom-audio-*`).
+- Updated `SpeechGameModule`:
+  - can record microphone audio for a typed key (word or phrase).
+  - stores recordings in localStorage (data URL).
+  - plays custom recording instead of TTS when key exists.
+  - exposes custom recording count in DOM state (`data-custom-audio-count`).
+- Updated `StoriesModule`:
+  - checks for full-sentence custom recording first.
+  - if not found, checks per-word recordings and plays those (or falls back to TTS).
+- Updated `SleepModeModule` already aligned to stored voice preference; no breaking change.
+- Extended testing hook payload:
+  - `speech.custom_audio_count`.
+
+## Validation (Recorded Audio Fallback)
+- `npm run build` ✅
+- `npm run lint` ✅
+- `npm test` ✅
+- `npm run test:e2e` ✅ (6 tests)
+- Official skill client run ✅ (`output/web-game-custom-audio-fallback/*`)
+  - state includes `speech.custom_audio_count`
+  - no `errors-*.json`
+- Service worker cache bumped to `konusu-yorum-v4` for immediate client refresh of new audio fallback logic.
+
+## Continuation Update: Removed All Non-Recorded Voiceover
+- User requested removal of all other voiceovers after successful recorded-audio flow.
+- Speech module was simplified to recorded-audio-only playback:
+  - removed Web Speech/TTS usage entirely.
+  - removed voice-profile and speech-rate settings.
+  - repeat logic now replays recorded word audio only.
+  - if no recording exists, app shows guidance text instead of speaking via TTS.
+- Stories module now uses only recorded audio:
+  - full-sentence recording first, then per-word recordings.
+  - no TTS fallback remains.
+- Sleep `pış pış` mode no longer uses speech synthesis:
+  - replaced with non-voice calming audio layers (wind + soft pink noise).
+- Deleted obsolete voice helper module:
+  - `src/modules/speech/voice.ts`.
+- Updated `render_game_to_text` speech payload:
+  - removed `rate/voice_uri/active_voice/has_turkish_voice`
+  - kept `repeat_mode` and `custom_audio_count`.
+- Updated page-load e2e assertion:
+  - now checks custom recording button visibility instead of voice selector.
+- Service worker cache bumped again to `konusu-yorum-v5` to force immediate client refresh after TTS removal.
+
+## Validation (Recorded-Only Voice)
+- `npm run build` ✅
+- `npm run lint` ✅
+- `npm test` ✅
+- `npm run test:e2e` ✅ (6 tests)
+- Official skill client run ✅ (`output/web-game-recorded-only/*`)
+  - state confirms reduced speech payload and no errors.
+- Follow-up verification run ✅ (`output/web-game-recorded-only-v2/*`) after final UI cleanup.
+
+## Continuation Update: Story-Level Recording Panel
+- Added dedicated recording controls directly in Stories view:
+  - `public/index.html`:
+    - `#story-audio-record-start`
+    - `#story-audio-record-stop`
+    - `#story-audio-play`
+    - `#story-audio-delete`
+    - `#story-audio-target`
+    - `#story-audio-status`
+- Added Stories panel styles in `public/style.css` (`.story-audio-*`).
+- Extended `StoriesModule` to support selected-sentence recording:
+  - records microphone input for current sentence key.
+  - saves/removes recordings via shared custom audio storage.
+  - updates panel state as sentence/story changes.
+  - listening flow now consumes updated in-memory map immediately.
+- Extended stories state attributes:
+  - `data-story-audio-record-count`
+  - `data-current-story-audio`
+- Extended `render_game_to_text` stories payload:
+  - `audio_record_count`
+  - `current_sentence_has_audio`
+- Updated Playwright stories test to assert story recording controls are visible and `current_sentence_has_audio` default state.
+- Service worker cache bumped to `konusu-yorum-v6` for immediate UI refresh.
+
+## Validation (Story Recorder)
+- `npm run build` ✅
+- `npm run lint` ✅
+- `npm test` ✅
+- `npm run test:e2e` ✅ (6 tests)
+- Official skill client run ✅ (`output/web-game-stories-recorder/*`)
+  - state includes `stories.audio_record_count` and `stories.current_sentence_has_audio`
+  - no `errors-*.json`
+
+## Continuation Update: Story Packs + Recording Library + Backup + Progress Tracking
+- Completed the full "Hepsini ekleyelim" scope with modular updates across speech + stories modules.
+
+### Added / Completed
+- Speech module:
+  - Recording library list with play/re-record/delete actions.
+  - JSON backup export/import for custom recordings.
+  - Progress panel for word recording coverage and listen counts.
+  - Speech root state attributes for testing hooks:
+    - `data-word-recording-coverage`
+    - `data-total-word-listens`
+    - `data-top-sentence`
+    - `data-top-sentence-count`
+- Stories module:
+  - Story pack selection (`core`, `animals`, `daily`) with independent catalogs.
+  - Story listen flow now updates sentence/word listen progress when recorded audio is played.
+  - Stories testing state includes selected pack (`stories.pack`).
+- Data / helpers:
+  - Extended custom audio helper with entry listing, backup build/parse, and map merge support.
+  - Added listen-progress storage helper module (`src/modules/progress/listening.ts`).
+
+### New Playwright Coverage
+- Added `tests/playwright/modular-features.spec.ts`:
+  - story pack switching (`stories.pack` + content assertion)
+  - recording backup import updates library + state (`speech.custom_audio_count`)
+  - progress counters increase after recorded word playback (`speech.total_word_listens`)
+
+### Fixes During Validation
+- Fixed TS typing in `listCustomAudioEntries` (`kind` literal narrowing to `"word" | "sentence"`).
+- Removed unused constant in progress helper to satisfy lint.
+
+### Validation (All Features)
+- `npm run build` ✅
+- `npm run lint` ✅
+- `npm test` ✅
+- `npm run test:e2e` ✅ (9 tests)
+- Official skill client run ✅
+  - `output/web-game-all-features/*`
+  - `output/web-game-all-features-speech/*`
+  - state output includes new speech progress fields and stories pack field
+  - no `errors-*.json` artifacts produced
+
+### Cache Bust
+- Service worker cache bumped to `konusu-yorum-v7` to ensure clients load latest JS/HTML changes.
+
+## Remaining TODOs / Suggestions
+- Optional next step: add a parent-facing “progress reset” button (word/sentence counters reset only, recordings kept).
+- Optional next step: add per-pack progress summaries in stories (e.g. most-listened sentence by pack).
+
+## Continuation Update: Parent Progress Reset (Counters Only)
+- Added parent-facing progress reset controls under Speech -> Progress panel:
+  - `public/index.html`:
+    - `#progress-reset-btn`
+    - `#progress-reset-status`
+  - `public/style.css`:
+    - `.progress-actions`
+    - `.progress-reset-status`
+- Implemented progress reset logic in listening helper:
+  - `src/modules/progress/listening.ts`
+  - new export: `resetListenProgress()`
+- Integrated reset behavior in `SpeechGameModule`:
+  - wired button click to reset only listen counters.
+  - recordings are preserved (`custom_audio_count` and coverage unchanged).
+  - reset button auto-disables when there is no listen progress to clear.
+  - status/feedback and mascot message updated on reset.
+- Updated PWA cache version:
+  - `public/sw.js`: `konusu-yorum-v8`
+
+## New Playwright Coverage
+- Extended `tests/playwright/modular-features.spec.ts`:
+  - `progress reset clears listen counters and keeps recordings`
+  - verifies:
+    - listen counters reset to zero
+    - recording count and coverage remain intact
+    - localStorage progress payload is cleared
+- Updated `tests/playwright/page-load.spec.ts`:
+  - asserts `#progress-reset-btn` visibility
+
+## Validation (Progress Reset)
+- `npm run build` ✅
+- `npm run lint` ✅
+- `npm test` ✅
+- `npx playwright test --config=playwright.local.config.ts` equivalent isolated run on port `3100` ✅ (10 tests)
+  - note: default `npm run test:e2e` was initially blocked by an unrelated existing server on `3000`; isolated port run was used for deterministic validation.
+- Official skill client run ✅
+  - `output/web-game-progress-reset/*`
+  - `state-0.json` includes speech progress fields with no errors
+  - no `errors-*.json` artifact produced
+
+## Remaining TODOs / Suggestions
+- Optional next step: add per-pack progress summaries in stories (e.g. most-listened sentence by pack).
+
+## Continuation Update: Per-Pack Progress Summaries (Stories)
+- Implemented parent-facing per-pack progress UI in Stories view:
+  - `public/index.html`:
+    - `#story-pack-progress-summary`
+    - `#story-pack-progress-list`
+  - `public/style.css`:
+    - `.story-pack-progress*` panel styles and rows
+- Extended listening progress model for pack-aware sentence tracking:
+  - `src/modules/progress/listening.ts`
+  - added `packSentenceListens` map in storage schema
+  - new helpers:
+    - `incrementPackSentenceListen(pack, sentence)`
+    - `getPackSentenceProgress(pack, sentences)`
+  - `resetListenProgress()` now also clears pack-level counters.
+- Updated Stories playback flow:
+  - `src/modules/stories/index.ts`
+  - when a sentence is played from recording (full sentence or chunked word path), pack-aware listen counters now increment.
+  - added runtime pack snapshot calculation:
+    - total pack listens
+    - top listened sentence + count
+    - listened sentence count
+    - recording coverage over current pack sentence catalog
+  - state attrs now include:
+    - `data-pack-recording-coverage`
+    - `data-pack-total-listens`
+    - `data-pack-top-sentence`
+    - `data-pack-top-sentence-count`
+    - `data-pack-listened-sentence-count`
+    - `data-pack-total-sentence-count`
+- Extended testing hook payload (`render_game_to_text`) with new stories pack-progress fields:
+  - `pack_recording_coverage`
+  - `pack_total_listens`
+  - `pack_top_sentence`
+  - `pack_top_sentence_count`
+  - `pack_listened_sentence_count`
+  - `pack_total_sentence_count`
+- Updated PWA cache:
+  - `public/sw.js`: `konusu-yorum-v9`
+
+## New Playwright Coverage
+- Extended `tests/playwright/modular-features.spec.ts`:
+  - `stories pack progress summary reflects selected pack metrics`
+  - validates selected-pack listen total, top sentence, and recording coverage.
+- Updated `tests/playwright/page-load.spec.ts`:
+  - now verifies stories progress summary block is visible after switching tabs.
+
+## Validation (Per-Pack Progress)
+- `npm run build` ✅
+- `npm run lint` ✅
+- `npm test` ✅
+- `npx playwright test --config=playwright.local.config.ts` isolated run on port `3200` ✅ (11 tests)
+- Official skill client run ✅
+  - `output/web-game-pack-progress/*`
+  - `state-0.json` includes new stories pack-progress fields
+  - no `errors-*.json` artifact produced
+
+## Remaining TODOs / Suggestions
+- Optional next step: add cross-pack comparison cards (e.g. which pack has highest listen momentum this week).
+
+## Continuation Update: Cross-Pack Comparison Cards + Weekly Momentum
+- Added cross-pack comparison UI in Stories:
+  - `public/index.html`:
+    - `#story-pack-compare-summary`
+    - `#story-pack-compare-list`
+  - `public/style.css`:
+    - `.story-pack-compare*` styles for cards/rows/summary
+- Extended progress storage model with daily pack listens:
+  - `src/modules/progress/listening.ts`
+  - new field: `packDailyListens`
+  - `incrementPackSentenceListen()` now increments:
+    - cumulative pack sentence listens
+    - per-day pack listen counter (local date key)
+  - new helper: `getPackWeeklyMomentum(pack)`:
+    - `currentWeekListens` (last 7 days)
+    - `previousWeekListens` (days 8-14)
+    - `change` (weekly momentum)
+- Updated Stories runtime logic:
+  - sentence playback now updates pack-level counters as before, now including daily momentum data.
+  - per-pack summary panel now also shows:
+    - weekly change (`+/-`)
+    - current week listen count
+  - new comparison panel renders all packs side-by-side:
+    - total listens
+    - weekly change + current week count
+    - recording coverage
+    - top sentence
+    - leader pack summary (`Lider paket: ...`)
+- Extended stories testing-state attrs and `render_game_to_text` payload:
+  - selected pack:
+    - `pack_weekly_current`
+    - `pack_weekly_change`
+  - comparison:
+    - `compare_leader_pack`
+    - `compare_leader_total`
+- Cache bust:
+  - `public/sw.js`: `konusu-yorum-v10`
+
+## New Playwright Coverage
+- Extended `tests/playwright/modular-features.spec.ts`:
+  - `pack comparison cards show leader and weekly momentum`
+  - existing pack-summary test now also verifies weekly change/state fields.
+- Updated `tests/playwright/page-load.spec.ts`:
+  - verifies comparison summary block visibility in Stories tab.
+
+## Validation (Cross-Pack Comparison)
+- `npm run build` ✅
+- `npm run lint` ✅
+- `npm test` ✅
+- `npx playwright test --config=playwright.local.config.ts` isolated run on `3200` ✅ (12 tests)
+- Official skill client run ✅
+  - `output/web-game-pack-compare/*`
+  - `state-0.json` includes weekly + compare fields
+  - no `errors-*.json` artifact produced
+
+## Remaining TODOs / Suggestions
+- Optional next step: add date-range selector (7/14/30 gün) for momentum calculations in Stories panel.
+
+## Continuation Update: Daily Word Kaydı + Phoenix Guidance + Daily Activity Card
+- Added `Daily Word` parent recording controls and playback:
+  - `public/index.html`:
+    - `#daily-word-record-start`, `#daily-word-record-stop`, `#daily-word-play`, `#daily-word-delete`, `#daily-word-record-status`
+    - root id: `#daily-word-card`
+  - `public/style.css`:
+    - `.daily-word-actions`, `.daily-word-status`
+  - `src/modules/dailyword/index.ts`:
+    - deterministic daily word selection preserved
+    - MediaRecorder-based parent voice record/play/delete flow
+    - shared map integration via `konusu_yorum_custom_audio_v1`
+    - state attrs: `data-daily-word`, `data-daily-word-has-audio`
+- Added `Phoenix Guidance` message set:
+  - `src/modules/mascot/index.ts`:
+    - praise alternates between `Aferin.` and `Harika.`
+    - repeat: `Bir daha söyle.`
+    - hint: `Hadi dokun.`
+- Added `Daily Activity Card` with daily reset and completion tracking:
+  - `public/index.html`:
+    - `#daily-activity-summary`, `#daily-task-words`, `#daily-task-story`, `#daily-task-interaction`, `#daily-activity-date`
+    - root id: `#daily-activity-card`
+  - `public/style.css`:
+    - `.daily-activity-*` card and row styles
+  - `src/modules/dailyactivity/index.ts`:
+    - tracks daily completion for: 3 words, 1 story, 1 interaction
+    - auto-resets when date key changes
+    - state attrs include completed count + per-task counters
+- Wiring and events:
+  - `src/modules/main.ts`:
+    - initializes `DailyWordModule` and `DailyActivityModule`
+    - tracks interactions from `speech-trigger` and `story-activity`
+    - extends `render_game_to_text` with `daily_word_audio` and `daily_activity`
+  - `src/modules/stories/index.ts`:
+    - dispatches `story-activity` during sentence playback
+- Tests updated:
+  - `tests/playwright/page-load.spec.ts`:
+    - checks daily-word record controls and daily-activity summary visibility
+  - `tests/playwright/modular-features.spec.ts`:
+    - daily word uses parent recording map for today
+    - daily activity progression to `3/3`
+    - stale-date reset to `0/3`
+- Cache bump:
+  - `public/sw.js`: `konusu-yorum-v11`
+
+## Validation (Daily Word + Phoenix + Daily Activity)
+- `npm run build` ✅
+- `npm run lint` ✅
+- `npm test` ✅
+- `npx playwright test --config=/Users/umitaydin/Documents/Konusu-Yorum/playwright.local.config.ts` isolated run on `3200` ✅ (15 tests)
+
+## Remaining TODOs / Suggestions
+- Optional next step: add configurable daily activity goals (e.g. 5 words / 2 stories) in parent settings.
+
+## Continuation Update: SU Bardak Görseli + %50 Ekran Dökülme Animasyonu
+- `su` kelime kartı görseli daha gerçekçi bardak SVG ile güncellendi:
+  - new asset: `public/assets/water-glass.svg`
+  - `src/modules/speech/index.ts` içinde `su` kartı render yapısı:
+    - `.water-glass-image`
+    - `.water-glass-shimmer`
+    - `.spill-stream`
+    - `.spill-pool`
+- Tıklama sonrası odak animasyonu eklendi:
+  - `public/index.html`:
+    - `#water-focus-overlay` ve iç sahne elemanları eklendi
+  - `public/style.css`:
+    - overlay sahnesi (`.water-focus-overlay`, `.water-focus-stage`)
+    - bardak eğilmesi + su akışı + sıçrama keyframe animasyonları
+    - odak sahnesi boyutu `50vw x 50vh` (ekranın yaklaşık %50 alanı)
+  - `src/modules/speech/index.ts`:
+    - `triggerWaterFocusVisual()` eklendi
+    - root state attrs:
+      - `data-water-spilled`
+      - `data-water-expanded`
+- Testing-state güncellemesi:
+  - `src/modules/main.ts`:
+    - `render_game_to_text.speech.water_expanded` eklendi
+- Playwright test genişletmesi:
+  - `tests/playwright/object-interaction.spec.ts`:
+    - overlay `is-active` + `is-spilling` doğrulaması
+    - odak sahnesi oran doğrulaması (`>= 0.45` width/height ratio)
+    - `data-water-expanded` true -> false akış doğrulaması
+- PWA cache bump:
+  - `public/sw.js`: `konusu-yorum-v12`
+  - `water-glass.svg` precache listesine eklendi
+
+## Validation (SU Görsel/Animasyon)
+- `npm run build` ✅
+- `npm run lint` ✅
+- `npm test` ✅
+- `npx playwright test --config=/Users/umitaydin/Documents/Konusu-Yorum/playwright.local.config.ts` isolated run on `3200` ✅ (15 tests)
+- Official skill client run ✅
+  - `output/web-game-su-realistic/*`
+  - `state-0.json` includes: `speech.last_word=su`, `speech.water_spilled=true`
+  - no `errors-*.json` artifact produced
+  - note: skill client screenshot still captures largest canvas (`sleep-stars`), state JSON used for interaction verification.
+
+## Remaining TODOs / Suggestions
+- Optional next step: add a short water splash sound effect synced with the spill animation.

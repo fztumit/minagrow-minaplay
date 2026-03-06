@@ -12,5 +12,6 @@
     "resolveJsonModule": true,
     "types": ["node", "vitest/globals"]
   },
-  "include": ["src", "tests"]
+  "include": ["server.ts", "src/**/*.ts", "tests/**/*.ts"],
+  "exclude": ["src/modules/**", "tests/playwright/**"]
 }

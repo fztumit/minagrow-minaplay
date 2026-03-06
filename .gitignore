@@ -3,3 +3,7 @@ node_modules
 dist
 .db.json
 coverage
+output
+test-results
+playwright-report
+.DS_Store

@@ -3,7 +3,8 @@ const tsParser = require('@typescript-eslint/parser');
 
 module.exports = [
   {
-    files: ['src/**/*.ts', 'tests/**/*.ts'],
+    files: ['server.ts', 'src/**/*.ts', 'tests/**/*.ts'],
+    ignores: ['src/modules/**/*.ts', 'tests/playwright/**/*.ts'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -18,6 +19,39 @@ module.exports = [
     rules: {
       ...tseslint.configs.recommended.rules,
       '@typescript-eslint/no-explicit-any': 'off'
+    }
+  },
+  {
+    files: ['src/modules/**/*.ts'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        sourceType: 'module',
+        ecmaVersion: 'latest',
+        project: './tsconfig.client.json'
+      }
+    },
+    plugins: {
+      '@typescript-eslint': tseslint
+    },
+    rules: {
+      ...tseslint.configs.recommended.rules
+    }
+  },
+  {
+    files: ['playwright.config.ts', 'tests/playwright/**/*.ts'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        sourceType: 'module',
+        ecmaVersion: 'latest'
+      }
+    },
+    plugins: {
+      '@typescript-eslint': tseslint
+    },
+    rules: {
+      ...tseslint.configs.recommended.rules
     }
   }
 ];

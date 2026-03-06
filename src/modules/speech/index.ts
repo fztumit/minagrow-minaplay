@@ -1,0 +1,739 @@
+import type { VocabularyItem, VocabularyWord } from '../data/vocabulary.js';
+import { VOCABULARY } from '../data/vocabulary.js';
+import {
+  getTopSentenceListens,
+  getWordListenCount,
+  incrementWordListen,
+  resetListenProgress
+} from '../progress/listening.js';
+import { MascotGuide } from '../mascot/index.js';
+import {
+  buildCustomAudioBackup,
+  listCustomAudioEntries,
+  loadCustomAudioMap,
+  mergeCustomAudioMaps,
+  normalizeSpeechKey,
+  parseCustomAudioBackup,
+  saveCustomAudioMap,
+  type CustomAudioMap
+} from './customAudio.js';
+
+type SpeechTriggerDetail = {
+  word: VocabularyWord;
+  repeats: number;
+};
+
+type RepeatMode = 'default' | '1' | '2' | '3';
+
+type SpeechSettings = {
+  repeatMode: RepeatMode;
+};
+
+const SETTINGS_STORAGE_KEY = 'konusu_yorum_speech_settings_v1';
+
+export class SpeechGameModule {
+  private readonly rootEl: HTMLElement;
+  private readonly gridEl: HTMLElement;
+  private readonly feedbackEl: HTMLElement;
+  private readonly repeatModeSelect: HTMLSelectElement;
+  private readonly customAudioTextInput: HTMLInputElement;
+  private readonly customAudioStartBtn: HTMLButtonElement;
+  private readonly customAudioStopBtn: HTMLButtonElement;
+  private readonly customAudioPlayBtn: HTMLButtonElement;
+  private readonly customAudioDeleteBtn: HTMLButtonElement;
+  private readonly customAudioStatusEl: HTMLElement;
+  private readonly recordingLibrarySummaryEl: HTMLElement;
+  private readonly recordingExportBtn: HTMLButtonElement;
+  private readonly recordingImportInput: HTMLInputElement;
+  private readonly recordingBackupStatusEl: HTMLElement;
+  private readonly recordingLibraryListEl: HTMLElement;
+  private readonly progressSummaryEl: HTMLElement;
+  private readonly progressResetBtn: HTMLButtonElement;
+  private readonly progressResetStatusEl: HTMLElement;
+  private readonly progressWordListEl: HTMLElement;
+  private readonly progressSentenceListEl: HTMLElement;
+  private readonly waterFocusOverlayEl: HTMLElement;
+  private readonly mascot: MascotGuide;
+
+  private timeoutIds: number[] = [];
+  private waterFocusTimeoutId: number | null = null;
+  private customAudioMap: CustomAudioMap = {};
+  private mediaRecorder: MediaRecorder | null = null;
+  private recordingChunks: Blob[] = [];
+  private recordingStream: MediaStream | null = null;
+  private settings: SpeechSettings = {
+    repeatMode: 'default'
+  };
+
+  constructor(rootEl: HTMLElement, mascot: MascotGuide) {
+    const gridEl = rootEl.querySelector<HTMLElement>('#speech-grid');
+    const feedbackEl = rootEl.querySelector<HTMLElement>('#speech-feedback');
+    const repeatModeSelect = rootEl.querySelector<HTMLSelectElement>('#speech-repeat-mode');
+    const customAudioTextInput = rootEl.querySelector<HTMLInputElement>('#custom-audio-text');
+    const customAudioStartBtn = rootEl.querySelector<HTMLButtonElement>('#custom-audio-record-start');
+    const customAudioStopBtn = rootEl.querySelector<HTMLButtonElement>('#custom-audio-record-stop');
+    const customAudioPlayBtn = rootEl.querySelector<HTMLButtonElement>('#custom-audio-play');
+    const customAudioDeleteBtn = rootEl.querySelector<HTMLButtonElement>('#custom-audio-delete');
+    const customAudioStatusEl = rootEl.querySelector<HTMLElement>('#custom-audio-status');
+    const recordingLibrarySummaryEl = rootEl.querySelector<HTMLElement>('#recording-library-summary');
+    const recordingExportBtn = rootEl.querySelector<HTMLButtonElement>('#recording-export-btn');
+    const recordingImportInput = rootEl.querySelector<HTMLInputElement>('#recording-import-input');
+    const recordingBackupStatusEl = rootEl.querySelector<HTMLElement>('#recording-backup-status');
+    const recordingLibraryListEl = rootEl.querySelector<HTMLElement>('#recording-library-list');
+    const progressSummaryEl = rootEl.querySelector<HTMLElement>('#progress-summary');
+    const progressResetBtn = rootEl.querySelector<HTMLButtonElement>('#progress-reset-btn');
+    const progressResetStatusEl = rootEl.querySelector<HTMLElement>('#progress-reset-status');
+    const progressWordListEl = rootEl.querySelector<HTMLElement>('#progress-word-list');
+    const progressSentenceListEl = rootEl.querySelector<HTMLElement>('#progress-sentence-list');
+    const waterFocusOverlayEl = rootEl.querySelector<HTMLElement>('#water-focus-overlay');
+
+    if (
+      !gridEl ||
+      !feedbackEl ||
+      !repeatModeSelect ||
+      !customAudioTextInput ||
+      !customAudioStartBtn ||
+      !customAudioStopBtn ||
+      !customAudioPlayBtn ||
+      !customAudioDeleteBtn ||
+      !customAudioStatusEl ||
+      !recordingLibrarySummaryEl ||
+      !recordingExportBtn ||
+      !recordingImportInput ||
+      !recordingBackupStatusEl ||
+      !recordingLibraryListEl ||
+      !progressSummaryEl ||
+      !progressResetBtn ||
+      !progressResetStatusEl ||
+      !progressWordListEl ||
+      !progressSentenceListEl ||
+      !waterFocusOverlayEl
+    ) {
+      throw new Error('Speech module requires game, recording library, backup, and progress elements.');
+    }
+
+    this.rootEl = rootEl;
+    this.gridEl = gridEl;
+    this.feedbackEl = feedbackEl;
+    this.repeatModeSelect = repeatModeSelect;
+    this.customAudioTextInput = customAudioTextInput;
+    this.customAudioStartBtn = customAudioStartBtn;
+    this.customAudioStopBtn = customAudioStopBtn;
+    this.customAudioPlayBtn = customAudioPlayBtn;
+    this.customAudioDeleteBtn = customAudioDeleteBtn;
+    this.customAudioStatusEl = customAudioStatusEl;
+    this.recordingLibrarySummaryEl = recordingLibrarySummaryEl;
+    this.recordingExportBtn = recordingExportBtn;
+    this.recordingImportInput = recordingImportInput;
+    this.recordingBackupStatusEl = recordingBackupStatusEl;
+    this.recordingLibraryListEl = recordingLibraryListEl;
+    this.progressSummaryEl = progressSummaryEl;
+    this.progressResetBtn = progressResetBtn;
+    this.progressResetStatusEl = progressResetStatusEl;
+    this.progressWordListEl = progressWordListEl;
+    this.progressSentenceListEl = progressSentenceListEl;
+    this.waterFocusOverlayEl = waterFocusOverlayEl;
+    this.mascot = mascot;
+  }
+
+  init(): void {
+    this.renderCards(VOCABULARY);
+    this.loadSettings();
+    this.refreshCustomAudioMap();
+    this.bindEvents();
+    this.bindSettingsEvents();
+    this.syncCustomAudioSupportState();
+
+    this.rootEl.setAttribute('data-last-word', '');
+    this.rootEl.setAttribute('data-water-spilled', 'false');
+    this.rootEl.setAttribute('data-water-expanded', 'false');
+    this.syncSettingsToDom();
+    this.renderRecordingLibrary();
+    this.renderProgressPanel();
+    this.mascot.sayHint();
+  }
+
+  private renderCards(vocabulary: VocabularyItem[]): void {
+    this.gridEl.innerHTML = vocabulary
+      .map((item) => {
+        if (item.word === 'su') {
+          return `
+            <button class="word-card" type="button" data-word="${item.word}" data-repeats="${item.repeats}">
+              <div class="water-visual" aria-hidden="true">
+                <img class="water-glass-image" src="/assets/water-glass.svg" alt="" />
+                <div class="water-glass-shimmer"></div>
+                <div class="spill-stream"></div>
+                <div class="spill-pool"></div>
+              </div>
+              <span class="word-label">${item.label}</span>
+            </button>
+          `;
+        }
+
+        return `
+          <button class="word-card" type="button" data-word="${item.word}" data-repeats="${item.repeats}">
+            <span class="word-emoji" aria-hidden="true">${item.emoji}</span>
+            <span class="word-label">${item.label}</span>
+          </button>
+        `;
+      })
+      .join('');
+  }
+
+  private bindEvents(): void {
+    this.gridEl.addEventListener('click', (event) => {
+      const target = (event.target as HTMLElement).closest<HTMLButtonElement>('.word-card');
+      if (!target) {
+        return;
+      }
+
+      const word = target.dataset.word as VocabularyWord | undefined;
+      const defaultRepeats = Number(target.dataset.repeats ?? 1);
+      if (!word || Number.isNaN(defaultRepeats)) {
+        return;
+      }
+
+      this.onWordTapped(target, word, defaultRepeats);
+    });
+
+    this.recordingLibraryListEl.addEventListener('click', (event) => {
+      const target = (event.target as HTMLElement).closest<HTMLButtonElement>('.recording-btn');
+      if (!target) {
+        return;
+      }
+
+      const action = target.dataset.action;
+      const encodedKey = target.dataset.key ?? '';
+      if (!action || !encodedKey) {
+        return;
+      }
+
+      const key = decodeURIComponent(encodedKey);
+      if (!key) {
+        return;
+      }
+
+      if (action === 'play') {
+        const dataUrl = this.customAudioMap[key];
+        if (dataUrl) {
+          this.playAudioDataUrl(dataUrl);
+        }
+        return;
+      }
+
+      if (action === 'delete') {
+        if (this.customAudioMap[key]) {
+          delete this.customAudioMap[key];
+          saveCustomAudioMap(this.customAudioMap);
+          this.syncSettingsToDom();
+          this.renderRecordingLibrary();
+          this.renderProgressPanel();
+          this.recordingBackupStatusEl.textContent = `"${key}" kaydi silindi.`;
+        }
+        return;
+      }
+
+      if (action === 'rerecord') {
+        this.customAudioTextInput.value = key;
+        void this.startCustomAudioRecording(key);
+      }
+    });
+  }
+
+  private bindSettingsEvents(): void {
+    this.repeatModeSelect.addEventListener('change', () => {
+      const repeatMode = this.repeatModeSelect.value as RepeatMode;
+      this.settings.repeatMode = repeatMode;
+      this.saveSettings();
+      this.syncSettingsToDom();
+      this.feedbackEl.textContent = 'Ebeveyn ayarlari guncellendi.';
+    });
+
+    this.customAudioStartBtn.addEventListener('click', () => {
+      void this.startCustomAudioRecording();
+    });
+
+    this.customAudioStopBtn.addEventListener('click', () => {
+      this.stopCustomAudioRecording();
+    });
+
+    this.customAudioPlayBtn.addEventListener('click', () => {
+      this.playCustomAudioForInput();
+    });
+
+    this.customAudioDeleteBtn.addEventListener('click', () => {
+      this.deleteCustomAudioForInput();
+    });
+
+    this.recordingExportBtn.addEventListener('click', () => {
+      this.exportCustomAudioBackup();
+    });
+
+    this.recordingImportInput.addEventListener('change', () => {
+      void this.importCustomAudioBackup();
+    });
+
+    this.progressResetBtn.addEventListener('click', () => {
+      this.resetProgressCounters();
+    });
+  }
+
+  private syncCustomAudioSupportState(): void {
+    const supported =
+      typeof window.MediaRecorder !== 'undefined' &&
+      !!navigator.mediaDevices &&
+      typeof navigator.mediaDevices.getUserMedia === 'function';
+
+    if (supported) {
+      return;
+    }
+
+    this.customAudioStartBtn.disabled = true;
+    this.customAudioStopBtn.disabled = true;
+    this.customAudioPlayBtn.disabled = true;
+    this.customAudioDeleteBtn.disabled = true;
+    this.customAudioStatusEl.textContent = 'Bu tarayicida ses kaydi desteklenmiyor.';
+  }
+
+  private getCustomAudioInputKey(): string {
+    return normalizeSpeechKey(this.customAudioTextInput.value);
+  }
+
+  private async startCustomAudioRecording(overrideKey?: string): Promise<void> {
+    const key = overrideKey ?? this.getCustomAudioInputKey();
+    if (!key) {
+      this.customAudioStatusEl.textContent = 'Once kelime veya cumle yaz.';
+      return;
+    }
+
+    if (
+      typeof window.MediaRecorder === 'undefined' ||
+      !navigator.mediaDevices ||
+      typeof navigator.mediaDevices.getUserMedia !== 'function'
+    ) {
+      this.customAudioStatusEl.textContent = 'Bu tarayicida ses kaydi desteklenmiyor.';
+      return;
+    }
+
+    if (this.mediaRecorder?.state === 'recording') {
+      this.customAudioStatusEl.textContent = 'Kayit zaten devam ediyor.';
+      return;
+    }
+
+    try {
+      this.recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.recordingChunks = [];
+      this.mediaRecorder = new MediaRecorder(this.recordingStream);
+
+      this.mediaRecorder.ondataavailable = (event: BlobEvent) => {
+        if (event.data.size > 0) {
+          this.recordingChunks.push(event.data);
+        }
+      };
+
+      this.mediaRecorder.onstop = () => {
+        void this.finalizeCustomAudioRecording(key);
+      };
+
+      this.mediaRecorder.start();
+      this.customAudioStartBtn.disabled = true;
+      this.customAudioStopBtn.disabled = false;
+      this.customAudioStatusEl.textContent = `"${key}" icin kayit aliniyor...`;
+    } catch {
+      this.cleanupRecordingResources();
+      this.customAudioStatusEl.textContent = 'Mikrofon acilamadi. Tarayici izinlerini kontrol et.';
+    }
+  }
+
+  private stopCustomAudioRecording(): void {
+    if (!this.mediaRecorder || this.mediaRecorder.state !== 'recording') {
+      this.customAudioStatusEl.textContent = 'Kayit aktif degil.';
+      return;
+    }
+
+    this.mediaRecorder.stop();
+    this.customAudioStopBtn.disabled = true;
+    this.customAudioStatusEl.textContent = 'Kayit isleniyor...';
+  }
+
+  private async finalizeCustomAudioRecording(key: string): Promise<void> {
+    try {
+      const blob = new Blob(this.recordingChunks, { type: this.mediaRecorder?.mimeType || 'audio/webm' });
+      if (blob.size === 0) {
+        this.customAudioStatusEl.textContent = 'Bos kayit alindi, tekrar dene.';
+        return;
+      }
+
+      const dataUrl = await this.blobToDataUrl(blob);
+      this.customAudioMap[key] = dataUrl;
+      saveCustomAudioMap(this.customAudioMap);
+      this.syncSettingsToDom();
+      this.renderRecordingLibrary();
+      this.renderProgressPanel();
+      this.customAudioStatusEl.textContent = `"${key}" kaydedildi.`;
+      this.feedbackEl.textContent = `Kendi ses kaydi aktif: ${key}`;
+    } finally {
+      this.cleanupRecordingResources();
+      this.customAudioStartBtn.disabled = false;
+      this.customAudioStopBtn.disabled = true;
+    }
+  }
+
+  private playCustomAudioForInput(): void {
+    const key = this.getCustomAudioInputKey();
+    if (!key) {
+      this.customAudioStatusEl.textContent = 'Calmak icin once kelime veya cumle yaz.';
+      return;
+    }
+
+    const dataUrl = this.customAudioMap[key];
+    if (!dataUrl) {
+      this.customAudioStatusEl.textContent = `"${key}" icin kayit yok.`;
+      return;
+    }
+
+    this.playAudioDataUrl(dataUrl);
+    this.customAudioStatusEl.textContent = `"${key}" kaydi caliniyor.`;
+  }
+
+  private deleteCustomAudioForInput(): void {
+    const key = this.getCustomAudioInputKey();
+    if (!key) {
+      this.customAudioStatusEl.textContent = 'Silmek icin once kelime veya cumle yaz.';
+      return;
+    }
+
+    if (!this.customAudioMap[key]) {
+      this.customAudioStatusEl.textContent = `"${key}" icin kayit yok.`;
+      return;
+    }
+
+    delete this.customAudioMap[key];
+    saveCustomAudioMap(this.customAudioMap);
+    this.syncSettingsToDom();
+    this.renderRecordingLibrary();
+    this.renderProgressPanel();
+    this.customAudioStatusEl.textContent = `"${key}" kaydi silindi.`;
+  }
+
+  private exportCustomAudioBackup(): void {
+    this.refreshCustomAudioMap();
+    const backupText = buildCustomAudioBackup(this.customAudioMap);
+    const blob = new Blob([backupText], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const stamp = new Date().toISOString().slice(0, 10);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `konusu-yorum-kayitlar-${stamp}.json`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(url);
+
+    this.recordingBackupStatusEl.textContent = 'Yedek dosyasi indirildi.';
+  }
+
+  private async importCustomAudioBackup(): Promise<void> {
+    const file = this.recordingImportInput.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    try {
+      const raw = await file.text();
+      const importedMap = parseCustomAudioBackup(raw);
+      if (!importedMap) {
+        this.recordingBackupStatusEl.textContent = 'Gecersiz yedek dosyasi.';
+        return;
+      }
+
+      const result = mergeCustomAudioMaps(this.customAudioMap, importedMap);
+      this.customAudioMap = result.mergedMap;
+      saveCustomAudioMap(this.customAudioMap);
+      this.syncSettingsToDom();
+      this.renderRecordingLibrary();
+      this.renderProgressPanel();
+
+      this.recordingBackupStatusEl.textContent =
+        `Yukleme tamamlandi. Yeni: ${result.added}, Guncellenen: ${result.replaced}`;
+    } catch {
+      this.recordingBackupStatusEl.textContent = 'Yedek dosyasi okunamadi.';
+    } finally {
+      this.recordingImportInput.value = '';
+    }
+  }
+
+  private renderRecordingLibrary(): void {
+    this.refreshCustomAudioMap();
+    const entries = listCustomAudioEntries(this.customAudioMap);
+
+    this.recordingLibrarySummaryEl.textContent = `Toplam kayit: ${entries.length}`;
+
+    if (entries.length === 0) {
+      this.recordingLibraryListEl.innerHTML = '<p class="recording-backup-status">Henüz kayıt yok.</p>';
+      return;
+    }
+
+    this.recordingLibraryListEl.innerHTML = entries
+      .map((entry) => {
+        const keyLabel = this.escapeHtml(entry.key);
+        const encodedKey = encodeURIComponent(entry.key);
+        const kindLabel = entry.kind === 'word' ? 'Kelime' : 'Cumle';
+
+        return `
+          <div class="recording-row" data-key="${encodedKey}">
+            <div class="recording-meta">
+              <span class="recording-key">${keyLabel}</span>
+              <span class="recording-kind">${kindLabel}</span>
+            </div>
+            <div class="recording-row-actions">
+              <button type="button" class="recording-btn" data-action="play" data-key="${encodedKey}">Cal</button>
+              <button type="button" class="recording-btn" data-action="rerecord" data-key="${encodedKey}">Yeniden Kaydet</button>
+              <button type="button" class="recording-btn" data-action="delete" data-key="${encodedKey}">Sil</button>
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+  }
+
+  private renderProgressPanel(): void {
+    this.refreshCustomAudioMap();
+    const wordRows = VOCABULARY.map((item) => {
+      const key = normalizeSpeechKey(item.word);
+      const hasRecording = Boolean(this.customAudioMap[key]);
+      const listenCount = getWordListenCount(item.word);
+      return {
+        word: item.word,
+        hasRecording,
+        listenCount
+      };
+    });
+
+    const withRecordingCount = wordRows.filter((row) => row.hasRecording).length;
+    const totalListens = wordRows.reduce((sum, row) => sum + row.listenCount, 0);
+    const topSentences = getTopSentenceListens(5);
+
+    this.rootEl.setAttribute('data-word-recording-coverage', `${withRecordingCount}/${VOCABULARY.length}`);
+    this.rootEl.setAttribute('data-total-word-listens', String(totalListens));
+    this.progressResetBtn.disabled = totalListens === 0 && topSentences.length === 0;
+
+    this.progressSummaryEl.textContent =
+      `Kayitli kelime: ${withRecordingCount}/${VOCABULARY.length} | Toplam kelime dinleme: ${totalListens}`;
+
+    this.progressWordListEl.innerHTML = wordRows
+      .map(
+        (row) => `
+          <div class="progress-row">
+            <span class="progress-name">${row.word.toLocaleUpperCase('tr-TR')}</span>
+            <span class="progress-value">Kayit: ${row.hasRecording ? 'Var' : 'Yok'} | Dinleme: ${row.listenCount}</span>
+          </div>
+        `
+      )
+      .join('');
+
+    if (topSentences.length === 0) {
+      this.rootEl.setAttribute('data-top-sentence', '');
+      this.rootEl.setAttribute('data-top-sentence-count', '0');
+      this.progressSentenceListEl.innerHTML = '<p class="progress-summary">Henüz cümle dinleme kaydı yok.</p>';
+      return;
+    }
+
+    this.rootEl.setAttribute('data-top-sentence', topSentences[0].sentence);
+    this.rootEl.setAttribute('data-top-sentence-count', String(topSentences[0].count));
+
+    this.progressSentenceListEl.innerHTML = topSentences
+      .map(
+        (entry) => `
+          <div class="progress-row">
+            <span class="progress-name">${this.escapeHtml(entry.sentence)}</span>
+            <span class="progress-value">Dinleme: ${entry.count}</span>
+          </div>
+        `
+      )
+      .join('');
+  }
+
+  private resetProgressCounters(): void {
+    resetListenProgress();
+    this.renderProgressPanel();
+    this.progressResetStatusEl.textContent = 'İlerleme sayaçları sıfırlandı. Kayıtlar korunuyor.';
+    this.feedbackEl.textContent = 'Dinleme ilerlemesi sıfırlandı.';
+    this.mascot.setMessage('İlerleme sıfırlandı.');
+  }
+
+  private playAudioDataUrl(dataUrl: string): void {
+    const audio = new Audio(dataUrl);
+    audio.play().catch(() => {
+      this.customAudioStatusEl.textContent = 'Kayit calinamadi.';
+    });
+  }
+
+  private blobToDataUrl(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result ?? ''));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  private cleanupRecordingResources(): void {
+    if (this.recordingStream) {
+      for (const track of this.recordingStream.getTracks()) {
+        track.stop();
+      }
+    }
+    this.recordingStream = null;
+    this.mediaRecorder = null;
+    this.recordingChunks = [];
+  }
+
+  private onWordTapped(button: HTMLButtonElement, word: VocabularyWord, defaultRepeats: number): void {
+    const resolvedRepeats = this.resolveRepeats(defaultRepeats);
+    this.rootEl.setAttribute('data-last-word', word);
+
+    this.triggerVisual(button, word);
+    this.triggerSpeech({ word, repeats: resolvedRepeats });
+
+    this.mascot.sayPraise();
+    window.setTimeout(() => {
+      this.mascot.sayRepeat();
+    }, 950);
+  }
+
+  private resolveRepeats(defaultRepeats: number): number {
+    if (this.settings.repeatMode === 'default') {
+      return defaultRepeats;
+    }
+
+    return Number(this.settings.repeatMode);
+  }
+
+  private triggerVisual(button: HTMLButtonElement, word: VocabularyWord): void {
+    if (word !== 'su') {
+      return;
+    }
+
+    this.rootEl.setAttribute('data-water-spilled', 'true');
+    button.classList.remove('is-spilling');
+    void button.offsetWidth;
+    button.classList.add('is-spilling');
+    this.triggerWaterFocusVisual();
+    window.setTimeout(() => {
+      button.classList.remove('is-spilling');
+    }, 1100);
+  }
+
+  private triggerWaterFocusVisual(): void {
+    if (this.waterFocusTimeoutId !== null) {
+      window.clearTimeout(this.waterFocusTimeoutId);
+      this.waterFocusTimeoutId = null;
+    }
+
+    this.rootEl.setAttribute('data-water-expanded', 'true');
+    this.waterFocusOverlayEl.classList.remove('is-active', 'is-spilling');
+    void this.waterFocusOverlayEl.offsetWidth;
+    this.waterFocusOverlayEl.classList.add('is-active', 'is-spilling');
+
+    this.waterFocusTimeoutId = window.setTimeout(() => {
+      this.waterFocusOverlayEl.classList.remove('is-active', 'is-spilling');
+      this.rootEl.setAttribute('data-water-expanded', 'false');
+      this.waterFocusTimeoutId = null;
+    }, 1600);
+  }
+
+  private triggerSpeech(payload: SpeechTriggerDetail): void {
+    this.clearPendingSpeech();
+    this.refreshCustomAudioMap();
+
+    const key = normalizeSpeechKey(payload.word);
+    const customAudioData = this.customAudioMap[key] ?? null;
+
+    if (!customAudioData) {
+      this.feedbackEl.textContent = `"${payload.word}" icin kayit yok. Ebeveyn ayarlarindan kayit ekleyin.`;
+    } else {
+      this.feedbackEl.textContent = `Kelime: ${payload.word.toLocaleUpperCase('tr-TR')} (${payload.repeats} tekrar)`;
+    }
+
+    const waitBetweenRepeatsMs = customAudioData ? 1100 : 620;
+    for (let index = 0; index < payload.repeats; index += 1) {
+      const timeoutId = window.setTimeout(() => {
+        this.speakOnce(payload.word, customAudioData);
+      }, waitBetweenRepeatsMs * index);
+      this.timeoutIds.push(timeoutId);
+    }
+
+    this.rootEl.dispatchEvent(new CustomEvent<SpeechTriggerDetail>('speech-trigger', { detail: payload }));
+  }
+
+  private speakOnce(word: string, customAudioData: string | null): void {
+    const runtime = window as Window & { __speechLog?: string[] };
+    runtime.__speechLog = runtime.__speechLog ?? [];
+    runtime.__speechLog.push(word);
+
+    if (customAudioData) {
+      incrementWordListen(word);
+      this.playAudioDataUrl(customAudioData);
+      this.renderProgressPanel();
+    }
+  }
+
+  private clearPendingSpeech(): void {
+    for (const timeoutId of this.timeoutIds) {
+      window.clearTimeout(timeoutId);
+    }
+    this.timeoutIds = [];
+  }
+
+  private refreshCustomAudioMap(): void {
+    this.customAudioMap = loadCustomAudioMap();
+  }
+
+  private loadSettings(): void {
+    const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    if (!raw) {
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as Partial<SpeechSettings>;
+      this.settings = {
+        repeatMode: this.normalizeRepeatMode(parsed.repeatMode)
+      };
+    } catch {
+      this.settings = {
+        repeatMode: 'default'
+      };
+    }
+  }
+
+  private saveSettings(): void {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(this.settings));
+  }
+
+  private syncSettingsToDom(): void {
+    this.repeatModeSelect.value = this.settings.repeatMode;
+
+    this.rootEl.setAttribute('data-repeat-mode', this.settings.repeatMode);
+    this.rootEl.setAttribute('data-custom-audio-count', String(Object.keys(this.customAudioMap).length));
+  }
+
+  private normalizeRepeatMode(value: unknown): RepeatMode {
+    if (value === '1' || value === '2' || value === '3') {
+      return value;
+    }
+
+    return 'default';
+  }
+
+  private escapeHtml(value: string): string {
+    return value
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
+  }
+}

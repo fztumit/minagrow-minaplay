@@ -1,0 +1,9 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Konuşu-Yorum simgesi büyük">
+  <rect width="512" height="512" rx="112" fill="#ff8f66" />
+  <circle cx="256" cy="264" r="126" fill="#fff3d3" />
+  <circle cx="216" cy="252" r="18" fill="#2b3552" />
+  <circle cx="296" cy="252" r="18" fill="#2b3552" />
+  <path d="M216 322c28 24 52 24 80 0" stroke="#2b3552" stroke-width="16" fill="none" stroke-linecap="round" />
+  <path d="M188 154c0-40 30-72 68-72s68 32 68 72" stroke="#ff5d73" stroke-width="26" fill="none" stroke-linecap="round" />
+  <path d="M126 380h260" stroke="#ffd7a9" stroke-width="34" stroke-linecap="round" />
+</svg>

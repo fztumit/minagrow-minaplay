@@ -1,0 +1,118 @@
+project:
+  name: "Tasarim Teknesi CRM WhatsApp MVP"
+  version: "1.0"
+  owner: "Umit"
+  goal: "WhatsApp/Meta mesajlarini alip Zoho CRM'de Musteri Adayi (Lead) kaydi acmak ve is kurallarina gore siniflandirmak."
+
+stack:
+  runtime: "Node.js 20+"
+  language: "TypeScript"
+  framework: "Express"
+  validation: "zod"
+  http_client: "axios"
+  persistence: "lowdb (json)"
+  deployment: "Railway"
+
+endpoints:
+  whatsapp_verify_get: "/webhooks/whatsapp"
+  whatsapp_events_post: "/webhooks/whatsapp"
+  meta_verify_get: "/webhooks/meta"
+  meta_events_post: "/webhooks/meta"
+
+business_rules:
+  unit_price_tl: 600
+  segment_thresholds:
+    S1: "< 7500"
+    S2: "7500-24999"
+    S3: "25000-49999"
+    S4: ">= 50000"
+  extraction:
+    quantity_patterns:
+      - "10 adet"
+      - "50 tane"
+    product_code_pattern: "4-6 haneli sayi"
+    logo_default: true
+    logo_false_if_contains: "logosuz"
+  stage_mapping:
+    no_qty:
+      stage: "On Bilgi Bekleniyor"
+      segment: "UNKN"
+    qty_no_product:
+      stage: "Urun Netlesiyor"
+    qty_and_product:
+      stage: "Teklif Verilecek"
+  followup_tasks:
+    trigger_stage: "Teklif Verilecek"
+    days_after:
+      - 3
+      - 10
+      - 30
+      - 180
+
+env:
+  required:
+    PORT: "3000"
+    META_VERIFY_TOKEN: "<same_token_in_meta_webhook_verify>"
+    META_APP_SECRET: "<meta_app_secret>"
+    ZOHO_ENABLED: "true"
+    ZOHO_CLIENT_ID: "<zoho_client_id>"
+    ZOHO_CLIENT_SECRET: "<zoho_client_secret>"
+    ZOHO_REFRESH_TOKEN: "<zoho_refresh_token>"
+    ZOHO_API_DOMAIN: "https://www.zohoapis.eu"
+
+operations_checklist:
+  startup:
+    - "Railway service status = Online"
+    - "Railway Variables dolu ve guncel"
+    - "Meta webhook Callback URL dogru: https://<domain>/webhooks/whatsapp"
+    - "Meta Verify Token = Railway META_VERIFY_TOKEN ile ayni"
+    - "Meta webhook 'messages' field subscribed"
+  smoke_test:
+    - "GET verify test (hub.challenge) 200 donmeli"
+    - "POST test payload ile {ok:true} donmeli"
+    - "Railway deploy logs'ta zoho token refresh hatasi olmamali"
+    - "Zoho CRM > Musteri Adaylari listesinde yeni kayit gorunmeli"
+  daily:
+    - "WhatsApp'tan test mesaji at: '29 adet 10516 logosuz'"
+    - "Zoho kaydinda telefon, aciklama ve kaynak (WhatsApp) kontrol et"
+
+curl_tests:
+  verify_get_example: "curl -i 'https://<domain>/webhooks/whatsapp?hub.mode=subscribe&hub.verify_token=<META_VERIFY_TOKEN>&hub.challenge=12345'"
+  post_test_example: "curl -X POST 'https://<domain>/webhooks/whatsapp' -H 'Content-Type: application/json' -d '{\"entry\":[{\"changes\":[{\"value\":{\"messages\":[{\"from\":\"905327157195\",\"type\":\"text\",\"text\":{\"body\":\"20 adet 10516 logosuz\"},\"timestamp\":\"1730000000\"}],\"contacts\":[{\"wa_id\":\"905327157195\"}]}}]}]}'"
+
+troubleshooting:
+  - issue: "Zoho token refresh failed: {\"error\":\"invalid_code\"}"
+    cause: "Refresh token gecersiz/eski"
+    fix:
+      - "Zoho'dan yeni authorization code al"
+      - "Token endpoint ile yeni refresh_token uret"
+      - "Railway ZOHO_REFRESH_TOKEN guncelle"
+      - "Redeploy / Restart et"
+  - issue: "MODULE_NOT_FOUND: /app/dist/server.js"
+    cause: "Build/start path uyusmazligi"
+    fix:
+      - "npm run build ile dist olusmali"
+      - "start script: node dist/src/server.js"
+      - "Railway yeniden deploy"
+  - issue: "Webhook verify 403 forbidden"
+    cause: "Verify token eslesmiyor"
+    fix:
+      - "META_VERIFY_TOKEN degeri Railway ve Meta'da birebir ayni olmali"
+  - issue: "Railway HTTP POST var ama Zoho kayit yok"
+    cause: "Zoho auth veya alan/map sorunu"
+    fix:
+      - "Deploy logs'ta 'zoho upsert error' satirini kontrol et"
+      - "ZOHO_ENABLED=true oldugunu dogrula"
+
+chatgpt_ops_prompts:
+  - name: "Gunluk kontrol"
+    prompt: "Bu projede gunluk operasyon kontrol listesi uygula, sorun varsa sadece bloklayani ve net cozum adimini yaz."
+  - name: "Hata analizi"
+    prompt: "Asagidaki Railway deploy logunu analiz et, kok neden + tek kesin cozum adimi ver."
+  - name: "Webhook test plan"
+    prompt: "WhatsApp webhook icin 5 adimli hizli test plani ve beklenen sonuc tablosu hazirla."
+
+security_notes:
+  - "Secret degerlerini mesajlasma ekranlarinda acik paylasma."
+  - "Token degisti ise Railway ve ilgili panelde ayni anda guncelle."
+  - "Periyodik rotate sonrasi mutlaka smoke test yap."

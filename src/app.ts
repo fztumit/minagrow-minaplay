@@ -1,5 +1,6 @@
 import express from 'express';
 import morgan from 'morgan';
+import path from 'node:path';
 import { Env } from './config/env';
 import { buildWebhookRouter } from './routes/webhooks';
 import { ZohoService } from './services/zoho';
@@ -16,6 +17,9 @@ export function createApp(env: Env): express.Express {
   );
 
   app.use(morgan('combined'));
+
+  const publicDir = path.join(process.cwd(), 'public');
+  app.use(express.static(publicDir));
 
   const zoho = new ZohoService(env);
   app.use('/webhooks', buildWebhookRouter(env, zoho));
