@@ -1,7 +1,7 @@
 {
-  "name": "Konuşu-Yorum",
-  "short_name": "Konuşu",
-  "description": "2-6 yaş için konuşma pratiği, uyku modu ve aile avatar araçları sunan çocuk gelişimi destek uygulaması.",
+  "name": "MinaPlay",
+  "short_name": "MinaPlay",
+  "description": "MinaGrow tarafından geliştirilen, 2-6 yaş için konuşma pratiği ve ebeveyn destek araçları sunan uygulama.",
   "lang": "tr",
   "start_url": "/",
   "scope": "/",

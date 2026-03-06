@@ -691,3 +691,38 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
 
 ## Remaining TODOs / Suggestions
 - Optional next step: add a short water splash sound effect synced with the spill animation.
+
+## Continuation Update: Rebranding (MinaGrow + MinaPlay)
+- Brand direction applied:
+  - Main brand: `MinaGrow`
+  - App name: `MinaPlay`
+- Updated visible app identity:
+  - `public/index.html`
+    - `<title>` -> `MinaPlay`
+    - hero heading -> `MinaPlay`
+    - subtitle now references `MinaGrow`
+    - meta description updated to `MinaPlay by MinaGrow`
+- Updated PWA metadata:
+  - `public/manifest.webmanifest`
+    - `name`: `MinaPlay`
+    - `short_name`: `MinaPlay`
+    - description updated with MinaGrow reference
+- Updated icon accessibility labels:
+  - `public/assets/icon-192.svg`
+  - `public/assets/icon-512.svg`
+- Updated package identity:
+  - `package.json` name -> `minagrow-minaplay`
+  - `package-lock.json` root names synced
+- Updated cache key for clean rollout:
+  - `public/sw.js` -> `minaplay-v13`
+- Test update:
+  - `tests/playwright/page-load.spec.ts` heading expectation -> `MinaPlay`
+
+## Validation (Rebranding)
+- `npm run build` ✅
+- `npm run lint` ✅
+- `npm test` ✅
+- `npx playwright test tests/playwright/page-load.spec.ts --config=/Users/umitaydin/Documents/Konusu-Yorum/playwright.local.config.ts` ✅
+
+## Remaining TODOs / Suggestions
+- Optional next step: rename GitHub repo to `minagrow-minaplay` (or `minaplay`) for naming consistency.

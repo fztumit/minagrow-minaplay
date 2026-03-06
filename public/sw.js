@@ -1,4 +1,4 @@
-const CACHE_NAME = 'konusu-yorum-v12';
+const CACHE_NAME = 'minaplay-v13';
 
 const PRECACHE_ASSETS = [
   '/',
