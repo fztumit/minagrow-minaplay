@@ -12,6 +12,11 @@ Bu proje, WhatsApp Cloud API ve Meta (Instagram/Facebook) webhook mesajlarini te
   - `qty`: `10 adet`, `50 tane`
   - `product_code`: 4-6 haneli kod (`10516`)
   - `logoRequested`: varsayilan `true`, mesajda `logosuz` gecerse `false`
+- Zoho custom logo alani map'i:
+  - Segment API name env ile degistirilebilir: `ZOHO_SEGMENT_FIELD_API_NAME` (varsayilan: `segment`)
+  - Varsayilan API name: `logo_requested_`
+  - Varsayilan tip: `select` (`Evet` / `Hayir`)
+  - Gerekirse `checkbox` tipe env ile gecilebilir
 - Segment/stage kurallari:
   - S1 `< 7500`
   - S2 `7500-24999`
@@ -55,6 +60,11 @@ ZOHO_CLIENT_ID=your_zoho_client_id
 ZOHO_CLIENT_SECRET=your_zoho_client_secret
 ZOHO_REFRESH_TOKEN=your_zoho_refresh_token
 ZOHO_API_DOMAIN=https://www.zohoapis.com
+ZOHO_SEGMENT_FIELD_API_NAME=segment
+ZOHO_LOGO_FIELD_API_NAME=logo_requested_
+ZOHO_LOGO_FIELD_TYPE=select
+ZOHO_LOGO_SELECT_TRUE_VALUE=Evet
+ZOHO_LOGO_SELECT_FALSE_VALUE=Hayir
 ```
 
 ## Meta Webhook Verify

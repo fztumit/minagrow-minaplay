@@ -10,6 +10,7 @@ export type LeadPayload = {
   leadSource: string;
   productCode?: string | null;
   qty?: number | null;
+  logoRequested: boolean;
   segment: string;
   stage: string;
 };
@@ -110,6 +111,15 @@ export class ZohoService {
   }
 
   private mapLead(payload: LeadPayload): Record<string, unknown> {
+    const segmentFieldName = this.env.ZOHO_SEGMENT_FIELD_API_NAME.trim();
+    const logoFieldName = this.env.ZOHO_LOGO_FIELD_API_NAME.trim();
+    const logoFieldValue =
+      this.env.ZOHO_LOGO_FIELD_TYPE === 'checkbox'
+        ? payload.logoRequested
+        : payload.logoRequested
+          ? this.env.ZOHO_LOGO_SELECT_TRUE_VALUE
+          : this.env.ZOHO_LOGO_SELECT_FALSE_VALUE;
+
     return {
       Company: payload.company,
       Last_Name: payload.lastName,
@@ -119,8 +129,9 @@ export class ZohoService {
       Lead_Source: payload.leadSource,
       product_code: payload.productCode ?? null,
       qty: payload.qty ?? null,
-      segment: payload.segment,
-      stage: payload.stage
+      ...(segmentFieldName ? { [segmentFieldName]: payload.segment } : {}),
+      stage: payload.stage,
+      ...(logoFieldName ? { [logoFieldName]: logoFieldValue } : {})
     };
   }
 

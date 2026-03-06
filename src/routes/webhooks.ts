@@ -40,6 +40,7 @@ async function processMessages(params: {
         leadSource: message.channel === 'whatsapp' ? 'WhatsApp' : 'Meta DM',
         productCode: extraction.productCode,
         qty: extraction.qty,
+        logoRequested: extraction.logoRequested,
         segment: segmentation.segment,
         stage: segmentation.stage
       });
