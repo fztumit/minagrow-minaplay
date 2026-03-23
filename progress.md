@@ -754,3 +754,51 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
 ## Remaining TODOs / Suggestions
 - Remove or isolate legacy CRM webhook/Zoho code from the MinaPlay repo.
 - Rename test hook `__konusuYorumModules` when we do the broader cleanup pass.
+
+## Continuation Update: Anka Mascot Refresh
+- Reworked the mascot direction around a softer, child-safe `Anka` character.
+- Updated `public/assets/phoenix.svg`:
+  - warmer golden / orange palette
+  - rounder body
+  - larger eyes
+  - soft glow aura
+  - internal SVG animations for:
+    - idle floating
+    - glow pulse
+    - sparkles
+    - gentle wing movement
+- Added `public/assets/phoenix-sleep.svg`:
+  - blue / purple sleep-mode palette
+  - eyes closed
+  - calmer floating and star twinkle animation
+- Updated mascot mounting in `public/index.html`:
+  - header mascot now uses `#mascot-shell` + `#phoenix-main`
+  - sleep stage now uses dedicated `#sleep-phoenix` image and shell
+- Updated mascot behavior model:
+  - `src/modules/mascot/index.ts`
+  - supports:
+    - `normal` variant
+    - temporary `active` pulse state
+    - `sleep` variant
+- Updated app wiring in `src/modules/main.ts`:
+  - mascot now switches to sleep variant on sleep tab
+  - tab-level guidance messages shortened to calmer phrases
+- Updated several runtime guidance messages to stay short and non-overwhelming:
+  - `src/modules/sleep/index.ts`
+  - `src/modules/stories/index.ts`
+  - `src/modules/speech/index.ts`
+- Updated `public/style.css`:
+  - mascot shell, glow, sparkle, float behavior
+  - sleep mascot shell styling
+- Cache bust:
+  - `public/sw.js` -> `minaplay-v14`
+  - added `/assets/phoenix-sleep.svg` to precache list
+
+## Validation (Anka Refresh)
+- `npm run build` ✅
+- `npm run lint` ✅
+- `npx playwright test tests/playwright/page-load.spec.ts` ✅
+
+## Remaining TODOs / Suggestions
+- Optional next step: create a third `active-guide` SVG variant just for praise / interaction bursts.
+- Optional next step: replace the current test hook name `__konusuYorumModules` during the broader cleanup pass.

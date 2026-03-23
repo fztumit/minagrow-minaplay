@@ -375,7 +375,7 @@ export class SleepModeModule {
       if (this.running) {
         this.stop();
         this.statusEl.textContent = 'Durduruldu.';
-        this.mascot.setMessage('Uyku sesi durdu.');
+        this.mascot.setMessage('Ses durdu.');
         return;
       }
 
@@ -391,7 +391,7 @@ export class SleepModeModule {
     this.rootEl.setAttribute('data-running', 'true');
     this.toggleBtn.textContent = 'Uyku Sesini Durdur';
     this.statusEl.textContent = `Çalıyor: ${this.soundSelect.selectedOptions[0].textContent ?? selectedSound}`;
-    this.mascot.setMessage('Aferin. Şimdi dinlenme zamanı.');
+    this.mascot.setMessage('Dinlenelim.');
 
     this.scheduleStop();
   }

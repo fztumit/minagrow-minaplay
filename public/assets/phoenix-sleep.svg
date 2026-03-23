@@ -1,0 +1,114 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Uyuyan Anka maskotu">
+  <defs>
+    <radialGradient id="sleepBg" cx="50%" cy="40%" r="62%">
+      <stop offset="0%" stop-color="#eef4ff"/>
+      <stop offset="70%" stop-color="#d7dcff"/>
+      <stop offset="100%" stop-color="#bfc8f7"/>
+    </radialGradient>
+    <radialGradient id="sleepBody" cx="50%" cy="35%" r="72%">
+      <stop offset="0%" stop-color="#f7f7ff"/>
+      <stop offset="60%" stop-color="#bfc8ff"/>
+      <stop offset="100%" stop-color="#8f9ce3"/>
+    </radialGradient>
+    <linearGradient id="sleepWing" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d6d7ff"/>
+      <stop offset="60%" stop-color="#9fa8f2"/>
+      <stop offset="100%" stop-color="#7c83d6"/>
+    </linearGradient>
+    <linearGradient id="sleepCrest" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#b4bfff"/>
+      <stop offset="55%" stop-color="#93a2ff"/>
+      <stop offset="100%" stop-color="#eef4ff"/>
+    </linearGradient>
+    <linearGradient id="sleepBeak" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffeab0"/>
+      <stop offset="100%" stop-color="#ffbe73"/>
+    </linearGradient>
+    <style>
+      .sleep-float {
+        transform-origin: 128px 136px;
+        animation: sleepFloat 6.8s ease-in-out infinite;
+      }
+      .sleep-wing-left,
+      .sleep-wing-right {
+        transform-box: fill-box;
+        animation-duration: 5.2s;
+        animation-timing-function: ease-in-out;
+        animation-iteration-count: infinite;
+      }
+      .sleep-wing-left {
+        transform-origin: right center;
+        animation-name: sleepWingLeft;
+      }
+      .sleep-wing-right {
+        transform-origin: left center;
+        animation-name: sleepWingRight;
+      }
+      .sleep-glow {
+        transform-origin: 128px 128px;
+        animation: sleepGlow 4.6s ease-in-out infinite;
+      }
+      .sleep-star {
+        animation: sleepStar 4.8s ease-in-out infinite;
+      }
+      .sleep-star.delay {
+        animation-delay: 1.4s;
+      }
+      .sleep-star.delay2 {
+        animation-delay: 2.6s;
+      }
+      @keyframes sleepFloat {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-7px); }
+      }
+      @keyframes sleepWingLeft {
+        0%, 100% { transform: rotate(0deg); }
+        50% { transform: rotate(-4deg); }
+      }
+      @keyframes sleepWingRight {
+        0%, 100% { transform: rotate(0deg); }
+        50% { transform: rotate(4deg); }
+      }
+      @keyframes sleepGlow {
+        0%, 100% { opacity: 0.38; transform: scale(0.98); }
+        50% { opacity: 0.74; transform: scale(1.05); }
+      }
+      @keyframes sleepStar {
+        0%, 100% { opacity: 0.25; transform: scale(0.8); }
+        50% { opacity: 0.95; transform: scale(1.05); }
+      }
+    </style>
+  </defs>
+
+  <rect width="256" height="256" rx="56" fill="url(#sleepBg)"/>
+  <circle class="sleep-glow" cx="128" cy="128" r="86" fill="#e9edff" opacity="0.7"/>
+
+  <g class="sleep-float">
+    <path d="M107 65c8-18 23-29 40-33-3 15-10 28-21 37 13-2 25 2 35 11-15 5-28 7-40 6 11 6 18 16 20 29-17-5-29-15-35-29-5 10-14 18-27 24 1-16 10-29 28-45z" fill="url(#sleepCrest)"/>
+
+    <g class="sleep-wing-left">
+      <path d="M84 136c-23 6-38 24-43 45 23-1 42-8 56-24 5 6 10 11 15 14-2-24-11-40-28-35z" fill="url(#sleepWing)"/>
+    </g>
+    <g class="sleep-wing-right">
+      <path d="M172 136c23 6 38 24 43 45-23-1-42-8-56-24-5 6-10 11-15 14 2-24 11-40 28-35z" fill="url(#sleepWing)"/>
+    </g>
+
+    <ellipse cx="128" cy="145" rx="55" ry="60" fill="url(#sleepBody)"/>
+    <ellipse cx="128" cy="118" rx="45" ry="37" fill="#f7f8ff"/>
+    <ellipse cx="128" cy="163" rx="25" ry="20" fill="#eef2ff"/>
+
+    <path d="M97 116c7 7 15 7 22 0" fill="none" stroke="#5962aa" stroke-linecap="round" stroke-width="4.5"/>
+    <path d="M137 116c7 7 15 7 22 0" fill="none" stroke="#5962aa" stroke-linecap="round" stroke-width="4.5"/>
+
+    <path d="M117 129c4-3 15-3 19 0 0 0-3 7-9.5 10-6.5-3-9.5-10-9.5-10z" fill="url(#sleepBeak)"/>
+    <path d="M113 141c9 7 21 7 30 0" fill="none" stroke="#6773bf" stroke-linecap="round" stroke-width="4"/>
+  </g>
+
+  <g fill="#f2f5ff">
+    <path class="sleep-star" d="M42 83l4 8 8 4-8 4-4 8-4-8-8-4 8-4z"/>
+    <path class="sleep-star delay" d="M208 68l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/>
+    <path class="sleep-star delay2" d="M206 184l3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/>
+    <circle class="sleep-star delay" cx="61" cy="158" r="4"/>
+    <circle class="sleep-star delay2" cx="188" cy="44" r="3.5"/>
+  </g>
+</svg>

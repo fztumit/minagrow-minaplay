@@ -40,14 +40,16 @@ function wireTabs(mascot: MascotGuide): void {
         view.classList.toggle('active', view.id === `view-${selectedView}`);
       });
 
+      mascot.setSleepMode(selectedView === 'sleep');
+
       if (selectedView === 'speech') {
         mascot.sayHint();
       } else if (selectedView === 'stories') {
-        mascot.setMessage('Hikayeyi dinleyelim.');
+        mascot.setMessage('Hikaye zamanı.');
       } else if (selectedView === 'sleep') {
-        mascot.setMessage('Uyku modu hazır.');
+        mascot.setMessage('Uyku zamanı.');
       } else {
-        mascot.setMessage('Aile üyelerini ekleyin.');
+        mascot.setMessage('Aile ekleyelim.');
       }
     });
   });
@@ -145,6 +147,8 @@ function bootstrap(): void {
   const sleepRoot = document.getElementById('view-sleep');
   const familyRoot = document.getElementById('view-family');
   const dailyWordOutput = document.getElementById('daily-word-text');
+  const mascotImage = document.getElementById('phoenix-main') as HTMLImageElement | null;
+  const mascotShell = document.getElementById('mascot-shell');
 
   if (
     !mascotOutput ||
@@ -154,12 +158,14 @@ function bootstrap(): void {
     !storiesRoot ||
     !sleepRoot ||
     !familyRoot ||
-    !dailyWordOutput
+    !dailyWordOutput ||
+    !mascotImage ||
+    !mascotShell
   ) {
     throw new Error('Required app roots not found.');
   }
 
-  const mascot = new MascotGuide(mascotOutput);
+  const mascot = new MascotGuide(mascotOutput, mascotImage, mascotShell);
 
   const dailyWordModule = new DailyWordModule(dailyWordCard, dailyWordOutput, VOCABULARY);
   dailyWordModule.init();

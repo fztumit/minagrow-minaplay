@@ -190,7 +190,7 @@ export class StoriesModule {
       this.renderStoryList();
       this.selectStory(0);
       this.syncEasyEditorAvailability();
-      this.mascot.setMessage('Yeni hikaye paketi secildi.');
+      this.mascot.setMessage('Yeni paket.');
     });
 
     this.easySentenceForm.addEventListener('submit', (event) => {
@@ -457,7 +457,7 @@ export class StoriesModule {
       return;
     }
 
-    this.mascot.setMessage('Bu cumle icin kayit yok.');
+    this.mascot.setMessage('Kayıt yok.');
     this.syncRootState();
   }
 

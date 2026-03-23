@@ -18,7 +18,9 @@
     <div class="app-shell">
       <header class="hero-card">
         <div class="mascot-row">
-          <img class="phoenix-main" src="/assets/phoenix.svg" alt="Dost Anka Kuşu" />
+          <div class="mascot-shell" id="mascot-shell" data-mascot-variant="normal" aria-hidden="true">
+            <img class="phoenix-main" id="phoenix-main" src="/assets/phoenix.svg" alt="Dost Anka" />
+          </div>
           <div>
             <h1>MinaPlay</h1>
             <p class="hero-subtitle">MinaGrow ile 2-6 yaş için konuşma pratiği ve ebeveyn destek araçları</p>
@@ -211,7 +213,9 @@
 
           <div class="sleep-stage">
             <canvas id="sleep-stars" width="640" height="260" aria-hidden="true"></canvas>
-            <img class="sleep-phoenix" src="/assets/phoenix.svg" alt="Uyuyan Anka" />
+            <div class="sleep-phoenix-shell" aria-hidden="true">
+              <img class="sleep-phoenix" id="sleep-phoenix" src="/assets/phoenix-sleep.svg" alt="Uyuyan Anka" />
+            </div>
             <p class="sleep-caption">Anka dinleniyor... iyi uykular.</p>
           </div>
 
