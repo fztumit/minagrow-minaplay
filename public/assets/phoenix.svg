@@ -1,24 +1,80 @@
-<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Anka kuşu maskotu">
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="MinaPlay anka kusu maskotu">
   <defs>
-    <linearGradient id="bodyGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ffce88" />
-      <stop offset="1" stop-color="#ff8e5a" />
+    <radialGradient id="bgGlow" cx="50%" cy="40%" r="58%">
+      <stop offset="0%" stop-color="#fff9da" />
+      <stop offset="72%" stop-color="#ffe5a6" />
+      <stop offset="100%" stop-color="#ffd084" />
+    </radialGradient>
+    <radialGradient id="faceGlow" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#fffce8" />
+      <stop offset="100%" stop-color="#ffe69a" />
+    </radialGradient>
+    <linearGradient id="crestGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff6a00" />
+      <stop offset="48%" stop-color="#ff9a00" />
+      <stop offset="100%" stop-color="#fff06a" />
     </linearGradient>
-    <linearGradient id="wingGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ff6f88" />
-      <stop offset="1" stop-color="#ff9d5d" />
+    <linearGradient id="featherGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffb300" />
+      <stop offset="52%" stop-color="#ff7a00" />
+      <stop offset="100%" stop-color="#f04a12" />
     </linearGradient>
+    <linearGradient id="wingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffb300" />
+      <stop offset="60%" stop-color="#ff6f00" />
+      <stop offset="100%" stop-color="#ee4312" />
+    </linearGradient>
+    <linearGradient id="tailGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffd54f" />
+      <stop offset="45%" stop-color="#ff9800" />
+      <stop offset="100%" stop-color="#f4511e" />
+    </linearGradient>
+    <linearGradient id="beakGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff176" />
+      <stop offset="100%" stop-color="#ff9800" />
+    </linearGradient>
+    <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#ff9800" flood-opacity="0.28"/>
+    </filter>
   </defs>
 
-  <rect width="256" height="256" rx="48" fill="#ffe9c8" />
-  <circle cx="128" cy="126" r="58" fill="url(#bodyGrad)" />
-  <path d="M72 136c-24-3-38 24-24 42 15 18 42 10 54-8" fill="url(#wingGrad)" />
-  <path d="M184 136c24-3 38 24 24 42-15 18-42 10-54-8" fill="url(#wingGrad)" />
-  <path d="M98 90c0-16 13-29 30-29s30 13 30 29" stroke="#f15e4c" stroke-width="10" fill="none" stroke-linecap="round" />
-  <circle cx="108" cy="120" r="7" fill="#2f2d44" />
-  <circle cx="148" cy="120" r="7" fill="#2f2d44" />
-  <path d="M110 148c12 11 24 11 36 0" stroke="#2f2d44" stroke-width="6" fill="none" stroke-linecap="round" />
-  <path d="M124 132l8 0 4 10-16 0z" fill="#ffb24d" />
-  <path d="M126 62l-14-22" stroke="#ff7e4f" stroke-width="8" stroke-linecap="round" />
-  <path d="M142 62l14-22" stroke="#ff7e4f" stroke-width="8" stroke-linecap="round" />
+  <rect width="256" height="256" rx="56" fill="url(#bgGlow)" />
+  <ellipse cx="128" cy="216" rx="62" ry="16" fill="#ffbc64" opacity="0.32" />
+
+  <g filter="url(#softShadow)">
+    <path d="M112 56c8-20 23-31 43-35-2 16-9 30-21 41 14-4 28 0 39 10-16 6-30 9-43 8 12 6 20 17 22 32-19-6-33-18-40-35-4 13-14 24-29 31 1-19 10-34 29-44z" fill="url(#crestGrad)"/>
+
+    <path d="M79 124c-25 7-43 27-49 53 25 0 49-8 64-27 6 8 13 14 21 18-4-29-15-48-36-44z" fill="url(#wingGrad)"/>
+    <path d="M177 124c25 7 43 27 49 53-25 0-49-8-64-27-6 8-13 14-21 18 4-29 15-48 36-44z" fill="url(#wingGrad)"/>
+
+    <path d="M128 78c-34 0-61 28-61 63 0 41 29 72 61 72s61-31 61-72c0-35-27-63-61-63z" fill="url(#featherGrad)"/>
+    <ellipse cx="128" cy="118" rx="47" ry="40" fill="url(#faceGlow)" />
+
+    <path d="M95 161c13 0 25 7 33 19 8-12 20-19 33-19 0 0-6 28-33 35-27-7-33-35-33-35z" fill="#fff3b0"/>
+
+    <ellipse cx="103" cy="118" rx="19" ry="23" fill="#3a1c12"/>
+    <ellipse cx="153" cy="118" rx="19" ry="23" fill="#3a1c12"/>
+    <ellipse cx="107" cy="112" rx="7" ry="9" fill="#fffdf6"/>
+    <ellipse cx="149" cy="112" rx="7" ry="9" fill="#fffdf6"/>
+    <circle cx="112" cy="125" r="3.5" fill="#ffffff" opacity="0.9"/>
+    <circle cx="154" cy="125" r="3.5" fill="#ffffff" opacity="0.9"/>
+
+    <path d="M118 131c4-3 11-3 15 0 0 0-2 8-7.5 11-5.5-3-7.5-11-7.5-11z" fill="url(#beakGrad)"/>
+    <path d="M112 143c10 8 22 8 32 0" stroke="#9d3e14" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+
+    <path d="M101 193c-10 18-27 29-48 34 6-17 18-31 35-40-12 2-23-1-33-9 13-7 26-10 40-8-9-7-14-17-14-31 15 8 26 22 31 40z" fill="url(#tailGrad)"/>
+    <path d="M155 193c10 18 27 29 48 34-6-17-18-31-35-40 12 2 23-1 33-9-13-7-26-10-40-8 9-7 14-17 14-31-15 8-26 22-31 40z" fill="url(#tailGrad)"/>
+
+    <path d="M92 90c4-13 13-24 28-32-2 12-7 22-16 29 10-1 20 2 29 10-12 4-23 5-32 2-5 8-8 17-9 27-5-13-4-25 0-36z" fill="#ff8e00" opacity="0.72"/>
+    <path d="M164 90c-4-13-13-24-28-32 2 12 7 22 16 29-10-1-20 2-29 10 12 4 23 5 32 2 5 8 8 17 9 27 5-13 4-25 0-36z" fill="#ff8e00" opacity="0.72"/>
+  </g>
+
+  <g fill="#fff7b8" opacity="0.95">
+    <path d="M43 65l4 10 10 4-10 4-4 10-4-10-10-4 10-4z"/>
+    <path d="M213 62l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/>
+    <path d="M210 183l3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/>
+    <circle cx="56" cy="151" r="4"/>
+    <circle cx="198" cy="40" r="3.5"/>
+    <circle cx="34" cy="124" r="3"/>
+  </g>
 </svg>

@@ -54,8 +54,12 @@ body {
   width: 80px;
   height: 80px;
   border-radius: 16px;
-  background: #ffe8c8;
-  border: 2px solid #f3b985;
+  background:
+    radial-gradient(circle at 50% 35%, #fff9dc, #ffd89d 72%, #ffc179);
+  border: 2px solid #f0ad63;
+  box-shadow:
+    0 10px 24px rgba(255, 166, 54, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.78);
 }
 
 .hero-card h1 {
@@ -1027,9 +1031,11 @@ body {
   right: 14px;
   bottom: 12px;
   border-radius: 18px;
-  border: 2px solid #78629e;
-  background: #f6d5a6;
+  border: 2px solid #7c669b;
+  background:
+    radial-gradient(circle at 50% 40%, #fff4c9, #f6d5a6 72%, #ecb672);
   opacity: 0.95;
+  box-shadow: 0 10px 24px rgba(9, 15, 42, 0.34);
 }
 
 .sleep-caption {
