@@ -726,3 +726,31 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
 
 ## Remaining TODOs / Suggestions
 - Optional next step: rename GitHub repo to `minagrow-minaplay` (or `minaplay`) for naming consistency.
+
+## Continuation Update: Railway Auto-Deploy Verification
+- Created a small UI-only subtitle change to verify production auto-deploy:
+  - `public/index.html`
+  - hero subtitle now includes `Canlı sürüm güncellendi.`
+- Pushed commit:
+  - `8717807 chore: trigger railway auto deploy test`
+- Verified GitHub branch wiring:
+  - `origin/main` -> `fztumit/minagrow-minaplay`
+- Verified live Railway deployment by fetching production HTML:
+  - `https://minagrow-minaplay-production.up.railway.app/`
+  - updated subtitle text is now present in live markup
+- Verified health endpoint remains healthy:
+  - `/health` returns `{"ok":true}`
+- Removed the temporary deploy-marker text after verification so production UI stays clean.
+
+## Continuation Update: README Reset to MinaPlay
+- Replaced old CRM-focused README with MinaPlay product documentation.
+- README now reflects:
+  - MinaGrow / MinaPlay branding
+  - active user-facing modules
+  - local dev commands
+  - Railway deploy model
+  - note that some legacy CRM backend files still exist in the repo and remain a future cleanup target
+
+## Remaining TODOs / Suggestions
+- Remove or isolate legacy CRM webhook/Zoho code from the MinaPlay repo.
+- Rename test hook `__konusuYorumModules` when we do the broader cleanup pass.
