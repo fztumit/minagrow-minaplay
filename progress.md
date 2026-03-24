@@ -825,3 +825,29 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
 - Kept the SVG itself transparent, so it still behaves like a PNG-style cutout on the main screen.
 - Reworked `public/assets/phoenix-sleep.svg` to match the new lightweight mascot family, so sleep mode now visibly changes too.
 - Bumped the service worker cache again so clients pull the refreshed sleep mascot asset.
+
+## Continuation Update: Guided Word Flow
+- Added a guided word transition loop in the speech module:
+  - tapped object animates
+  - word now repeats 2x by default (`su` stays 3x)
+  - after the sequence finishes, Anka flies to the next object
+  - the next object gets a soft glow + scale emphasis
+  - mascot prompt says `Şimdi buna dokun.`
+- Added a lightweight in-module guide mascot layer using the new UI Anka asset.
+- Restored TTS fallback for word playback when a parent recording does not exist.
+- Added a lightweight guide chime for the mascot prompt so `Şimdi buna dokun.` also has a gentle audio cue.
+- Extended `render_game_to_text` speech payload with:
+  - `next_word`
+  - `guide_prompt`
+  - `guide_active`
+- Added Playwright coverage for the new guided transition.
+
+## Validation (Guided Chime)
+- `npm run build` ✅
+- `npx playwright test tests/playwright/guided-transition.spec.ts tests/playwright/speech-trigger.spec.ts tests/playwright/parent-settings.spec.ts tests/playwright/object-interaction.spec.ts --workers=1` ✅
+- Official `develop-web-game` client run against `http://127.0.0.1:3200` confirmed state:
+  - `mascot_message: "Şimdi buna dokun."`
+  - `speech.next_word: "anne"`
+  - `speech.guide_prompt: "Şimdi buna dokun"`
+  - `speech.guide_active: true`
+- Note: the skill client's canvas-only screenshot captures the hidden sleep canvas in this DOM-based layout, so visual verification for this pass relies on the passing Playwright assertions plus state output rather than the raw client screenshot.

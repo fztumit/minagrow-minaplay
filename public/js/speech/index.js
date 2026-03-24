@@ -4,7 +4,10 @@ import { buildCustomAudioBackup, listCustomAudioEntries, loadCustomAudioMap, mer
 const SETTINGS_STORAGE_KEY = 'konusu_yorum_speech_settings_v1';
 export class SpeechGameModule {
     rootEl;
+    stageEl;
     gridEl;
+    guideLayerEl;
+    guideMascotEl;
     feedbackEl;
     repeatModeSelect;
     customAudioTextInput;
@@ -27,6 +30,9 @@ export class SpeechGameModule {
     mascot;
     timeoutIds = [];
     waterFocusTimeoutId = null;
+    guideTimeoutId = null;
+    visualResetTimeoutId = null;
+    activeNextButton = null;
     customAudioMap = {};
     mediaRecorder = null;
     recordingChunks = [];
@@ -35,7 +41,10 @@ export class SpeechGameModule {
         repeatMode: 'default'
     };
     constructor(rootEl, mascot) {
+        const stageEl = rootEl.querySelector('#speech-stage');
         const gridEl = rootEl.querySelector('#speech-grid');
+        const guideLayerEl = rootEl.querySelector('#speech-guide-layer');
+        const guideMascotEl = rootEl.querySelector('#speech-guide-mascot');
         const feedbackEl = rootEl.querySelector('#speech-feedback');
         const repeatModeSelect = rootEl.querySelector('#speech-repeat-mode');
         const customAudioTextInput = rootEl.querySelector('#custom-audio-text');
@@ -55,7 +64,10 @@ export class SpeechGameModule {
         const progressWordListEl = rootEl.querySelector('#progress-word-list');
         const progressSentenceListEl = rootEl.querySelector('#progress-sentence-list');
         const waterFocusOverlayEl = rootEl.querySelector('#water-focus-overlay');
-        if (!gridEl ||
+        if (!stageEl ||
+            !gridEl ||
+            !guideLayerEl ||
+            !guideMascotEl ||
             !feedbackEl ||
             !repeatModeSelect ||
             !customAudioTextInput ||
@@ -78,7 +90,10 @@ export class SpeechGameModule {
             throw new Error('Speech module requires game, recording library, backup, and progress elements.');
         }
         this.rootEl = rootEl;
+        this.stageEl = stageEl;
         this.gridEl = gridEl;
+        this.guideLayerEl = guideLayerEl;
+        this.guideMascotEl = guideMascotEl;
         this.feedbackEl = feedbackEl;
         this.repeatModeSelect = repeatModeSelect;
         this.customAudioTextInput = customAudioTextInput;
@@ -110,6 +125,9 @@ export class SpeechGameModule {
         this.rootEl.setAttribute('data-last-word', '');
         this.rootEl.setAttribute('data-water-spilled', 'false');
         this.rootEl.setAttribute('data-water-expanded', 'false');
+        this.rootEl.setAttribute('data-next-word', '');
+        this.rootEl.setAttribute('data-guide-prompt', '');
+        this.rootEl.setAttribute('data-guide-active', 'false');
         this.syncSettingsToDom();
         this.renderRecordingLibrary();
         this.renderProgressPanel();
@@ -488,12 +506,15 @@ export class SpeechGameModule {
     onWordTapped(button, word, defaultRepeats) {
         const resolvedRepeats = this.resolveRepeats(defaultRepeats);
         this.rootEl.setAttribute('data-last-word', word);
-        this.triggerVisual(button, word);
-        this.triggerSpeech({ word, repeats: resolvedRepeats });
+        this.clearPendingSpeech();
+        this.clearPendingGuidance();
+        this.clearCurrentNextTarget();
+        const visualDuration = this.triggerVisual(button, word);
+        const speechDuration = this.triggerSpeech({ word, repeats: resolvedRepeats });
+        const sequenceDuration = Math.max(visualDuration, speechDuration);
+        const nextButton = this.getNextButton(word);
         this.mascot.sayPraise();
-        window.setTimeout(() => {
-            this.mascot.sayRepeat();
-        }, 950);
+        this.scheduleGuidedTransition(button, nextButton, sequenceDuration);
     }
     resolveRepeats(defaultRepeats) {
         if (this.settings.repeatMode === 'default') {
@@ -502,8 +523,20 @@ export class SpeechGameModule {
         return Number(this.settings.repeatMode);
     }
     triggerVisual(button, word) {
+        const duration = word === 'su' ? 1600 : 820;
+        if (this.visualResetTimeoutId !== null) {
+            window.clearTimeout(this.visualResetTimeoutId);
+            this.visualResetTimeoutId = null;
+        }
+        button.classList.remove('is-speaking');
+        void button.offsetWidth;
+        button.classList.add('is-speaking');
+        this.visualResetTimeoutId = window.setTimeout(() => {
+            button.classList.remove('is-speaking');
+            this.visualResetTimeoutId = null;
+        }, duration);
         if (word !== 'su') {
-            return;
+            return duration;
         }
         this.rootEl.setAttribute('data-water-spilled', 'true');
         button.classList.remove('is-spilling');
@@ -513,6 +546,7 @@ export class SpeechGameModule {
         window.setTimeout(() => {
             button.classList.remove('is-spilling');
         }, 1100);
+        return duration;
     }
     triggerWaterFocusVisual() {
         if (this.waterFocusTimeoutId !== null) {
@@ -530,16 +564,10 @@ export class SpeechGameModule {
         }, 1600);
     }
     triggerSpeech(payload) {
-        this.clearPendingSpeech();
         this.refreshCustomAudioMap();
         const key = normalizeSpeechKey(payload.word);
         const customAudioData = this.customAudioMap[key] ?? null;
-        if (!customAudioData) {
-            this.feedbackEl.textContent = `"${payload.word}" icin kayit yok. Ebeveyn ayarlarindan kayit ekleyin.`;
-        }
-        else {
-            this.feedbackEl.textContent = `Kelime: ${payload.word.toLocaleUpperCase('tr-TR')} (${payload.repeats} tekrar)`;
-        }
+        this.feedbackEl.textContent = `Kelime: ${payload.word.toLocaleUpperCase('tr-TR')} (${payload.repeats} tekrar)`;
         const waitBetweenRepeatsMs = customAudioData ? 1100 : 620;
         for (let index = 0; index < payload.repeats; index += 1) {
             const timeoutId = window.setTimeout(() => {
@@ -548,6 +576,7 @@ export class SpeechGameModule {
             this.timeoutIds.push(timeoutId);
         }
         this.rootEl.dispatchEvent(new CustomEvent('speech-trigger', { detail: payload }));
+        return waitBetweenRepeatsMs * Math.max(0, payload.repeats - 1) + (customAudioData ? 900 : 760);
     }
     speakOnce(word, customAudioData) {
         const runtime = window;
@@ -557,13 +586,18 @@ export class SpeechGameModule {
             incrementWordListen(word);
             this.playAudioDataUrl(customAudioData);
             this.renderProgressPanel();
+            return;
         }
+        this.speakWithTts(word);
     }
     clearPendingSpeech() {
         for (const timeoutId of this.timeoutIds) {
             window.clearTimeout(timeoutId);
         }
         this.timeoutIds = [];
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+        }
     }
     refreshCustomAudioMap() {
         this.customAudioMap = loadCustomAudioMap();
@@ -606,6 +640,87 @@ export class SpeechGameModule {
             .replaceAll('>', '&gt;')
             .replaceAll('"', '&quot;')
             .replaceAll("'", '&#39;');
+    }
+    speakWithTts(word) {
+        if (!('speechSynthesis' in window) || typeof window.SpeechSynthesisUtterance === 'undefined') {
+            return;
+        }
+        const utterance = new SpeechSynthesisUtterance(word);
+        utterance.lang = 'tr-TR';
+        utterance.rate = 0.82;
+        utterance.pitch = 1.02;
+        utterance.volume = 0.88;
+        try {
+            window.speechSynthesis.speak(utterance);
+        }
+        catch {
+            // Keep the guidance flow running even if TTS is unavailable.
+        }
+    }
+    clearPendingGuidance() {
+        if (this.guideTimeoutId !== null) {
+            window.clearTimeout(this.guideTimeoutId);
+            this.guideTimeoutId = null;
+        }
+        this.rootEl.setAttribute('data-guide-prompt', '');
+    }
+    clearCurrentNextTarget() {
+        if (this.activeNextButton) {
+            this.activeNextButton.classList.remove('is-next-target');
+            this.activeNextButton.removeAttribute('data-next-target');
+            this.activeNextButton = null;
+        }
+        this.rootEl.setAttribute('data-next-word', '');
+        this.rootEl.setAttribute('data-guide-active', 'false');
+    }
+    scheduleGuidedTransition(currentButton, nextButton, delayMs) {
+        if (!nextButton) {
+            return;
+        }
+        this.guideTimeoutId = window.setTimeout(() => {
+            this.moveGuideMascot(currentButton, nextButton);
+            this.activeNextButton = nextButton;
+            nextButton.classList.add('is-next-target');
+            nextButton.setAttribute('data-next-target', 'true');
+            this.rootEl.setAttribute('data-next-word', nextButton.dataset.word ?? '');
+            this.rootEl.setAttribute('data-guide-prompt', 'Şimdi buna dokun');
+            this.rootEl.setAttribute('data-guide-active', 'true');
+            this.feedbackEl.textContent = `Siradaki hedef: ${(nextButton.dataset.word ?? '').toLocaleUpperCase('tr-TR')}`;
+            this.mascot.sayNextPrompt();
+            this.guideTimeoutId = null;
+        }, delayMs);
+    }
+    moveGuideMascot(currentButton, nextButton) {
+        const from = this.resolveGuidePosition(currentButton);
+        const to = this.resolveGuidePosition(nextButton);
+        this.guideLayerEl.classList.add('is-active');
+        this.guideMascotEl.style.transform = `translate(${from.x}px, ${from.y}px) scale(0.84)`;
+        void this.guideMascotEl.offsetWidth;
+        window.requestAnimationFrame(() => {
+            this.guideMascotEl.style.transform = `translate(${to.x}px, ${to.y}px) scale(1)`;
+        });
+    }
+    resolveGuidePosition(button) {
+        const stageRect = this.stageEl.getBoundingClientRect();
+        const buttonRect = button.getBoundingClientRect();
+        const mascotSize = 62;
+        const x = buttonRect.left - stageRect.left + buttonRect.width / 2 - mascotSize / 2;
+        const y = buttonRect.top - stageRect.top - mascotSize * 0.82;
+        return {
+            x: Math.max(4, Math.min(x, Math.max(4, stageRect.width - mascotSize - 4))),
+            y: Math.max(0, y)
+        };
+    }
+    getNextButton(currentWord) {
+        const buttons = Array.from(this.gridEl.querySelectorAll('.word-card'));
+        const currentIndex = buttons.findIndex((button) => button.dataset.word === currentWord);
+        if (buttons.length === 0) {
+            return null;
+        }
+        if (currentIndex < 0) {
+            return buttons[0] ?? null;
+        }
+        return buttons[(currentIndex + 1) % buttons.length] ?? null;
     }
 }
 //# sourceMappingURL=index.js.map

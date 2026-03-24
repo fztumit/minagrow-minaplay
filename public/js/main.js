@@ -78,6 +78,9 @@ function installTestingHooks() {
             },
             speech: {
                 last_word: speechRoot?.getAttribute('data-last-word') ?? null,
+                next_word: speechRoot?.getAttribute('data-next-word') ?? null,
+                guide_prompt: speechRoot?.getAttribute('data-guide-prompt') ?? '',
+                guide_active: speechRoot?.getAttribute('data-guide-active') === 'true',
                 water_spilled: speechRoot?.getAttribute('data-water-spilled') === 'true',
                 water_expanded: speechRoot?.getAttribute('data-water-expanded') === 'true',
                 repeat_mode: speechRoot?.getAttribute('data-repeat-mode') ?? 'default',

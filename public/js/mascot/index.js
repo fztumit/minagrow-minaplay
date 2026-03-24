@@ -1,6 +1,7 @@
 const GUIDE_MESSAGES = {
     hint: 'Hadi dokun.',
-    repeat: 'Bir daha söyle.'
+    repeat: 'Bir daha söyle.',
+    next: 'Şimdi buna dokun.'
 };
 export class MascotGuide {
     outputEl;
@@ -8,6 +9,7 @@ export class MascotGuide {
     shellEl;
     praiseFlip = false;
     activeTimeoutId = null;
+    guideAudioContext = null;
     variant = 'normal';
     constructor(outputEl, imageEl, shellEl) {
         this.outputEl = outputEl;
@@ -21,11 +23,18 @@ export class MascotGuide {
     sayPraise() {
         this.pulse();
         this.setMessage(this.praiseFlip ? 'Harika.' : 'Aferin.');
+        this.primeGuideAudio();
         this.praiseFlip = !this.praiseFlip;
     }
     sayRepeat() {
         this.pulse();
         this.setMessage(GUIDE_MESSAGES.repeat);
+    }
+    sayNextPrompt() {
+        this.pulse();
+        this.setMessage(GUIDE_MESSAGES.next);
+        this.playGuideChime();
+        this.speakPrompt(GUIDE_MESSAGES.next);
     }
     setSleepMode(enabled) {
         this.variant = enabled ? 'sleep' : 'normal';
@@ -54,6 +63,75 @@ export class MascotGuide {
             this.shellEl?.classList.remove('is-active');
             this.activeTimeoutId = null;
         }, 1200);
+    }
+    speakPrompt(message) {
+        const runtime = window;
+        runtime.__mascotPromptLog = runtime.__mascotPromptLog ?? [];
+        runtime.__mascotPromptLog.push(message);
+        if (!('speechSynthesis' in window) || typeof window.SpeechSynthesisUtterance === 'undefined') {
+            return;
+        }
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.lang = 'tr-TR';
+        utterance.rate = 0.9;
+        utterance.pitch = 1.04;
+        utterance.volume = 0.82;
+        try {
+            window.speechSynthesis.speak(utterance);
+        }
+        catch {
+            // Ignore speech prompt errors and keep visual guidance active.
+        }
+    }
+    primeGuideAudio() {
+        if (!('AudioContext' in window)) {
+            return;
+        }
+        if (!this.guideAudioContext) {
+            try {
+                this.guideAudioContext = new AudioContext();
+            }
+            catch {
+                return;
+            }
+        }
+        void this.guideAudioContext.resume().catch(() => {
+            // Ignore resume failures; prompt audio is optional.
+        });
+    }
+    playGuideChime() {
+        const runtime = window;
+        runtime.__mascotSoundLog = runtime.__mascotSoundLog ?? [];
+        runtime.__mascotSoundLog.push('guide-chime');
+        if (this.variant === 'sleep') {
+            return;
+        }
+        this.primeGuideAudio();
+        const context = this.guideAudioContext;
+        if (!context || context.state !== 'running') {
+            return;
+        }
+        const start = context.currentTime + 0.01;
+        const master = context.createGain();
+        master.connect(context.destination);
+        master.gain.setValueAtTime(0.0001, start);
+        master.gain.exponentialRampToValueAtTime(0.26, start + 0.04);
+        master.gain.exponentialRampToValueAtTime(0.0001, start + 0.44);
+        this.playGuideTone(context, master, start, 740, 0.18, 'triangle');
+        this.playGuideTone(context, master, start + 0.11, 988, 0.2, 'sine');
+    }
+    playGuideTone(context, destination, start, frequency, duration, type) {
+        const oscillator = context.createOscillator();
+        const gainNode = context.createGain();
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(frequency, start);
+        gainNode.gain.setValueAtTime(0.0001, start);
+        gainNode.gain.exponentialRampToValueAtTime(0.42, start + 0.025);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+        oscillator.connect(gainNode);
+        gainNode.connect(destination);
+        oscillator.start(start);
+        oscillator.stop(start + duration + 0.02);
     }
 }
 //# sourceMappingURL=index.js.map

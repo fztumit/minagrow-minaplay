@@ -33,7 +33,10 @@ const SETTINGS_STORAGE_KEY = 'konusu_yorum_speech_settings_v1';
 
 export class SpeechGameModule {
   private readonly rootEl: HTMLElement;
+  private readonly stageEl: HTMLElement;
   private readonly gridEl: HTMLElement;
+  private readonly guideLayerEl: HTMLElement;
+  private readonly guideMascotEl: HTMLElement;
   private readonly feedbackEl: HTMLElement;
   private readonly repeatModeSelect: HTMLSelectElement;
   private readonly customAudioTextInput: HTMLInputElement;
@@ -57,6 +60,9 @@ export class SpeechGameModule {
 
   private timeoutIds: number[] = [];
   private waterFocusTimeoutId: number | null = null;
+  private guideTimeoutId: number | null = null;
+  private visualResetTimeoutId: number | null = null;
+  private activeNextButton: HTMLButtonElement | null = null;
   private customAudioMap: CustomAudioMap = {};
   private mediaRecorder: MediaRecorder | null = null;
   private recordingChunks: Blob[] = [];
@@ -66,7 +72,10 @@ export class SpeechGameModule {
   };
 
   constructor(rootEl: HTMLElement, mascot: MascotGuide) {
+    const stageEl = rootEl.querySelector<HTMLElement>('#speech-stage');
     const gridEl = rootEl.querySelector<HTMLElement>('#speech-grid');
+    const guideLayerEl = rootEl.querySelector<HTMLElement>('#speech-guide-layer');
+    const guideMascotEl = rootEl.querySelector<HTMLElement>('#speech-guide-mascot');
     const feedbackEl = rootEl.querySelector<HTMLElement>('#speech-feedback');
     const repeatModeSelect = rootEl.querySelector<HTMLSelectElement>('#speech-repeat-mode');
     const customAudioTextInput = rootEl.querySelector<HTMLInputElement>('#custom-audio-text');
@@ -88,7 +97,10 @@ export class SpeechGameModule {
     const waterFocusOverlayEl = rootEl.querySelector<HTMLElement>('#water-focus-overlay');
 
     if (
+      !stageEl ||
       !gridEl ||
+      !guideLayerEl ||
+      !guideMascotEl ||
       !feedbackEl ||
       !repeatModeSelect ||
       !customAudioTextInput ||
@@ -113,7 +125,10 @@ export class SpeechGameModule {
     }
 
     this.rootEl = rootEl;
+    this.stageEl = stageEl;
     this.gridEl = gridEl;
+    this.guideLayerEl = guideLayerEl;
+    this.guideMascotEl = guideMascotEl;
     this.feedbackEl = feedbackEl;
     this.repeatModeSelect = repeatModeSelect;
     this.customAudioTextInput = customAudioTextInput;
@@ -147,6 +162,9 @@ export class SpeechGameModule {
     this.rootEl.setAttribute('data-last-word', '');
     this.rootEl.setAttribute('data-water-spilled', 'false');
     this.rootEl.setAttribute('data-water-expanded', 'false');
+    this.rootEl.setAttribute('data-next-word', '');
+    this.rootEl.setAttribute('data-guide-prompt', '');
+    this.rootEl.setAttribute('data-guide-active', 'false');
     this.syncSettingsToDom();
     this.renderRecordingLibrary();
     this.renderProgressPanel();
@@ -594,13 +612,16 @@ export class SpeechGameModule {
     const resolvedRepeats = this.resolveRepeats(defaultRepeats);
     this.rootEl.setAttribute('data-last-word', word);
 
-    this.triggerVisual(button, word);
-    this.triggerSpeech({ word, repeats: resolvedRepeats });
+    this.clearPendingSpeech();
+    this.clearPendingGuidance();
+    this.clearCurrentNextTarget();
+    const visualDuration = this.triggerVisual(button, word);
+    const speechDuration = this.triggerSpeech({ word, repeats: resolvedRepeats });
+    const sequenceDuration = Math.max(visualDuration, speechDuration);
+    const nextButton = this.getNextButton(word);
 
     this.mascot.sayPraise();
-    window.setTimeout(() => {
-      this.mascot.sayRepeat();
-    }, 950);
+    this.scheduleGuidedTransition(button, nextButton, sequenceDuration);
   }
 
   private resolveRepeats(defaultRepeats: number): number {
@@ -611,9 +632,24 @@ export class SpeechGameModule {
     return Number(this.settings.repeatMode);
   }
 
-  private triggerVisual(button: HTMLButtonElement, word: VocabularyWord): void {
+  private triggerVisual(button: HTMLButtonElement, word: VocabularyWord): number {
+    const duration = word === 'su' ? 1600 : 820;
+
+    if (this.visualResetTimeoutId !== null) {
+      window.clearTimeout(this.visualResetTimeoutId);
+      this.visualResetTimeoutId = null;
+    }
+
+    button.classList.remove('is-speaking');
+    void button.offsetWidth;
+    button.classList.add('is-speaking');
+    this.visualResetTimeoutId = window.setTimeout(() => {
+      button.classList.remove('is-speaking');
+      this.visualResetTimeoutId = null;
+    }, duration);
+
     if (word !== 'su') {
-      return;
+      return duration;
     }
 
     this.rootEl.setAttribute('data-water-spilled', 'true');
@@ -624,6 +660,7 @@ export class SpeechGameModule {
     window.setTimeout(() => {
       button.classList.remove('is-spilling');
     }, 1100);
+    return duration;
   }
 
   private triggerWaterFocusVisual(): void {
@@ -644,18 +681,13 @@ export class SpeechGameModule {
     }, 1600);
   }
 
-  private triggerSpeech(payload: SpeechTriggerDetail): void {
-    this.clearPendingSpeech();
+  private triggerSpeech(payload: SpeechTriggerDetail): number {
     this.refreshCustomAudioMap();
 
     const key = normalizeSpeechKey(payload.word);
     const customAudioData = this.customAudioMap[key] ?? null;
 
-    if (!customAudioData) {
-      this.feedbackEl.textContent = `"${payload.word}" icin kayit yok. Ebeveyn ayarlarindan kayit ekleyin.`;
-    } else {
-      this.feedbackEl.textContent = `Kelime: ${payload.word.toLocaleUpperCase('tr-TR')} (${payload.repeats} tekrar)`;
-    }
+    this.feedbackEl.textContent = `Kelime: ${payload.word.toLocaleUpperCase('tr-TR')} (${payload.repeats} tekrar)`;
 
     const waitBetweenRepeatsMs = customAudioData ? 1100 : 620;
     for (let index = 0; index < payload.repeats; index += 1) {
@@ -666,6 +698,7 @@ export class SpeechGameModule {
     }
 
     this.rootEl.dispatchEvent(new CustomEvent<SpeechTriggerDetail>('speech-trigger', { detail: payload }));
+    return waitBetweenRepeatsMs * Math.max(0, payload.repeats - 1) + (customAudioData ? 900 : 760);
   }
 
   private speakOnce(word: string, customAudioData: string | null): void {
@@ -677,7 +710,10 @@ export class SpeechGameModule {
       incrementWordListen(word);
       this.playAudioDataUrl(customAudioData);
       this.renderProgressPanel();
+      return;
     }
+
+    this.speakWithTts(word);
   }
 
   private clearPendingSpeech(): void {
@@ -685,6 +721,9 @@ export class SpeechGameModule {
       window.clearTimeout(timeoutId);
     }
     this.timeoutIds = [];
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
   }
 
   private refreshCustomAudioMap(): void {
@@ -735,5 +774,103 @@ export class SpeechGameModule {
       .replaceAll('>', '&gt;')
       .replaceAll('"', '&quot;')
       .replaceAll("'", '&#39;');
+  }
+
+  private speakWithTts(word: string): void {
+    if (!('speechSynthesis' in window) || typeof window.SpeechSynthesisUtterance === 'undefined') {
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(word);
+    utterance.lang = 'tr-TR';
+    utterance.rate = 0.82;
+    utterance.pitch = 1.02;
+    utterance.volume = 0.88;
+
+    try {
+      window.speechSynthesis.speak(utterance);
+    } catch {
+      // Keep the guidance flow running even if TTS is unavailable.
+    }
+  }
+
+  private clearPendingGuidance(): void {
+    if (this.guideTimeoutId !== null) {
+      window.clearTimeout(this.guideTimeoutId);
+      this.guideTimeoutId = null;
+    }
+    this.rootEl.setAttribute('data-guide-prompt', '');
+  }
+
+  private clearCurrentNextTarget(): void {
+    if (this.activeNextButton) {
+      this.activeNextButton.classList.remove('is-next-target');
+      this.activeNextButton.removeAttribute('data-next-target');
+      this.activeNextButton = null;
+    }
+    this.rootEl.setAttribute('data-next-word', '');
+    this.rootEl.setAttribute('data-guide-active', 'false');
+  }
+
+  private scheduleGuidedTransition(
+    currentButton: HTMLButtonElement,
+    nextButton: HTMLButtonElement | null,
+    delayMs: number
+  ): void {
+    if (!nextButton) {
+      return;
+    }
+
+    this.guideTimeoutId = window.setTimeout(() => {
+      this.moveGuideMascot(currentButton, nextButton);
+      this.activeNextButton = nextButton;
+      nextButton.classList.add('is-next-target');
+      nextButton.setAttribute('data-next-target', 'true');
+      this.rootEl.setAttribute('data-next-word', nextButton.dataset.word ?? '');
+      this.rootEl.setAttribute('data-guide-prompt', 'Şimdi buna dokun');
+      this.rootEl.setAttribute('data-guide-active', 'true');
+      this.feedbackEl.textContent = `Siradaki hedef: ${(nextButton.dataset.word ?? '').toLocaleUpperCase('tr-TR')}`;
+      this.mascot.sayNextPrompt();
+      this.guideTimeoutId = null;
+    }, delayMs);
+  }
+
+  private moveGuideMascot(currentButton: HTMLButtonElement, nextButton: HTMLButtonElement): void {
+    const from = this.resolveGuidePosition(currentButton);
+    const to = this.resolveGuidePosition(nextButton);
+
+    this.guideLayerEl.classList.add('is-active');
+    this.guideMascotEl.style.transform = `translate(${from.x}px, ${from.y}px) scale(0.84)`;
+    void this.guideMascotEl.offsetWidth;
+    window.requestAnimationFrame(() => {
+      this.guideMascotEl.style.transform = `translate(${to.x}px, ${to.y}px) scale(1)`;
+    });
+  }
+
+  private resolveGuidePosition(button: HTMLButtonElement): { x: number; y: number } {
+    const stageRect = this.stageEl.getBoundingClientRect();
+    const buttonRect = button.getBoundingClientRect();
+    const mascotSize = 62;
+    const x = buttonRect.left - stageRect.left + buttonRect.width / 2 - mascotSize / 2;
+    const y = buttonRect.top - stageRect.top - mascotSize * 0.82;
+
+    return {
+      x: Math.max(4, Math.min(x, Math.max(4, stageRect.width - mascotSize - 4))),
+      y: Math.max(0, y)
+    };
+  }
+
+  private getNextButton(currentWord: VocabularyWord): HTMLButtonElement | null {
+    const buttons = Array.from(this.gridEl.querySelectorAll<HTMLButtonElement>('.word-card'));
+    const currentIndex = buttons.findIndex((button) => button.dataset.word === currentWord);
+    if (buttons.length === 0) {
+      return null;
+    }
+
+    if (currentIndex < 0) {
+      return buttons[0] ?? null;
+    }
+
+    return buttons[(currentIndex + 1) % buttons.length] ?? null;
   }
 }

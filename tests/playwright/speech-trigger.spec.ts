@@ -4,7 +4,7 @@ test('speech trigger repeats "su" three times', async ({ page }) => {
   await page.goto('/');
 
   await page.click('.word-card[data-word="su"]');
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(2200);
 
   const speechLog = await page.evaluate(() => {
     const runtime = window as Window & { __speechLog?: string[] };
