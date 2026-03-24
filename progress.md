@@ -823,3 +823,5 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
 - Switched the main screen mascot to `public/assets/phoenix-ui.svg`.
 - Updated the mascot shell to a cooler cream/sky background so the phoenix stays readable without blending into the same warm orange family.
 - Kept the SVG itself transparent, so it still behaves like a PNG-style cutout on the main screen.
+- Reworked `public/assets/phoenix-sleep.svg` to match the new lightweight mascot family, so sleep mode now visibly changes too.
+- Bumped the service worker cache again so clients pull the refreshed sleep mascot asset.

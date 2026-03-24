@@ -1,128 +1,115 @@
 <svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Uyuyan Anka maskotu">
   <defs>
-    <radialGradient id="sleepAura" cx="50%" cy="48%" r="46%">
-      <stop offset="0%" stop-color="#f0f4ff" stop-opacity="0.96"/>
-      <stop offset="58%" stop-color="#b8c6ff" stop-opacity="0.36"/>
-      <stop offset="100%" stop-color="#b8c6ff" stop-opacity="0"/>
+    <radialGradient id="sleepAura" cx="50%" cy="52%" r="42%">
+      <stop offset="0%" stop-color="#eef3ff" stop-opacity="0.38"/>
+      <stop offset="62%" stop-color="#c7d2ff" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#c7d2ff" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="sleepBody" cx="50%" cy="28%" r="76%">
-      <stop offset="0%" stop-color="#fbfcff"/>
-      <stop offset="46%" stop-color="#d7ddff"/>
-      <stop offset="78%" stop-color="#a3b0f5"/>
-      <stop offset="100%" stop-color="#7888d9"/>
-    </radialGradient>
-    <radialGradient id="sleepFace" cx="50%" cy="28%" r="72%">
+    <radialGradient id="sleepHead" cx="50%" cy="28%" r="72%">
       <stop offset="0%" stop-color="#ffffff"/>
-      <stop offset="72%" stop-color="#eef1ff"/>
-      <stop offset="100%" stop-color="#d7deff"/>
+      <stop offset="62%" stop-color="#dde4ff"/>
+      <stop offset="100%" stop-color="#a4b1f4"/>
     </radialGradient>
-    <linearGradient id="sleepWingOuter" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#d9dcff"/>
-      <stop offset="58%" stop-color="#a9b4f8"/>
-      <stop offset="100%" stop-color="#7b87dc"/>
+    <radialGradient id="sleepBody" cx="50%" cy="22%" r="74%">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="48%" stop-color="#cfd8ff"/>
+      <stop offset="100%" stop-color="#7d8ce1"/>
+    </radialGradient>
+    <radialGradient id="sleepFace" cx="50%" cy="34%" r="70%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="72%" stop-color="#f1f4ff"/>
+      <stop offset="100%" stop-color="#d5dcff"/>
+    </radialGradient>
+    <linearGradient id="sleepWing" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#dce2ff"/>
+      <stop offset="100%" stop-color="#8a98ea"/>
+    </linearGradient>
+    <linearGradient id="sleepWingInner" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f2f4ff"/>
+      <stop offset="100%" stop-color="#c2cdfd"/>
     </linearGradient>
     <linearGradient id="sleepCrest" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#95a4ff"/>
-      <stop offset="55%" stop-color="#7f8ff5"/>
-      <stop offset="100%" stop-color="#f2f4ff"/>
+      <stop offset="0%" stop-color="#9ba9ff"/>
+      <stop offset="100%" stop-color="#f7f9ff"/>
+    </linearGradient>
+    <linearGradient id="sleepTail" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d8deff"/>
+      <stop offset="100%" stop-color="#8d9aed"/>
     </linearGradient>
     <linearGradient id="sleepBeak" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffe7a6"/>
-      <stop offset="100%" stop-color="#ffb56c"/>
+      <stop offset="0%" stop-color="#ffe7a9"/>
+      <stop offset="100%" stop-color="#ffb76a"/>
     </linearGradient>
     <filter id="sleepShadow" x="-40%" y="-40%" width="180%" height="180%">
-      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#8da0f0" flood-opacity="0.24"/>
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#95a7f2" flood-opacity="0.2"/>
     </filter>
     <style>
       .sleep-float {
         transform-origin: 128px 136px;
-        animation: sleepFloat 6.4s ease-in-out infinite;
+        animation: sleepFloat 6.6s ease-in-out infinite;
       }
-      .sleep-wing-left,
-      .sleep-wing-right {
-        transform-box: fill-box;
-        animation: sleepWing 5.2s ease-in-out infinite;
-      }
-      .sleep-wing-left { transform-origin: right center; }
-      .sleep-wing-right {
-        transform-origin: left center;
-        animation-name: sleepWingRight;
+      .sleep-glow {
+        transform-origin: 128px 144px;
+        animation: sleepGlow 5.2s ease-in-out infinite;
       }
       .sleep-star {
         animation: sleepStar 4.8s ease-in-out infinite;
         transform-origin: center;
       }
-      .sleep-star.delay { animation-delay: 1.4s; }
-      .sleep-star.delay2 { animation-delay: 2.4s; }
-      .sleep-glow {
-        transform-origin: 128px 136px;
-        animation: sleepGlow 4.8s ease-in-out infinite;
-      }
+      .sleep-star.delay { animation-delay: 1.5s; }
       @keyframes sleepFloat {
         0%, 100% { transform: translateY(0px); }
         50% { transform: translateY(-6px); }
       }
-      @keyframes sleepWing {
-        0%, 100% { transform: rotate(0deg); }
-        50% { transform: rotate(-4deg); }
-      }
-      @keyframes sleepWingRight {
-        0%, 100% { transform: rotate(0deg); }
-        50% { transform: rotate(4deg); }
-      }
       @keyframes sleepGlow {
-        0%, 100% { opacity: 0.34; transform: scale(0.97); }
-        50% { opacity: 0.82; transform: scale(1.04); }
+        0%, 100% { opacity: 0.28; transform: scale(0.98); }
+        50% { opacity: 0.7; transform: scale(1.04); }
       }
       @keyframes sleepStar {
-        0%, 100% { opacity: 0.24; transform: scale(0.82); }
-        50% { opacity: 1; transform: scale(1.06); }
+        0%, 100% { opacity: 0.2; transform: scale(0.84); }
+        50% { opacity: 0.86; transform: scale(1.02); }
       }
     </style>
   </defs>
 
-  <circle class="sleep-glow" cx="128" cy="140" r="92" fill="url(#sleepAura)"/>
-  <ellipse cx="128" cy="224" rx="54" ry="11" fill="#bcc7ff" opacity="0.28"/>
+  <circle class="sleep-glow" cx="128" cy="148" r="84" fill="url(#sleepAura)"/>
+  <ellipse cx="150" cy="200" rx="74" ry="20" fill="#cad5ff" opacity="0.1" transform="rotate(20 150 200)"/>
 
   <g class="sleep-float" filter="url(#sleepShadow)">
-    <path d="M122 57c5-15 16-27 30-34 0 15-5 28-14 37 11-3 24-2 34 5-11 8-23 11-35 12 13 4 22 12 28 24-16 0-29-5-40-17-1 10-8 20-21 29-2-16 4-34 18-56z" fill="url(#sleepCrest)"/>
+    <path d="M119 55c5-16 16-29 31-36-1 15-6 27-15 37 10-3 22-2 31 5-10 7-21 11-33 12 13 4 22 11 28 22-15 0-28-5-38-16-2 10-8 20-19 29-2-17 4-33 15-53z" fill="url(#sleepCrest)"/>
 
-    <g class="sleep-wing-left">
-      <path d="M105 138c-26 2-48 14-62 33 25 5 46 2 64-10 4 9 11 16 20 21 2-24-2-41-22-44z" fill="url(#sleepWingOuter)"/>
-    </g>
-    <g class="sleep-wing-right">
-      <path d="M151 138c26 2 48 14 62 33-25 5-46 2-64-10-4 9-11 16-20 21-2-24 2-41 22-44z" fill="url(#sleepWingOuter)"/>
-    </g>
+    <path d="M104 124c-29 2-54 17-70 42 29 6 54 4 76-8 5 10 12 17 22 21 1-27-4-46-28-55z" fill="url(#sleepWing)"/>
+    <path d="M107 133c-20 1-38 10-53 23 23 4 43 3 59-4" fill="url(#sleepWingInner)" opacity="0.82"/>
+    <path d="M152 124c29 2 54 17 70 42-29 6-54 4-76-8-5 10-12 17-22 21-1-27 4-46 28-55z" fill="url(#sleepWing)"/>
+    <path d="M149 133c20 1 38 10 53 23-23 4-43 3-59-4" fill="url(#sleepWingInner)" opacity="0.82"/>
 
-    <path d="M122 183c-12 9-23 19-33 31 17-3 30-9 40-18" fill="none" stroke="#9eacf8" stroke-linecap="round" stroke-width="10"/>
-    <path d="M143 184c13 9 25 20 35 32-17-4-31-10-41-20" fill="none" stroke="#8f9dea" stroke-linecap="round" stroke-width="10"/>
+    <path d="M128 177c-7 17-16 33-28 48 13-4 24-11 32-21 3-8 2-15-4-27z" fill="#b8c6ff"/>
+    <path d="M138 177c7 17 15 33 27 49-12-4-22-10-30-20-3-8-2-15 3-29z" fill="#97a6f1"/>
+    <path d="M129 187c-3 24-9 45-19 61 14-9 24-22 31-38 2-8 0-15-12-23z" fill="url(#sleepTail)"/>
 
-    <ellipse cx="128" cy="149" rx="49" ry="55" fill="url(#sleepBody)"/>
-    <circle cx="128" cy="104" r="37" fill="url(#sleepBody)"/>
-    <ellipse cx="128" cy="110" rx="42" ry="31" fill="url(#sleepFace)"/>
-    <ellipse cx="128" cy="154" rx="27" ry="24" fill="#f3f5ff" opacity="0.92"/>
+    <ellipse cx="128" cy="145" rx="43" ry="49" fill="url(#sleepBody)"/>
+    <circle cx="128" cy="100" r="38" fill="url(#sleepHead)"/>
+    <ellipse cx="128" cy="107" rx="41" ry="32" fill="url(#sleepFace)"/>
+    <path d="M106 132c7 7 14 15 19 23" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-width="7" opacity="0.75"/>
+    <path d="M150 132c-7 7-14 15-19 23" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-width="7" opacity="0.75"/>
+    <ellipse cx="128" cy="149" rx="24" ry="22" fill="#f4f6ff" opacity="0.94"/>
 
-    <path d="M117 142c4 7 6 14 8 20" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-width="6" opacity="0.82"/>
-    <path d="M139 142c-4 7-6 14-8 20" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-width="6" opacity="0.82"/>
-    <path d="M96 107c8 8 18 8 26 0" fill="none" stroke="#5965b9" stroke-linecap="round" stroke-width="4.5"/>
-    <path d="M134 107c8 8 18 8 26 0" fill="none" stroke="#5965b9" stroke-linecap="round" stroke-width="4.5"/>
-    <circle cx="92" cy="118" r="6" fill="#d9cfff" opacity="0.38"/>
-    <circle cx="164" cy="118" r="6" fill="#d9cfff" opacity="0.38"/>
+    <path d="M96 102c8 8 18 8 26 0" fill="none" stroke="#5e6dc4" stroke-linecap="round" stroke-width="4.4"/>
+    <path d="M134 102c8 8 18 8 26 0" fill="none" stroke="#5e6dc4" stroke-linecap="round" stroke-width="4.4"/>
+    <circle cx="92" cy="113" r="5.5" fill="#d7ceff" opacity="0.34"/>
+    <circle cx="164" cy="113" r="5.5" fill="#d7ceff" opacity="0.34"/>
 
-    <path d="M116 122c5-4 19-4 24 0 0 0-4 8-12 12-8-4-12-12-12-12z" fill="url(#sleepBeak)"/>
-    <path d="M115 136c8 6 18 6 26 0" fill="none" stroke="#6b79c8" stroke-linecap="round" stroke-width="4"/>
+    <path d="M116 119c5-4 19-4 24 0 0 0-4 8-12 12-8-4-12-12-12-12z" fill="url(#sleepBeak)"/>
+    <path d="M115 133c8 6 18 6 26 0" fill="none" stroke="#6c79c9" stroke-linecap="round" stroke-width="4"/>
 
-    <g fill="#a88ef0" opacity="0.45">
-      <path d="M110 196c-2 9-6 15-13 17 1-9 5-15 12-19"/>
-      <path d="M146 196c2 9 6 15 13 17-1-9-5-15-12-19"/>
+    <g fill="#9eacf8" opacity="0.72">
+      <path d="M112 188c-2 8-6 14-12 17 1-9 5-15 11-18"/>
+      <path d="M144 188c2 8 6 14 12 17-1-9-5-15-11-18"/>
     </g>
   </g>
 
   <g fill="#eef3ff">
-    <path class="sleep-star" d="M44 91l5 10 10 5-10 5-5 10-5-10-10-5 10-5z"/>
-    <path class="sleep-star delay" d="M208 74l4 8 8 4-8 4-4 8-4-8-8-4 8-4z"/>
-    <path class="sleep-star delay2" d="M213 188l4 9 9 4-9 4-4 9-4-9-9-4 9-4z"/>
-    <circle class="sleep-star delay" cx="67" cy="160" r="4.2"/>
-    <circle class="sleep-star delay2" cx="187" cy="54" r="3.8"/>
+    <path class="sleep-star" d="M50 88l4 8 8 4-8 4-4 8-4-8-8-4 8-4z"/>
+    <path class="sleep-star delay" d="M201 76l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/>
   </g>
 </svg>
