@@ -1,13 +1,11 @@
 import { expect, test } from '@playwright/test';
+import { unlockParentPanel } from './helpers/parent-access.js';
 
 test('stories easy level provides two-word starter sentences', async ({ page }) => {
   await page.goto('/');
 
   await page.click('.tab-btn[data-view="stories"]');
-  await page.evaluate(() => {
-    (document.getElementById('parent-panel-trigger') as HTMLButtonElement | null)?.click();
-  });
-  await expect(page.locator('#view-parent')).toHaveClass(/active/);
+  await unlockParentPanel(page);
   await expect(page.locator('#story-level-select')).toHaveValue('easy');
   await expect(page.locator('#story-audio-record-start')).toBeVisible();
   await expect(page.locator('#story-audio-play')).toBeVisible();

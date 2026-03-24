@@ -1,13 +1,11 @@
 import { expect, test } from '@playwright/test';
+import { unlockParentPanel } from './helpers/parent-access.js';
 
 test('easy sentence editor adds and removes custom two-word sentence', async ({ page }) => {
   await page.goto('/');
 
   await page.click('.tab-btn[data-view="stories"]');
-  await page.evaluate(() => {
-    (document.getElementById('parent-panel-trigger') as HTMLButtonElement | null)?.click();
-  });
-  await expect(page.locator('#view-parent')).toHaveClass(/active/);
+  await unlockParentPanel(page);
   await expect(page.locator('#story-level-select')).toHaveValue('easy');
 
   await page.fill('#easy-sentence-input', 'Dede bak');

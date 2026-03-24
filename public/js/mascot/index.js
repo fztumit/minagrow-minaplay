@@ -36,6 +36,16 @@ export class MascotGuide {
         this.playGuideChime();
         this.speakPrompt(GUIDE_MESSAGES.next);
     }
+    sayAttention(message) {
+        this.pulse();
+        this.setMessage(message);
+        this.playAttentionChirp();
+        this.speakPrompt(message, {
+            rate: 0.84,
+            pitch: 1.08,
+            volume: 0.86
+        });
+    }
     setSleepMode(enabled) {
         this.variant = enabled ? 'sleep' : 'normal';
         if (this.imageEl) {
@@ -64,7 +74,7 @@ export class MascotGuide {
             this.activeTimeoutId = null;
         }, 1200);
     }
-    speakPrompt(message) {
+    speakPrompt(message, options = {}) {
         const runtime = window;
         runtime.__mascotPromptLog = runtime.__mascotPromptLog ?? [];
         runtime.__mascotPromptLog.push(message);
@@ -73,9 +83,9 @@ export class MascotGuide {
         }
         const utterance = new SpeechSynthesisUtterance(message);
         utterance.lang = 'tr-TR';
-        utterance.rate = 0.9;
-        utterance.pitch = 1.04;
-        utterance.volume = 0.82;
+        utterance.rate = options.rate ?? 0.9;
+        utterance.pitch = options.pitch ?? 1.04;
+        utterance.volume = options.volume ?? 0.82;
         try {
             window.speechSynthesis.speak(utterance);
         }
@@ -119,6 +129,28 @@ export class MascotGuide {
         master.gain.exponentialRampToValueAtTime(0.0001, start + 0.44);
         this.playGuideTone(context, master, start, 740, 0.18, 'triangle');
         this.playGuideTone(context, master, start + 0.11, 988, 0.2, 'sine');
+    }
+    playAttentionChirp() {
+        const runtime = window;
+        runtime.__mascotSoundLog = runtime.__mascotSoundLog ?? [];
+        runtime.__mascotSoundLog.push('attention-chirp');
+        if (this.variant === 'sleep') {
+            return;
+        }
+        this.primeGuideAudio();
+        const context = this.guideAudioContext;
+        if (!context || context.state !== 'running') {
+            return;
+        }
+        const start = context.currentTime + 0.01;
+        const master = context.createGain();
+        master.connect(context.destination);
+        master.gain.setValueAtTime(0.0001, start);
+        master.gain.exponentialRampToValueAtTime(0.2, start + 0.03);
+        master.gain.exponentialRampToValueAtTime(0.0001, start + 0.6);
+        this.playGuideTone(context, master, start, 622, 0.14, 'triangle');
+        this.playGuideTone(context, master, start + 0.09, 784, 0.14, 'sine');
+        this.playGuideTone(context, master, start + 0.18, 932, 0.18, 'triangle');
     }
     playGuideTone(context, destination, start, frequency, duration, type) {
         const oscillator = context.createOscillator();

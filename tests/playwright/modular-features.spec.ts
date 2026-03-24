@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { unlockParentPanel } from './helpers/parent-access.js';
 
 function getState() {
   const runtime = window as Window & { render_game_to_text?: () => string };
@@ -9,10 +10,7 @@ function getState() {
 }
 
 async function openParentPanel(page: Page) {
-  await page.evaluate(() => {
-    (document.getElementById('parent-panel-trigger') as HTMLButtonElement | null)?.click();
-  });
-  await expect(page.locator('#view-parent')).toHaveClass(/active/);
+  await unlockParentPanel(page);
 }
 
 async function closeParentPanel(page: Page, expectedView = 'speech') {
@@ -143,6 +141,31 @@ test('pack comparison cards show leader and weekly momentum', async ({ page }) =
   const state = await page.evaluate(getState);
   expect(state?.stories?.compare_leader_pack).toBe('core');
   expect(state?.stories?.compare_leader_total).toBe(12);
+});
+
+test('story audio panel lets parent choose a pack sentence directly', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      'konusu_yorum_custom_audio_v1',
+      JSON.stringify({
+        'kedi gel': 'data:audio/webm;base64,AAAA'
+      })
+    );
+  });
+
+  await page.goto('/');
+  await page.click('.tab-btn[data-view="stories"]');
+  await openParentPanel(page);
+  await page.selectOption('#story-pack-select', 'animals');
+
+  await expect(page.locator('#story-audio-sentence-list')).toContainText('Kedi gel');
+  await page.click('.story-audio-sentence-btn:has-text("Kedi gel")');
+  await expect(page.locator('#story-audio-target')).toContainText('Kedi gel');
+  await expect(page.locator('.story-audio-sentence-btn:has-text("Kedi gel")')).toHaveClass(/active/);
+  await expect(page.locator('#story-audio-play')).toBeEnabled();
+
+  await page.click('#story-audio-play');
+  await expect(page.locator('#story-audio-status')).toContainText('Kedi gel');
 });
 
 test('daily word card uses parent recording map for today', async ({ page }) => {
@@ -321,4 +344,26 @@ test('progress reset clears listen counters and keeps recordings', async ({ page
   expect(rawProgress).toBeTruthy();
   expect(rawProgress).toContain('"wordListens":{}');
   expect(rawProgress).toContain('"sentenceListens":{}');
+});
+
+test('progress word rows provide direct recording actions', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      'konusu_yorum_custom_audio_v1',
+      JSON.stringify({
+        baba: 'data:audio/webm;base64,AAAA'
+      })
+    );
+  });
+
+  await page.goto('/');
+  await openParentPanel(page);
+
+  await expect(page.locator('.progress-row:has(.progress-name:text-is("BABA")) .progress-record-btn[data-action="record"]')).toBeVisible();
+  await expect(page.locator('.progress-row:has(.progress-name:text-is("BABA")) .progress-record-btn[data-action="play"]')).toBeEnabled();
+  await expect(page.locator('.progress-row:has(.progress-name:text-is("SU")) .progress-record-btn[data-action="play"]')).toBeDisabled();
+
+  await page.click('.progress-row:has(.progress-name:text-is("BABA")) .progress-record-btn[data-action="delete"]');
+  await expect(page.locator('.progress-row:has(.progress-name:text-is("BABA"))')).toContainText('Kayit: Yok');
+  await expect(page.locator('#custom-audio-status')).toContainText('baba');
 });

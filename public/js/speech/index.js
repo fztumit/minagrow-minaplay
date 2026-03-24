@@ -3,6 +3,17 @@ import { getTopSentenceListens, getWordListenCount, incrementWordListen, resetLi
 import { buildCustomAudioBackup, listCustomAudioEntries, loadCustomAudioMap, mergeCustomAudioMaps, normalizeSpeechKey, parseCustomAudioBackup, saveCustomAudioMap } from './customAudio.js';
 const SETTINGS_STORAGE_KEY = 'konusu_yorum_speech_settings_v1';
 const SCENE_VOCABULARY = VOCABULARY.filter((item) => item.featuredOnScene);
+const GUIDE_REMINDER_DELAY_MS = navigator.webdriver ? 1400 : 9400;
+const GUIDE_REMINDER_VARIANCE_MS = navigator.webdriver ? 0 : 2400;
+const GUIDE_REMINDER_RETRY_MS = navigator.webdriver ? 300 : 1800;
+const GUIDE_WAIT_PROMPTS = {
+    su: 'Ben suyun yanında bekliyorum.',
+    top: 'Ben topun yanında bekliyorum.',
+    araba: 'Ben arabanın yanında bekliyorum.',
+    kitap: 'Ben kitabın yanında bekliyorum.',
+    elma: 'Ben elmanın yanında bekliyorum.',
+    süt: 'Ben sütün yanında bekliyorum.'
+};
 export class SpeechGameModule {
     rootEl;
     stageEl;
@@ -34,6 +45,9 @@ export class SpeechGameModule {
     waterFocusTimeoutId = null;
     guideTimeoutId = null;
     visualResetTimeoutId = null;
+    guideMotionResetTimeoutId = null;
+    idleReminderTimeoutId = null;
+    attentionResetTimeoutId = null;
     activeNextButton = null;
     customAudioMap = {};
     mediaRecorder = null;
@@ -134,9 +148,11 @@ export class SpeechGameModule {
         this.rootEl.setAttribute('data-next-word', '');
         this.rootEl.setAttribute('data-guide-prompt', '');
         this.rootEl.setAttribute('data-guide-active', 'false');
+        this.rootEl.setAttribute('data-guide-mode', 'idle');
         this.syncSettingsToDom();
         this.renderRecordingLibrary();
         this.renderProgressPanel();
+        this.bindGuideLifecycleEvents();
         window.requestAnimationFrame(() => {
             this.activateInitialTarget();
         });
@@ -230,6 +246,57 @@ export class SpeechGameModule {
                 this.customAudioTextInput.value = key;
                 void this.startCustomAudioRecording(key);
             }
+        });
+        this.progressWordListEl.addEventListener('click', (event) => {
+            const target = event.target.closest('.progress-record-btn');
+            if (!target) {
+                return;
+            }
+            const action = target.dataset.action;
+            const word = target.dataset.word ?? '';
+            const key = normalizeSpeechKey(word);
+            if (!action || !key) {
+                return;
+            }
+            this.customAudioTextInput.value = word;
+            if (action === 'record') {
+                void this.startCustomAudioRecording(key);
+                return;
+            }
+            if (action === 'play') {
+                const dataUrl = this.customAudioMap[key];
+                if (dataUrl) {
+                    this.playAudioDataUrl(dataUrl);
+                    this.customAudioStatusEl.textContent = `"${word}" kaydi caliniyor.`;
+                }
+                return;
+            }
+            if (action === 'delete' && this.customAudioMap[key]) {
+                delete this.customAudioMap[key];
+                saveCustomAudioMap(this.customAudioMap);
+                this.syncSettingsToDom();
+                this.renderRecordingLibrary();
+                this.renderProgressPanel();
+                this.customAudioStatusEl.textContent = `"${word}" kaydi silindi.`;
+            }
+        });
+    }
+    bindGuideLifecycleEvents() {
+        this.rootEl.addEventListener('speech-guidance-pause', () => {
+            this.clearIdleReminder();
+            this.clearAttentionState();
+        });
+        this.rootEl.addEventListener('speech-guidance-resume', () => {
+            if (!this.activeNextButton) {
+                this.activateInitialTarget();
+                return;
+            }
+            this.placeGuideMascot(this.activeNextButton);
+            this.rootEl.setAttribute('data-guide-active', 'true');
+            if (!this.rootEl.getAttribute('data-guide-prompt')) {
+                this.rootEl.setAttribute('data-guide-prompt', 'Hadi dokun');
+            }
+            this.scheduleIdleReminder(this.activeNextButton);
         });
     }
     bindSettingsEvents() {
@@ -500,8 +567,38 @@ export class SpeechGameModule {
         this.progressWordListEl.innerHTML = wordRows
             .map((row) => `
           <div class="progress-row">
-            <span class="progress-name">${row.word.toLocaleUpperCase('tr-TR')}</span>
-            <span class="progress-value">Kayit: ${row.hasRecording ? 'Var' : 'Yok'} | Dinleme: ${row.listenCount}</span>
+            <div class="progress-row-head">
+              <span class="progress-name">${row.word.toLocaleUpperCase('tr-TR')}</span>
+              <span class="progress-value">Kayit: ${row.hasRecording ? 'Var' : 'Yok'} | Dinleme: ${row.listenCount}</span>
+            </div>
+            <div class="progress-row-actions">
+              <button
+                type="button"
+                class="progress-record-btn"
+                data-action="record"
+                data-word="${row.word}"
+              >
+                ${row.hasRecording ? 'Yeniden Kaydet' : 'Kaydet'}
+              </button>
+              <button
+                type="button"
+                class="progress-record-btn"
+                data-action="play"
+                data-word="${row.word}"
+                ${row.hasRecording ? '' : 'disabled'}
+              >
+                Cal
+              </button>
+              <button
+                type="button"
+                class="progress-record-btn"
+                data-action="delete"
+                data-word="${row.word}"
+                ${row.hasRecording ? '' : 'disabled'}
+              >
+                Sil
+              </button>
+            </div>
           </div>
         `)
             .join('');
@@ -558,6 +655,8 @@ export class SpeechGameModule {
         this.rootEl.setAttribute('data-last-word', word);
         this.clearPendingSpeech();
         this.clearPendingGuidance();
+        this.clearIdleReminder();
+        this.clearAttentionState();
         this.clearCurrentNextTarget();
         const visualDuration = this.triggerVisual(button, word);
         const speechDuration = this.triggerSpeech({ word, repeats: resolvedRepeats });
@@ -579,6 +678,7 @@ export class SpeechGameModule {
         this.rootEl.setAttribute('data-guide-active', 'true');
         this.feedbackEl.textContent = 'Bir nesneye dokun.';
         this.placeGuideMascot(firstButton);
+        this.scheduleIdleReminder(firstButton);
     }
     resolveRepeats(defaultRepeats) {
         if (this.settings.repeatMode === 'default') {
@@ -728,9 +828,29 @@ export class SpeechGameModule {
         }
         this.rootEl.setAttribute('data-guide-prompt', '');
     }
+    clearIdleReminder() {
+        if (this.idleReminderTimeoutId !== null) {
+            window.clearTimeout(this.idleReminderTimeoutId);
+            this.idleReminderTimeoutId = null;
+        }
+    }
+    clearAttentionState() {
+        this.guideLayerEl.classList.remove('is-attention');
+        this.activeNextButton?.classList.remove('is-attention-target');
+        if (this.attentionResetTimeoutId !== null) {
+            window.clearTimeout(this.attentionResetTimeoutId);
+            this.attentionResetTimeoutId = null;
+        }
+        if (this.guideMotionResetTimeoutId !== null) {
+            window.clearTimeout(this.guideMotionResetTimeoutId);
+            this.guideMotionResetTimeoutId = null;
+        }
+        this.rootEl.setAttribute('data-guide-mode', 'idle');
+    }
     clearCurrentNextTarget() {
         if (this.activeNextButton) {
             this.activeNextButton.classList.remove('is-next-target');
+            this.activeNextButton.classList.remove('is-attention-target');
             this.activeNextButton.removeAttribute('data-next-target');
             this.activeNextButton = null;
         }
@@ -751,23 +871,36 @@ export class SpeechGameModule {
             this.rootEl.setAttribute('data-guide-active', 'true');
             this.feedbackEl.textContent = `Siradaki hedef: ${(nextButton.dataset.word ?? '').toLocaleUpperCase('tr-TR')}`;
             this.mascot.sayNextPrompt();
+            this.scheduleIdleReminder(nextButton);
             this.guideTimeoutId = null;
         }, delayMs);
     }
     moveGuideMascot(currentButton, nextButton) {
         const from = this.resolveGuidePosition(currentButton);
         const to = this.resolveGuidePosition(nextButton);
+        this.clearAttentionState();
         this.guideLayerEl.classList.add('is-active');
-        this.guideMascotEl.style.transform = `translate(${from.x}px, ${from.y}px) scale(0.84)`;
+        this.setGuideTransform(from.x, from.y, 0.84);
+        this.rootEl.setAttribute('data-guide-mode', 'travel');
         void this.guideMascotEl.offsetWidth;
         window.requestAnimationFrame(() => {
-            this.guideMascotEl.style.transform = `translate(${to.x}px, ${to.y}px) scale(1)`;
+            this.setGuideTransform(to.x, to.y, 1);
         });
+        this.guideMotionResetTimeoutId = window.setTimeout(() => {
+            this.rootEl.setAttribute('data-guide-mode', 'idle');
+            this.guideMotionResetTimeoutId = null;
+        }, 760);
     }
     placeGuideMascot(button) {
         const target = this.resolveGuidePosition(button);
         this.guideLayerEl.classList.add('is-active');
-        this.guideMascotEl.style.transform = `translate(${target.x}px, ${target.y}px) scale(1)`;
+        this.setGuideTransform(target.x, target.y, 1);
+        this.rootEl.setAttribute('data-guide-mode', 'idle');
+    }
+    setGuideTransform(x, y, scale) {
+        this.guideMascotEl.style.setProperty('--guide-x', `${x}px`);
+        this.guideMascotEl.style.setProperty('--guide-y', `${y}px`);
+        this.guideMascotEl.style.setProperty('--guide-scale', String(scale));
     }
     resolveGuidePosition(button) {
         const stageRect = this.stageEl.getBoundingClientRect();
@@ -790,6 +923,57 @@ export class SpeechGameModule {
             return buttons[0] ?? null;
         }
         return buttons[(currentIndex + 1) % buttons.length] ?? null;
+    }
+    scheduleIdleReminder(targetButton, delayMs) {
+        this.clearIdleReminder();
+        if (!targetButton) {
+            return;
+        }
+        const resolvedDelay = delayMs ??
+            (GUIDE_REMINDER_DELAY_MS + Math.round(Math.random() * GUIDE_REMINDER_VARIANCE_MS));
+        this.idleReminderTimeoutId = window.setTimeout(() => {
+            if (!this.activeNextButton || this.activeNextButton !== targetButton) {
+                return;
+            }
+            if (!this.rootEl.classList.contains('active') || document.visibilityState !== 'visible') {
+                this.scheduleIdleReminder(targetButton, GUIDE_REMINDER_RETRY_MS);
+                return;
+            }
+            this.runAttentionSequence(targetButton);
+            this.scheduleIdleReminder(targetButton);
+        }, resolvedDelay);
+    }
+    runAttentionSequence(targetButton) {
+        const target = this.resolveGuidePosition(targetButton);
+        const prompt = this.buildGuideWaitPrompt(targetButton.dataset.word);
+        this.clearAttentionState();
+        this.guideLayerEl.classList.add('is-active');
+        this.guideLayerEl.classList.remove('is-attention');
+        targetButton.classList.remove('is-attention-target');
+        void this.guideLayerEl.offsetWidth;
+        this.setGuideTransform(target.x, target.y, 1.06);
+        this.guideLayerEl.classList.add('is-attention');
+        targetButton.classList.add('is-attention-target');
+        this.rootEl.setAttribute('data-guide-mode', 'attention');
+        this.rootEl.setAttribute('data-guide-prompt', prompt);
+        this.rootEl.setAttribute('data-guide-active', 'true');
+        this.feedbackEl.textContent = prompt;
+        this.mascot.sayAttention(prompt);
+        this.attentionResetTimeoutId = window.setTimeout(() => {
+            if (this.activeNextButton === targetButton) {
+                targetButton.classList.remove('is-attention-target');
+            }
+            this.guideLayerEl.classList.remove('is-attention');
+            this.setGuideTransform(target.x, target.y, 1);
+            this.rootEl.setAttribute('data-guide-mode', 'idle');
+            this.attentionResetTimeoutId = null;
+        }, 1550);
+    }
+    buildGuideWaitPrompt(word) {
+        if (!word) {
+            return 'Ben burada bekliyorum.';
+        }
+        return GUIDE_WAIT_PROMPTS[word] ?? 'Ben burada bekliyorum.';
     }
 }
 //# sourceMappingURL=index.js.map

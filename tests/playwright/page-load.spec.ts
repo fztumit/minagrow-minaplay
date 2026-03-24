@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { requestParentPanel, unlockParentPanel } from './helpers/parent-access.js';
 
 test('page loads with core module blocks', async ({ page }) => {
   await page.goto('/');
@@ -9,19 +10,29 @@ test('page loads with core module blocks', async ({ page }) => {
   await expect(page.locator('#view-parent')).not.toHaveClass(/active/);
   await expect(page.locator('#daily-word-record-start')).not.toBeVisible();
 
-  await page.evaluate(() => {
-    (document.getElementById('parent-panel-trigger') as HTMLButtonElement | null)?.click();
-  });
-
-  await expect(page.locator('#view-parent')).toHaveClass(/active/);
+  await unlockParentPanel(page);
   await expect(page.locator('#daily-word-record-start')).toBeVisible();
   await expect(page.locator('#progress-reset-btn')).toBeVisible();
 
   await page.click('.tab-btn[data-view="stories"]');
-  await page.evaluate(() => {
-    (document.getElementById('parent-panel-trigger') as HTMLButtonElement | null)?.click();
-  });
-  await expect(page.locator('#view-parent')).toHaveClass(/active/);
+  await unlockParentPanel(page);
   await expect(page.locator('#story-pack-progress-summary')).toBeVisible();
   await expect(page.locator('#story-pack-compare-summary')).toBeVisible();
+});
+
+test('parent panel requires correct pin before opening', async ({ page }) => {
+  await page.goto('/');
+
+  await requestParentPanel(page);
+  await page.fill('#parent-auth-input', '9999');
+  await page.click('#parent-auth-form button[type="submit"]');
+
+  await expect(page.locator('#parent-auth-error')).toContainText('Şifre yanlış.');
+  await expect(page.locator('#view-parent')).not.toHaveClass(/active/);
+
+  await page.fill('#parent-auth-input', '1234');
+  await page.click('#parent-auth-form button[type="submit"]');
+
+  await expect(page.locator('#view-parent')).toHaveClass(/active/);
+  await expect(page.locator('#daily-word-record-start')).toBeVisible();
 });

@@ -7,6 +7,28 @@ import { SleepModeModule } from './sleep/index.js';
 import { SpeechGameModule } from './speech/index.js';
 import { StoriesModule } from './stories/index.js';
 
+const DEFAULT_PARENT_PIN = '1234';
+const PARENT_PIN_STORAGE_KEY = 'minaplay_parent_pin_v1';
+
+function normalizeParentPin(value: string): string {
+  return value.replace(/\D/g, '').slice(0, 4);
+}
+
+function loadParentPin(): string {
+  const normalized = normalizeParentPin(localStorage.getItem(PARENT_PIN_STORAGE_KEY) ?? '');
+  return normalized.length === 4 ? normalized : DEFAULT_PARENT_PIN;
+}
+
+function saveParentPin(pin: string): void {
+  const normalized = normalizeParentPin(pin);
+  if (normalized.length !== 4 || normalized === DEFAULT_PARENT_PIN) {
+    localStorage.removeItem(PARENT_PIN_STORAGE_KEY);
+    return;
+  }
+
+  localStorage.setItem(PARENT_PIN_STORAGE_KEY, normalized);
+}
+
 function registerServiceWorker(): void {
   if (!('serviceWorker' in navigator)) {
     return;
@@ -25,10 +47,50 @@ function wireTabs(mascot: MascotGuide): void {
   const speechRoot = document.getElementById('view-speech');
   const parentRoot = document.getElementById('view-parent');
   const parentCloseBtn = document.getElementById('parent-panel-close') as HTMLButtonElement | null;
+  const authOverlay = document.getElementById('parent-auth-overlay');
+  const authForm = document.getElementById('parent-auth-form') as HTMLFormElement | null;
+  const authInput = document.getElementById('parent-auth-input') as HTMLInputElement | null;
+  const authError = document.getElementById('parent-auth-error');
+  const authCancelBtn = document.getElementById('parent-auth-cancel') as HTMLButtonElement | null;
+  const parentPinForm = document.getElementById('parent-pin-form') as HTMLFormElement | null;
+  const parentPinInput = document.getElementById('parent-pin-input') as HTMLInputElement | null;
+  const parentPinConfirmInput = document.getElementById('parent-pin-confirm') as HTMLInputElement | null;
+  const parentPinStatus = document.getElementById('parent-pin-status');
   let lastPrimaryView = 'speech';
+  const notifySpeechGuidance = (state: 'pause' | 'resume') => {
+    speechRoot?.dispatchEvent(new CustomEvent(`speech-guidance-${state}`));
+  };
+
+  const syncParentPinStatus = (message?: string) => {
+    if (!parentPinStatus) {
+      return;
+    }
+
+    if (message) {
+      parentPinStatus.textContent = message;
+      return;
+    }
+
+    const usesDefaultPin = loadParentPin() === DEFAULT_PARENT_PIN;
+    parentPinStatus.textContent = usesDefaultPin
+      ? `Varsayılan şifre aktif: ${DEFAULT_PARENT_PIN}`
+      : 'Özel ebeveyn şifresi kayıtlı.';
+  };
+
+  const closeParentAuth = () => {
+    authOverlay?.classList.remove('is-active');
+    authOverlay?.setAttribute('aria-hidden', 'true');
+    if (authInput) {
+      authInput.value = '';
+    }
+    if (authError) {
+      authError.textContent = '';
+    }
+  };
 
   const activatePrimaryView = (selectedView: string) => {
     lastPrimaryView = selectedView;
+    closeParentAuth();
 
     tabButtons.forEach((candidate) => {
       const active = candidate.dataset.view === selectedView;
@@ -41,6 +103,11 @@ function wireTabs(mascot: MascotGuide): void {
     });
 
     mascot.setSleepMode(selectedView === 'sleep');
+    if (selectedView === 'speech') {
+      notifySpeechGuidance('resume');
+    } else {
+      notifySpeechGuidance('pause');
+    }
 
     if (selectedView === 'speech') {
       mascot.sayHint();
@@ -52,11 +119,32 @@ function wireTabs(mascot: MascotGuide): void {
   };
 
   const openParentPanel = () => {
+    closeParentAuth();
+    notifySpeechGuidance('pause');
     views.forEach((view) => {
       view.classList.toggle('active', view.id === 'view-parent');
     });
     mascot.setSleepMode(false);
     mascot.setMessage('Ebeveyn paneli.');
+  };
+
+  const requestParentPin = () => {
+    if (!authOverlay || !authInput) {
+      openParentPanel();
+      return;
+    }
+
+    notifySpeechGuidance('pause');
+    authOverlay.classList.add('is-active');
+    authOverlay.setAttribute('aria-hidden', 'false');
+    authInput.value = '';
+    if (authError) {
+      authError.textContent = '';
+    }
+    mascot.setMessage('Şifreyi gir.');
+    window.setTimeout(() => {
+      authInput.focus();
+    }, 40);
   };
 
   tabButtons.forEach((button) => {
@@ -75,8 +163,86 @@ function wireTabs(mascot: MascotGuide): void {
   });
 
   speechRoot?.addEventListener('open-parent-panel', () => {
-    openParentPanel();
+    requestParentPin();
   });
+
+  authInput?.addEventListener('input', () => {
+    authInput.value = normalizeParentPin(authInput.value);
+  });
+
+  parentPinInput?.addEventListener('input', () => {
+    parentPinInput.value = normalizeParentPin(parentPinInput.value);
+  });
+
+  parentPinConfirmInput?.addEventListener('input', () => {
+    parentPinConfirmInput.value = normalizeParentPin(parentPinConfirmInput.value);
+  });
+
+  authForm?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const enteredPin = normalizeParentPin(authInput?.value ?? '');
+    if (enteredPin === loadParentPin()) {
+      openParentPanel();
+      return;
+    }
+
+    if (authError) {
+      authError.textContent = 'Şifre yanlış.';
+    }
+    if (authInput) {
+      authInput.value = '';
+      authInput.focus();
+    }
+    mascot.setMessage('Şifre yanlış.');
+  });
+
+  authCancelBtn?.addEventListener('click', () => {
+    closeParentAuth();
+    if (document.querySelector('.module-view.active')?.id === 'view-speech') {
+      notifySpeechGuidance('resume');
+    }
+    mascot.sayHint();
+  });
+
+  authOverlay?.addEventListener('click', (event) => {
+    if (event.target === authOverlay) {
+      closeParentAuth();
+      if (document.querySelector('.module-view.active')?.id === 'view-speech') {
+        notifySpeechGuidance('resume');
+      }
+      mascot.sayHint();
+    }
+  });
+
+  parentPinForm?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const nextPin = normalizeParentPin(parentPinInput?.value ?? '');
+    const confirmPin = normalizeParentPin(parentPinConfirmInput?.value ?? '');
+
+    if (nextPin.length !== 4) {
+      syncParentPinStatus('4 haneli sayı gir.');
+      return;
+    }
+
+    if (nextPin !== confirmPin) {
+      syncParentPinStatus('Şifreler aynı değil.');
+      return;
+    }
+
+    saveParentPin(nextPin);
+    if (parentPinInput) {
+      parentPinInput.value = '';
+    }
+    if (parentPinConfirmInput) {
+      parentPinConfirmInput.value = '';
+    }
+    syncParentPinStatus(
+      nextPin === DEFAULT_PARENT_PIN ? `Varsayılan şifre aktif: ${DEFAULT_PARENT_PIN}` : 'Yeni ebeveyn şifresi kaydedildi.'
+    );
+    mascot.setMessage('Şifre kaydedildi.');
+  });
+
+  syncParentPinStatus();
 
   if (parentRoot?.classList.contains('active')) {
     openParentPanel();
@@ -99,11 +265,13 @@ function installTestingHooks(): void {
     const dailyActivityRoot = document.getElementById('daily-activity-card');
     const dailyWordText = document.getElementById('daily-word-text')?.textContent ?? null;
     const mascotMessage = document.getElementById('mascot-message')?.textContent ?? null;
+    const authOverlay = document.getElementById('parent-auth-overlay');
 
     return JSON.stringify({
       layout: 'DOM based module layout, no physics coordinates',
       active_view: activeViewId,
       parent_panel_open: activeViewId === 'view-parent',
+      parent_auth_open: authOverlay?.classList.contains('is-active') ?? false,
       mascot_message: mascotMessage,
       daily_word: dailyWordText,
       daily_word_audio: {
@@ -121,6 +289,7 @@ function installTestingHooks(): void {
         next_word: speechRoot?.getAttribute('data-next-word') ?? null,
         guide_prompt: speechRoot?.getAttribute('data-guide-prompt') ?? '',
         guide_active: speechRoot?.getAttribute('data-guide-active') === 'true',
+        guide_mode: speechRoot?.getAttribute('data-guide-mode') ?? 'idle',
         water_spilled: speechRoot?.getAttribute('data-water-spilled') === 'true',
         water_expanded: speechRoot?.getAttribute('data-water-expanded') === 'true',
         repeat_mode: speechRoot?.getAttribute('data-repeat-mode') ?? 'default',

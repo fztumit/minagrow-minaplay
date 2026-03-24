@@ -42,6 +42,10 @@
             <button type="button" id="parent-panel-trigger" class="visually-hidden">Ebeveyn panelini aç</button>
             <div class="speech-guide-layer" id="speech-guide-layer" aria-hidden="true">
               <div class="speech-guide-mascot" id="speech-guide-mascot" aria-label="Anka">
+                <span class="speech-guide-wing speech-guide-wing-left" aria-hidden="true"></span>
+                <span class="speech-guide-wing speech-guide-wing-right" aria-hidden="true"></span>
+                <span class="speech-guide-glow" aria-hidden="true"></span>
+                <span class="speech-guide-sparkles" aria-hidden="true"></span>
                 <img src="/assets/phoenix-ui.svg" alt="" />
               </div>
             </div>
@@ -233,7 +237,9 @@
             </section>
 
             <section class="story-audio-panel" aria-label="Hikaye ses kaydi">
-              <h3>Hikaye Ses Kaydi</h3>
+              <h3>Ebeveyn / Kardeş Ses Kaydı</h3>
+              <p class="story-audio-note">Paketten bir cümle seç, sonra aile sesiyle kaydet.</p>
+              <div class="story-audio-sentence-list" id="story-audio-sentence-list"></div>
               <p class="story-audio-target" id="story-audio-target">Secili cumle: -</p>
               <div class="story-audio-actions">
                 <button type="button" id="story-audio-record-start" class="secondary-btn">Kayda Basla</button>
@@ -266,6 +272,34 @@
                 <button type="button" class="timer-btn" data-duration="allnight">Tüm gece</button>
               </div>
             </div>
+          </section>
+
+          <section class="parent-settings" id="parent-security-panel" aria-label="Ebeveyn sifresi">
+            <h3>Ebeveyn Şifresi</h3>
+            <form class="parent-pin-form" id="parent-pin-form">
+              <label>
+                Yeni 4 Haneli Şifre
+                <input
+                  id="parent-pin-input"
+                  inputmode="numeric"
+                  maxlength="4"
+                  pattern="[0-9]*"
+                  placeholder="1234"
+                />
+              </label>
+              <label>
+                Tekrar
+                <input
+                  id="parent-pin-confirm"
+                  inputmode="numeric"
+                  maxlength="4"
+                  pattern="[0-9]*"
+                  placeholder="1234"
+                />
+              </label>
+              <button type="submit" class="secondary-btn">Şifreyi Kaydet</button>
+            </form>
+            <p class="parent-pin-status" id="parent-pin-status">Varsayılan şifre aktif: 1234</p>
           </section>
 
           <section id="family-panel" class="parent-family-panel" data-module="family">
@@ -303,6 +337,30 @@
           </section>
         </section>
       </main>
+
+      <div class="parent-auth-overlay" id="parent-auth-overlay" aria-hidden="true">
+        <div class="parent-auth-card" role="dialog" aria-modal="true" aria-labelledby="parent-auth-title">
+          <h2 id="parent-auth-title">Ebeveyn Şifresi</h2>
+          <p>Parent sayfasına geçmek için 4 haneli şifreyi gir.</p>
+          <form class="parent-auth-form" id="parent-auth-form">
+            <input
+              id="parent-auth-input"
+              type="password"
+              inputmode="numeric"
+              maxlength="4"
+              pattern="[0-9]*"
+              autocomplete="one-time-code"
+              placeholder="1234"
+              aria-label="Ebeveyn şifresi"
+            />
+            <p class="parent-auth-error" id="parent-auth-error" aria-live="polite"></p>
+            <div class="parent-auth-actions">
+              <button type="submit" class="primary-btn">Devam Et</button>
+              <button type="button" class="secondary-btn" id="parent-auth-cancel">Vazgeç</button>
+            </div>
+          </form>
+        </div>
+      </div>
 
       <nav class="module-tabs" role="tablist" aria-label="Modüller">
         <button class="tab-btn active" role="tab" aria-selected="true" data-view="speech">Oyun</button>

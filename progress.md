@@ -219,6 +219,105 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
 - Slowed easy-level story speech rate from `0.83` to `0.74` for better clarity.
 - Verified build/lint/unit/e2e and official skill client run after change.
 
+## Continuation Update: Child-First Parent PIN Gate
+- Kept the previous full controls screen as the dedicated `Ebeveyn Paneli`.
+- Added password gate before opening the parent screen:
+  - default PIN: `1234`
+  - stored in localStorage key `minaplay_parent_pin_v1`
+  - accepts only 4 digits
+- Added parent auth overlay UI:
+  - PIN input
+  - error feedback on wrong entry
+  - cancel / close behavior
+- Added parent security section inside the parent panel:
+  - change PIN
+  - confirm PIN
+  - reset back to default by saving `1234`
+- Updated tab / parent routing:
+  - hidden parent access now opens the PIN gate first
+  - correct PIN unlocks the parent panel
+  - wrong PIN keeps the child screen active
+- Updated Playwright coverage:
+  - shared parent unlock helper
+  - regression updates for all parent-panel tests
+  - explicit wrong-PIN test added
+- Bumped service worker cache version to `minaplay-v19`.
+
+## Validation (Parent PIN Gate)
+- `npm run build` ✅
+- `npx playwright test --workers=1` ✅
+  - `17 passed`
+- Official skill client run ✅
+  - output: `output/web-game-parent-pin/*`
+  - state JSON confirms child-first screen loads cleanly
+  - note: skill client screenshot still captures the sleep stars canvas because it is the largest canvas on the page, so state JSON remains the reliable assertion source for this DOM-first UI
+
+## Remaining TODOs / Suggestions
+- Add a softer parent-entry microinteraction (e.g. numeric keypad style) if we want the PIN gate to feel more productized on tablet.
+- Optionally add a second hidden parent entry route from `Stories` / `Sleep` to avoid requiring a return to the main play scene.
+
+## Continuation Update: Phoenix Attention Behaviors
+- Upgraded Anka from a static guide to an intermittent attention-restoring companion on the child play screen.
+- Added idle attention loop for the current target object:
+  - waits briefly when the child is inactive
+  - plays a soft chirp
+  - speaks a short location-aware line (e.g. `Ben suyun yanında bekliyorum.`)
+  - boosts the target card again with a stronger pop / glow
+- Added richer visual behavior to the floating mascot:
+  - spin / tumble style attention burst
+  - larger glowing wing flaps
+  - brighter aura pulse
+  - soft sparkles around the mascot
+- Added pause/resume handling for guidance:
+  - attention loop pauses when speech view is hidden or parent auth/panel opens
+  - resumes when returning to the child play scene
+- Extended speech test state with `guide_mode`.
+- Added Playwright coverage:
+  - `tests/playwright/mascot-attention.spec.ts`
+
+## Validation (Phoenix Attention Behaviors)
+- `npm run build` ✅
+- `npx playwright test --workers=1` ✅
+  - `18 passed`
+- Official skill client run ✅
+  - output: `output/web-game-anka-attention/*`
+  - state JSON confirms idle reminder enters `guide_mode: attention`
+  - state JSON confirms prompt text: `Ben suyun yanında bekliyorum.`
+  - note: skill client screenshot still captures the sleep stars canvas because it is the largest canvas element on the page, so JSON state remains the reliable assertion source for this DOM-first UI
+
+## Remaining TODOs / Suggestions
+- If we want even more character, add per-object idle prompts so Anka’s reminder text varies by target and does not feel repetitive.
+- If we want a stronger “hero” moment, add a one-time entrance animation when the speech scene first opens, then keep the current lighter idle loop afterward.
+
+## Continuation Update: Story Pack Voice Recording Flow
+- Reworked the parent-side story audio panel so pack recordings are directly usable.
+- Added selectable sentence list inside the story audio panel:
+  - grouped by story inside the selected pack
+  - each sentence shows whether a recording already exists
+  - parent can choose the exact sentence target without leaving the parent panel
+- Story audio record / play / delete actions now operate on the selected pack sentence, not only the currently visible child reader sentence.
+- Renamed the panel to emphasize the main feature:
+  - `Ebeveyn / Kardeş Ses Kaydı`
+- Added guidance copy to make the flow explicit:
+  - choose a sentence from the pack
+  - then record the family voice
+- Added Playwright coverage:
+  - parent can select a sentence directly from the pack audio panel
+  - panel reflects active selection and existing recording state
+- Bumped service worker cache version to `minaplay-v21`.
+
+## Validation (Story Pack Voice Recording Flow)
+- `npm run build` ✅
+- `npx playwright test --workers=1` ✅
+  - `19 passed`
+- Official skill client run ✅
+  - output: `output/web-game-story-audio-panel/*`
+  - note: this app remains DOM-first, so skill client state JSON is more useful than the canvas screenshot for verifying feature changes
+
+## Remaining TODOs / Suggestions
+- Add optional per-sentence quick actions in the pack list itself (`Kaydet`, `Cal`, `Sil`) if we want an even faster workflow.
+- Consider a dedicated “Aile Sesleri” summary card that shows word vs story-sentence coverage separately.
+
 ## Continuation Update: Pronunciation Fix (Turkish Voice + Word Queue)
 - Reworked story sentence TTS pipeline for two-word easy sentences to reduce misreads like `gel -> ger` and `iç -> iş`.
 - Added Turkish voice selection in `StoriesModule`:

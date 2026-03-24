@@ -18,6 +18,7 @@ export class StoriesModule {
     listenBtn;
     repeatBtn;
     nextBtn;
+    storyAudioSentenceListEl;
     storyAudioTargetEl;
     storyAudioStatusEl;
     storyRecordStartBtn;
@@ -39,6 +40,7 @@ export class StoriesModule {
     mediaRecorder = null;
     recordingChunks = [];
     recordingStream = null;
+    selectedStoryAudioKey = null;
     constructor(rootEl, mascot, controlsRoot = rootEl) {
         const levelSelect = controlsRoot.querySelector('#story-level-select');
         const packSelect = controlsRoot.querySelector('#story-pack-select');
@@ -53,6 +55,7 @@ export class StoriesModule {
         const listenBtn = rootEl.querySelector('#story-listen');
         const repeatBtn = rootEl.querySelector('#story-repeat');
         const nextBtn = rootEl.querySelector('#story-next');
+        const storyAudioSentenceListEl = controlsRoot.querySelector('#story-audio-sentence-list');
         const storyAudioTargetEl = controlsRoot.querySelector('#story-audio-target');
         const storyAudioStatusEl = controlsRoot.querySelector('#story-audio-status');
         const storyRecordStartBtn = controlsRoot.querySelector('#story-audio-record-start');
@@ -76,6 +79,7 @@ export class StoriesModule {
             !listenBtn ||
             !repeatBtn ||
             !nextBtn ||
+            !storyAudioSentenceListEl ||
             !storyAudioTargetEl ||
             !storyAudioStatusEl ||
             !storyRecordStartBtn ||
@@ -102,6 +106,7 @@ export class StoriesModule {
         this.listenBtn = listenBtn;
         this.repeatBtn = repeatBtn;
         this.nextBtn = nextBtn;
+        this.storyAudioSentenceListEl = storyAudioSentenceListEl;
         this.storyAudioTargetEl = storyAudioTargetEl;
         this.storyAudioStatusEl = storyAudioStatusEl;
         this.storyRecordStartBtn = storyRecordStartBtn;
@@ -125,6 +130,7 @@ export class StoriesModule {
         this.selectStory(0);
         this.syncEasyEditorAvailability();
         this.syncAudioRecorderSupport();
+        this.syncStoryAudioTargetToCurrentSentence();
         this.syncStoryAudioPanel();
         this.syncRootState();
     }
@@ -196,6 +202,20 @@ export class StoriesModule {
         this.nextBtn.addEventListener('click', () => {
             this.moveToNextSentence();
             this.mascot.sayHint();
+        });
+        this.storyAudioSentenceListEl.addEventListener('click', (event) => {
+            const target = event.target.closest('.story-audio-sentence-btn');
+            if (!target) {
+                return;
+            }
+            const nextKey = target.dataset.sentenceKey ?? '';
+            if (!nextKey) {
+                return;
+            }
+            this.selectedStoryAudioKey = nextKey;
+            this.syncStoryAudioPanel();
+            this.syncRootState();
+            this.mascot.setMessage('Aile sesi hedefi seçildi.');
         });
         this.storyRecordStartBtn.addEventListener('click', () => {
             void this.startStoryAudioRecording();
@@ -290,6 +310,7 @@ export class StoriesModule {
         this.sentenceIndex = 0;
         this.updateStoryListSelection();
         this.syncReader();
+        this.syncStoryAudioTargetToCurrentSentence();
         this.syncStoryAudioPanel();
         this.syncRootState();
     }
@@ -300,6 +321,7 @@ export class StoriesModule {
         }
         this.sentenceIndex = (this.sentenceIndex + 1) % story.sentences.length;
         this.syncReader();
+        this.syncStoryAudioTargetToCurrentSentence();
         this.syncStoryAudioPanel();
         this.syncRootState();
     }
@@ -408,6 +430,36 @@ export class StoriesModule {
         }
         return normalizeSpeechKey(sentence);
     }
+    syncStoryAudioTargetToCurrentSentence() {
+        this.selectedStoryAudioKey = this.currentSentenceKey();
+    }
+    selectedStoryAudioSentence() {
+        const key = this.selectedStoryAudioKey;
+        if (!key) {
+            return null;
+        }
+        for (const story of this.currentStories()) {
+            for (const sentence of story.sentences) {
+                if (normalizeSpeechKey(sentence) === key) {
+                    return this.normalizeSentence(sentence);
+                }
+            }
+        }
+        return null;
+    }
+    ensureStoryAudioSelection() {
+        const selectedSentence = this.selectedStoryAudioSentence();
+        if (selectedSentence) {
+            return;
+        }
+        const fallbackKey = this.currentSentenceKey();
+        if (fallbackKey) {
+            this.selectedStoryAudioKey = fallbackKey;
+            return;
+        }
+        const firstSentence = this.currentStories().flatMap((story) => story.sentences)[0] ?? '';
+        this.selectedStoryAudioKey = firstSentence ? normalizeSpeechKey(firstSentence) : null;
+    }
     syncAudioRecorderSupport() {
         const supported = typeof window.MediaRecorder !== 'undefined' &&
             !!navigator.mediaDevices &&
@@ -423,8 +475,10 @@ export class StoriesModule {
     }
     syncStoryAudioPanel() {
         this.refreshCustomAudioMap();
-        const sentence = this.currentSentence();
-        const key = this.currentSentenceKey();
+        this.ensureStoryAudioSelection();
+        this.renderStoryAudioSentenceList();
+        const sentence = this.selectedStoryAudioSentence();
+        const key = this.selectedStoryAudioKey;
         const recorderSupported = typeof window.MediaRecorder !== 'undefined' &&
             !!navigator.mediaDevices &&
             typeof navigator.mediaDevices.getUserMedia === 'function';
@@ -446,9 +500,45 @@ export class StoriesModule {
             ? 'Bu cumle icin kayit var.'
             : 'Bu cumle icin henuz kayit yok.';
     }
+    renderStoryAudioSentenceList() {
+        const stories = this.currentStories();
+        if (stories.length === 0) {
+            this.storyAudioSentenceListEl.innerHTML = '<p class="story-audio-note">Bu pakette cümle yok.</p>';
+            return;
+        }
+        this.storyAudioSentenceListEl.innerHTML = stories
+            .map((story) => {
+            const buttons = story.sentences
+                .map((sentence) => {
+                const normalizedSentence = this.normalizeSentence(sentence);
+                const sentenceKey = normalizeSpeechKey(normalizedSentence);
+                const hasRecording = Boolean(sentenceKey && this.customAudioMap[sentenceKey]);
+                const isActive = sentenceKey === this.selectedStoryAudioKey;
+                return `
+              <button
+                type="button"
+                class="story-audio-sentence-btn ${isActive ? 'active' : ''}"
+                data-sentence-key="${sentenceKey}"
+              >
+                <span>${this.escapeHtml(normalizedSentence)}</span>
+                <span class="story-audio-sentence-meta">${hasRecording ? 'Kayit var' : 'Kaydet'}</span>
+              </button>
+            `;
+            })
+                .join('');
+            return `
+          <div class="story-audio-sentence-group">
+            <p class="story-audio-group-title">${story.emoji} ${this.escapeHtml(story.title)}</p>
+            <div class="story-audio-group-buttons">${buttons}</div>
+          </div>
+        `;
+        })
+            .join('');
+    }
     async startStoryAudioRecording() {
-        const key = this.currentSentenceKey();
-        if (!key) {
+        const key = this.selectedStoryAudioKey;
+        const sentence = this.selectedStoryAudioSentence();
+        if (!key || !sentence) {
             this.storyAudioStatusEl.textContent = 'Kayit icin once cumle sec.';
             return;
         }
@@ -477,7 +567,7 @@ export class StoriesModule {
             this.mediaRecorder.start();
             this.storyRecordStartBtn.disabled = true;
             this.storyRecordStopBtn.disabled = false;
-            this.storyAudioStatusEl.textContent = `"${key}" icin kayit aliniyor...`;
+            this.storyAudioStatusEl.textContent = `"${sentence}" icin aile sesi kaydediliyor...`;
         }
         catch {
             this.cleanupRecordingResources();
@@ -503,7 +593,7 @@ export class StoriesModule {
             const dataUrl = await this.blobToDataUrl(blob);
             this.customAudioMap[key] = dataUrl;
             saveCustomAudioMap(this.customAudioMap);
-            this.storyAudioStatusEl.textContent = `"${key}" kaydedildi.`;
+            this.storyAudioStatusEl.textContent = `"${this.selectedStoryAudioSentence() ?? key}" kaydedildi.`;
             this.syncStoryAudioPanel();
             this.syncRootState();
         }
@@ -515,33 +605,35 @@ export class StoriesModule {
     }
     playCurrentStoryRecording() {
         this.refreshCustomAudioMap();
-        const key = this.currentSentenceKey();
-        if (!key) {
+        const key = this.selectedStoryAudioKey;
+        const sentence = this.selectedStoryAudioSentence();
+        if (!key || !sentence) {
             this.storyAudioStatusEl.textContent = 'Calmak icin once cumle sec.';
             return;
         }
         const dataUrl = this.customAudioMap[key];
         if (!dataUrl) {
-            this.storyAudioStatusEl.textContent = `"${key}" icin kayit yok.`;
+            this.storyAudioStatusEl.textContent = `"${sentence}" icin kayit yok.`;
             return;
         }
         this.playAudioDataUrl(dataUrl);
-        this.storyAudioStatusEl.textContent = `"${key}" kaydi caliniyor.`;
+        this.storyAudioStatusEl.textContent = `"${sentence}" kaydi caliniyor.`;
     }
     deleteCurrentStoryRecording() {
         this.refreshCustomAudioMap();
-        const key = this.currentSentenceKey();
-        if (!key) {
+        const key = this.selectedStoryAudioKey;
+        const sentence = this.selectedStoryAudioSentence();
+        if (!key || !sentence) {
             this.storyAudioStatusEl.textContent = 'Silmek icin once cumle sec.';
             return;
         }
         if (!this.customAudioMap[key]) {
-            this.storyAudioStatusEl.textContent = `"${key}" icin kayit yok.`;
+            this.storyAudioStatusEl.textContent = `"${sentence}" icin kayit yok.`;
             return;
         }
         delete this.customAudioMap[key];
         saveCustomAudioMap(this.customAudioMap);
-        this.storyAudioStatusEl.textContent = `"${key}" kaydi silindi.`;
+        this.storyAudioStatusEl.textContent = `"${sentence}" kaydi silindi.`;
         this.syncStoryAudioPanel();
         this.syncRootState();
     }
@@ -762,6 +854,7 @@ export class StoriesModule {
         this.rootEl.setAttribute('data-pack-weekly-change', String(packProgress.weeklyChange));
         this.rootEl.setAttribute('data-pack-compare-leader', leader?.pack ?? '');
         this.rootEl.setAttribute('data-pack-compare-leader-total', String(leader?.totalListens ?? 0));
+        this.rootEl.setAttribute('data-selected-story-audio-key', this.selectedStoryAudioKey ?? '');
         this.rootEl.setAttribute('data-current-story-audio', String(Boolean(currentSentenceKey && this.customAudioMap[currentSentenceKey])));
     }
     getPackLabel(pack) {
