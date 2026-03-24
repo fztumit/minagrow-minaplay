@@ -19,35 +19,56 @@ function registerServiceWorker() {
 function wireTabs(mascot) {
     const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
     const views = Array.from(document.querySelectorAll('.module-view'));
+    const speechRoot = document.getElementById('view-speech');
+    const parentRoot = document.getElementById('view-parent');
+    const parentCloseBtn = document.getElementById('parent-panel-close');
+    let lastPrimaryView = 'speech';
+    const activatePrimaryView = (selectedView) => {
+        lastPrimaryView = selectedView;
+        tabButtons.forEach((candidate) => {
+            const active = candidate.dataset.view === selectedView;
+            candidate.classList.toggle('active', active);
+            candidate.setAttribute('aria-selected', String(active));
+        });
+        views.forEach((view) => {
+            view.classList.toggle('active', view.id === `view-${selectedView}`);
+        });
+        mascot.setSleepMode(selectedView === 'sleep');
+        if (selectedView === 'speech') {
+            mascot.sayHint();
+        }
+        else if (selectedView === 'stories') {
+            mascot.setMessage('Hikaye zamanı.');
+        }
+        else if (selectedView === 'sleep') {
+            mascot.setMessage('Uyku zamanı.');
+        }
+    };
+    const openParentPanel = () => {
+        views.forEach((view) => {
+            view.classList.toggle('active', view.id === 'view-parent');
+        });
+        mascot.setSleepMode(false);
+        mascot.setMessage('Ebeveyn paneli.');
+    };
     tabButtons.forEach((button) => {
         button.addEventListener('click', () => {
             const selectedView = button.dataset.view;
             if (!selectedView) {
                 return;
             }
-            tabButtons.forEach((candidate) => {
-                const active = candidate === button;
-                candidate.classList.toggle('active', active);
-                candidate.setAttribute('aria-selected', String(active));
-            });
-            views.forEach((view) => {
-                view.classList.toggle('active', view.id === `view-${selectedView}`);
-            });
-            mascot.setSleepMode(selectedView === 'sleep');
-            if (selectedView === 'speech') {
-                mascot.sayHint();
-            }
-            else if (selectedView === 'stories') {
-                mascot.setMessage('Hikaye zamanı.');
-            }
-            else if (selectedView === 'sleep') {
-                mascot.setMessage('Uyku zamanı.');
-            }
-            else {
-                mascot.setMessage('Aile ekleyelim.');
-            }
+            activatePrimaryView(selectedView);
         });
     });
+    parentCloseBtn?.addEventListener('click', () => {
+        activatePrimaryView(lastPrimaryView);
+    });
+    speechRoot?.addEventListener('open-parent-panel', () => {
+        openParentPanel();
+    });
+    if (parentRoot?.classList.contains('active')) {
+        openParentPanel();
+    }
 }
 function installTestingHooks() {
     const runtime = window;
@@ -55,7 +76,7 @@ function installTestingHooks() {
         const activeViewId = document.querySelector('.module-view.active')?.id ?? null;
         const speechRoot = document.getElementById('view-speech');
         const sleepRoot = document.getElementById('view-sleep');
-        const familyRoot = document.getElementById('view-family');
+        const familyRoot = document.getElementById('family-panel');
         const storiesRoot = document.getElementById('view-stories');
         const dailyWordRoot = document.getElementById('daily-word-card');
         const dailyActivityRoot = document.getElementById('daily-activity-card');
@@ -64,6 +85,7 @@ function installTestingHooks() {
         return JSON.stringify({
             layout: 'DOM based module layout, no physics coordinates',
             active_view: activeViewId,
+            parent_panel_open: activeViewId === 'view-parent',
             mascot_message: mascotMessage,
             daily_word: dailyWordText,
             daily_word_audio: {
@@ -130,34 +152,32 @@ function bootstrap() {
     const speechRoot = document.getElementById('view-speech');
     const storiesRoot = document.getElementById('view-stories');
     const sleepRoot = document.getElementById('view-sleep');
-    const familyRoot = document.getElementById('view-family');
+    const parentRoot = document.getElementById('view-parent');
+    const familyRoot = document.getElementById('family-panel');
     const dailyWordOutput = document.getElementById('daily-word-text');
-    const mascotImage = document.getElementById('phoenix-main');
-    const mascotShell = document.getElementById('mascot-shell');
     if (!mascotOutput ||
         !dailyWordCard ||
         !dailyActivityCard ||
         !speechRoot ||
         !storiesRoot ||
         !sleepRoot ||
+        !parentRoot ||
         !familyRoot ||
-        !dailyWordOutput ||
-        !mascotImage ||
-        !mascotShell) {
+        !dailyWordOutput) {
         throw new Error('Required app roots not found.');
     }
-    const mascot = new MascotGuide(mascotOutput, mascotImage, mascotShell);
+    const mascot = new MascotGuide(mascotOutput, null, null);
     const dailyWordModule = new DailyWordModule(dailyWordCard, dailyWordOutput, VOCABULARY);
     dailyWordModule.init();
     const dailyActivityModule = new DailyActivityModule(dailyActivityCard);
     dailyActivityModule.init();
-    const speechModule = new SpeechGameModule(speechRoot, mascot);
+    const speechModule = new SpeechGameModule(speechRoot, mascot, parentRoot);
     speechModule.init();
-    const sleepModule = new SleepModeModule(sleepRoot, mascot);
+    const sleepModule = new SleepModeModule(sleepRoot, mascot, parentRoot);
     sleepModule.init();
     const familyModule = new FamilyAvatarModule(familyRoot, mascot);
     familyModule.init();
-    const storiesModule = new StoriesModule(storiesRoot, mascot);
+    const storiesModule = new StoriesModule(storiesRoot, mascot, parentRoot);
     storiesModule.init();
     speechRoot.addEventListener('speech-trigger', (event) => {
         const detail = event.detail;

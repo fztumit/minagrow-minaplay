@@ -2,12 +2,14 @@ import { VOCABULARY } from '../data/vocabulary.js';
 import { getTopSentenceListens, getWordListenCount, incrementWordListen, resetListenProgress } from '../progress/listening.js';
 import { buildCustomAudioBackup, listCustomAudioEntries, loadCustomAudioMap, mergeCustomAudioMaps, normalizeSpeechKey, parseCustomAudioBackup, saveCustomAudioMap } from './customAudio.js';
 const SETTINGS_STORAGE_KEY = 'konusu_yorum_speech_settings_v1';
+const SCENE_VOCABULARY = VOCABULARY.filter((item) => item.featuredOnScene);
 export class SpeechGameModule {
     rootEl;
     stageEl;
     gridEl;
     guideLayerEl;
     guideMascotEl;
+    parentPanelTriggerBtn;
     feedbackEl;
     repeatModeSelect;
     customAudioTextInput;
@@ -40,34 +42,36 @@ export class SpeechGameModule {
     settings = {
         repeatMode: 'default'
     };
-    constructor(rootEl, mascot) {
+    constructor(rootEl, mascot, controlsRootEl = rootEl) {
         const stageEl = rootEl.querySelector('#speech-stage');
         const gridEl = rootEl.querySelector('#speech-grid');
         const guideLayerEl = rootEl.querySelector('#speech-guide-layer');
         const guideMascotEl = rootEl.querySelector('#speech-guide-mascot');
+        const parentPanelTriggerBtn = rootEl.querySelector('#parent-panel-trigger');
         const feedbackEl = rootEl.querySelector('#speech-feedback');
-        const repeatModeSelect = rootEl.querySelector('#speech-repeat-mode');
-        const customAudioTextInput = rootEl.querySelector('#custom-audio-text');
-        const customAudioStartBtn = rootEl.querySelector('#custom-audio-record-start');
-        const customAudioStopBtn = rootEl.querySelector('#custom-audio-record-stop');
-        const customAudioPlayBtn = rootEl.querySelector('#custom-audio-play');
-        const customAudioDeleteBtn = rootEl.querySelector('#custom-audio-delete');
-        const customAudioStatusEl = rootEl.querySelector('#custom-audio-status');
-        const recordingLibrarySummaryEl = rootEl.querySelector('#recording-library-summary');
-        const recordingExportBtn = rootEl.querySelector('#recording-export-btn');
-        const recordingImportInput = rootEl.querySelector('#recording-import-input');
-        const recordingBackupStatusEl = rootEl.querySelector('#recording-backup-status');
-        const recordingLibraryListEl = rootEl.querySelector('#recording-library-list');
-        const progressSummaryEl = rootEl.querySelector('#progress-summary');
-        const progressResetBtn = rootEl.querySelector('#progress-reset-btn');
-        const progressResetStatusEl = rootEl.querySelector('#progress-reset-status');
-        const progressWordListEl = rootEl.querySelector('#progress-word-list');
-        const progressSentenceListEl = rootEl.querySelector('#progress-sentence-list');
+        const repeatModeSelect = controlsRootEl.querySelector('#speech-repeat-mode');
+        const customAudioTextInput = controlsRootEl.querySelector('#custom-audio-text');
+        const customAudioStartBtn = controlsRootEl.querySelector('#custom-audio-record-start');
+        const customAudioStopBtn = controlsRootEl.querySelector('#custom-audio-record-stop');
+        const customAudioPlayBtn = controlsRootEl.querySelector('#custom-audio-play');
+        const customAudioDeleteBtn = controlsRootEl.querySelector('#custom-audio-delete');
+        const customAudioStatusEl = controlsRootEl.querySelector('#custom-audio-status');
+        const recordingLibrarySummaryEl = controlsRootEl.querySelector('#recording-library-summary');
+        const recordingExportBtn = controlsRootEl.querySelector('#recording-export-btn');
+        const recordingImportInput = controlsRootEl.querySelector('#recording-import-input');
+        const recordingBackupStatusEl = controlsRootEl.querySelector('#recording-backup-status');
+        const recordingLibraryListEl = controlsRootEl.querySelector('#recording-library-list');
+        const progressSummaryEl = controlsRootEl.querySelector('#progress-summary');
+        const progressResetBtn = controlsRootEl.querySelector('#progress-reset-btn');
+        const progressResetStatusEl = controlsRootEl.querySelector('#progress-reset-status');
+        const progressWordListEl = controlsRootEl.querySelector('#progress-word-list');
+        const progressSentenceListEl = controlsRootEl.querySelector('#progress-sentence-list');
         const waterFocusOverlayEl = rootEl.querySelector('#water-focus-overlay');
         if (!stageEl ||
             !gridEl ||
             !guideLayerEl ||
             !guideMascotEl ||
+            !parentPanelTriggerBtn ||
             !feedbackEl ||
             !repeatModeSelect ||
             !customAudioTextInput ||
@@ -94,6 +98,7 @@ export class SpeechGameModule {
         this.gridEl = gridEl;
         this.guideLayerEl = guideLayerEl;
         this.guideMascotEl = guideMascotEl;
+        this.parentPanelTriggerBtn = parentPanelTriggerBtn;
         this.feedbackEl = feedbackEl;
         this.repeatModeSelect = repeatModeSelect;
         this.customAudioTextInput = customAudioTextInput;
@@ -116,11 +121,12 @@ export class SpeechGameModule {
         this.mascot = mascot;
     }
     init() {
-        this.renderCards(VOCABULARY);
+        this.renderCards(SCENE_VOCABULARY);
         this.loadSettings();
         this.refreshCustomAudioMap();
         this.bindEvents();
         this.bindSettingsEvents();
+        this.bindParentPanelAccess();
         this.syncCustomAudioSupportState();
         this.rootEl.setAttribute('data-last-word', '');
         this.rootEl.setAttribute('data-water-spilled', 'false');
@@ -131,6 +137,9 @@ export class SpeechGameModule {
         this.syncSettingsToDom();
         this.renderRecordingLibrary();
         this.renderProgressPanel();
+        window.requestAnimationFrame(() => {
+            this.activateInitialTarget();
+        });
         this.mascot.sayHint();
     }
     renderCards(vocabulary) {
@@ -138,21 +147,35 @@ export class SpeechGameModule {
             .map((item) => {
             if (item.word === 'su') {
                 return `
-            <button class="word-card" type="button" data-word="${item.word}" data-repeats="${item.repeats}">
-              <div class="water-visual" aria-hidden="true">
+            <button
+              class="word-card ${item.sceneClass ?? ''}"
+              type="button"
+              data-word="${item.word}"
+              data-repeats="${item.repeats}"
+              aria-label="${item.label}"
+            >
+              <div class="word-illustration water-visual" aria-hidden="true">
                 <img class="water-glass-image" src="/assets/water-glass.svg" alt="" />
                 <div class="water-glass-shimmer"></div>
                 <div class="spill-stream"></div>
                 <div class="spill-pool"></div>
               </div>
-              <span class="word-label">${item.label}</span>
+              <span class="visually-hidden">${item.label}</span>
             </button>
           `;
             }
             return `
-          <button class="word-card" type="button" data-word="${item.word}" data-repeats="${item.repeats}">
-            <span class="word-emoji" aria-hidden="true">${item.emoji}</span>
-            <span class="word-label">${item.label}</span>
+          <button
+            class="word-card ${item.sceneClass ?? ''}"
+            type="button"
+            data-word="${item.word}"
+            data-repeats="${item.repeats}"
+            aria-label="${item.label}"
+          >
+            <div class="word-illustration" aria-hidden="true">
+              <img class="word-object-image" src="${item.asset ?? ''}" alt="" />
+            </div>
+            <span class="visually-hidden">${item.label}</span>
           </button>
         `;
         })
@@ -238,6 +261,33 @@ export class SpeechGameModule {
         this.progressResetBtn.addEventListener('click', () => {
             this.resetProgressCounters();
         });
+    }
+    bindParentPanelAccess() {
+        this.parentPanelTriggerBtn.addEventListener('click', () => {
+            this.rootEl.dispatchEvent(new CustomEvent('open-parent-panel', { bubbles: true }));
+        });
+        let holdTimeoutId = null;
+        const clearHold = () => {
+            if (holdTimeoutId !== null) {
+                window.clearTimeout(holdTimeoutId);
+                holdTimeoutId = null;
+            }
+            this.guideMascotEl.classList.remove('is-holding');
+        };
+        this.guideMascotEl.addEventListener('pointerdown', (event) => {
+            if (event.pointerType === 'mouse' && event.button !== 0) {
+                return;
+            }
+            clearHold();
+            this.guideMascotEl.classList.add('is-holding');
+            holdTimeoutId = window.setTimeout(() => {
+                this.parentPanelTriggerBtn.click();
+                clearHold();
+            }, 700);
+        });
+        this.guideMascotEl.addEventListener('pointerup', clearHold);
+        this.guideMascotEl.addEventListener('pointerleave', clearHold);
+        this.guideMascotEl.addEventListener('pointercancel', clearHold);
     }
     syncCustomAudioSupportState() {
         const supported = typeof window.MediaRecorder !== 'undefined' &&
@@ -516,6 +566,20 @@ export class SpeechGameModule {
         this.mascot.sayPraise();
         this.scheduleGuidedTransition(button, nextButton, sequenceDuration);
     }
+    activateInitialTarget() {
+        const firstButton = this.gridEl.querySelector('.word-card');
+        if (!firstButton) {
+            return;
+        }
+        this.activeNextButton = firstButton;
+        firstButton.classList.add('is-next-target');
+        firstButton.setAttribute('data-next-target', 'true');
+        this.rootEl.setAttribute('data-next-word', firstButton.dataset.word ?? '');
+        this.rootEl.setAttribute('data-guide-prompt', 'Hadi dokun');
+        this.rootEl.setAttribute('data-guide-active', 'true');
+        this.feedbackEl.textContent = 'Bir nesneye dokun.';
+        this.placeGuideMascot(firstButton);
+    }
     resolveRepeats(defaultRepeats) {
         if (this.settings.repeatMode === 'default') {
             return defaultRepeats;
@@ -700,10 +764,15 @@ export class SpeechGameModule {
             this.guideMascotEl.style.transform = `translate(${to.x}px, ${to.y}px) scale(1)`;
         });
     }
+    placeGuideMascot(button) {
+        const target = this.resolveGuidePosition(button);
+        this.guideLayerEl.classList.add('is-active');
+        this.guideMascotEl.style.transform = `translate(${target.x}px, ${target.y}px) scale(1)`;
+    }
     resolveGuidePosition(button) {
         const stageRect = this.stageEl.getBoundingClientRect();
         const buttonRect = button.getBoundingClientRect();
-        const mascotSize = 62;
+        const mascotSize = this.guideMascotEl.getBoundingClientRect().width || 84;
         const x = buttonRect.left - stageRect.left + buttonRect.width / 2 - mascotSize / 2;
         const y = buttonRect.top - stageRect.top - mascotSize * 0.82;
         return {

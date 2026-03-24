@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <radialGradient id="appleBody" cx="40%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#ffb6a4"/>
+      <stop offset="100%" stop-color="#ff614a"/>
+    </radialGradient>
+    <linearGradient id="appleLeaf" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9dd862"/>
+      <stop offset="100%" stop-color="#57a548"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="100" cy="176" rx="48" ry="13" fill="#f2d4bd" opacity=".42"/>
+  <path d="M100 50c-14-12-42-9-56 14-18 30-3 82 29 95 11 4 18 1 27-4 8 5 16 8 27 4 31-11 45-64 28-95-14-23-42-26-55-14Z" fill="url(#appleBody)"/>
+  <path d="M101 44c-4-16 5-29 18-36" fill="none" stroke="#7f5024" stroke-linecap="round" stroke-width="8"/>
+  <path d="M106 31c17-10 39-5 48 15-17 5-37 0-48-15Z" fill="url(#appleLeaf)"/>
+  <path d="M76 76c-6 7-10 16-10 28 0 13 4 24 11 32" fill="none" stroke="#ffdccd" stroke-linecap="round" stroke-width="10"/>
+  <circle cx="78" cy="74" r="10" fill="#fff2e8" opacity=".62"/>
+</svg>

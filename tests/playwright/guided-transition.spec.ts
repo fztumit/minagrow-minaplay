@@ -7,10 +7,10 @@ test('guided transition moves phoenix to the next word target', async ({ page })
 
   await page.waitForFunction(() => {
     const speechRoot = document.getElementById('view-speech');
-    return speechRoot?.getAttribute('data-next-word') === 'anne';
+    return speechRoot?.getAttribute('data-next-word') === 'top';
   });
 
-  await expect(page.locator('.word-card[data-word="anne"]')).toHaveClass(/is-next-target/);
+  await expect(page.locator('.word-card[data-word="top"]')).toHaveClass(/is-next-target/);
   await expect(page.locator('#view-speech')).toHaveAttribute('data-guide-active', 'true');
   await expect(page.locator('#view-speech')).toHaveAttribute('data-guide-prompt', 'Şimdi buna dokun');
 
@@ -27,7 +27,7 @@ test('guided transition moves phoenix to the next word target', async ({ page })
     };
   });
 
-  expect(state.state?.speech?.next_word).toBe('anne');
+  expect(state.state?.speech?.next_word).toBe('top');
   expect(state.state?.speech?.guide_active).toBe(true);
   expect(state.prompts.at(-1)).toBe('Şimdi buna dokun.');
   expect(state.sounds.at(-1)).toBe('guide-chime');

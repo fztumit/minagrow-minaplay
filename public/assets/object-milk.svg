@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="milkGlass" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f9fdff"/>
+      <stop offset="100%" stop-color="#dceefe"/>
+    </linearGradient>
+    <linearGradient id="milkFill" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fffdf8"/>
+      <stop offset="100%" stop-color="#fff0d0"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="100" cy="174" rx="50" ry="14" fill="#d7e1ec" opacity=".45"/>
+  <path d="M60 34h80l-10 108c-1 10-9 18-19 18H89c-10 0-18-8-19-18L60 34Z" fill="url(#milkGlass)" stroke="#89c4e4" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M72 52h56l-7 82c-1 6-6 11-12 11H91c-6 0-11-5-12-11l-7-82Z" fill="url(#milkFill)"/>
+  <path d="M60 34h80" stroke="#b6e2ff" stroke-linecap="round" stroke-width="8"/>
+  <path d="M79 42h20" stroke="#ffffff" stroke-linecap="round" stroke-width="8" opacity=".75"/>
+  <path d="M118 42h10" stroke="#ffffff" stroke-linecap="round" stroke-width="8" opacity=".55"/>
+  <circle cx="133" cy="68" r="8" fill="#fff8da"/>
+</svg>

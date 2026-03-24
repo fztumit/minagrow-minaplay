@@ -851,3 +851,46 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
   - `speech.guide_prompt: "Şimdi buna dokun"`
   - `speech.guide_active: true`
 - Note: the skill client's canvas-only screenshot captures the hidden sleep canvas in this DOM-based layout, so visual verification for this pass relies on the passing Playwright assertions plus state output rather than the raw client screenshot.
+
+## Continuation Update: Child-First Main Screen
+- Rebuilt the default speech screen as a child-first play scene:
+  - removed visible parent controls from the main screen
+  - replaced text/emoji cards with 6 large SVG object targets in a simple playroom layout
+  - kept only bottom navigation visible by default
+- Added a floating in-scene Anka flow:
+  - Anka now starts on the first target
+  - continues guiding to the next object after each interaction
+  - long-pressing Anka opens the hidden parent panel
+- Moved main-screen parent controls into a separate parent panel (`view-parent`):
+  - daily word recording
+  - daily activity tracking
+  - speech repeat/custom audio/backup/progress controls
+  - family avatar creator
+- Added new scene assets:
+  - `public/assets/object-ball.svg`
+  - `public/assets/object-car.svg`
+  - `public/assets/object-book.svg`
+  - `public/assets/object-apple.svg`
+  - `public/assets/object-milk.svg`
+- Updated tests to reflect the new child-first layout and hidden parent access pattern.
+
+## Validation (Child-First UI)
+- `npm run build` ✅
+- `npx playwright test --workers=1` ✅
+
+## Continuation Update: Parent Panel Expansion
+- Moved additional non-child settings out of the visible `Stories` and `Sleep` screens into the same hidden parent panel:
+  - stories level / pack selectors
+  - pack progress and comparison summaries
+  - easy sentence editor
+  - story sentence recording controls
+  - sleep sound selector
+  - sleep timer controls
+- Kept child-facing surfaces visible:
+  - stories list + reader + listen/repeat/next buttons
+  - sleep scene + start/stop action + status
+- Updated `StoriesModule` and `SleepModeModule` so their child-facing roots and parent-facing controls can live in different DOM sections.
+
+## Validation (Expanded Parent Panel)
+- `npm run build` ✅
+- `npx playwright test --workers=1` ✅

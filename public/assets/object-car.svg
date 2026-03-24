@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200">
+  <defs>
+    <linearGradient id="carBody" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffb056"/>
+      <stop offset="100%" stop-color="#ff784b"/>
+    </linearGradient>
+    <linearGradient id="carTop" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffe9a5"/>
+      <stop offset="100%" stop-color="#ffd574"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="120" cy="176" rx="84" ry="14" fill="#f2d7b6" opacity=".45"/>
+  <path d="M48 118c0-20 16-36 36-36h11l14-28c5-10 16-16 27-16h28c13 0 24 7 29 18l11 26h8c16 0 28 13 28 28v22c0 8-6 14-14 14H62c-8 0-14-6-14-14v-14Z" fill="url(#carBody)"/>
+  <path d="M89 84h95l-11-24c-2-5-8-9-14-9h-28c-6 0-11 3-14 8L89 84Z" fill="url(#carTop)"/>
+  <path d="M98 86h34V58h-6c-4 0-8 2-10 5L98 86Z" fill="#fff8ef" opacity=".8"/>
+  <path d="M140 58h18c5 0 9 3 11 7l9 21h-38V58Z" fill="#fff8ef" opacity=".8"/>
+  <circle cx="82" cy="146" r="24" fill="#3d4663"/>
+  <circle cx="82" cy="146" r="12" fill="#fff5ec"/>
+  <circle cx="182" cy="146" r="24" fill="#3d4663"/>
+  <circle cx="182" cy="146" r="12" fill="#fff5ec"/>
+  <rect x="58" y="112" width="20" height="9" rx="4.5" fill="#fff0bd"/>
+  <rect x="195" y="112" width="24" height="9" rx="4.5" fill="#fff0bd"/>
+  <path d="M66 90h18" stroke="#ffcf66" stroke-linecap="round" stroke-width="8"/>
+</svg>

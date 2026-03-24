@@ -39,13 +39,13 @@ export class StoriesModule {
     mediaRecorder = null;
     recordingChunks = [];
     recordingStream = null;
-    constructor(rootEl, mascot) {
-        const levelSelect = rootEl.querySelector('#story-level-select');
-        const packSelect = rootEl.querySelector('#story-pack-select');
-        const easySentenceForm = rootEl.querySelector('#easy-sentence-form');
-        const easySentenceInput = rootEl.querySelector('#easy-sentence-input');
-        const easySentenceHint = rootEl.querySelector('#easy-sentence-hint');
-        const easySentenceListEl = rootEl.querySelector('#easy-sentence-list');
+    constructor(rootEl, mascot, controlsRoot = rootEl) {
+        const levelSelect = controlsRoot.querySelector('#story-level-select');
+        const packSelect = controlsRoot.querySelector('#story-pack-select');
+        const easySentenceForm = controlsRoot.querySelector('#easy-sentence-form');
+        const easySentenceInput = controlsRoot.querySelector('#easy-sentence-input');
+        const easySentenceHint = controlsRoot.querySelector('#easy-sentence-hint');
+        const easySentenceListEl = controlsRoot.querySelector('#easy-sentence-list');
         const listEl = rootEl.querySelector('#story-list');
         const titleEl = rootEl.querySelector('#story-title');
         const sentenceEl = rootEl.querySelector('#story-sentence');
@@ -53,16 +53,16 @@ export class StoriesModule {
         const listenBtn = rootEl.querySelector('#story-listen');
         const repeatBtn = rootEl.querySelector('#story-repeat');
         const nextBtn = rootEl.querySelector('#story-next');
-        const storyAudioTargetEl = rootEl.querySelector('#story-audio-target');
-        const storyAudioStatusEl = rootEl.querySelector('#story-audio-status');
-        const storyRecordStartBtn = rootEl.querySelector('#story-audio-record-start');
-        const storyRecordStopBtn = rootEl.querySelector('#story-audio-record-stop');
-        const storyRecordPlayBtn = rootEl.querySelector('#story-audio-play');
-        const storyRecordDeleteBtn = rootEl.querySelector('#story-audio-delete');
-        const storyPackProgressSummaryEl = rootEl.querySelector('#story-pack-progress-summary');
-        const storyPackProgressListEl = rootEl.querySelector('#story-pack-progress-list');
-        const storyPackCompareSummaryEl = rootEl.querySelector('#story-pack-compare-summary');
-        const storyPackCompareListEl = rootEl.querySelector('#story-pack-compare-list');
+        const storyAudioTargetEl = controlsRoot.querySelector('#story-audio-target');
+        const storyAudioStatusEl = controlsRoot.querySelector('#story-audio-status');
+        const storyRecordStartBtn = controlsRoot.querySelector('#story-audio-record-start');
+        const storyRecordStopBtn = controlsRoot.querySelector('#story-audio-record-stop');
+        const storyRecordPlayBtn = controlsRoot.querySelector('#story-audio-play');
+        const storyRecordDeleteBtn = controlsRoot.querySelector('#story-audio-delete');
+        const storyPackProgressSummaryEl = controlsRoot.querySelector('#story-pack-progress-summary');
+        const storyPackProgressListEl = controlsRoot.querySelector('#story-pack-progress-list');
+        const storyPackCompareSummaryEl = controlsRoot.querySelector('#story-pack-compare-summary');
+        const storyPackCompareListEl = controlsRoot.querySelector('#story-pack-compare-list');
         if (!levelSelect ||
             !packSelect ||
             !easySentenceForm ||

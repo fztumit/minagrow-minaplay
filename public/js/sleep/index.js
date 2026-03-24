@@ -276,9 +276,9 @@ export class SleepModeModule {
     stopTimeout = null;
     stars = [];
     starLoopHandle = 0;
-    constructor(rootEl, mascot) {
-        const soundSelect = rootEl.querySelector('#sleep-sound-select');
-        const timerGroup = rootEl.querySelector('#sleep-timers');
+    constructor(rootEl, mascot, controlsRoot = rootEl) {
+        const soundSelect = controlsRoot.querySelector('#sleep-sound-select');
+        const timerGroup = controlsRoot.querySelector('#sleep-timers');
         const toggleBtn = rootEl.querySelector('#sleep-toggle');
         const statusEl = rootEl.querySelector('#sleep-status');
         const countdownEl = rootEl.querySelector('#sleep-countdown');

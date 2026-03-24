@@ -4,6 +4,10 @@ test('easy sentence editor adds and removes custom two-word sentence', async ({ 
   await page.goto('/');
 
   await page.click('.tab-btn[data-view="stories"]');
+  await page.evaluate(() => {
+    (document.getElementById('parent-panel-trigger') as HTMLButtonElement | null)?.click();
+  });
+  await expect(page.locator('#view-parent')).toHaveClass(/active/);
   await expect(page.locator('#story-level-select')).toHaveValue('easy');
 
   await page.fill('#easy-sentence-input', 'Dede bak');

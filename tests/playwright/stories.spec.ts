@@ -4,9 +4,15 @@ test('stories easy level provides two-word starter sentences', async ({ page }) 
   await page.goto('/');
 
   await page.click('.tab-btn[data-view="stories"]');
+  await page.evaluate(() => {
+    (document.getElementById('parent-panel-trigger') as HTMLButtonElement | null)?.click();
+  });
+  await expect(page.locator('#view-parent')).toHaveClass(/active/);
   await expect(page.locator('#story-level-select')).toHaveValue('easy');
   await expect(page.locator('#story-audio-record-start')).toBeVisible();
   await expect(page.locator('#story-audio-play')).toBeVisible();
+  await page.click('#parent-panel-close');
+  await expect(page.locator('#view-stories')).toHaveClass(/active/);
 
   const firstSentence = (await page.locator('#story-sentence').innerText()).trim();
   expect(firstSentence).toBe('Su iç');

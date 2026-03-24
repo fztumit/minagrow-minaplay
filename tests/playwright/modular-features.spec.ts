@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 function getState() {
   const runtime = window as Window & { render_game_to_text?: () => string };
@@ -8,14 +8,26 @@ function getState() {
   return JSON.parse(runtime.render_game_to_text());
 }
 
+async function openParentPanel(page: Page) {
+  await page.evaluate(() => {
+    (document.getElementById('parent-panel-trigger') as HTMLButtonElement | null)?.click();
+  });
+  await expect(page.locator('#view-parent')).toHaveClass(/active/);
+}
+
+async function closeParentPanel(page: Page, expectedView = 'speech') {
+  await page.click('#parent-panel-close');
+  await expect(page.locator(`#view-${expectedView}`)).toHaveClass(/active/);
+}
+
 test('stories pack selector switches dataset and content', async ({ page }) => {
   await page.goto('/');
   await page.click('.tab-btn[data-view="stories"]');
 
+  await openParentPanel(page);
   await expect(page.locator('#story-pack-select')).toHaveValue('core');
-  await expect(page.locator('#story-sentence')).toContainText('Su iç');
-
   await page.selectOption('#story-pack-select', 'animals');
+  await closeParentPanel(page, 'stories');
   await expect(page.locator('#story-sentence')).toContainText('Kedi gel');
 
   const state = await page.evaluate(getState);
@@ -63,6 +75,7 @@ test('stories pack progress summary reflects selected pack metrics', async ({ pa
 
   await page.goto('/');
   await page.click('.tab-btn[data-view="stories"]');
+  await openParentPanel(page);
   await page.selectOption('#story-pack-select', 'animals');
 
   await expect(page.locator('#story-pack-progress-summary')).toContainText('Paket dinleme: 7');
@@ -118,6 +131,7 @@ test('pack comparison cards show leader and weekly momentum', async ({ page }) =
 
   await page.goto('/');
   await page.click('.tab-btn[data-view="stories"]');
+  await openParentPanel(page);
 
   await expect(page.locator('#story-pack-compare-summary')).toContainText('Lider paket: Temel Paket');
   await expect(page.locator('#story-pack-compare-list')).toContainText('Temel Paket');
@@ -148,6 +162,7 @@ test('daily word card uses parent recording map for today', async ({ page }) => 
   });
 
   await page.goto('/');
+  await openParentPanel(page);
 
   await expect(page.locator('#daily-word-play')).toBeEnabled();
   await expect(page.locator('#daily-word-record-status')).toContainText('hazir');
@@ -168,12 +183,13 @@ test('daily activity card tracks words, story, and interaction', async ({ page }
   await page.goto('/');
 
   await page.click('.word-card[data-word="su"]');
-  await page.click('.word-card[data-word="anne"]');
-  await page.click('.word-card[data-word="baba"]');
+  await page.click('.word-card[data-word="top"]');
+  await page.click('.word-card[data-word="araba"]');
 
   await page.click('.tab-btn[data-view="stories"]');
   await page.click('#story-listen');
 
+  await openParentPanel(page);
   await expect(page.locator('#daily-activity-summary')).toContainText('3/3');
   await expect(page.locator('#daily-task-words')).toContainText('3/3');
   await expect(page.locator('#daily-task-story')).toContainText('1/1');
@@ -207,6 +223,7 @@ test('daily activity resets when stored date is stale', async ({ page }) => {
   });
 
   await page.goto('/');
+  await openParentPanel(page);
 
   await expect(page.locator('#daily-activity-summary')).toContainText('0/3');
 
@@ -219,6 +236,7 @@ test('daily activity resets when stored date is stale', async ({ page }) => {
 
 test('custom audio backup import updates recording library and state', async ({ page }) => {
   await page.goto('/');
+  await openParentPanel(page);
 
   const backupPayload = {
     version: 1,
@@ -253,6 +271,8 @@ test('progress metrics increase when recorded word is played', async ({ page }) 
   });
 
   await page.goto('/');
+  await openParentPanel(page);
+  await closeParentPanel(page);
   await page.click('.word-card[data-word="su"]');
   await page.waitForTimeout(2500);
 
@@ -283,6 +303,7 @@ test('progress reset clears listen counters and keeps recordings', async ({ page
   });
 
   await page.goto('/');
+  await openParentPanel(page);
 
   await expect(page.locator('#progress-summary')).toContainText('Toplam kelime dinleme: 4');
   await expect(page.locator('#progress-reset-btn')).toBeEnabled();

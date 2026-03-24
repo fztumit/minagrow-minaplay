@@ -16,58 +16,129 @@
   </head>
   <body>
     <div class="app-shell">
-      <header class="hero-card">
-        <div class="mascot-row">
-          <div class="mascot-shell" id="mascot-shell" data-mascot-variant="normal" aria-hidden="true">
-            <img class="phoenix-main" id="phoenix-main" src="/assets/phoenix-ui.svg" alt="Dost Anka" />
-          </div>
-          <div>
-            <h1>MinaPlay</h1>
-            <p class="hero-subtitle">MinaGrow ile 2-6 yaş için konuşma pratiği ve ebeveyn destek araçları</p>
-            <p class="mascot-message" id="mascot-message">Hadi dokun.</p>
-          </div>
-        </div>
-
-        <section class="daily-word-card" id="daily-word-card" aria-live="polite">
-          <span>Bugünün Kelimesi</span>
-          <strong id="daily-word-text">SU</strong>
-          <div class="daily-word-actions">
-            <button type="button" id="daily-word-record-start" class="secondary-btn">Kelimeyi Kaydet</button>
-            <button type="button" id="daily-word-record-stop" class="secondary-btn" disabled>Durdur</button>
-            <button type="button" id="daily-word-play" class="secondary-btn">Çal</button>
-            <button type="button" id="daily-word-delete" class="secondary-btn">Sil</button>
-          </div>
-          <p class="daily-word-status" id="daily-word-record-status">Bugünün kelimesini ebeveyn sesiyle kaydedin.</p>
-        </section>
-
-        <section class="daily-activity-card" id="daily-activity-card" aria-live="polite">
-          <span>Günlük Aktivite Kartı</span>
-          <p class="daily-activity-summary" id="daily-activity-summary">0/3 tamamlandı</p>
-          <div class="daily-activity-list">
-            <p class="daily-activity-item" id="daily-task-words">⬜ 3 kelime: 0/3</p>
-            <p class="daily-activity-item" id="daily-task-story">⬜ 1 hikaye: 0/1</p>
-            <p class="daily-activity-item" id="daily-task-interaction">⬜ 1 etkileşim: 0/1</p>
-          </div>
-          <p class="daily-activity-date" id="daily-activity-date"></p>
-        </section>
+      <header class="app-chrome">
+        <h1 class="visually-hidden">MinaPlay</h1>
+        <p class="mascot-message" id="mascot-message">Hadi dokun.</p>
       </header>
-
-      <nav class="module-tabs" role="tablist" aria-label="Modüller">
-        <button class="tab-btn active" role="tab" aria-selected="true" data-view="speech">Konuşma Oyunu</button>
-        <button class="tab-btn" role="tab" aria-selected="false" data-view="stories">Hikayeler</button>
-        <button class="tab-btn" role="tab" aria-selected="false" data-view="sleep">Uyku Modu</button>
-        <button class="tab-btn" role="tab" aria-selected="false" data-view="family">Aile Avatarları</button>
-      </nav>
 
       <main>
         <section class="module-view active" id="view-speech" data-module="speech">
-          <div class="module-header">
+          <div class="module-header visually-hidden">
             <h2>Dokun ve Söyle</h2>
             <p>Nesnelere dokununca kelime sesli tekrar edilir. Su nesnesi 3 kez söylenir.</p>
           </div>
 
+          <div class="speech-stage" id="speech-stage" aria-label="Oyun sahnesi">
+            <div class="speech-scene-backdrop" aria-hidden="true">
+              <div class="scene-window">
+                <div class="scene-window-sun"></div>
+                <div class="scene-window-cloud scene-window-cloud-a"></div>
+                <div class="scene-window-cloud scene-window-cloud-b"></div>
+              </div>
+              <div class="scene-shelf"></div>
+              <div class="scene-rug"></div>
+              <div class="scene-basket"></div>
+            </div>
+            <button type="button" id="parent-panel-trigger" class="visually-hidden">Ebeveyn panelini aç</button>
+            <div class="speech-guide-layer" id="speech-guide-layer" aria-hidden="true">
+              <div class="speech-guide-mascot" id="speech-guide-mascot" aria-label="Anka">
+                <img src="/assets/phoenix-ui.svg" alt="" />
+              </div>
+            </div>
+            <div class="speech-grid" id="speech-grid" aria-label="Sesli nesneler"></div>
+          </div>
+          <p class="speech-feedback visually-hidden" id="speech-feedback" aria-live="polite">Bir nesneye dokun.</p>
+          <div class="water-focus-overlay" id="water-focus-overlay" aria-hidden="true">
+            <div class="water-focus-stage">
+              <img class="water-focus-glass" src="/assets/water-glass.svg" alt="" />
+              <div class="water-focus-stream"></div>
+              <div class="water-focus-splash"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="module-view" id="view-stories" data-module="stories">
+          <div class="module-header">
+            <h2>Hikayeler</h2>
+            <p>Kısa hikayeleri dinle, cümleyi tekrar et ve sonraki cümleye geç.</p>
+          </div>
+
+          <div class="stories-layout">
+            <aside class="story-list" id="story-list" aria-label="Hikaye listesi"></aside>
+
+            <article class="story-reader">
+              <h3 id="story-title">Hikaye</h3>
+              <p class="story-sentence" id="story-sentence">Hikaye seç.</p>
+              <p class="story-counter" id="story-counter"></p>
+
+              <div class="story-controls">
+                <button type="button" id="story-listen" class="primary-btn">Dinle</button>
+                <button type="button" id="story-repeat" class="secondary-btn">Tekrar Et</button>
+                <button type="button" id="story-next" class="secondary-btn">Sonraki Cümle</button>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="module-view" id="view-sleep" data-module="sleep">
+          <div class="module-header">
+            <h2>Uyku Modu</h2>
+            <p>Karanlık sahnede yıldızlar, uyuyan Anka ve sakinleştirici sesler.</p>
+          </div>
+
+          <div class="sleep-stage">
+            <canvas id="sleep-stars" width="640" height="260" aria-hidden="true"></canvas>
+            <div class="sleep-phoenix-shell" aria-hidden="true">
+              <img class="sleep-phoenix" id="sleep-phoenix" src="/assets/phoenix-sleep.svg" alt="Uyuyan Anka" />
+            </div>
+            <p class="sleep-caption">Anka dinleniyor... iyi uykular.</p>
+          </div>
+
+          <div class="sleep-controls sleep-controls-child">
+            <button type="button" id="sleep-toggle" class="primary-btn">Uyku Sesini Başlat</button>
+            <p class="sleep-status" id="sleep-status" aria-live="polite">Hazır.</p>
+            <p class="sleep-countdown" id="sleep-countdown" aria-live="polite"></p>
+          </div>
+        </section>
+
+        <section class="module-view parent-panel-view" id="view-parent" data-module="parent">
+          <div class="parent-panel-header">
+            <div>
+              <h2>Ebeveyn Paneli</h2>
+              <p>Anka'ya uzun basarak bu ekrana dönebilirsin.</p>
+            </div>
+            <button type="button" id="parent-panel-close" class="secondary-btn">Çocuk Ekranına Dön</button>
+          </div>
+
+          <div class="parent-overview-grid">
+            <section class="daily-word-card" id="daily-word-card" aria-live="polite">
+              <span>Bugünün Kelimesi</span>
+              <strong id="daily-word-text">SU</strong>
+              <div class="daily-word-actions">
+                <button type="button" id="daily-word-record-start" class="secondary-btn">Kelimeyi Kaydet</button>
+                <button type="button" id="daily-word-record-stop" class="secondary-btn" disabled>Durdur</button>
+                <button type="button" id="daily-word-play" class="secondary-btn">Çal</button>
+                <button type="button" id="daily-word-delete" class="secondary-btn">Sil</button>
+              </div>
+              <p class="daily-word-status" id="daily-word-record-status">
+                Bugünün kelimesini ebeveyn sesiyle kaydedin.
+              </p>
+            </section>
+
+            <section class="daily-activity-card" id="daily-activity-card" aria-live="polite">
+              <span>Günlük Aktivite Kartı</span>
+              <p class="daily-activity-summary" id="daily-activity-summary">0/3 tamamlandı</p>
+              <div class="daily-activity-list">
+                <p class="daily-activity-item" id="daily-task-words">⬜ 3 kelime: 0/3</p>
+                <p class="daily-activity-item" id="daily-task-story">⬜ 1 hikaye: 0/1</p>
+                <p class="daily-activity-item" id="daily-task-interaction">⬜ 1 etkileşim: 0/1</p>
+              </div>
+              <p class="daily-activity-date" id="daily-activity-date"></p>
+            </section>
+          </div>
+
           <section class="parent-settings" aria-label="Ebeveyn ayarları">
-            <h3>Ebeveyn Ayarları</h3>
+            <h3>Konuşma Ayarları</h3>
             <div class="parent-settings-grid">
               <label>
                 Tekrar Sayısı
@@ -118,173 +189,126 @@
             </div>
           </section>
 
-          <div class="speech-stage" id="speech-stage">
-            <div class="speech-guide-layer" id="speech-guide-layer" aria-hidden="true">
-              <div class="speech-guide-mascot" id="speech-guide-mascot">
-                <img src="/assets/phoenix-ui.svg" alt="" />
+          <section class="parent-settings" id="stories-settings-panel" aria-label="Hikaye ayarlari">
+            <h3>Hikaye Ayarları</h3>
+            <section class="story-level-bar" aria-label="Hikaye seviyesi">
+              <label for="story-level-select">Seviye</label>
+              <select id="story-level-select">
+                <option value="easy">Kolay (2 kelime)</option>
+                <option value="standard">Standart</option>
+              </select>
+              <label for="story-pack-select">Paket</label>
+              <select id="story-pack-select">
+                <option value="core">Temel Paket</option>
+                <option value="animals">Hayvanlar</option>
+                <option value="daily">Gunluk Yasam</option>
+              </select>
+            </section>
+
+            <section class="story-pack-progress" aria-label="Paket ilerleme ozeti">
+              <h3>Paket İlerlemesi</h3>
+              <p class="story-pack-progress-summary" id="story-pack-progress-summary">Yukleniyor...</p>
+              <div class="story-pack-progress-list" id="story-pack-progress-list"></div>
+            </section>
+
+            <section class="story-pack-compare" aria-label="Paketler arasi karsilastirma">
+              <h3>Paketler Arası Karşılaştırma</h3>
+              <p class="story-pack-compare-summary" id="story-pack-compare-summary">Yukleniyor...</p>
+              <div class="story-pack-compare-list" id="story-pack-compare-list"></div>
+            </section>
+
+            <section class="easy-editor" aria-label="Kolay cümle düzenleyici">
+              <h3>Kolay Cümle Ekle/Sil</h3>
+              <form class="easy-editor-form" id="easy-sentence-form">
+                <input
+                  id="easy-sentence-input"
+                  maxlength="32"
+                  placeholder="Örn: Dede gel"
+                  aria-label="Kolay cümle"
+                />
+                <button type="submit" class="secondary-btn">Cümle Ekle</button>
+              </form>
+              <p class="easy-editor-hint" id="easy-sentence-hint">2 kelimelik cümle yaz.</p>
+              <div class="easy-sentence-list" id="easy-sentence-list"></div>
+            </section>
+
+            <section class="story-audio-panel" aria-label="Hikaye ses kaydi">
+              <h3>Hikaye Ses Kaydi</h3>
+              <p class="story-audio-target" id="story-audio-target">Secili cumle: -</p>
+              <div class="story-audio-actions">
+                <button type="button" id="story-audio-record-start" class="secondary-btn">Kayda Basla</button>
+                <button type="button" id="story-audio-record-stop" class="secondary-btn" disabled>Durdur</button>
+                <button type="button" id="story-audio-play" class="secondary-btn">Cal</button>
+                <button type="button" id="story-audio-delete" class="secondary-btn">Sil</button>
+              </div>
+              <p class="story-audio-status" id="story-audio-status">Secili cumleyi kaydedebilirsin.</p>
+            </section>
+          </section>
+
+          <section class="parent-settings" id="sleep-settings-panel" aria-label="Uyku ayarlari">
+            <h3>Uyku Ayarları</h3>
+            <div class="sleep-controls sleep-controls-parent">
+              <label for="sleep-sound-select">Uyku Sesi</label>
+              <select id="sleep-sound-select">
+                <option value="white">White Noise</option>
+                <option value="rain">Rain</option>
+                <option value="wind">Wind</option>
+                <option value="ocean">Ocean Waves</option>
+                <option value="vacuum">Vacuum Cleaner</option>
+                <option value="heartbeat">Heartbeat</option>
+                <option value="pispis">Pış Pış</option>
+              </select>
+
+              <div class="timer-row" id="sleep-timers" role="group" aria-label="Uyku Süresi">
+                <button type="button" class="timer-btn active" data-duration="1800000">30 dakika</button>
+                <button type="button" class="timer-btn" data-duration="3600000">1 saat</button>
+                <button type="button" class="timer-btn" data-duration="7200000">2 saat</button>
+                <button type="button" class="timer-btn" data-duration="allnight">Tüm gece</button>
               </div>
             </div>
-            <div class="speech-grid" id="speech-grid"></div>
-          </div>
-          <p class="speech-feedback" id="speech-feedback" aria-live="polite">Bir nesneye dokun.</p>
-          <div class="water-focus-overlay" id="water-focus-overlay" aria-hidden="true">
-            <div class="water-focus-stage">
-              <img class="water-focus-glass" src="/assets/water-glass.svg" alt="" />
-              <div class="water-focus-stream"></div>
-              <div class="water-focus-splash"></div>
+          </section>
+
+          <section id="family-panel" class="parent-family-panel" data-module="family">
+            <div class="module-header">
+              <h2>Aile Avatar Oluşturucu</h2>
+              <p>İsim, renk ve kameradan fotoğraf ile aile üyelerini ekleyin.</p>
             </div>
-          </div>
-        </section>
 
-        <section class="module-view" id="view-stories" data-module="stories">
-          <div class="module-header">
-            <h2>Hikayeler</h2>
-            <p>Kısa hikayeleri dinle, cümleyi tekrar et ve sonraki cümleye geç.</p>
-          </div>
+            <form class="family-form" id="family-form">
+              <label>
+                İsim
+                <input id="family-name" name="name" maxlength="24" required placeholder="Örn: Anne" />
+              </label>
 
-          <section class="story-level-bar" aria-label="Hikaye seviyesi">
-            <label for="story-level-select">Seviye</label>
-            <select id="story-level-select">
-              <option value="easy">Kolay (2 kelime)</option>
-              <option value="standard">Standart</option>
-            </select>
-            <label for="story-pack-select">Paket</label>
-            <select id="story-pack-select">
-              <option value="core">Temel Paket</option>
-              <option value="animals">Hayvanlar</option>
-              <option value="daily">Gunluk Yasam</option>
-            </select>
-          </section>
+              <label>
+                Renk
+                <input id="family-color" name="color" type="color" value="#ff8f66" />
+              </label>
 
-          <section class="story-pack-progress" aria-label="Paket ilerleme ozeti">
-            <h3>Paket İlerlemesi</h3>
-            <p class="story-pack-progress-summary" id="story-pack-progress-summary">Yukleniyor...</p>
-            <div class="story-pack-progress-list" id="story-pack-progress-list"></div>
-          </section>
+              <label>
+                Fotoğraf
+                <input
+                  id="family-photo"
+                  name="photo"
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                />
+              </label>
 
-          <section class="story-pack-compare" aria-label="Paketler arasi karsilastirma">
-            <h3>Paketler Arası Karşılaştırma</h3>
-            <p class="story-pack-compare-summary" id="story-pack-compare-summary">Yukleniyor...</p>
-            <div class="story-pack-compare-list" id="story-pack-compare-list"></div>
-          </section>
-
-          <section class="easy-editor" aria-label="Kolay cümle düzenleyici">
-            <h3>Kolay Cümle Ekle/Sil</h3>
-            <form class="easy-editor-form" id="easy-sentence-form">
-              <input
-                id="easy-sentence-input"
-                maxlength="32"
-                placeholder="Örn: Dede gel"
-                aria-label="Kolay cümle"
-              />
-              <button type="submit" class="secondary-btn">Cümle Ekle</button>
+              <button class="primary-btn" type="submit">Aile Üyesi Kaydet</button>
             </form>
-            <p class="easy-editor-hint" id="easy-sentence-hint">2 kelimelik cümle yaz.</p>
-            <div class="easy-sentence-list" id="easy-sentence-list"></div>
+
+            <div class="family-list" id="family-list"></div>
           </section>
-
-          <section class="story-audio-panel" aria-label="Hikaye ses kaydi">
-            <h3>Hikaye Ses Kaydi</h3>
-            <p class="story-audio-target" id="story-audio-target">Secili cumle: -</p>
-            <div class="story-audio-actions">
-              <button type="button" id="story-audio-record-start" class="secondary-btn">Kayda Basla</button>
-              <button type="button" id="story-audio-record-stop" class="secondary-btn" disabled>Durdur</button>
-              <button type="button" id="story-audio-play" class="secondary-btn">Cal</button>
-              <button type="button" id="story-audio-delete" class="secondary-btn">Sil</button>
-            </div>
-            <p class="story-audio-status" id="story-audio-status">Secili cumleyi kaydedebilirsin.</p>
-          </section>
-
-          <div class="stories-layout">
-            <aside class="story-list" id="story-list" aria-label="Hikaye listesi"></aside>
-
-            <article class="story-reader">
-              <h3 id="story-title">Hikaye</h3>
-              <p class="story-sentence" id="story-sentence">Hikaye seç.</p>
-              <p class="story-counter" id="story-counter"></p>
-
-              <div class="story-controls">
-                <button type="button" id="story-listen" class="primary-btn">Dinle</button>
-                <button type="button" id="story-repeat" class="secondary-btn">Tekrar Et</button>
-                <button type="button" id="story-next" class="secondary-btn">Sonraki Cümle</button>
-              </div>
-            </article>
-          </div>
-        </section>
-
-        <section class="module-view" id="view-sleep" data-module="sleep">
-          <div class="module-header">
-            <h2>Uyku Modu</h2>
-            <p>Karanlık sahnede yıldızlar, uyuyan Anka ve sakinleştirici sesler.</p>
-          </div>
-
-          <div class="sleep-stage">
-            <canvas id="sleep-stars" width="640" height="260" aria-hidden="true"></canvas>
-            <div class="sleep-phoenix-shell" aria-hidden="true">
-              <img class="sleep-phoenix" id="sleep-phoenix" src="/assets/phoenix-sleep.svg" alt="Uyuyan Anka" />
-            </div>
-            <p class="sleep-caption">Anka dinleniyor... iyi uykular.</p>
-          </div>
-
-          <div class="sleep-controls">
-            <label for="sleep-sound-select">Uyku Sesi</label>
-            <select id="sleep-sound-select">
-              <option value="white">White Noise</option>
-              <option value="rain">Rain</option>
-              <option value="wind">Wind</option>
-              <option value="ocean">Ocean Waves</option>
-              <option value="vacuum">Vacuum Cleaner</option>
-              <option value="heartbeat">Heartbeat</option>
-              <option value="pispis">Pış Pış</option>
-            </select>
-
-            <div class="timer-row" id="sleep-timers" role="group" aria-label="Uyku Süresi">
-              <button type="button" class="timer-btn active" data-duration="1800000">30 dakika</button>
-              <button type="button" class="timer-btn" data-duration="3600000">1 saat</button>
-              <button type="button" class="timer-btn" data-duration="7200000">2 saat</button>
-              <button type="button" class="timer-btn" data-duration="allnight">Tüm gece</button>
-            </div>
-
-            <button type="button" id="sleep-toggle" class="primary-btn">Uyku Sesini Başlat</button>
-            <p class="sleep-status" id="sleep-status" aria-live="polite">Hazır.</p>
-            <p class="sleep-countdown" id="sleep-countdown" aria-live="polite"></p>
-          </div>
-        </section>
-
-        <section class="module-view" id="view-family" data-module="family">
-          <div class="module-header">
-            <h2>Aile Avatar Oluşturucu</h2>
-            <p>İsim, renk ve kameradan fotoğraf ile aile üyelerini ekleyin.</p>
-          </div>
-
-          <form class="family-form" id="family-form">
-            <label>
-              İsim
-              <input id="family-name" name="name" maxlength="24" required placeholder="Örn: Anne" />
-            </label>
-
-            <label>
-              Renk
-              <input id="family-color" name="color" type="color" value="#ff8f66" />
-            </label>
-
-            <label>
-              Fotoğraf
-              <input
-                id="family-photo"
-                name="photo"
-                type="file"
-                accept="image/*"
-                capture="environment"
-              />
-            </label>
-
-            <button class="primary-btn" type="submit">Aile Üyesi Kaydet</button>
-          </form>
-
-          <div class="family-list" id="family-list"></div>
         </section>
       </main>
+
+      <nav class="module-tabs" role="tablist" aria-label="Modüller">
+        <button class="tab-btn active" role="tab" aria-selected="true" data-view="speech">Oyun</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-view="stories">Hikaye</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-view="sleep">Uyku</button>
+      </nav>
     </div>
 
     <script type="module" src="/js/main.js"></script>
