@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 test('water object interaction triggers spill animation', async ({ page }) => {
   await page.goto('/');
 
-  const waterCard = page.locator('.word-card[data-word="su"]');
+  const waterCard = page.locator('.word-card[data-word-id="su"]');
   await waterCard.click();
 
   const waterOverlay = page.locator('#water-focus-overlay');

@@ -3,14 +3,14 @@ import { expect, test } from '@playwright/test';
 test('guided transition moves phoenix to the next word target', async ({ page }) => {
   await page.goto('/');
 
-  await page.click('.word-card[data-word="su"]');
+  await page.click('.word-card[data-word-id="su"]');
 
   await page.waitForFunction(() => {
     const speechRoot = document.getElementById('view-speech');
     return speechRoot?.getAttribute('data-next-word') === 'top';
   });
 
-  await expect(page.locator('.word-card[data-word="top"]')).toHaveClass(/is-next-target/);
+  await expect(page.locator('.word-card[data-word-id="top"]')).toHaveClass(/is-next-target/);
   await expect(page.locator('#view-speech')).toHaveAttribute('data-guide-active', 'true');
   await expect(page.locator('#view-speech')).toHaveAttribute('data-guide-prompt', 'Şimdi buna dokun');
 

@@ -1,4 +1,5 @@
-import type { VocabularyItem } from '../data/vocabulary.js';
+import { getWordProfile } from '../data/wordProfiles.js';
+import type { VocabularyItem, VocabularyWord } from '../data/vocabulary.js';
 import {
   loadCustomAudioMap,
   normalizeSpeechKey,
@@ -15,7 +16,7 @@ export class DailyWordModule {
   private readonly deleteBtn: HTMLButtonElement;
   private readonly statusEl: HTMLElement;
   private readonly vocabulary: VocabularyItem[];
-  private selectedWord = '';
+  private selectedWordId: VocabularyWord | null = null;
   private customAudioMap: CustomAudioMap = {};
   private mediaRecorder: MediaRecorder | null = null;
   private recordingChunks: Blob[] = [];
@@ -43,20 +44,38 @@ export class DailyWordModule {
   }
 
   init(): void {
-    this.selectedWord = this.pickWordOfDay();
-    this.outputEl.textContent = this.selectedWord.toLocaleUpperCase('tr-TR');
+    this.selectedWordId = this.pickWordOfDay();
+    this.renderSelectedWord();
     this.bindEvents();
     this.syncRecordingState();
     this.syncRecorderSupportState();
+
+    window.addEventListener('word-profiles-updated', () => {
+      this.renderSelectedWord();
+      this.syncRecordingState();
+    });
   }
 
-  private pickWordOfDay(): string {
+  private pickWordOfDay(): VocabularyWord {
     const now = new Date();
     const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
     const dayIndex = Math.floor(dayStart / 86_400_000);
     const vocabIndex = Math.abs(dayIndex) % this.vocabulary.length;
 
-    return this.vocabulary[vocabIndex].label;
+    return this.vocabulary[vocabIndex].word;
+  }
+
+  private renderSelectedWord(): void {
+    const selectedWord = this.getSelectedWordLabel();
+    this.outputEl.textContent = selectedWord.toLocaleUpperCase('tr-TR');
+  }
+
+  private getSelectedWordLabel(): string {
+    if (!this.selectedWordId) {
+      return '';
+    }
+
+    return getWordProfile(this.selectedWordId, this.vocabulary).label;
   }
 
   private bindEvents(): void {
@@ -93,7 +112,7 @@ export class DailyWordModule {
   }
 
   private getWordAudioKey(): string {
-    return normalizeSpeechKey(this.selectedWord);
+    return normalizeSpeechKey(this.getSelectedWordLabel());
   }
 
   private syncRecordingState(): void {
@@ -103,11 +122,12 @@ export class DailyWordModule {
 
     this.playBtn.disabled = !hasRecording;
     this.deleteBtn.disabled = !hasRecording;
-    this.rootEl.setAttribute('data-daily-word', this.selectedWord);
+    const selectedWord = this.getSelectedWordLabel();
+    this.rootEl.setAttribute('data-daily-word', selectedWord);
     this.rootEl.setAttribute('data-daily-word-has-audio', String(hasRecording));
 
     if (hasRecording) {
-      this.statusEl.textContent = `"${this.selectedWord}" icin ebeveyn kaydi hazir.`;
+      this.statusEl.textContent = `"${selectedWord}" icin ebeveyn kaydi hazir.`;
     }
   }
 
@@ -147,7 +167,7 @@ export class DailyWordModule {
       this.mediaRecorder.start();
       this.recordStartBtn.disabled = true;
       this.recordStopBtn.disabled = false;
-      this.statusEl.textContent = `"${this.selectedWord}" icin kayit aliniyor...`;
+      this.statusEl.textContent = `"${this.getSelectedWordLabel()}" icin kayit aliniyor...`;
     } catch {
       this.cleanupRecordingResources();
       this.statusEl.textContent = 'Mikrofon acilamadi. Tarayici izinlerini kontrol et.';
@@ -176,7 +196,7 @@ export class DailyWordModule {
       const dataUrl = await this.blobToDataUrl(blob);
       this.customAudioMap[key] = dataUrl;
       saveCustomAudioMap(this.customAudioMap);
-      this.statusEl.textContent = `"${this.selectedWord}" kaydedildi.`;
+      this.statusEl.textContent = `"${this.getSelectedWordLabel()}" kaydedildi.`;
       this.syncRecordingState();
     } finally {
       this.cleanupRecordingResources();
@@ -190,7 +210,7 @@ export class DailyWordModule {
     const key = this.getWordAudioKey();
     const dataUrl = key ? this.customAudioMap[key] : null;
     if (!dataUrl) {
-      this.statusEl.textContent = `"${this.selectedWord}" icin kayit yok.`;
+      this.statusEl.textContent = `"${this.getSelectedWordLabel()}" icin kayit yok.`;
       return;
     }
 
@@ -198,20 +218,20 @@ export class DailyWordModule {
     audio.play().catch(() => {
       this.statusEl.textContent = 'Kayit calinamadi.';
     });
-    this.statusEl.textContent = `"${this.selectedWord}" kaydi caliniyor.`;
+    this.statusEl.textContent = `"${this.getSelectedWordLabel()}" kaydi caliniyor.`;
   }
 
   private deleteRecording(): void {
     this.syncRecordingState();
     const key = this.getWordAudioKey();
     if (!key || !this.customAudioMap[key]) {
-      this.statusEl.textContent = `"${this.selectedWord}" icin kayit yok.`;
+      this.statusEl.textContent = `"${this.getSelectedWordLabel()}" icin kayit yok.`;
       return;
     }
 
     delete this.customAudioMap[key];
     saveCustomAudioMap(this.customAudioMap);
-    this.statusEl.textContent = `"${this.selectedWord}" kaydi silindi.`;
+    this.statusEl.textContent = `"${this.getSelectedWordLabel()}" kaydi silindi.`;
     this.syncRecordingState();
   }
 

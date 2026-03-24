@@ -205,9 +205,9 @@ test('daily activity card tracks words, story, and interaction', async ({ page }
 
   await page.goto('/');
 
-  await page.click('.word-card[data-word="su"]');
-  await page.click('.word-card[data-word="top"]');
-  await page.click('.word-card[data-word="araba"]');
+  await page.click('.word-card[data-word-id="su"]');
+  await page.click('.word-card[data-word-id="top"]');
+  await page.click('.word-card[data-word-id="araba"]');
 
   await page.click('.tab-btn[data-view="stories"]');
   await page.click('#story-listen');
@@ -296,7 +296,7 @@ test('progress metrics increase when recorded word is played', async ({ page }) 
   await page.goto('/');
   await openParentPanel(page);
   await closeParentPanel(page);
-  await page.click('.word-card[data-word="su"]');
+  await page.click('.word-card[data-word-id="su"]');
   await page.waitForTimeout(2500);
 
   const state = await page.evaluate(getState);
@@ -359,11 +359,37 @@ test('progress word rows provide direct recording actions', async ({ page }) => 
   await page.goto('/');
   await openParentPanel(page);
 
-  await expect(page.locator('.progress-row:has(.progress-name:text-is("BABA")) .progress-record-btn[data-action="record"]')).toBeVisible();
-  await expect(page.locator('.progress-row:has(.progress-name:text-is("BABA")) .progress-record-btn[data-action="play"]')).toBeEnabled();
-  await expect(page.locator('.progress-row:has(.progress-name:text-is("SU")) .progress-record-btn[data-action="play"]')).toBeDisabled();
+  await expect(page.locator('.progress-row[data-word-id="baba"] .progress-record-btn[data-action="record"]')).toBeVisible();
+  await expect(page.locator('.progress-row[data-word-id="baba"] .progress-record-btn[data-action="play"]')).toBeEnabled();
+  await expect(page.locator('.progress-row[data-word-id="su"] .progress-record-btn[data-action="play"]')).toBeDisabled();
 
-  await page.click('.progress-row:has(.progress-name:text-is("BABA")) .progress-record-btn[data-action="delete"]');
-  await expect(page.locator('.progress-row:has(.progress-name:text-is("BABA"))')).toContainText('Kayit: Yok');
+  await page.click('.progress-row[data-word-id="baba"] .progress-record-btn[data-action="delete"]');
+  await expect(page.locator('.progress-row[data-word-id="baba"]')).toContainText('Kayit: Yok');
   await expect(page.locator('#custom-audio-status')).toContainText('baba');
+});
+
+test('parent can rename a word and add a matching image from the progress list', async ({ page }) => {
+  await page.goto('/');
+  await openParentPanel(page);
+
+  await page.fill('.progress-row[data-word-id="elma"] .progress-word-input', 'Meyve');
+  await page.click('.progress-row[data-word-id="elma"] .progress-record-btn[data-action="save-label"]');
+
+  await expect(page.locator('.progress-row[data-word-id="elma"] .progress-word-input')).toHaveValue('Meyve');
+  await expect(page.locator('#custom-audio-status')).toContainText('Meyve');
+  await expect(page.locator('.word-card[data-word-id="elma"]')).toHaveAttribute('aria-label', 'Meyve');
+
+  await page.setInputFiles('.progress-row[data-word-id="elma"] .progress-image-input', {
+    name: 'meyve.svg',
+    mimeType: 'image/svg+xml',
+    buffer: Buffer.from(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" rx="16" fill="#ffe08a"/><circle cx="32" cy="34" r="18" fill="#ff9f4a"/><rect x="30" y="10" width="4" height="12" rx="2" fill="#5f8d3b"/></svg>'
+    )
+  });
+
+  await expect(page.locator('.progress-row[data-word-id="elma"] .progress-word-preview img')).toHaveAttribute(
+    'src',
+    /data:image/
+  );
+  await expect(page.locator('.word-card[data-word-id="elma"] .word-object-image')).toHaveAttribute('src', /data:image/);
 });

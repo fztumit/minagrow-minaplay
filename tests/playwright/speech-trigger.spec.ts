@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 test('speech trigger repeats "su" three times', async ({ page }) => {
   await page.goto('/');
 
-  await page.click('.word-card[data-word="su"]');
+  await page.click('.word-card[data-word-id="su"]');
   await page.waitForTimeout(2200);
 
   const speechLog = await page.evaluate(() => {

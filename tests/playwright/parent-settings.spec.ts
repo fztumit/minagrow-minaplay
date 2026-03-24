@@ -7,7 +7,7 @@ test('parent settings repeat mode overrides default repeat count', async ({ page
   await unlockParentPanel(page);
   await page.selectOption('#speech-repeat-mode', '2');
   await page.click('#parent-panel-close');
-  await page.click('.word-card[data-word="su"]');
+  await page.click('.word-card[data-word-id="su"]');
   await page.waitForTimeout(1700);
 
   const state = await page.evaluate(() => {

@@ -318,6 +318,38 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
 - Add optional per-sentence quick actions in the pack list itself (`Kaydet`, `Cal`, `Sil`) if we want an even faster workflow.
 - Consider a dedicated “Aile Sesleri” summary card that shows word vs story-sentence coverage separately.
 
+## Continuation Update: Inline Word Editing + Image Upload
+- Reworked the parent-side word management flow so each word row is directly editable.
+- Every word row in `İlerleme Takibi` now supports:
+  - inline word rename
+  - image upload
+  - image removal
+  - direct `Kaydet / Cal / Sil` voice controls
+- Updated the quick custom-audio panel so the word input and record controls sit together in one inline layout.
+- Added persistent word profile storage:
+  - custom word label
+  - custom image
+- Child scene now reflects parent edits:
+  - renamed words update the interactive object label
+  - uploaded images replace the default object visual where applicable
+- Added migration behavior on rename:
+  - existing word recording moves to the new label
+  - existing word listen progress also moves to the new label
+- Daily word display also reads the updated word profile.
+- Bumped service worker cache version to `minaplay-v22`.
+
+## Validation (Inline Word Editing + Image Upload)
+- `npm run build` ✅
+- `npx playwright test --workers=1` ✅
+  - `21 passed`
+- Official skill client run ✅
+  - output: `output/web-game-word-editor/*`
+  - note: this app is still DOM-first, so state JSON remains more informative than the canvas screenshot for these parent-panel flows
+
+## Remaining TODOs / Suggestions
+- Add drag-and-drop image support for tablet/desktop parent editing.
+- Consider a small crop/fit option so uploaded visuals stay more consistent across the play scene.
+
 ## Continuation Update: Pronunciation Fix (Turkish Voice + Word Queue)
 - Reworked story sentence TTS pipeline for two-word easy sentences to reduce misreads like `gel -> ger` and `iç -> iş`.
 - Added Turkish voice selection in `StoriesModule`:

@@ -1,9 +1,18 @@
 import type { VocabularyItem, VocabularyWord } from '../data/vocabulary.js';
 import { VOCABULARY } from '../data/vocabulary.js';
 import {
+  clearWordImage,
+  getAllWordProfiles,
+  normalizeWordLabel,
+  updateWordImage,
+  updateWordLabel,
+  type ResolvedWordProfile
+} from '../data/wordProfiles.js';
+import {
   getTopSentenceListens,
   getWordListenCount,
   incrementWordListen,
+  renameWordListenKey,
   resetListenProgress
 } from '../progress/listening.js';
 import { MascotGuide } from '../mascot/index.js';
@@ -13,13 +22,14 @@ import {
   loadCustomAudioMap,
   mergeCustomAudioMaps,
   normalizeSpeechKey,
+  renameCustomAudioKey,
   parseCustomAudioBackup,
   saveCustomAudioMap,
   type CustomAudioMap
 } from './customAudio.js';
 
 type SpeechTriggerDetail = {
-  word: VocabularyWord;
+  word: string;
   repeats: number;
 };
 
@@ -171,7 +181,7 @@ export class SpeechGameModule {
   }
 
   init(): void {
-    this.renderCards(SCENE_VOCABULARY);
+    this.renderCards(this.getSceneProfiles());
     this.loadSettings();
     this.refreshCustomAudioMap();
     this.bindEvents();
@@ -190,13 +200,16 @@ export class SpeechGameModule {
     this.renderRecordingLibrary();
     this.renderProgressPanel();
     this.bindGuideLifecycleEvents();
+    window.addEventListener('word-profiles-updated', () => {
+      this.handleWordProfilesUpdated();
+    });
     window.requestAnimationFrame(() => {
       this.activateInitialTarget();
     });
     this.mascot.sayHint();
   }
 
-  private renderCards(vocabulary: VocabularyItem[]): void {
+  private renderCards(vocabulary: ResolvedWordProfile[]): void {
     this.gridEl.innerHTML = vocabulary
       .map((item) => {
         if (item.word === 'su') {
@@ -204,17 +217,18 @@ export class SpeechGameModule {
             <button
               class="word-card ${item.sceneClass ?? ''}"
               type="button"
-              data-word="${item.word}"
+              data-word-id="${item.word}"
+              data-word-label="${this.escapeHtml(item.label)}"
               data-repeats="${item.repeats}"
-              aria-label="${item.label}"
+              aria-label="${this.escapeHtml(item.label)}"
             >
               <div class="word-illustration water-visual" aria-hidden="true">
-                <img class="water-glass-image" src="/assets/water-glass.svg" alt="" />
+                <img class="water-glass-image" src="${this.escapeHtml(item.imageSrc || '/assets/water-glass.svg')}" alt="" />
                 <div class="water-glass-shimmer"></div>
                 <div class="spill-stream"></div>
                 <div class="spill-pool"></div>
               </div>
-              <span class="visually-hidden">${item.label}</span>
+              <span class="visually-hidden">${this.escapeHtml(item.label)}</span>
             </button>
           `;
         }
@@ -223,18 +237,98 @@ export class SpeechGameModule {
           <button
             class="word-card ${item.sceneClass ?? ''}"
             type="button"
-            data-word="${item.word}"
+            data-word-id="${item.word}"
+            data-word-label="${this.escapeHtml(item.label)}"
             data-repeats="${item.repeats}"
-            aria-label="${item.label}"
+            aria-label="${this.escapeHtml(item.label)}"
           >
             <div class="word-illustration" aria-hidden="true">
-              <img class="word-object-image" src="${item.asset ?? ''}" alt="" />
+              <img class="word-object-image" src="${this.escapeHtml(item.imageSrc)}" alt="" />
             </div>
-            <span class="visually-hidden">${item.label}</span>
+            <span class="visually-hidden">${this.escapeHtml(item.label)}</span>
           </button>
         `;
       })
       .join('');
+  }
+
+  private getSceneProfiles(): ResolvedWordProfile[] {
+    return getAllWordProfiles(SCENE_VOCABULARY);
+  }
+
+  private getResolvedWordProfile(wordId: VocabularyWord): ResolvedWordProfile {
+    const profile = getAllWordProfiles().find((item) => item.word === wordId);
+    if (!profile) {
+      throw new Error(`Unknown word profile: ${wordId}`);
+    }
+    return profile;
+  }
+
+  private handleWordProfilesUpdated(): void {
+    const previousActiveWordId = this.activeNextButton?.dataset.wordId as VocabularyWord | undefined;
+    this.renderCards(this.getSceneProfiles());
+    this.renderProgressPanel();
+    this.renderRecordingLibrary();
+
+    const nextWordLabel = this.rootEl.getAttribute('data-next-word') ?? '';
+    const restoredButton =
+      (previousActiveWordId
+        ? Array.from(this.gridEl.querySelectorAll<HTMLButtonElement>('.word-card')).find(
+            (button) => button.dataset.wordId === previousActiveWordId
+          )
+        : null) ??
+      Array.from(this.gridEl.querySelectorAll<HTMLButtonElement>('.word-card')).find(
+        (button) => button.dataset.wordLabel === nextWordLabel
+      ) ??
+      this.gridEl.querySelector<HTMLButtonElement>('.word-card');
+
+    if (restoredButton) {
+      this.clearCurrentNextTarget();
+      this.activeNextButton = restoredButton;
+      restoredButton.classList.add('is-next-target');
+      restoredButton.setAttribute('data-next-target', 'true');
+      this.rootEl.setAttribute('data-next-word', restoredButton.dataset.wordLabel ?? '');
+      this.placeGuideMascot(restoredButton);
+    }
+  }
+
+  private notifyWordProfilesUpdated(): void {
+    window.dispatchEvent(new CustomEvent('word-profiles-updated'));
+  }
+
+  private applyWordLabelUpdate(wordId: VocabularyWord, nextLabel: string): void {
+    const currentProfile = this.getResolvedWordProfile(wordId);
+    if (!nextLabel) {
+      this.customAudioStatusEl.textContent = 'Kelime bos olamaz.';
+      return;
+    }
+
+    if (currentProfile.label !== nextLabel) {
+      this.customAudioMap = renameCustomAudioKey(this.customAudioMap, currentProfile.label, nextLabel);
+      saveCustomAudioMap(this.customAudioMap);
+      renameWordListenKey(currentProfile.label, nextLabel);
+      updateWordLabel(wordId, nextLabel);
+      this.notifyWordProfilesUpdated();
+    } else {
+      this.renderProgressPanel();
+    }
+
+    this.customAudioTextInput.value = nextLabel;
+    this.customAudioStatusEl.textContent = `"${nextLabel}" kelimesi guncellendi.`;
+  }
+
+  private async updateWordImageFromFile(wordId: VocabularyWord, file: File): Promise<void> {
+    if (!file.type.startsWith('image/')) {
+      this.customAudioStatusEl.textContent = 'Lutfen gecerli bir gorsel sec.';
+      return;
+    }
+
+    const dataUrl = await this.blobToDataUrl(file);
+    updateWordImage(wordId, dataUrl);
+    this.renderCards(this.getSceneProfiles());
+    this.renderProgressPanel();
+    this.notifyWordProfilesUpdated();
+    this.customAudioStatusEl.textContent = `"${this.getResolvedWordProfile(wordId).label}" gorseli guncellendi.`;
   }
 
   private bindEvents(): void {
@@ -244,13 +338,14 @@ export class SpeechGameModule {
         return;
       }
 
-      const word = target.dataset.word as VocabularyWord | undefined;
+      const wordId = target.dataset.wordId as VocabularyWord | undefined;
+      const wordLabel = target.dataset.wordLabel ?? '';
       const defaultRepeats = Number(target.dataset.repeats ?? 1);
-      if (!word || Number.isNaN(defaultRepeats)) {
+      if (!wordId || !wordLabel || Number.isNaN(defaultRepeats)) {
         return;
       }
 
-      this.onWordTapped(target, word, defaultRepeats);
+      this.onWordTapped(target, wordId, wordLabel, defaultRepeats);
     });
 
     this.recordingLibraryListEl.addEventListener('click', (event) => {
@@ -303,13 +398,41 @@ export class SpeechGameModule {
       }
 
       const action = target.dataset.action;
-      const word = target.dataset.word ?? '';
-      const key = normalizeSpeechKey(word);
-      if (!action || !key) {
+      const wordId = target.dataset.wordId as VocabularyWord | undefined;
+      if (!action || !wordId) {
         return;
       }
 
-      this.customAudioTextInput.value = word;
+      const currentProfile = this.getResolvedWordProfile(wordId);
+      const rowEl = target.closest<HTMLElement>('.progress-row');
+      const inputEl = rowEl?.querySelector<HTMLInputElement>('.progress-word-input');
+      const nextLabel = normalizeWordLabel(inputEl?.value ?? currentProfile.label);
+      if (!nextLabel) {
+        this.customAudioStatusEl.textContent = 'Kelime bos olamaz.';
+        return;
+      }
+
+      if (action === 'save-label') {
+        this.applyWordLabelUpdate(wordId, nextLabel);
+        return;
+      }
+
+      if (action === 'clear-image') {
+        clearWordImage(wordId);
+        this.renderCards(this.getSceneProfiles());
+        this.renderProgressPanel();
+        this.notifyWordProfilesUpdated();
+        this.customAudioStatusEl.textContent = `"${nextLabel}" gorseli silindi.`;
+        return;
+      }
+
+      const activeProfile = this.getResolvedWordProfile(wordId);
+      const key = normalizeSpeechKey(activeProfile.label);
+      if (!key) {
+        return;
+      }
+
+      this.customAudioTextInput.value = activeProfile.label;
 
       if (action === 'record') {
         void this.startCustomAudioRecording(key);
@@ -320,7 +443,7 @@ export class SpeechGameModule {
         const dataUrl = this.customAudioMap[key];
         if (dataUrl) {
           this.playAudioDataUrl(dataUrl);
-          this.customAudioStatusEl.textContent = `"${word}" kaydi caliniyor.`;
+          this.customAudioStatusEl.textContent = `"${activeProfile.label}" kaydi caliniyor.`;
         }
         return;
       }
@@ -331,8 +454,25 @@ export class SpeechGameModule {
         this.syncSettingsToDom();
         this.renderRecordingLibrary();
         this.renderProgressPanel();
-        this.customAudioStatusEl.textContent = `"${word}" kaydi silindi.`;
+        this.customAudioStatusEl.textContent = `"${activeProfile.label}" kaydi silindi.`;
       }
+    });
+
+    this.progressWordListEl.addEventListener('change', (event) => {
+      const target = event.target as HTMLInputElement | null;
+      if (!target || !target.classList.contains('progress-image-input')) {
+        return;
+      }
+
+      const wordId = target.dataset.wordId as VocabularyWord | undefined;
+      const file = target.files?.[0];
+      if (!wordId || !file) {
+        return;
+      }
+
+      void this.updateWordImageFromFile(wordId, file).finally(() => {
+        target.value = '';
+      });
     });
   }
 
@@ -450,6 +590,7 @@ export class SpeechGameModule {
 
   private async startCustomAudioRecording(overrideKey?: string): Promise<void> {
     const key = overrideKey ?? this.getCustomAudioInputKey();
+    const displayLabel = normalizeWordLabel(this.customAudioTextInput.value) || key;
     if (!key) {
       this.customAudioStatusEl.textContent = 'Once kelime veya cumle yaz.';
       return;
@@ -487,7 +628,7 @@ export class SpeechGameModule {
       this.mediaRecorder.start();
       this.customAudioStartBtn.disabled = true;
       this.customAudioStopBtn.disabled = false;
-      this.customAudioStatusEl.textContent = `"${key}" icin kayit aliniyor...`;
+      this.customAudioStatusEl.textContent = `"${displayLabel}" icin kayit aliniyor...`;
     } catch {
       this.cleanupRecordingResources();
       this.customAudioStatusEl.textContent = 'Mikrofon acilamadi. Tarayici izinlerini kontrol et.';
@@ -507,6 +648,7 @@ export class SpeechGameModule {
 
   private async finalizeCustomAudioRecording(key: string): Promise<void> {
     try {
+      const displayLabel = normalizeWordLabel(this.customAudioTextInput.value) || key;
       const blob = new Blob(this.recordingChunks, { type: this.mediaRecorder?.mimeType || 'audio/webm' });
       if (blob.size === 0) {
         this.customAudioStatusEl.textContent = 'Bos kayit alindi, tekrar dene.';
@@ -519,8 +661,8 @@ export class SpeechGameModule {
       this.syncSettingsToDom();
       this.renderRecordingLibrary();
       this.renderProgressPanel();
-      this.customAudioStatusEl.textContent = `"${key}" kaydedildi.`;
-      this.feedbackEl.textContent = `Kendi ses kaydi aktif: ${key}`;
+      this.customAudioStatusEl.textContent = `"${displayLabel}" kaydedildi.`;
+      this.feedbackEl.textContent = `Kendi ses kaydi aktif: ${displayLabel}`;
     } finally {
       this.cleanupRecordingResources();
       this.customAudioStartBtn.disabled = false;
@@ -530,6 +672,7 @@ export class SpeechGameModule {
 
   private playCustomAudioForInput(): void {
     const key = this.getCustomAudioInputKey();
+    const displayLabel = normalizeWordLabel(this.customAudioTextInput.value) || key;
     if (!key) {
       this.customAudioStatusEl.textContent = 'Calmak icin once kelime veya cumle yaz.';
       return;
@@ -537,23 +680,24 @@ export class SpeechGameModule {
 
     const dataUrl = this.customAudioMap[key];
     if (!dataUrl) {
-      this.customAudioStatusEl.textContent = `"${key}" icin kayit yok.`;
+      this.customAudioStatusEl.textContent = `"${displayLabel}" icin kayit yok.`;
       return;
     }
 
     this.playAudioDataUrl(dataUrl);
-    this.customAudioStatusEl.textContent = `"${key}" kaydi caliniyor.`;
+    this.customAudioStatusEl.textContent = `"${displayLabel}" kaydi caliniyor.`;
   }
 
   private deleteCustomAudioForInput(): void {
     const key = this.getCustomAudioInputKey();
+    const displayLabel = normalizeWordLabel(this.customAudioTextInput.value) || key;
     if (!key) {
       this.customAudioStatusEl.textContent = 'Silmek icin once kelime veya cumle yaz.';
       return;
     }
 
     if (!this.customAudioMap[key]) {
-      this.customAudioStatusEl.textContent = `"${key}" icin kayit yok.`;
+      this.customAudioStatusEl.textContent = `"${displayLabel}" icin kayit yok.`;
       return;
     }
 
@@ -562,7 +706,7 @@ export class SpeechGameModule {
     this.syncSettingsToDom();
     this.renderRecordingLibrary();
     this.renderProgressPanel();
-    this.customAudioStatusEl.textContent = `"${key}" kaydi silindi.`;
+    this.customAudioStatusEl.textContent = `"${displayLabel}" kaydi silindi.`;
   }
 
   private exportCustomAudioBackup(): void {
@@ -649,12 +793,16 @@ export class SpeechGameModule {
 
   private renderProgressPanel(): void {
     this.refreshCustomAudioMap();
-    const wordRows = VOCABULARY.map((item) => {
-      const key = normalizeSpeechKey(item.word);
+    const wordRows = getAllWordProfiles().map((item) => {
+      const key = normalizeSpeechKey(item.label);
       const hasRecording = Boolean(this.customAudioMap[key]);
-      const listenCount = getWordListenCount(item.word);
+      const listenCount = getWordListenCount(item.label);
       return {
+        id: item.word,
         word: item.word,
+        label: item.label,
+        imageSrc: item.imageSrc,
+        hasCustomImage: item.hasCustomImage,
         hasRecording,
         listenCount
       };
@@ -674,17 +822,55 @@ export class SpeechGameModule {
     this.progressWordListEl.innerHTML = wordRows
       .map(
         (row) => `
-          <div class="progress-row">
+          <div class="progress-row" data-word-id="${row.id}">
             <div class="progress-row-head">
-              <span class="progress-name">${row.word.toLocaleUpperCase('tr-TR')}</span>
-              <span class="progress-value">Kayit: ${row.hasRecording ? 'Var' : 'Yok'} | Dinleme: ${row.listenCount}</span>
+              <div class="progress-word-main">
+                <div class="progress-word-preview">
+                  ${row.imageSrc ? `<img src="${this.escapeHtml(row.imageSrc)}" alt="" />` : '<span>Gorsel</span>'}
+                </div>
+                <div class="progress-word-fields">
+                  <input
+                    class="progress-word-input"
+                    data-word-id="${row.id}"
+                    value="${this.escapeHtml(row.label)}"
+                    aria-label="${this.escapeHtml(row.word)} kelimesi"
+                  />
+                  <span class="progress-value">Kayit: ${row.hasRecording ? 'Var' : 'Yok'} | Dinleme: ${row.listenCount}</span>
+                </div>
+              </div>
             </div>
             <div class="progress-row-actions">
               <button
                 type="button"
                 class="progress-record-btn"
+                data-action="save-label"
+                data-word-id="${row.id}"
+              >
+                Kelimeyi Kaydet
+              </button>
+              <label class="progress-record-btn file-btn">
+                Gorsel Ekle
+                <input
+                  class="progress-image-input"
+                  data-word-id="${row.id}"
+                  type="file"
+                  accept="image/*"
+                />
+              </label>
+              <button
+                type="button"
+                class="progress-record-btn"
+                data-action="clear-image"
+                data-word-id="${row.id}"
+                ${row.hasCustomImage ? '' : 'disabled'}
+              >
+                Gorseli Sil
+              </button>
+              <button
+                type="button"
+                class="progress-record-btn"
                 data-action="record"
-                data-word="${row.word}"
+                data-word-id="${row.id}"
               >
                 ${row.hasRecording ? 'Yeniden Kaydet' : 'Kaydet'}
               </button>
@@ -692,7 +878,7 @@ export class SpeechGameModule {
                 type="button"
                 class="progress-record-btn"
                 data-action="play"
-                data-word="${row.word}"
+                data-word-id="${row.id}"
                 ${row.hasRecording ? '' : 'disabled'}
               >
                 Cal
@@ -701,7 +887,7 @@ export class SpeechGameModule {
                 type="button"
                 class="progress-record-btn"
                 data-action="delete"
-                data-word="${row.word}"
+                data-word-id="${row.id}"
                 ${row.hasRecording ? '' : 'disabled'}
               >
                 Sil
@@ -769,19 +955,24 @@ export class SpeechGameModule {
     this.recordingChunks = [];
   }
 
-  private onWordTapped(button: HTMLButtonElement, word: VocabularyWord, defaultRepeats: number): void {
+  private onWordTapped(
+    button: HTMLButtonElement,
+    wordId: VocabularyWord,
+    wordLabel: string,
+    defaultRepeats: number
+  ): void {
     const resolvedRepeats = this.resolveRepeats(defaultRepeats);
-    this.rootEl.setAttribute('data-last-word', word);
+    this.rootEl.setAttribute('data-last-word', wordLabel);
 
     this.clearPendingSpeech();
     this.clearPendingGuidance();
     this.clearIdleReminder();
     this.clearAttentionState();
     this.clearCurrentNextTarget();
-    const visualDuration = this.triggerVisual(button, word);
-    const speechDuration = this.triggerSpeech({ word, repeats: resolvedRepeats });
+    const visualDuration = this.triggerVisual(button, wordId);
+    const speechDuration = this.triggerSpeech({ word: wordLabel, repeats: resolvedRepeats });
     const sequenceDuration = Math.max(visualDuration, speechDuration);
-    const nextButton = this.getNextButton(word);
+    const nextButton = this.getNextButton(wordId);
 
     this.mascot.sayPraise();
     this.scheduleGuidedTransition(button, nextButton, sequenceDuration);
@@ -796,7 +987,7 @@ export class SpeechGameModule {
     this.activeNextButton = firstButton;
     firstButton.classList.add('is-next-target');
     firstButton.setAttribute('data-next-target', 'true');
-    this.rootEl.setAttribute('data-next-word', firstButton.dataset.word ?? '');
+    this.rootEl.setAttribute('data-next-word', firstButton.dataset.wordLabel ?? '');
     this.rootEl.setAttribute('data-guide-prompt', 'Hadi dokun');
     this.rootEl.setAttribute('data-guide-active', 'true');
     this.feedbackEl.textContent = 'Bir nesneye dokun.';
@@ -1031,10 +1222,10 @@ export class SpeechGameModule {
       this.activeNextButton = nextButton;
       nextButton.classList.add('is-next-target');
       nextButton.setAttribute('data-next-target', 'true');
-      this.rootEl.setAttribute('data-next-word', nextButton.dataset.word ?? '');
+      this.rootEl.setAttribute('data-next-word', nextButton.dataset.wordLabel ?? '');
       this.rootEl.setAttribute('data-guide-prompt', 'Şimdi buna dokun');
       this.rootEl.setAttribute('data-guide-active', 'true');
-      this.feedbackEl.textContent = `Siradaki hedef: ${(nextButton.dataset.word ?? '').toLocaleUpperCase('tr-TR')}`;
+      this.feedbackEl.textContent = `Siradaki hedef: ${(nextButton.dataset.wordLabel ?? '').toLocaleUpperCase('tr-TR')}`;
       this.mascot.sayNextPrompt();
       this.scheduleIdleReminder(nextButton);
       this.guideTimeoutId = null;
@@ -1086,9 +1277,9 @@ export class SpeechGameModule {
     };
   }
 
-  private getNextButton(currentWord: VocabularyWord): HTMLButtonElement | null {
+  private getNextButton(currentWordId: VocabularyWord): HTMLButtonElement | null {
     const buttons = Array.from(this.gridEl.querySelectorAll<HTMLButtonElement>('.word-card'));
-    const currentIndex = buttons.findIndex((button) => button.dataset.word === currentWord);
+    const currentIndex = buttons.findIndex((button) => button.dataset.wordId === currentWordId);
     if (buttons.length === 0) {
       return null;
     }
@@ -1127,7 +1318,7 @@ export class SpeechGameModule {
 
   private runAttentionSequence(targetButton: HTMLButtonElement): void {
     const target = this.resolveGuidePosition(targetButton);
-    const prompt = this.buildGuideWaitPrompt(targetButton.dataset.word as VocabularyWord | undefined);
+    const prompt = this.buildGuideWaitPrompt(targetButton.dataset.wordId as VocabularyWord | undefined);
 
     this.clearAttentionState();
     this.guideLayerEl.classList.add('is-active');
@@ -1160,6 +1351,11 @@ export class SpeechGameModule {
       return 'Ben burada bekliyorum.';
     }
 
-    return GUIDE_WAIT_PROMPTS[word] ?? 'Ben burada bekliyorum.';
+    const fallbackLabel = this.getResolvedWordProfile(word).label;
+    if (fallbackLabel !== word) {
+      return `${fallbackLabel} icin bekliyorum.`;
+    }
+
+    return GUIDE_WAIT_PROMPTS[word] ?? `${fallbackLabel} icin bekliyorum.`;
   }
 }

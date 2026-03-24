@@ -156,15 +156,17 @@
             </div>
             <div class="custom-audio-panel" aria-label="Kendi ses kaydi">
               <h4>Kendi Sesinle Oku (TTS yerine)</h4>
-              <label>
-                Kelime / Cümle
-                <input id="custom-audio-text" maxlength="32" placeholder="Orn: gel veya sut ic" />
-              </label>
-              <div class="custom-audio-actions">
-                <button type="button" id="custom-audio-record-start" class="secondary-btn">Kayda Basla</button>
-                <button type="button" id="custom-audio-record-stop" class="secondary-btn" disabled>Durdur</button>
-                <button type="button" id="custom-audio-play" class="secondary-btn">Cal</button>
-                <button type="button" id="custom-audio-delete" class="secondary-btn">Sil</button>
+              <div class="custom-audio-inline">
+                <label>
+                  Kelime / Cümle
+                  <input id="custom-audio-text" maxlength="32" placeholder="Orn: gel veya sut ic" />
+                </label>
+                <div class="custom-audio-actions">
+                  <button type="button" id="custom-audio-record-start" class="secondary-btn">Kayda Basla</button>
+                  <button type="button" id="custom-audio-record-stop" class="secondary-btn" disabled>Durdur</button>
+                  <button type="button" id="custom-audio-play" class="secondary-btn">Cal</button>
+                  <button type="button" id="custom-audio-delete" class="secondary-btn">Sil</button>
+                </div>
               </div>
               <p class="custom-audio-status" id="custom-audio-status">Bir kelime yazip kayit al.</p>
             </div>

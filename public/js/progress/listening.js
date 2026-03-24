@@ -51,6 +51,21 @@ export function getWordListenCount(word) {
     const progress = loadListenProgress();
     return progress.wordListens[normalizeSpeechKey(word)] ?? 0;
 }
+export function renameWordListenKey(fromWord, toWord) {
+    const fromKey = normalizeSpeechKey(fromWord);
+    const toKey = normalizeSpeechKey(toWord);
+    if (!fromKey || !toKey || fromKey === toKey) {
+        return;
+    }
+    const progress = loadListenProgress();
+    const existingCount = progress.wordListens[fromKey] ?? 0;
+    if (existingCount <= 0) {
+        return;
+    }
+    progress.wordListens[toKey] = (progress.wordListens[toKey] ?? 0) + existingCount;
+    delete progress.wordListens[fromKey];
+    saveListenProgress(progress);
+}
 export function getTopSentenceListens(limit = 5) {
     const progress = loadListenProgress();
     return Object.entries(progress.sentenceListens)

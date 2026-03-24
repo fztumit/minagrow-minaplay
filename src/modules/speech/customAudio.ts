@@ -106,6 +106,19 @@ export function mergeCustomAudioMaps(
   return { mergedMap, added, replaced };
 }
 
+export function renameCustomAudioKey(map: CustomAudioMap, fromText: string, toText: string): CustomAudioMap {
+  const fromKey = normalizeSpeechKey(fromText);
+  const toKey = normalizeSpeechKey(toText);
+  if (!fromKey || !toKey || fromKey === toKey || !map[fromKey]) {
+    return { ...map };
+  }
+
+  const nextMap = { ...map };
+  nextMap[toKey] = nextMap[fromKey];
+  delete nextMap[fromKey];
+  return nextMap;
+}
+
 function normalizeMap(value: unknown): CustomAudioMap | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return null;
