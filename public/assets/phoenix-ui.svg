@@ -1,0 +1,88 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Anka hafif UI maskotu">
+  <defs>
+    <radialGradient id="uiAura" cx="50%" cy="52%" r="42%">
+      <stop offset="0%" stop-color="#fff6c8" stop-opacity="0.34"/>
+      <stop offset="62%" stop-color="#ffd76e" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#ffd76e" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="uiHead" cx="50%" cy="28%" r="72%">
+      <stop offset="0%" stop-color="#fffdf2"/>
+      <stop offset="62%" stop-color="#ffe26e"/>
+      <stop offset="100%" stop-color="#ffab21"/>
+    </radialGradient>
+    <radialGradient id="uiBody" cx="50%" cy="22%" r="74%">
+      <stop offset="0%" stop-color="#fff8db"/>
+      <stop offset="48%" stop-color="#ffd55f"/>
+      <stop offset="100%" stop-color="#f97819"/>
+    </radialGradient>
+    <radialGradient id="uiFace" cx="50%" cy="34%" r="70%">
+      <stop offset="0%" stop-color="#fffef8"/>
+      <stop offset="72%" stop-color="#fff2bb"/>
+      <stop offset="100%" stop-color="#ffda91"/>
+    </radialGradient>
+    <linearGradient id="uiWing" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffc131"/>
+      <stop offset="100%" stop-color="#f25d17"/>
+    </linearGradient>
+    <linearGradient id="uiWingInner" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffe87f"/>
+      <stop offset="100%" stop-color="#ff9f1f"/>
+    </linearGradient>
+    <linearGradient id="uiCrest" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff9714"/>
+      <stop offset="100%" stop-color="#fff289"/>
+    </linearGradient>
+    <linearGradient id="uiTail" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffd85c"/>
+      <stop offset="100%" stop-color="#ff7d1d"/>
+    </linearGradient>
+    <linearGradient id="uiBeak" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff17b"/>
+      <stop offset="100%" stop-color="#ff9819"/>
+    </linearGradient>
+    <radialGradient id="uiEye" cx="50%" cy="36%" r="72%">
+      <stop offset="0%" stop-color="#6a311d"/>
+      <stop offset="60%" stop-color="#2a0d08"/>
+      <stop offset="100%" stop-color="#160603"/>
+    </radialGradient>
+  </defs>
+
+  <circle cx="128" cy="148" r="86" fill="url(#uiAura)"/>
+  <ellipse cx="152" cy="198" rx="78" ry="22" fill="#ffd983" opacity="0.12" transform="rotate(22 152 198)"/>
+
+  <g>
+    <path d="M118 53c5-17 17-31 34-39-1 16-7 29-17 39 11-3 23-1 33 6-10 8-22 12-35 13 13 4 23 12 30 24-17 0-30-6-40-18-2 10-8 21-20 31-2-18 4-34 15-56z" fill="url(#uiCrest)"/>
+
+    <path d="M103 122c-31 2-58 18-76 46 31 7 58 4 82-9 5 10 13 18 23 23 1-29-4-49-29-60z" fill="url(#uiWing)"/>
+    <path d="M106 132c-21 1-40 10-56 25 24 5 46 4 63-4" fill="url(#uiWingInner)" opacity="0.78"/>
+    <path d="M153 122c31 2 58 18 76 46-31 7-58 4-82-9-5 10-13 18-23 23-1-29 4-49 29-60z" fill="url(#uiWing)"/>
+    <path d="M150 132c21 1 40 10 56 25-24 5-46 4-63-4" fill="url(#uiWingInner)" opacity="0.78"/>
+
+    <path d="M127 175c-8 18-17 35-30 51 14-5 26-13 35-24 3-8 2-16-5-27z" fill="#ffb233"/>
+    <path d="M138 175c7 18 15 35 28 53-13-5-24-12-33-22-3-8-2-17 5-31z" fill="#ff941f"/>
+    <path d="M128 186c-4 27-10 49-21 68 15-10 27-25 34-42 2-9 0-17-13-26z" fill="url(#uiTail)"/>
+    <path d="M135 192c6 18 16 34 31 49-12-4-22-10-31-19" fill="#ffd963" opacity="0.62"/>
+
+    <ellipse cx="128" cy="144" rx="43" ry="49" fill="url(#uiBody)"/>
+    <circle cx="128" cy="99" r="38" fill="url(#uiHead)"/>
+    <ellipse cx="128" cy="106" rx="41" ry="32" fill="url(#uiFace)"/>
+    <path d="M106 131c7 7 14 15 19 24" fill="none" stroke="#fff9d8" stroke-linecap="round" stroke-width="7" opacity="0.8"/>
+    <path d="M150 131c-7 7-14 15-19 24" fill="none" stroke="#fff9d8" stroke-linecap="round" stroke-width="7" opacity="0.8"/>
+    <ellipse cx="128" cy="148" rx="24" ry="22" fill="#fff3c1" opacity="0.92"/>
+
+    <ellipse cx="107" cy="102" rx="17.5" ry="22" fill="url(#uiEye)"/>
+    <ellipse cx="149" cy="102" rx="17.5" ry="22" fill="url(#uiEye)"/>
+    <ellipse cx="112" cy="95" rx="7" ry="9" fill="#fffef8"/>
+    <ellipse cx="144" cy="95" rx="7" ry="9" fill="#fffef8"/>
+    <circle cx="117" cy="109" r="3.6" fill="#ffffff"/>
+    <circle cx="149" cy="109" r="3.6" fill="#ffffff"/>
+
+    <path d="M116 119c5-4 19-4 24 0 0 0-4 9-12 13-8-4-12-13-12-13z" fill="url(#uiBeak)"/>
+    <path d="M114 134c8 7 20 7 28 0" fill="none" stroke="#aa4918" stroke-linecap="round" stroke-width="4.2"/>
+
+    <g fill="#f78921">
+      <path d="M112 188c-2 9-7 15-13 18 1-10 5-16 12-19"/>
+      <path d="M144 188c2 9 7 15 13 18-1-10-5-16-12-19"/>
+    </g>
+  </g>
+</svg>

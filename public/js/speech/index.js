@@ -459,7 +459,7 @@ export class SpeechGameModule {
         this.renderProgressPanel();
         this.progressResetStatusEl.textContent = 'İlerleme sayaçları sıfırlandı. Kayıtlar korunuyor.';
         this.feedbackEl.textContent = 'Dinleme ilerlemesi sıfırlandı.';
-        this.mascot.setMessage('İlerleme sıfırlandı.');
+        this.mascot.setMessage('Sıfırlandı.');
     }
     playAudioDataUrl(dataUrl) {
         const audio = new Audio(dataUrl);

@@ -1,128 +1,172 @@
 <svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Anka maskotu">
   <defs>
-    <radialGradient id="ankaWarmBg" cx="50%" cy="42%" r="58%">
-      <stop offset="0%" stop-color="#fff8df"/>
-      <stop offset="68%" stop-color="#ffe7a7"/>
-      <stop offset="100%" stop-color="#ffd292"/>
+    <radialGradient id="ankaAura" cx="50%" cy="48%" r="46%">
+      <stop offset="0%" stop-color="#fff7be" stop-opacity="0.98"/>
+      <stop offset="58%" stop-color="#ffd463" stop-opacity="0.42"/>
+      <stop offset="100%" stop-color="#ffd463" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="ankaBody" cx="50%" cy="35%" r="70%">
+    <radialGradient id="ankaBody" cx="50%" cy="26%" r="76%">
       <stop offset="0%" stop-color="#fff7df"/>
-      <stop offset="55%" stop-color="#ffd363"/>
-      <stop offset="100%" stop-color="#ff9e36"/>
+      <stop offset="48%" stop-color="#ffd86f"/>
+      <stop offset="78%" stop-color="#ff9e2d"/>
+      <stop offset="100%" stop-color="#f06416"/>
     </radialGradient>
-    <linearGradient id="ankaWing" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffcf57"/>
-      <stop offset="55%" stop-color="#ff9524"/>
-      <stop offset="100%" stop-color="#f6611d"/>
+    <radialGradient id="ankaFace" cx="50%" cy="30%" r="72%">
+      <stop offset="0%" stop-color="#fffdf5"/>
+      <stop offset="70%" stop-color="#fff0be"/>
+      <stop offset="100%" stop-color="#ffd993"/>
+    </radialGradient>
+    <linearGradient id="ankaWingOuter" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffbb2d"/>
+      <stop offset="48%" stop-color="#ff8d1b"/>
+      <stop offset="100%" stop-color="#f25318"/>
     </linearGradient>
-    <linearGradient id="ankaFlame" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#ff9d00"/>
-      <stop offset="45%" stop-color="#ff7a00"/>
-      <stop offset="100%" stop-color="#fff07a"/>
+    <linearGradient id="ankaWingInner" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffe977"/>
+      <stop offset="55%" stop-color="#ffb230"/>
+      <stop offset="100%" stop-color="#ff7a1f"/>
     </linearGradient>
+    <linearGradient id="ankaCrest" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff9417"/>
+      <stop offset="44%" stop-color="#ff6d00"/>
+      <stop offset="100%" stop-color="#fff27f"/>
+    </linearGradient>
+    <linearGradient id="ankaTail" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffd65e"/>
+      <stop offset="52%" stop-color="#ff9226"/>
+      <stop offset="100%" stop-color="#ef4d17"/>
+    </linearGradient>
+    <radialGradient id="ankaEye" cx="50%" cy="35%" r="72%">
+      <stop offset="0%" stop-color="#6a351f"/>
+      <stop offset="62%" stop-color="#2d120a"/>
+      <stop offset="100%" stop-color="#180804"/>
+    </radialGradient>
     <linearGradient id="ankaBeak" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#fff176"/>
-      <stop offset="100%" stop-color="#ff9b1d"/>
+      <stop offset="0%" stop-color="#fff07a"/>
+      <stop offset="100%" stop-color="#ff971c"/>
     </linearGradient>
-    <filter id="ankaGlow" x="-30%" y="-30%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#ffb73e" flood-opacity="0.28"/>
+    <filter id="ankaShadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#ffb148" flood-opacity="0.28"/>
     </filter>
     <style>
       .anka-float {
         transform-origin: 128px 136px;
-        animation: ankaFloat 4.8s ease-in-out infinite;
+        animation: ankaFloat 4.9s ease-in-out infinite;
       }
       .anka-wing-left,
       .anka-wing-right {
         transform-box: fill-box;
-        animation-duration: 3.6s;
-        animation-timing-function: ease-in-out;
-        animation-iteration-count: infinite;
+        animation: ankaWing 3.8s ease-in-out infinite;
       }
       .anka-wing-left {
         transform-origin: right center;
-        animation-name: ankaWingLeft;
       }
       .anka-wing-right {
         transform-origin: left center;
         animation-name: ankaWingRight;
       }
-      .anka-glow {
-        transform-origin: 128px 128px;
-        animation: ankaPulse 3.2s ease-in-out infinite;
-      }
       .anka-sparkle {
-        animation: ankaSparkle 3.4s ease-in-out infinite;
+        animation: ankaSparkle 3.6s ease-in-out infinite;
         transform-origin: center;
       }
-      .anka-sparkle.delay {
-        animation-delay: 1.2s;
-      }
-      .anka-sparkle.delay2 {
-        animation-delay: 2s;
+      .anka-sparkle.delay { animation-delay: 1.15s; }
+      .anka-sparkle.delay2 { animation-delay: 2.05s; }
+      .anka-glow {
+        transform-origin: 128px 128px;
+        animation: ankaGlow 3.4s ease-in-out infinite;
       }
       @keyframes ankaFloat {
         0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-6px); }
+        50% { transform: translateY(-7px); }
       }
-      @keyframes ankaWingLeft {
-        0%, 100% { transform: rotate(0deg); }
-        50% { transform: rotate(-8deg); }
+      @keyframes ankaWing {
+        0%, 100% { transform: rotate(0deg) translateY(0px); }
+        50% { transform: rotate(-8deg) translateY(-2px); }
       }
       @keyframes ankaWingRight {
-        0%, 100% { transform: rotate(0deg); }
-        50% { transform: rotate(8deg); }
+        0%, 100% { transform: rotate(0deg) translateY(0px); }
+        50% { transform: rotate(8deg) translateY(-2px); }
       }
-      @keyframes ankaPulse {
-        0%, 100% { opacity: 0.62; transform: scale(0.96); }
-        50% { opacity: 1; transform: scale(1.06); }
+      @keyframes ankaGlow {
+        0%, 100% { opacity: 0.54; transform: scale(0.96); }
+        50% { opacity: 0.98; transform: scale(1.05); }
       }
       @keyframes ankaSparkle {
-        0%, 100% { opacity: 0.3; transform: scale(0.82); }
-        50% { opacity: 1; transform: scale(1.08); }
+        0%, 100% { opacity: 0.28; transform: scale(0.86); }
+        50% { opacity: 1; transform: scale(1.1); }
       }
     </style>
   </defs>
 
-  <rect width="256" height="256" rx="56" fill="url(#ankaWarmBg)"/>
-  <circle class="anka-glow" cx="128" cy="128" r="86" fill="#fff6b8" opacity="0.78"/>
+  <circle class="anka-glow" cx="128" cy="136" r="92" fill="url(#ankaAura)"/>
+  <ellipse cx="128" cy="224" rx="58" ry="12" fill="#ffcf7e" opacity="0.34"/>
 
-  <g class="anka-float" filter="url(#ankaGlow)">
-    <path d="M102 60c8-22 24-36 45-40-3 18-11 33-24 45 14-3 29 1 40 12-16 6-31 8-44 6 13 7 22 19 24 35-20-6-34-18-41-35-5 12-15 22-31 29 2-20 11-36 31-52z" fill="url(#ankaFlame)"/>
+  <g class="anka-float" filter="url(#ankaShadow)">
+    <g opacity="0.98">
+      <path d="M120 52c4-17 16-32 33-40 0 17-6 31-16 42 13-4 27-3 38 5-12 8-25 12-39 13 14 5 24 14 31 28-17 0-32-7-43-20-2 12-10 23-25 33-2-19 5-38 21-61z" fill="url(#ankaCrest)"/>
+      <path d="M136 45c10-13 25-23 40-25-3 16-11 28-23 37 11-1 23 2 33 10-12 6-24 9-36 9" fill="#fff58f" opacity="0.42"/>
+    </g>
+
+    <g>
+      <path d="M119 182c-14 10-27 22-39 37 20-4 36-12 48-25" fill="none" stroke="#ffb040" stroke-linecap="round" stroke-width="12"/>
+      <path d="M141 182c15 10 30 23 42 39-20-5-37-14-50-28" fill="none" stroke="#ff9325" stroke-linecap="round" stroke-width="12"/>
+      <path d="M126 190c-3 16-13 31-29 44 17-3 31-11 40-25" fill="none" stroke="#ffd45a" stroke-linecap="round" stroke-width="8"/>
+      <path d="M145 191c5 16 16 30 33 42-18-2-33-9-44-22" fill="none" stroke="#ffc546" stroke-linecap="round" stroke-width="8"/>
+    </g>
 
     <g class="anka-wing-left">
-      <path d="M82 132c-26 7-43 28-47 53 26-1 48-10 64-28 5 7 11 13 17 16-2-28-12-48-34-41z" fill="url(#ankaWing)"/>
-      <path d="M84 141c-14 8-24 19-31 33 15-2 27-9 37-20" fill="none" stroke="#ffd972" stroke-linecap="round" stroke-width="5" opacity="0.7"/>
+      <path d="M103 132c-29 0-53 15-69 39 28 6 53 2 74-13 4 10 12 18 22 24 2-28-2-47-27-50z" fill="url(#ankaWingOuter)"/>
+      <path d="M104 138c-22 1-40 11-53 26 23 3 42 0 58-10" fill="#ffd55e" opacity="0.72"/>
+      <path d="M97 149c-17 3-29 10-39 21 17 2 31 0 43-7" fill="#fff0a2" opacity="0.46"/>
     </g>
 
     <g class="anka-wing-right">
-      <path d="M174 132c26 7 43 28 47 53-26-1-48-10-64-28-5 7-11 13-17 16 2-28 12-48 34-41z" fill="url(#ankaWing)"/>
-      <path d="M172 141c14 8 24 19 31 33-15-2-27-9-37-20" fill="none" stroke="#ffd972" stroke-linecap="round" stroke-width="5" opacity="0.7"/>
+      <path d="M153 132c29 0 53 15 69 39-28 6-53 2-74-13-4 10-12 18-22 24-2-28 2-47 27-50z" fill="url(#ankaWingOuter)"/>
+      <path d="M152 138c22 1 40 11 53 26-23 3-42 0-58-10" fill="#ffd55e" opacity="0.72"/>
+      <path d="M159 149c17 3 29 10 39 21-17 2-31 0-43-7" fill="#fff0a2" opacity="0.46"/>
     </g>
 
-    <ellipse cx="128" cy="145" rx="57" ry="62" fill="url(#ankaBody)"/>
-    <ellipse cx="128" cy="116" rx="47" ry="40" fill="#fff4cf"/>
-    <ellipse cx="128" cy="164" rx="26" ry="22" fill="#fff3c2" opacity="0.85"/>
+    <ellipse cx="128" cy="148" rx="50" ry="57" fill="url(#ankaBody)"/>
+    <circle cx="128" cy="102" r="39" fill="url(#ankaBody)"/>
+    <ellipse cx="128" cy="108" rx="43" ry="33" fill="url(#ankaFace)"/>
+    <ellipse cx="128" cy="154" rx="28" ry="26" fill="#fff1bc" opacity="0.9"/>
 
-    <path d="M101 186c-10 16-26 27-46 32 7-16 19-28 34-36" fill="none" stroke="#ff9d2a" stroke-linecap="round" stroke-width="10"/>
-    <path d="M155 186c10 16 26 27 46 32-7-16-19-28-34-36" fill="none" stroke="#ff9d2a" stroke-linecap="round" stroke-width="10"/>
+    <path d="M107 148c7 6 13 13 19 21" fill="none" stroke="#fff9d7" stroke-linecap="round" stroke-width="7" opacity="0.82"/>
+    <path d="M149 148c-7 6-13 13-19 21" fill="none" stroke="#fff9d7" stroke-linecap="round" stroke-width="7" opacity="0.82"/>
+    <path d="M118 142c4 8 6 17 7 24" fill="none" stroke="#fff8d9" stroke-linecap="round" stroke-width="6" opacity="0.88"/>
+    <path d="M138 142c-4 8-6 17-7 24" fill="none" stroke="#fff8d9" stroke-linecap="round" stroke-width="6" opacity="0.88"/>
 
-    <ellipse cx="105" cy="117" rx="17" ry="21" fill="#442313"/>
-    <ellipse cx="151" cy="117" rx="17" ry="21" fill="#442313"/>
-    <ellipse cx="110" cy="111" rx="7" ry="9" fill="#fffdfa"/>
-    <ellipse cx="146" cy="111" rx="7" ry="9" fill="#fffdfa"/>
-    <circle cx="114" cy="123" r="3.5" fill="#ffffff"/>
-    <circle cx="150" cy="123" r="3.5" fill="#ffffff"/>
+    <ellipse cx="107" cy="106" rx="19" ry="23" fill="url(#ankaEye)"/>
+    <ellipse cx="149" cy="106" rx="19" ry="23" fill="url(#ankaEye)"/>
+    <ellipse cx="112" cy="99" rx="7.5" ry="9.5" fill="#fffef8"/>
+    <ellipse cx="144" cy="99" rx="7.5" ry="9.5" fill="#fffef8"/>
+    <circle cx="117" cy="113" r="3.8" fill="#ffffff"/>
+    <circle cx="149" cy="113" r="3.8" fill="#ffffff"/>
 
-    <path d="M117 132c4-4 15-4 19 0 0 0-3 8-9.5 11-6.5-3-9.5-11-9.5-11z" fill="url(#ankaBeak)"/>
-    <path d="M111 144c10 8 24 8 34 0" fill="none" stroke="#b2541e" stroke-linecap="round" stroke-width="4.5"/>
+    <circle cx="92" cy="120" r="6.5" fill="#ffb19b" opacity="0.5"/>
+    <circle cx="164" cy="120" r="6.5" fill="#ffb19b" opacity="0.5"/>
+
+    <path d="M116 124c5-5 19-5 24 0 0 0-4 10-12 14-8-4-12-14-12-14z" fill="url(#ankaBeak)"/>
+    <path d="M113 140c9 8 21 8 30 0" fill="none" stroke="#a84918" stroke-linecap="round" stroke-width="4.5"/>
+
+    <g fill="#f38a22">
+      <path d="M110 197c-2 10-8 16-16 19 2-11 6-17 14-21"/>
+      <path d="M146 197c2 10 8 16 16 19-2-11-6-17-14-21"/>
+    </g>
+    <g stroke="#ffb83f" stroke-linecap="round" stroke-width="3.8">
+      <path d="M96 215h10"/>
+      <path d="M94 219h9"/>
+      <path d="M150 215h10"/>
+      <path d="M152 219h9"/>
+    </g>
   </g>
 
-  <g fill="#fff6b5">
-    <path class="anka-sparkle" d="M41 76l4 9 9 4-9 4-4 9-4-9-9-4 9-4z"/>
-    <path class="anka-sparkle delay" d="M215 62l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/>
-    <path class="anka-sparkle delay2" d="M210 184l3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/>
-    <circle class="anka-sparkle delay" cx="56" cy="152" r="4"/>
-    <circle class="anka-sparkle delay2" cx="191" cy="42" r="3.5"/>
+  <g fill="#fff5a9">
+    <path class="anka-sparkle" d="M40 90l5 11 11 5-11 5-5 11-5-11-11-5 11-5z"/>
+    <path class="anka-sparkle delay" d="M210 72l4 9 9 4-9 4-4 9-4-9-9-4 9-4z"/>
+    <path class="anka-sparkle delay2" d="M213 188l4 10 10 4-10 4-4 10-4-10-10-4 10-4z"/>
+    <circle class="anka-sparkle delay" cx="64" cy="160" r="4.5"/>
+    <circle class="anka-sparkle delay2" cx="189" cy="52" r="4"/>
+    <circle class="anka-sparkle" cx="86" cy="54" r="3.5"/>
   </g>
 </svg>

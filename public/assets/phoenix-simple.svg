@@ -1,0 +1,81 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sade Anka maskotu">
+  <defs>
+    <radialGradient id="simpleAura" cx="50%" cy="46%" r="42%">
+      <stop offset="0%" stop-color="#fff7cf" stop-opacity="0.38"/>
+      <stop offset="60%" stop-color="#ffd874" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#ffd874" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="simpleBody" cx="50%" cy="28%" r="74%">
+      <stop offset="0%" stop-color="#fff7e2"/>
+      <stop offset="52%" stop-color="#ffd86d"/>
+      <stop offset="100%" stop-color="#ff9628"/>
+    </radialGradient>
+    <radialGradient id="simpleFace" cx="50%" cy="30%" r="68%">
+      <stop offset="0%" stop-color="#fffdf7"/>
+      <stop offset="74%" stop-color="#fff0c1"/>
+      <stop offset="100%" stop-color="#ffd99a"/>
+    </radialGradient>
+    <linearGradient id="simpleWing" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffc43f"/>
+      <stop offset="100%" stop-color="#f6661d"/>
+    </linearGradient>
+    <linearGradient id="simpleWingShine" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff3a5"/>
+      <stop offset="100%" stop-color="#ffd058"/>
+    </linearGradient>
+    <linearGradient id="simpleTailMid" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffd761"/>
+      <stop offset="100%" stop-color="#ff8a22"/>
+    </linearGradient>
+    <linearGradient id="simpleCrest" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff9116"/>
+      <stop offset="100%" stop-color="#fff184"/>
+    </linearGradient>
+    <linearGradient id="simpleBeak" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff17b"/>
+      <stop offset="100%" stop-color="#ff9a22"/>
+    </linearGradient>
+    <radialGradient id="simpleEye" cx="50%" cy="35%" r="72%">
+      <stop offset="0%" stop-color="#5e2f1c"/>
+      <stop offset="100%" stop-color="#1a0905"/>
+    </radialGradient>
+  </defs>
+
+  <circle cx="128" cy="136" r="82" fill="url(#simpleAura)"/>
+  <ellipse cx="128" cy="222" rx="44" ry="9" fill="#ffc76d" opacity="0.16"/>
+
+  <g>
+    <path d="M120 58c6-16 18-28 33-35-1 14-7 25-16 34 12-3 24-1 34 6-10 7-22 10-35 11 12 4 20 11 26 23-15-1-27-6-37-16-2 9-8 19-20 28-2-16 3-31 15-51z" fill="url(#simpleCrest)"/>
+
+    <path d="M105 131c-28 0-53 15-70 40 30 7 56 4 77-10 5 10 13 18 22 23 2-29-2-48-29-53z" fill="url(#simpleWing)"/>
+    <path d="M151 131c28 0 53 15 70 40-30 7-56 4-77-10-5 10-13 18-22 23-2-29 2-48 29-53z" fill="url(#simpleWing)"/>
+    <path d="M103 139c-20 1-38 10-51 24 22 4 41 2 57-7" fill="url(#simpleWingShine)" opacity="0.7"/>
+    <path d="M153 139c20 1 38 10 51 24-22 4-41 2-57-7" fill="url(#simpleWingShine)" opacity="0.7"/>
+
+    <path d="M121 183c-13 9-24 20-33 33 16-2 29-8 38-18 1-5 0-10-5-15z" fill="#ffb338"/>
+    <path d="M135 184c0 13 6 24 17 34-11-1-19-5-26-11-2-6-1-12 9-23z" fill="url(#simpleTailMid)"/>
+    <path d="M145 183c13 9 24 20 33 33-16-2-29-8-38-18-1-5 0-10 5-15z" fill="#ff9725"/>
+    <path d="M123 190c-8 6-15 13-20 21 9-1 17-4 23-9" fill="#ffe27b" opacity="0.68"/>
+    <path d="M145 190c8 6 15 13 20 21-9-1-17-4-23-9" fill="#ffd963" opacity="0.68"/>
+
+    <ellipse cx="128" cy="149" rx="48" ry="54" fill="url(#simpleBody)"/>
+    <circle cx="128" cy="104" r="37" fill="url(#simpleBody)"/>
+    <ellipse cx="128" cy="111" rx="40" ry="30" fill="url(#simpleFace)"/>
+    <ellipse cx="128" cy="155" rx="25" ry="23" fill="#fff2c3" opacity="0.9"/>
+
+    <ellipse cx="108" cy="107" rx="18" ry="22" fill="url(#simpleEye)"/>
+    <ellipse cx="148" cy="107" rx="18" ry="22" fill="url(#simpleEye)"/>
+    <ellipse cx="113" cy="100" rx="7" ry="9" fill="#fffef9"/>
+    <ellipse cx="143" cy="100" rx="7" ry="9" fill="#fffef9"/>
+    <circle cx="118" cy="113" r="3.6" fill="#ffffff"/>
+    <circle cx="148" cy="113" r="3.6" fill="#ffffff"/>
+
+    <path d="M116 124c5-4 19-4 24 0 0 0-4 9-12 13-8-4-12-13-12-13z" fill="url(#simpleBeak)"/>
+    <path d="M114 139c8 7 20 7 28 0" fill="none" stroke="#aa4a17" stroke-linecap="round" stroke-width="4.5"/>
+
+    <g fill="#f48a24">
+      <path d="M111 196c-2 8-6 13-12 16 1-9 5-14 11-17"/>
+      <path d="M145 196c2 8 6 13 12 16-1-9-5-14-11-17"/>
+    </g>
+  </g>
+</svg>

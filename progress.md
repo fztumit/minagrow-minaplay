@@ -802,3 +802,24 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
 ## Remaining TODOs / Suggestions
 - Optional next step: create a third `active-guide` SVG variant just for praise / interaction bursts.
 - Optional next step: replace the current test hook name `__konusuYorumModules` during the broader cleanup pass.
+
+## Continuation Update: Anka Silhouette Refinement
+- Refined `public/assets/phoenix.svg` to read clearly as a bird: larger head, clearer beak, separated wings, visible feet, more distinct tail ribbons, and a fluffier chest.
+- Updated `public/assets/phoenix-sleep.svg` to match the new bird silhouette in the calm sleep palette.
+- Goal for this pass: reduce the fish-like silhouette and move closer to the approved glowing phoenix reference while staying child-safe and app-friendly.
+
+## Continuation Update: Simplified UI Anka
+- Added `public/assets/phoenix-simple.svg` as a lighter UI/base mascot version.
+- Reduced visible detail density by roughly half:
+  - removed sparkles
+  - softened the glow
+  - simplified wing, crest, and tail shapes
+  - preserved the round body and large eyes for recognizability
+- Intended use: compact UI placements, icon-friendly surfaces, and future guide-state overlays.
+- Tuned `public/assets/phoenix-simple.svg` further for small UI use: glow reduced roughly by half, ground shadow softened, and tail ribbons simplified one step more while preserving the same mascot silhouette.
+- Refined `public/assets/phoenix-simple.svg` again: wings are broader, tail reads more like feathers than a fin, and sparkle was moved into wing/tail highlights instead of external particles for better small-size readability.
+- Added `public/assets/phoenix-ui.svg` as a lighter hero-based mascot variant for continuous UI use.
+- This variant keeps the same phoenix identity and broad pose while reducing glow further, removing external sparkles, and simplifying wing/tail structure for small-size clarity.
+- Switched the main screen mascot to `public/assets/phoenix-ui.svg`.
+- Updated the mascot shell to a cooler cream/sky background so the phoenix stays readable without blending into the same warm orange family.
+- Kept the SVG itself transparent, so it still behaves like a PNG-style cutout on the main screen.

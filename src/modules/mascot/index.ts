@@ -39,7 +39,7 @@ export class MascotGuide {
     this.variant = enabled ? 'sleep' : 'normal';
 
     if (this.imageEl) {
-      this.imageEl.src = enabled ? '/assets/phoenix-sleep.svg' : '/assets/phoenix.svg';
+      this.imageEl.src = enabled ? '/assets/phoenix-sleep.svg' : '/assets/phoenix-ui.svg';
     }
 
     if (this.shellEl) {

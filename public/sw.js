@@ -1,10 +1,11 @@
-const CACHE_NAME = 'minaplay-v14';
+const CACHE_NAME = 'minaplay-v15';
 
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/style.css',
   '/manifest.webmanifest',
+  '/assets/phoenix-ui.svg',
   '/assets/phoenix.svg',
   '/assets/phoenix-sleep.svg',
   '/assets/water-glass.svg',
