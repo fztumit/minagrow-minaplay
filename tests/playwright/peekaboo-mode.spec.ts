@@ -38,7 +38,7 @@ test('peekaboo environment hide can be revealed by tapping the hideout', async (
 
   await page.waitForFunction(() => {
     const root = document.getElementById('view-peekaboo');
-    return root?.getAttribute('data-hide-mode') === 'environment' && root?.getAttribute('data-peek-state') === 'hidden';
+    return root?.getAttribute('data-hide-mode') === 'environment' && root?.getAttribute('data-peek-state') === 'wait';
   });
 
   const hideout = await page.locator('#view-peekaboo').getAttribute('data-current-hideout');
@@ -48,7 +48,7 @@ test('peekaboo environment hide can be revealed by tapping the hideout', async (
 
   await page.waitForFunction(() => {
     const root = document.getElementById('view-peekaboo');
-    return root?.getAttribute('data-peek-state') === 'revealed';
+    return root?.getAttribute('data-peek-state') === 'reveal';
   });
 
   const result = await page.evaluate(() => {

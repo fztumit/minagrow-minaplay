@@ -1159,3 +1159,25 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
 - Official `develop-web-game` client run ✅
   - state confirmed build loads, though the client screenshot itself remained unreliable for this DOM-first scene
   - visual confirmation was completed using Playwright screenshot output at `output/peekaboo-visual.png`
+
+## Continuation Update: Peekaboo State Machine
+- Replaced the ad-hoc peekaboo phase flow with an explicit mascot state machine:
+  - `idle`
+  - `hide`
+  - `wait`
+  - `reveal`
+  - `react`
+- The loop now always returns to `idle`, regardless of room/center scenario.
+- `hide` handles the wing-cover animation or environment concealment.
+- `wait` now holds the mascot for a distinct pause before the reveal.
+- `reveal` is the dedicated `Ceee!` sound/wing-open phase.
+- `react` is the dedicated jump + glow pulse phase.
+- Added initial-view query support (`?view=peekaboo`) to make direct module testing deterministic.
+- Official `develop-web-game` client state output now reports the new FSM values (example observed states: `hide`, `idle`).
+
+## Validation (Peekaboo State Machine)
+- `npm run build` ✅
+- `npx playwright test tests/playwright/peekaboo-mode.spec.ts tests/playwright/peekaboo-visual.spec.ts tests/playwright/page-load.spec.ts --workers=1` ✅
+- Official `develop-web-game` client run ✅
+  - `active_view: "view-peekaboo"`
+  - observed `peekaboo.state: "hide"` and later `peekaboo.state: "idle"`

@@ -471,7 +471,13 @@ function bootstrap(): void {
   };
 
   wireTabs(mascot);
-  document.body.setAttribute('data-active-view', 'speech');
+  const requestedView = new URLSearchParams(window.location.search).get('view');
+  const allowedViews = new Set(['speech', 'peekaboo', 'stories', 'sleep']);
+  if (requestedView && allowedViews.has(requestedView)) {
+    document.querySelector<HTMLButtonElement>(`.tab-btn[data-view="${requestedView}"]`)?.click();
+  } else {
+    document.body.setAttribute('data-active-view', 'speech');
+  }
   installTestingHooks();
   registerServiceWorker();
 }

@@ -6,11 +6,12 @@ const VOICE_VARIANTS = [
     { prompt: 'Ceeey!', rate: 0.98, pitch: 1.26, volume: 0.9, tone: 820, chime: 1160 }
 ];
 const INTRO_DELAY_MS = navigator.webdriver ? 220 : 760;
-const ROOM_VISIBLE_MS = navigator.webdriver ? 540 : 1780;
-const CENTER_VISIBLE_MS = navigator.webdriver ? 420 : 1480;
-const HIDE_WAIT_MS = navigator.webdriver ? 420 : 1180;
-const REVEAL_VISIBLE_MS = navigator.webdriver ? 620 : 1680;
-const REACTION_VISIBLE_MS = navigator.webdriver ? 260 : 760;
+const ROOM_IDLE_MS = navigator.webdriver ? 540 : 1780;
+const CENTER_IDLE_MS = navigator.webdriver ? 420 : 1480;
+const HIDE_COVER_MS = navigator.webdriver ? 180 : 320;
+const WAIT_MS = navigator.webdriver ? 520 : 1000;
+const REVEAL_MS = navigator.webdriver ? 380 : 760;
+const REACT_MS = navigator.webdriver ? 260 : 680;
 export class PeekabooModeModule {
     rootEl;
     stageEl;
@@ -71,13 +72,14 @@ export class PeekabooModeModule {
         this.isPaused = false;
         this.clearTimers();
         this.currentHideout = null;
+        this.hideoutButtons.forEach((button) => button.classList.remove('is-active-hideout', 'is-tappable-hideout'));
         this.setPhoenixPosition(this.getAnchorPosition('center'), 1.1, 0);
         if (!this.hasStartedOnce) {
             this.hasStartedOnce = true;
             this.playIntro();
             return;
         }
-        this.enterVisiblePhase();
+        this.enterIdleState();
     }
     pause() {
         this.isPaused = true;
@@ -97,12 +99,12 @@ export class PeekabooModeModule {
             this.pause();
         });
         this.stageTapEl.addEventListener('click', () => {
-            if (this.currentState === 'hidden' && this.currentHideMode === 'self') {
-                this.revealPhoenix(true);
+            if (this.currentState === 'hide' || (this.currentState === 'wait' && this.currentHideMode === 'self')) {
+                this.enterRevealState(true);
                 return;
             }
-            if (this.currentState === 'revealed' || this.currentState === 'celebrate') {
-                this.handleChildReaction();
+            if (this.currentState === 'reveal' || this.currentState === 'react') {
+                this.enterReactState(true);
             }
         });
         this.hideoutButtons.forEach((button) => {
@@ -111,14 +113,14 @@ export class PeekabooModeModule {
                 if (!hideout) {
                     return;
                 }
-                if (this.currentState === 'hidden' &&
+                if ((this.currentState === 'hide' || this.currentState === 'wait') &&
                     this.currentHideMode === 'environment' &&
                     this.currentHideout === hideout) {
-                    this.revealPhoenix(true);
+                    this.enterRevealState(true);
                     return;
                 }
-                if (this.currentState === 'revealed' || this.currentState === 'celebrate') {
-                    this.handleChildReaction();
+                if (this.currentState === 'reveal' || this.currentState === 'react') {
+                    this.enterReactState(true);
                 }
             });
         });
@@ -156,9 +158,9 @@ export class PeekabooModeModule {
         }
         this.currentScene = 'room';
         this.currentHideMode = 'self';
-        this.currentState = 'visible';
+        this.currentHideout = null;
         this.currentAnchor = 'stage-left';
-        this.syncStateAttributes();
+        this.setState('idle');
         this.setPhoenixPosition(this.getAnchorPosition('stage-left'), 1.06, -8);
         this.statusEl.textContent = 'Anka oyun için geldi.';
         this.mascot.setMessage('Hadi oynayalım.');
@@ -168,23 +170,22 @@ export class PeekabooModeModule {
             this.setPhoenixPosition(this.getAnchorPosition('window'), 1.1, 10);
         }, navigator.webdriver ? 80 : 280);
         const startTimeout = window.setTimeout(() => {
-            this.enterVisiblePhase(true);
+            this.enterIdleState(true);
         }, INTRO_DELAY_MS);
         this.timeoutIds.push(driftTimeout, startTimeout);
     }
-    enterVisiblePhase(skipGreeting = false) {
+    enterIdleState(skipGreeting = false) {
         if (this.isPaused) {
             return;
         }
         this.currentScene = this.cycleIndex % 2 === 0 ? 'room' : 'center';
         this.currentHideMode = this.currentScene === 'room' && this.cycleIndex % 4 === 2 ? 'environment' : 'self';
-        this.currentState = 'visible';
         this.currentHideout = null;
         this.currentAnchor = this.currentScene === 'room'
             ? ROOM_ROUTE[this.cycleIndex % ROOM_ROUTE.length]
             : 'center';
         this.hideoutButtons.forEach((button) => button.classList.remove('is-active-hideout', 'is-tappable-hideout'));
-        this.syncStateAttributes();
+        this.setState('idle');
         if (this.currentScene === 'room') {
             this.statusEl.textContent = 'Anka odada süzülüyor.';
             this.setPhoenixPosition(this.getAnchorPosition(this.currentAnchor), 1.02, -6 + (this.cycleIndex % 3) * 4);
@@ -194,63 +195,54 @@ export class PeekabooModeModule {
             }
         }
         else {
-            this.statusEl.textContent = 'Anka ortada bekliyor.';
+            this.statusEl.textContent = 'Anka ortada süzülüyor.';
             this.setPhoenixPosition(this.getAnchorPosition('center'), 1.2, 0);
             this.mascot.setMessage('Anka burada.');
         }
         const timeoutId = window.setTimeout(() => {
-            this.hidePhoenix();
-        }, this.currentScene === 'room' ? ROOM_VISIBLE_MS : CENTER_VISIBLE_MS);
+            this.enterHideState();
+        }, this.currentScene === 'room' ? ROOM_IDLE_MS : CENTER_IDLE_MS);
         this.timeoutIds.push(timeoutId);
     }
-    scheduleRoomDrift() {
-        if (this.currentScene !== 'room') {
-            return;
-        }
-        const hops = navigator.webdriver ? 1 : 2;
-        for (let index = 0; index < hops; index += 1) {
-            const timeoutId = window.setTimeout(() => {
-                if (this.isPaused || this.currentState !== 'visible' || this.currentScene !== 'room') {
-                    return;
-                }
-                const nextAnchor = ROOM_ROUTE[(this.cycleIndex + index + 1) % ROOM_ROUTE.length];
-                this.currentAnchor = nextAnchor;
-                this.rootEl.setAttribute('data-current-anchor', nextAnchor);
-                this.setPhoenixPosition(this.getAnchorPosition(nextAnchor), index === hops - 1 ? 1.08 : 1, index % 2 === 0 ? 8 : -8);
-            }, navigator.webdriver ? 120 + index * 120 : 380 + index * 360);
-            this.timeoutIds.push(timeoutId);
-        }
-    }
-    hidePhoenix() {
+    enterHideState() {
         if (this.isPaused) {
             return;
         }
-        this.currentState = 'hidden';
-        this.statusEl.textContent = 'Anka saklandı.';
         if (this.currentHideMode === 'environment') {
             const hideout = HIDEOUT_SEQUENCE[this.cycleIndex % HIDEOUT_SEQUENCE.length];
             this.currentHideout = hideout;
             this.currentAnchor = hideout;
-            this.rootEl.setAttribute('data-current-hideout', hideout);
-            this.rootEl.setAttribute('data-can-tap-reveal', 'true');
-            this.getHideoutButton(hideout)?.classList.add('is-active-hideout', 'is-tappable-hideout');
+            this.getHideoutButton(hideout)?.classList.add('is-active-hideout');
             this.setPhoenixPosition(this.getAnchorPosition(hideout), 0.9, 0);
         }
         else {
             this.currentHideout = null;
-            this.rootEl.setAttribute('data-current-hideout', '');
-            this.rootEl.setAttribute('data-can-tap-reveal', 'true');
             const hiddenScale = this.currentScene === 'center' ? 1.18 : 1.02;
             this.setPhoenixPosition(this.getAnchorPosition(this.currentAnchor), hiddenScale, this.currentScene === 'room' ? -4 : 0);
         }
-        this.rootEl.setAttribute('data-peek-state', this.currentState);
+        this.statusEl.textContent = 'Anka yüzünü kapattı.';
+        this.setState('hide');
         this.playHideAudio();
         const timeoutId = window.setTimeout(() => {
-            this.revealPhoenix(false);
-        }, HIDE_WAIT_MS + (this.currentHideMode === 'environment' && !navigator.webdriver ? 260 : 0));
+            this.enterWaitState();
+        }, HIDE_COVER_MS);
         this.timeoutIds.push(timeoutId);
     }
-    revealPhoenix(triggeredByTap) {
+    enterWaitState() {
+        if (this.isPaused) {
+            return;
+        }
+        if (this.currentHideMode === 'environment' && this.currentHideout) {
+            this.getHideoutButton(this.currentHideout)?.classList.add('is-tappable-hideout');
+        }
+        this.statusEl.textContent = 'Anka bekliyor.';
+        this.setState('wait');
+        const timeoutId = window.setTimeout(() => {
+            this.enterRevealState(false);
+        }, WAIT_MS);
+        this.timeoutIds.push(timeoutId);
+    }
+    enterRevealState(triggeredByTap) {
         if (this.isPaused) {
             return;
         }
@@ -262,18 +254,12 @@ export class PeekabooModeModule {
         const revealScale = this.currentScene === 'center' ? 1.24 : 1.1;
         const revealRotation = triggeredByTap ? 6 : -6;
         this.setPhoenixPosition(this.getAnchorPosition(revealAnchor), revealScale, revealRotation);
-        this.currentState = 'revealed';
         this.revealCount += 1;
-        if (triggeredByTap) {
-            this.childReactionCount += 1;
-            this.rootEl.setAttribute('data-peek-reactions', String(this.childReactionCount));
-        }
-        this.syncStateAttributes();
+        this.statusEl.textContent = 'Ceee!';
+        this.setState('reveal');
         this.rootEl.setAttribute('data-peek-reveals', String(this.revealCount));
-        this.rootEl.setAttribute('data-can-tap-reveal', 'false');
         const variant = VOICE_VARIANTS[this.voiceVariantIndex % VOICE_VARIANTS.length];
         this.voiceVariantIndex += 1;
-        this.statusEl.textContent = variant.prompt;
         this.mascot.setMessage('Ceee!');
         this.playRevealAudio(variant);
         this.speakLine(variant.prompt, variant.rate, variant.pitch, variant.volume);
@@ -281,25 +267,53 @@ export class PeekabooModeModule {
         runtime.__peekabooPromptLog = runtime.__peekabooPromptLog ?? [];
         runtime.__peekabooPromptLog.push(variant.prompt);
         const timeoutId = window.setTimeout(() => {
-            this.cycleIndex += 1;
-            this.enterVisiblePhase();
-        }, REVEAL_VISIBLE_MS);
+            this.enterReactState(triggeredByTap);
+        }, REVEAL_MS);
         this.timeoutIds.push(timeoutId);
     }
-    handleChildReaction() {
+    enterReactState(triggeredByTap) {
+        if (this.isPaused) {
+            return;
+        }
+        this.clearTimers();
         this.childReactionCount += 1;
-        this.currentState = 'celebrate';
-        this.rootEl.setAttribute('data-peek-state', 'celebrate');
+        this.statusEl.textContent = triggeredByTap ? 'Anka seninle sevindi.' : 'Anka sevindi.';
+        this.setState('react');
         this.rootEl.setAttribute('data-peek-reactions', String(this.childReactionCount));
-        this.statusEl.textContent = 'Anka sevindi.';
         this.mascot.setMessage('Aferin.');
         this.playChildReactionAudio();
-        this.clearTimers();
         const timeoutId = window.setTimeout(() => {
             this.cycleIndex += 1;
-            this.enterVisiblePhase();
-        }, REACTION_VISIBLE_MS);
+            this.enterIdleState();
+        }, REACT_MS);
         this.timeoutIds.push(timeoutId);
+    }
+    setState(nextState) {
+        this.currentState = nextState;
+        this.rootEl.setAttribute('data-peek-state', this.currentState);
+        this.rootEl.setAttribute('data-peek-scene', this.currentScene);
+        this.rootEl.setAttribute('data-hide-mode', this.currentHideMode);
+        this.rootEl.setAttribute('data-current-hideout', this.currentHideout ?? '');
+        this.rootEl.setAttribute('data-current-anchor', this.currentAnchor);
+        this.rootEl.setAttribute('data-can-tap-reveal', String(nextState === 'wait' || (nextState === 'hide' && this.currentHideMode === 'environment')));
+    }
+    scheduleRoomDrift() {
+        if (this.currentScene !== 'room') {
+            return;
+        }
+        const hops = navigator.webdriver ? 1 : 2;
+        for (let index = 0; index < hops; index += 1) {
+            const timeoutId = window.setTimeout(() => {
+                if (this.isPaused || this.currentState !== 'idle' || this.currentScene !== 'room') {
+                    return;
+                }
+                const nextAnchor = ROOM_ROUTE[(this.cycleIndex + index + 1) % ROOM_ROUTE.length];
+                this.currentAnchor = nextAnchor;
+                this.rootEl.setAttribute('data-current-anchor', nextAnchor);
+                this.setPhoenixPosition(this.getAnchorPosition(nextAnchor), index === hops - 1 ? 1.08 : 1, index % 2 === 0 ? 8 : -8);
+            }, navigator.webdriver ? 120 + index * 120 : 380 + index * 360);
+            this.timeoutIds.push(timeoutId);
+        }
     }
     setPhoenixPosition(position, scale = 1, rotate = 0) {
         this.phoenixShellEl.style.setProperty('--peek-x', `${position.x}px`);
@@ -370,13 +384,6 @@ export class PeekabooModeModule {
     }
     getHideoutButton(hideout) {
         return this.hideoutButtons.find((button) => button.dataset.hideout === hideout) ?? null;
-    }
-    syncStateAttributes() {
-        this.rootEl.setAttribute('data-peek-state', this.currentState);
-        this.rootEl.setAttribute('data-peek-scene', this.currentScene);
-        this.rootEl.setAttribute('data-hide-mode', this.currentHideMode);
-        this.rootEl.setAttribute('data-current-hideout', this.currentHideout ?? '');
-        this.rootEl.setAttribute('data-current-anchor', this.currentAnchor);
     }
     clearTimers() {
         while (this.timeoutIds.length > 0) {
