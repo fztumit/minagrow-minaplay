@@ -1,4 +1,4 @@
-const CACHE_NAME = 'minaplay-v22';
+const CACHE_NAME = 'minaplay-v23';
 
 const PRECACHE_ASSETS = [
   '/',
@@ -11,6 +11,7 @@ const PRECACHE_ASSETS = [
   '/assets/water-glass.svg',
   '/assets/object-ball.svg',
   '/assets/object-car.svg',
+  '/assets/object-father.svg',
   '/assets/object-book.svg',
   '/assets/object-apple.svg',
   '/assets/object-milk.svg',
