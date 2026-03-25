@@ -72,6 +72,58 @@
           </div>
         </section>
 
+        <section class="module-view" id="view-peekaboo" data-module="peekaboo">
+          <div class="module-header visually-hidden">
+            <h2>Cee Oyunu</h2>
+            <p>Anka saklanır ve yeniden görünür.</p>
+          </div>
+
+          <div class="peekaboo-stage" id="peekaboo-stage" aria-label="Cee oyunu sahnesi">
+            <button type="button" id="peekaboo-parent-trigger" class="visually-hidden">Ebeveyn panelini aç</button>
+            <div class="parent-corner-hotspot" id="peekaboo-parent-hotspot" aria-hidden="true"></div>
+
+            <div class="peekaboo-room" aria-hidden="true">
+              <div class="peekaboo-window">
+                <div class="peekaboo-window-sun"></div>
+                <div class="peekaboo-window-cloud peekaboo-window-cloud-a"></div>
+                <div class="peekaboo-window-cloud peekaboo-window-cloud-b"></div>
+              </div>
+              <div class="peekaboo-floor-rug"></div>
+              <div class="peekaboo-curtain-wrap">
+                <button type="button" class="peekaboo-hideout peekaboo-hideout-curtain" data-hideout="curtain">
+                  <span class="visually-hidden">Perde</span>
+                </button>
+              </div>
+              <button type="button" class="peekaboo-hideout peekaboo-hideout-sofa" data-hideout="sofa">
+                <span class="visually-hidden">Koltuk</span>
+              </button>
+              <button type="button" class="peekaboo-hideout peekaboo-hideout-table" data-hideout="table">
+                <span class="visually-hidden">Masa</span>
+              </button>
+              <div class="peekaboo-lamp"></div>
+              <div class="peekaboo-toys">
+                <span class="peekaboo-toy-ball"></span>
+                <span class="peekaboo-toy-block"></span>
+              </div>
+            </div>
+
+            <div class="peekaboo-phoenix-layer" id="peekaboo-phoenix-layer" aria-hidden="true">
+              <div class="peekaboo-phoenix-shell" id="peekaboo-phoenix-shell">
+                <span class="peekaboo-phoenix-glow"></span>
+                <span class="peekaboo-phoenix-wing peekaboo-phoenix-wing-left"></span>
+                <span class="peekaboo-phoenix-wing peekaboo-phoenix-wing-right"></span>
+                <span class="peekaboo-phoenix-sparkles"></span>
+                <img src="/assets/phoenix-ui.svg" alt="" />
+              </div>
+            </div>
+
+            <button type="button" class="peekaboo-stage-tap" id="peekaboo-stage-tap">
+              <span class="visually-hidden">Cee oyun sahnesi</span>
+            </button>
+          </div>
+          <p class="visually-hidden" id="peekaboo-status" aria-live="polite">Cee oyunu hazır.</p>
+        </section>
+
         <section class="module-view" id="view-stories" data-module="stories">
           <div class="module-header">
             <h2>Hikayeler</h2>
@@ -377,6 +429,7 @@
 
       <nav class="module-tabs" role="tablist" aria-label="Modüller">
         <button class="tab-btn active" role="tab" aria-selected="true" data-view="speech">Oyun</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-view="peekaboo">Cee</button>
         <button class="tab-btn" role="tab" aria-selected="false" data-view="stories">Hikaye</button>
         <button class="tab-btn" role="tab" aria-selected="false" data-view="sleep">Uyku</button>
       </nav>

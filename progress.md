@@ -292,6 +292,52 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
   - `current_target: su`
   - `scene_phase: awaiting-tap`
   - `peek_mode: wing`
+
+## Continuation Update: Peekaboo Mode
+- Added a new separate child game module: `Peekaboo Mode`
+  - new tab: `Cee`
+  - no learning text, no settings, no forms on the child scene
+  - fully separate from the word-learning game
+- Added dedicated DOM scene in `public/index.html`:
+  - room background
+  - curtain hideout
+  - sofa hideout
+  - table hideout
+  - floating phoenix shell
+  - hidden top-corner parent access
+- Added dedicated module implementation:
+  - `src/modules/peekaboo/index.ts`
+  - self hide mode
+  - environment hide mode
+  - auto reveal after short delay
+  - reveal by child tap on hideout
+  - `Ceee!` voice + sparkle/giggle style sound effects
+  - tap reaction sound and loop restart
+- Integrated into app bootstrap and testing hooks:
+  - new `peekaboo` state payload in `render_game_to_text`
+  - tab lifecycle pause/resume handling
+  - parent PIN flow also works from peekaboo view
+- Updated PWA cache version:
+  - `minaplay-v24`
+
+## Validation (Peekaboo Mode)
+- `npm run build` ✅
+- `npm run lint` ✅
+- `npm test` ✅
+- `npx playwright test --workers=1` ✅
+  - `23 passed`
+- Official skill client run ✅
+  - command opened `peekaboo` tab before capture
+  - state confirms:
+    - `active_view: view-peekaboo`
+    - `peekaboo.state: revealed`
+    - `peekaboo.hide_mode: self`
+    - `peekaboo.reveals: 1`
+  - no `errors-*.json`
+
+## Notes
+- The official skill client screenshot still shows the largest canvas (`sleep-stars`) instead of the DOM-based peekaboo scene.
+- For the peekaboo module, JSON state is the reliable verification source.
   - shared parent unlock helper
   - regression updates for all parent-panel tests
   - explicit wrong-PIN test added

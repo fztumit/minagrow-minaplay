@@ -3,6 +3,7 @@ import { DailyWordModule } from './dailyword/index.js';
 import { VOCABULARY } from './data/vocabulary.js';
 import { FamilyAvatarModule } from './family/index.js';
 import { MascotGuide } from './mascot/index.js';
+import { PeekabooModeModule } from './peekaboo/index.js';
 import { SleepModeModule } from './sleep/index.js';
 import { SpeechGameModule } from './speech/index.js';
 import { StoriesModule } from './stories/index.js';
@@ -45,6 +46,7 @@ function wireTabs(mascot: MascotGuide): void {
   const tabButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.tab-btn'));
   const views = Array.from(document.querySelectorAll<HTMLElement>('.module-view'));
   const speechRoot = document.getElementById('view-speech');
+  const peekabooRoot = document.getElementById('view-peekaboo');
   const parentRoot = document.getElementById('view-parent');
   const parentCloseBtn = document.getElementById('parent-panel-close') as HTMLButtonElement | null;
   const authOverlay = document.getElementById('parent-auth-overlay');
@@ -59,6 +61,18 @@ function wireTabs(mascot: MascotGuide): void {
   let lastPrimaryView = 'speech';
   const notifySpeechGuidance = (state: 'pause' | 'resume') => {
     speechRoot?.dispatchEvent(new CustomEvent(`speech-guidance-${state}`));
+  };
+  const notifyPeekabooLifecycle = (state: 'pause' | 'resume') => {
+    peekabooRoot?.dispatchEvent(new CustomEvent(`peekaboo-${state}`));
+  };
+  const resumeActiveChildModule = () => {
+    const activeViewId = document.querySelector('.module-view.active')?.id;
+    if (activeViewId === 'view-speech') {
+      notifySpeechGuidance('resume');
+    }
+    if (activeViewId === 'view-peekaboo') {
+      notifyPeekabooLifecycle('resume');
+    }
   };
 
   const syncParentPinStatus = (message?: string) => {
@@ -110,8 +124,16 @@ function wireTabs(mascot: MascotGuide): void {
       notifySpeechGuidance('pause');
     }
 
+    if (selectedView === 'peekaboo') {
+      notifyPeekabooLifecycle('resume');
+    } else {
+      notifyPeekabooLifecycle('pause');
+    }
+
     if (selectedView === 'speech') {
       mascot.sayHint();
+    } else if (selectedView === 'peekaboo') {
+      mascot.setMessage('Cee zamanı.');
     } else if (selectedView === 'stories') {
       mascot.setMessage('Hikaye zamanı.');
     } else if (selectedView === 'sleep') {
@@ -122,6 +144,7 @@ function wireTabs(mascot: MascotGuide): void {
   const openParentPanel = () => {
     closeParentAuth();
     notifySpeechGuidance('pause');
+    notifyPeekabooLifecycle('pause');
     document.body.setAttribute('data-active-view', 'parent');
     views.forEach((view) => {
       view.classList.toggle('active', view.id === 'view-parent');
@@ -137,6 +160,7 @@ function wireTabs(mascot: MascotGuide): void {
     }
 
     notifySpeechGuidance('pause');
+    notifyPeekabooLifecycle('pause');
     authOverlay.classList.add('is-active');
     authOverlay.setAttribute('aria-hidden', 'false');
     authInput.value = '';
@@ -165,6 +189,10 @@ function wireTabs(mascot: MascotGuide): void {
   });
 
   speechRoot?.addEventListener('open-parent-panel', () => {
+    requestParentPin();
+  });
+
+  peekabooRoot?.addEventListener('open-parent-panel', () => {
     requestParentPin();
   });
 
@@ -200,18 +228,14 @@ function wireTabs(mascot: MascotGuide): void {
 
   authCancelBtn?.addEventListener('click', () => {
     closeParentAuth();
-    if (document.querySelector('.module-view.active')?.id === 'view-speech') {
-      notifySpeechGuidance('resume');
-    }
+    resumeActiveChildModule();
     mascot.sayHint();
   });
 
   authOverlay?.addEventListener('click', (event) => {
     if (event.target === authOverlay) {
       closeParentAuth();
-      if (document.querySelector('.module-view.active')?.id === 'view-speech') {
-        notifySpeechGuidance('resume');
-      }
+      resumeActiveChildModule();
       mascot.sayHint();
     }
   });
@@ -260,6 +284,7 @@ function installTestingHooks(): void {
   runtime.render_game_to_text = () => {
     const activeViewId = document.querySelector<HTMLElement>('.module-view.active')?.id ?? null;
     const speechRoot = document.getElementById('view-speech');
+    const peekabooRoot = document.getElementById('view-peekaboo');
     const sleepRoot = document.getElementById('view-sleep');
     const familyRoot = document.getElementById('family-panel');
     const storiesRoot = document.getElementById('view-stories');
@@ -303,6 +328,14 @@ function installTestingHooks(): void {
         total_word_listens: Number(speechRoot?.getAttribute('data-total-word-listens') ?? 0),
         top_sentence: speechRoot?.getAttribute('data-top-sentence') ?? '',
         top_sentence_count: Number(speechRoot?.getAttribute('data-top-sentence-count') ?? 0)
+      },
+      peekaboo: {
+        state: peekabooRoot?.getAttribute('data-peek-state') ?? 'idle',
+        hide_mode: peekabooRoot?.getAttribute('data-hide-mode') ?? 'self',
+        current_hideout: peekabooRoot?.getAttribute('data-current-hideout') ?? '',
+        reveals: Number(peekabooRoot?.getAttribute('data-peek-reveals') ?? 0),
+        reactions: Number(peekabooRoot?.getAttribute('data-peek-reactions') ?? 0),
+        can_tap_reveal: peekabooRoot?.getAttribute('data-can-tap-reveal') === 'true'
       },
       sleep: {
         running: sleepRoot?.getAttribute('data-running') === 'true'
@@ -351,6 +384,7 @@ function bootstrap(): void {
   const dailyWordCard = document.getElementById('daily-word-card');
   const dailyActivityCard = document.getElementById('daily-activity-card');
   const speechRoot = document.getElementById('view-speech');
+  const peekabooRoot = document.getElementById('view-peekaboo');
   const storiesRoot = document.getElementById('view-stories');
   const sleepRoot = document.getElementById('view-sleep');
   const parentRoot = document.getElementById('view-parent');
@@ -363,6 +397,7 @@ function bootstrap(): void {
     !dailyWordCard ||
     !dailyActivityCard ||
     !speechRoot ||
+    !peekabooRoot ||
     !storiesRoot ||
     !sleepRoot ||
     !parentRoot ||
@@ -382,6 +417,9 @@ function bootstrap(): void {
 
   const speechModule = new SpeechGameModule(speechRoot, mascot, parentRoot);
   speechModule.init();
+
+  const peekabooModule = new PeekabooModeModule(peekabooRoot, mascot);
+  peekabooModule.init();
 
   const sleepModule = new SleepModeModule(sleepRoot, mascot, parentRoot);
   sleepModule.init();
@@ -413,6 +451,7 @@ function bootstrap(): void {
       dailyWord: DailyWordModule;
       dailyActivity: DailyActivityModule;
       speech: SpeechGameModule;
+      peekaboo: PeekabooModeModule;
       sleep: SleepModeModule;
       family: FamilyAvatarModule;
       stories: StoriesModule;
@@ -423,6 +462,7 @@ function bootstrap(): void {
     dailyWord: dailyWordModule,
     dailyActivity: dailyActivityModule,
     speech: speechModule,
+    peekaboo: peekabooModule,
     sleep: sleepModule,
     family: familyModule,
     stories: storiesModule
