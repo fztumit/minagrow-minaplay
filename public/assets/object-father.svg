@@ -1,0 +1,35 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="fatherBg" x1="48" y1="28" x2="208" y2="228" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF6E8"/>
+      <stop offset="1" stop-color="#FFE6C9"/>
+    </linearGradient>
+    <linearGradient id="fatherShirt" x1="90" y1="150" x2="164" y2="232" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#66C9D5"/>
+      <stop offset="1" stop-color="#3AA8B9"/>
+    </linearGradient>
+    <linearGradient id="fatherHair" x1="92" y1="58" x2="156" y2="120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#825E43"/>
+      <stop offset="1" stop-color="#533624"/>
+    </linearGradient>
+  </defs>
+
+  <ellipse cx="128" cy="220" rx="64" ry="16" fill="#FFD8A3" fill-opacity="0.45"/>
+  <circle cx="128" cy="128" r="94" fill="url(#fatherBg)"/>
+  <path d="M88 152C88 128.804 106.804 110 130 110C153.196 110 172 128.804 172 152V196C172 204.837 164.837 212 156 212H104C95.1634 212 88 204.837 88 196V152Z" fill="url(#fatherShirt)"/>
+  <path d="M142 154C142 161.732 135.732 168 128 168C120.268 168 114 161.732 114 154V146H142V154Z" fill="#FFF1D3"/>
+  <path d="M91 162C97.2 150.2 109.667 144.75 115 143.5V170H97C92.5817 170 89.0571 166.147 91 162Z" fill="#58BBC8"/>
+  <path d="M165 162C158.8 150.2 146.333 144.75 141 143.5V170H159C163.418 170 166.943 166.147 165 162Z" fill="#58BBC8"/>
+  <path d="M89 100C89 77.3563 107.356 59 130 59H132C154.644 59 173 77.3563 173 100V111C173 135.301 153.301 155 129 155C104.699 155 85 135.301 85 111L89 100Z" fill="#FFD7B5"/>
+  <path d="M88 101C87.3333 79 102.6 54.6 130 54.9999C151.333 54.9999 169.6 68.6 173 92.9999L172 112L160 101L154 83L127 74L96 83L88 101Z" fill="url(#fatherHair)"/>
+  <circle cx="112" cy="111" r="7" fill="#372117"/>
+  <circle cx="145" cy="111" r="7" fill="#372117"/>
+  <circle cx="109.5" cy="108.5" r="2.5" fill="white" fill-opacity="0.92"/>
+  <circle cx="142.5" cy="108.5" r="2.5" fill="white" fill-opacity="0.92"/>
+  <path d="M121 124C123.667 126 128.3 126.8 133.5 123" stroke="#E2936C" stroke-width="4" stroke-linecap="round"/>
+  <path d="M114 133C121.5 139.5 135.5 139.5 143 133" stroke="#A75B41" stroke-width="5" stroke-linecap="round"/>
+  <path d="M109 96C112.5 92.5 117.167 91.8333 121 93" stroke="#5C3A2A" stroke-width="4" stroke-linecap="round"/>
+  <path d="M138 93C141.833 91.8333 146.5 92.5 150 96" stroke="#5C3A2A" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="87" cy="126" r="10" fill="#FFD2AD"/>
+  <circle cx="170" cy="126" r="10" fill="#FFD2AD"/>
+</svg>

@@ -7,13 +7,16 @@ const SCENE_VOCABULARY = VOCABULARY.filter((item) => item.featuredOnScene);
 const GUIDE_REMINDER_DELAY_MS = navigator.webdriver ? 1400 : 9400;
 const GUIDE_REMINDER_VARIANCE_MS = navigator.webdriver ? 0 : 2400;
 const GUIDE_REMINDER_RETRY_MS = navigator.webdriver ? 300 : 1800;
+const PEEKABOO_HIDE_MS = 1000;
+const PEEKABOO_REVEAL_DELAY_MS = 260;
+const GUIDE_TRAVEL_MS = 720;
 const GUIDE_WAIT_PROMPTS = {
     su: 'Ben suyun yanında bekliyorum.',
+    baba: 'Ben babanın yanında bekliyorum.',
     top: 'Ben topun yanında bekliyorum.',
     araba: 'Ben arabanın yanında bekliyorum.',
-    kitap: 'Ben kitabın yanında bekliyorum.',
     elma: 'Ben elmanın yanında bekliyorum.',
-    süt: 'Ben sütün yanında bekliyorum.'
+    anne: 'Ben annenin yanında bekliyorum.'
 };
 export class SpeechGameModule {
     rootEl;
@@ -22,6 +25,7 @@ export class SpeechGameModule {
     guideLayerEl;
     guideMascotEl;
     parentPanelTriggerBtn;
+    parentCornerHotspotEl;
     feedbackEl;
     repeatModeSelect;
     customAudioTextInput;
@@ -54,6 +58,9 @@ export class SpeechGameModule {
     mediaRecorder = null;
     recordingChunks = [];
     recordingStream = null;
+    sequenceTimeoutIds = [];
+    sceneAudioContext = null;
+    peekCounter = 0;
     settings = {
         repeatMode: 'default'
     };
@@ -63,6 +70,7 @@ export class SpeechGameModule {
         const guideLayerEl = rootEl.querySelector('#speech-guide-layer');
         const guideMascotEl = rootEl.querySelector('#speech-guide-mascot');
         const parentPanelTriggerBtn = rootEl.querySelector('#parent-panel-trigger');
+        const parentCornerHotspotEl = rootEl.querySelector('#parent-corner-hotspot');
         const feedbackEl = rootEl.querySelector('#speech-feedback');
         const repeatModeSelect = controlsRootEl.querySelector('#speech-repeat-mode');
         const customAudioTextInput = controlsRootEl.querySelector('#custom-audio-text');
@@ -87,6 +95,7 @@ export class SpeechGameModule {
             !guideLayerEl ||
             !guideMascotEl ||
             !parentPanelTriggerBtn ||
+            !parentCornerHotspotEl ||
             !feedbackEl ||
             !repeatModeSelect ||
             !customAudioTextInput ||
@@ -114,6 +123,7 @@ export class SpeechGameModule {
         this.guideLayerEl = guideLayerEl;
         this.guideMascotEl = guideMascotEl;
         this.parentPanelTriggerBtn = parentPanelTriggerBtn;
+        this.parentCornerHotspotEl = parentCornerHotspotEl;
         this.feedbackEl = feedbackEl;
         this.repeatModeSelect = repeatModeSelect;
         this.customAudioTextInput = customAudioTextInput;
@@ -150,6 +160,9 @@ export class SpeechGameModule {
         this.rootEl.setAttribute('data-guide-prompt', '');
         this.rootEl.setAttribute('data-guide-active', 'false');
         this.rootEl.setAttribute('data-guide-mode', 'idle');
+        this.rootEl.setAttribute('data-scene-phase', 'intro');
+        this.rootEl.setAttribute('data-peek-mode', 'wing');
+        this.rootEl.setAttribute('data-current-target', '');
         this.syncSettingsToDom();
         this.renderRecordingLibrary();
         this.renderProgressPanel();
@@ -158,9 +171,8 @@ export class SpeechGameModule {
             this.handleWordProfilesUpdated();
         });
         window.requestAnimationFrame(() => {
-            this.activateInitialTarget();
+            this.startIntroSequence();
         });
-        this.mascot.sayHint();
     }
     renderCards(vocabulary) {
         this.gridEl.innerHTML = vocabulary
@@ -230,6 +242,8 @@ export class SpeechGameModule {
             restoredButton.classList.add('is-next-target');
             restoredButton.setAttribute('data-next-target', 'true');
             this.rootEl.setAttribute('data-next-word', restoredButton.dataset.wordLabel ?? '');
+            this.rootEl.setAttribute('data-current-target', restoredButton.dataset.wordId ?? '');
+            this.setCardsInteractive(restoredButton);
             this.placeGuideMascot(restoredButton);
         }
     }
@@ -271,6 +285,9 @@ export class SpeechGameModule {
         this.gridEl.addEventListener('click', (event) => {
             const target = event.target.closest('.word-card');
             if (!target) {
+                return;
+            }
+            if (target !== this.activeNextButton || this.rootEl.getAttribute('data-scene-phase') !== 'awaiting-tap') {
                 return;
             }
             const wordId = target.dataset.wordId;
@@ -394,17 +411,20 @@ export class SpeechGameModule {
         this.rootEl.addEventListener('speech-guidance-pause', () => {
             this.clearIdleReminder();
             this.clearAttentionState();
+            this.clearSequenceTimeouts();
         });
         this.rootEl.addEventListener('speech-guidance-resume', () => {
             if (!this.activeNextButton) {
-                this.activateInitialTarget();
+                this.startIntroSequence();
                 return;
             }
             this.placeGuideMascot(this.activeNextButton);
             this.rootEl.setAttribute('data-guide-active', 'true');
             if (!this.rootEl.getAttribute('data-guide-prompt')) {
-                this.rootEl.setAttribute('data-guide-prompt', 'Hadi dokun');
+                this.rootEl.setAttribute('data-guide-prompt', 'Şimdi buna dokun');
             }
+            this.rootEl.setAttribute('data-scene-phase', 'awaiting-tap');
+            this.setCardsInteractive(this.activeNextButton);
             this.scheduleIdleReminder(this.activeNextButton);
         });
     }
@@ -449,21 +469,26 @@ export class SpeechGameModule {
                 holdTimeoutId = null;
             }
             this.guideMascotEl.classList.remove('is-holding');
+            this.parentCornerHotspotEl.classList.remove('is-holding');
         };
-        this.guideMascotEl.addEventListener('pointerdown', (event) => {
-            if (event.pointerType === 'mouse' && event.button !== 0) {
-                return;
-            }
-            clearHold();
-            this.guideMascotEl.classList.add('is-holding');
-            holdTimeoutId = window.setTimeout(() => {
-                this.parentPanelTriggerBtn.click();
+        const registerHold = (element) => {
+            element.addEventListener('pointerdown', (event) => {
+                if (event.pointerType === 'mouse' && event.button !== 0) {
+                    return;
+                }
                 clearHold();
-            }, 700);
-        });
-        this.guideMascotEl.addEventListener('pointerup', clearHold);
-        this.guideMascotEl.addEventListener('pointerleave', clearHold);
-        this.guideMascotEl.addEventListener('pointercancel', clearHold);
+                element.classList.add('is-holding');
+                holdTimeoutId = window.setTimeout(() => {
+                    this.parentPanelTriggerBtn.click();
+                    clearHold();
+                }, 700);
+            });
+            element.addEventListener('pointerup', clearHold);
+            element.addEventListener('pointerleave', clearHold);
+            element.addEventListener('pointercancel', clearHold);
+        };
+        registerHold(this.guideMascotEl);
+        registerHold(this.parentCornerHotspotEl);
     }
     syncCustomAudioSupportState() {
         const supported = typeof window.MediaRecorder !== 'undefined' &&
@@ -808,32 +833,122 @@ export class SpeechGameModule {
     onWordTapped(button, wordId, wordLabel, defaultRepeats) {
         const resolvedRepeats = this.resolveRepeats(defaultRepeats);
         this.rootEl.setAttribute('data-last-word', wordLabel);
+        this.rootEl.setAttribute('data-scene-phase', 'playing');
         this.clearPendingSpeech();
         this.clearPendingGuidance();
         this.clearIdleReminder();
         this.clearAttentionState();
+        this.clearSequenceTimeouts();
+        this.setCardsInteractive(null);
         this.clearCurrentNextTarget();
         const visualDuration = this.triggerVisual(button, wordId);
+        const soundEffectDuration = this.playObjectSound(wordId);
         const speechDuration = this.triggerSpeech({ word: wordLabel, repeats: resolvedRepeats });
-        const sequenceDuration = Math.max(visualDuration, speechDuration);
+        const sequenceDuration = Math.max(visualDuration, speechDuration, soundEffectDuration);
         const nextButton = this.getNextButton(wordId);
-        this.mascot.sayPraise();
+        const celebrateTimeoutId = window.setTimeout(() => {
+            this.triggerMascotCelebrate();
+            this.mascot.sayPraise();
+        }, sequenceDuration);
+        this.sequenceTimeoutIds.push(celebrateTimeoutId);
         this.scheduleGuidedTransition(button, nextButton, sequenceDuration);
     }
-    activateInitialTarget() {
+    startIntroSequence() {
         const firstButton = this.gridEl.querySelector('.word-card');
         if (!firstButton) {
             return;
         }
-        this.activeNextButton = firstButton;
-        firstButton.classList.add('is-next-target');
-        firstButton.setAttribute('data-next-target', 'true');
-        this.rootEl.setAttribute('data-next-word', firstButton.dataset.wordLabel ?? '');
-        this.rootEl.setAttribute('data-guide-prompt', 'Hadi dokun');
+        this.setCardsInteractive(null);
+        this.clearCurrentNextTarget();
+        this.rootEl.setAttribute('data-scene-phase', 'intro');
         this.rootEl.setAttribute('data-guide-active', 'true');
-        this.feedbackEl.textContent = 'Bir nesneye dokun.';
-        this.placeGuideMascot(firstButton);
-        this.scheduleIdleReminder(firstButton);
+        this.rootEl.setAttribute('data-guide-prompt', 'Hadi oynayalım');
+        this.feedbackEl.textContent = 'Oyun başlıyor.';
+        this.placeGuideMascotAtCenter();
+        this.mascot.sayPlayStart();
+        const timeoutId = window.setTimeout(() => {
+            this.beginPeekabooCycle(firstButton, true);
+        }, 460);
+        this.sequenceTimeoutIds.push(timeoutId);
+    }
+    beginPeekabooCycle(targetButton, isIntro = false) {
+        const peekMode = this.choosePeekabooMode(isIntro);
+        this.rootEl.setAttribute('data-peek-mode', peekMode);
+        this.rootEl.setAttribute('data-guide-active', 'true');
+        this.clearAttentionState();
+        this.setCardsInteractive(null);
+        if (peekMode === 'environment') {
+            this.runEnvironmentPeekaboo(targetButton);
+            return;
+        }
+        this.rootEl.setAttribute('data-scene-phase', 'peek-hide');
+        this.guideLayerEl.classList.add('is-active', 'is-peek-hide');
+        this.feedbackEl.textContent = 'Anka saklanıyor.';
+        const timeoutId = window.setTimeout(() => {
+            this.guideLayerEl.classList.remove('is-peek-hide');
+            this.rootEl.setAttribute('data-scene-phase', 'peek-reveal');
+            this.mascot.sayPeekaboo();
+            this.feedbackEl.textContent = 'Anka ortaya çıktı.';
+            const revealTimeoutId = window.setTimeout(() => {
+                this.revealTarget(targetButton);
+            }, PEEKABOO_REVEAL_DELAY_MS);
+            this.sequenceTimeoutIds.push(revealTimeoutId);
+        }, PEEKABOO_HIDE_MS);
+        this.sequenceTimeoutIds.push(timeoutId);
+    }
+    runEnvironmentPeekaboo(targetButton) {
+        const hideBehindBasket = this.peekCounter % 2 === 0;
+        const hideTarget = hideBehindBasket
+            ? this.stageEl.querySelector('.scene-basket')
+            : this.stageEl.querySelector('.scene-sofa');
+        this.rootEl.setAttribute('data-scene-phase', 'peek-hide');
+        this.guideLayerEl.classList.add('is-active', 'is-environment-hide');
+        if (hideTarget) {
+            const hidePosition = this.resolveHideoutPosition(hideTarget);
+            this.setGuideTransform(hidePosition.x, hidePosition.y, 0.96);
+        }
+        const timeoutId = window.setTimeout(() => {
+            this.guideLayerEl.classList.remove('is-environment-hide');
+            this.rootEl.setAttribute('data-scene-phase', 'peek-reveal');
+            this.mascot.sayPeekaboo();
+            const revealTimeoutId = window.setTimeout(() => {
+                this.revealTarget(targetButton);
+            }, PEEKABOO_REVEAL_DELAY_MS);
+            this.sequenceTimeoutIds.push(revealTimeoutId);
+        }, PEEKABOO_HIDE_MS);
+        this.sequenceTimeoutIds.push(timeoutId);
+    }
+    revealTarget(targetButton) {
+        this.clearCurrentNextTarget();
+        this.activeNextButton = targetButton;
+        targetButton.classList.add('is-next-target');
+        targetButton.setAttribute('data-next-target', 'true');
+        this.setCardsInteractive(targetButton);
+        this.rootEl.setAttribute('data-next-word', targetButton.dataset.wordLabel ?? '');
+        this.rootEl.setAttribute('data-current-target', targetButton.dataset.wordId ?? '');
+        this.rootEl.setAttribute('data-guide-prompt', 'Şimdi buna dokun');
+        this.rootEl.setAttribute('data-guide-active', 'true');
+        this.rootEl.setAttribute('data-scene-phase', 'awaiting-tap');
+        this.feedbackEl.textContent = 'Hedef nesne hazır.';
+        this.placeGuideMascot(targetButton);
+        this.mascot.sayNextPrompt();
+        this.scheduleIdleReminder(targetButton);
+    }
+    choosePeekabooMode(isIntro) {
+        if (isIntro) {
+            this.peekCounter = 1;
+            return 'wing';
+        }
+        this.peekCounter += 1;
+        return this.peekCounter % 4 === 0 ? 'environment' : 'wing';
+    }
+    placeGuideMascotAtCenter() {
+        const stageRect = this.stageEl.getBoundingClientRect();
+        const mascotSize = this.guideMascotEl.getBoundingClientRect().width || 88;
+        const x = stageRect.width / 2 - mascotSize / 2;
+        const y = Math.max(18, stageRect.height * 0.08);
+        this.guideLayerEl.classList.add('is-active');
+        this.setGuideTransform(x, y, 1);
     }
     resolveRepeats(defaultRepeats) {
         if (this.settings.repeatMode === 'default') {
@@ -983,6 +1098,15 @@ export class SpeechGameModule {
         }
         this.rootEl.setAttribute('data-guide-prompt', '');
     }
+    clearSequenceTimeouts() {
+        while (this.sequenceTimeoutIds.length > 0) {
+            const timeoutId = this.sequenceTimeoutIds.pop();
+            if (typeof timeoutId === 'number') {
+                window.clearTimeout(timeoutId);
+            }
+        }
+        this.guideLayerEl.classList.remove('is-celebrating', 'is-peek-hide', 'is-environment-hide');
+    }
     clearIdleReminder() {
         if (this.idleReminderTimeoutId !== null) {
             window.clearTimeout(this.idleReminderTimeoutId);
@@ -1000,7 +1124,9 @@ export class SpeechGameModule {
             window.clearTimeout(this.guideMotionResetTimeoutId);
             this.guideMotionResetTimeoutId = null;
         }
-        this.rootEl.setAttribute('data-guide-mode', 'idle');
+        if (this.rootEl.getAttribute('data-scene-phase') !== 'playing') {
+            this.rootEl.setAttribute('data-guide-mode', 'idle');
+        }
     }
     clearCurrentNextTarget() {
         if (this.activeNextButton) {
@@ -1010,6 +1136,7 @@ export class SpeechGameModule {
             this.activeNextButton = null;
         }
         this.rootEl.setAttribute('data-next-word', '');
+        this.rootEl.setAttribute('data-current-target', '');
         this.rootEl.setAttribute('data-guide-active', 'false');
     }
     scheduleGuidedTransition(currentButton, nextButton, delayMs) {
@@ -1017,16 +1144,15 @@ export class SpeechGameModule {
             return;
         }
         this.guideTimeoutId = window.setTimeout(() => {
+            this.clearCurrentNextTarget();
+            this.setCardsInteractive(null);
+            this.rootEl.setAttribute('data-scene-phase', 'transition');
             this.moveGuideMascot(currentButton, nextButton);
-            this.activeNextButton = nextButton;
-            nextButton.classList.add('is-next-target');
-            nextButton.setAttribute('data-next-target', 'true');
-            this.rootEl.setAttribute('data-next-word', nextButton.dataset.wordLabel ?? '');
-            this.rootEl.setAttribute('data-guide-prompt', 'Şimdi buna dokun');
-            this.rootEl.setAttribute('data-guide-active', 'true');
-            this.feedbackEl.textContent = `Siradaki hedef: ${(nextButton.dataset.wordLabel ?? '').toLocaleUpperCase('tr-TR')}`;
-            this.mascot.sayNextPrompt();
-            this.scheduleIdleReminder(nextButton);
+            this.feedbackEl.textContent = 'Yeni hedefe geçiliyor.';
+            const peekTimeoutId = window.setTimeout(() => {
+                this.beginPeekabooCycle(nextButton);
+            }, GUIDE_TRAVEL_MS - 80);
+            this.sequenceTimeoutIds.push(peekTimeoutId);
             this.guideTimeoutId = null;
         }, delayMs);
     }
@@ -1052,10 +1178,29 @@ export class SpeechGameModule {
         this.setGuideTransform(target.x, target.y, 1);
         this.rootEl.setAttribute('data-guide-mode', 'idle');
     }
+    resolveHideoutPosition(hideoutEl) {
+        const stageRect = this.stageEl.getBoundingClientRect();
+        const hideoutRect = hideoutEl.getBoundingClientRect();
+        const mascotSize = this.guideMascotEl.getBoundingClientRect().width || 88;
+        const x = hideoutRect.left - stageRect.left + hideoutRect.width / 2 - mascotSize / 2;
+        const y = hideoutRect.top - stageRect.top + Math.max(0, hideoutRect.height * 0.12);
+        return {
+            x: Math.max(6, Math.min(x, Math.max(6, stageRect.width - mascotSize - 6))),
+            y: Math.max(0, y)
+        };
+    }
     setGuideTransform(x, y, scale) {
         this.guideMascotEl.style.setProperty('--guide-x', `${x}px`);
         this.guideMascotEl.style.setProperty('--guide-y', `${y}px`);
         this.guideMascotEl.style.setProperty('--guide-scale', String(scale));
+    }
+    setCardsInteractive(activeButton) {
+        const buttons = Array.from(this.gridEl.querySelectorAll('.word-card'));
+        buttons.forEach((button) => {
+            const enabled = button === activeButton;
+            button.disabled = !enabled;
+            button.setAttribute('aria-disabled', String(!enabled));
+        });
     }
     resolveGuidePosition(button) {
         const stageRect = this.stageEl.getBoundingClientRect();
@@ -1110,6 +1255,7 @@ export class SpeechGameModule {
         this.guideLayerEl.classList.add('is-attention');
         targetButton.classList.add('is-attention-target');
         this.rootEl.setAttribute('data-guide-mode', 'attention');
+        this.rootEl.setAttribute('data-scene-phase', 'awaiting-tap');
         this.rootEl.setAttribute('data-guide-prompt', prompt);
         this.rootEl.setAttribute('data-guide-active', 'true');
         this.feedbackEl.textContent = prompt;
@@ -1123,6 +1269,101 @@ export class SpeechGameModule {
             this.rootEl.setAttribute('data-guide-mode', 'idle');
             this.attentionResetTimeoutId = null;
         }, 1550);
+    }
+    triggerMascotCelebrate() {
+        this.clearAttentionState();
+        this.guideLayerEl.classList.remove('is-celebrating');
+        void this.guideLayerEl.offsetWidth;
+        this.guideLayerEl.classList.add('is-celebrating');
+        this.rootEl.setAttribute('data-guide-mode', 'celebrate');
+        const timeoutId = window.setTimeout(() => {
+            this.guideLayerEl.classList.remove('is-celebrating');
+            this.rootEl.setAttribute('data-guide-mode', 'idle');
+        }, 760);
+        this.sequenceTimeoutIds.push(timeoutId);
+    }
+    primeSceneAudio() {
+        if (!('AudioContext' in window)) {
+            return null;
+        }
+        if (!this.sceneAudioContext) {
+            try {
+                this.sceneAudioContext = new AudioContext();
+            }
+            catch {
+                return null;
+            }
+        }
+        void this.sceneAudioContext.resume().catch(() => {
+            // Optional game sound effect.
+        });
+        return this.sceneAudioContext;
+    }
+    playObjectSound(word) {
+        const runtime = window;
+        runtime.__speechSfxLog = runtime.__speechSfxLog ?? [];
+        runtime.__speechSfxLog.push(word);
+        const context = this.primeSceneAudio();
+        if (!context || context.state !== 'running') {
+            return word === 'su' ? 760 : 520;
+        }
+        const start = context.currentTime + 0.02;
+        const master = context.createGain();
+        master.connect(context.destination);
+        master.gain.setValueAtTime(0.0001, start);
+        master.gain.exponentialRampToValueAtTime(0.18, start + 0.04);
+        master.gain.exponentialRampToValueAtTime(0.0001, start + 0.72);
+        if (word === 'su') {
+            this.playTone(context, master, start, 740, 0.16, 'sine');
+            this.playTone(context, master, start + 0.1, 620, 0.22, 'triangle');
+            this.playTone(context, master, start + 0.22, 520, 0.24, 'triangle');
+            return 760;
+        }
+        if (word === 'baba') {
+            this.playTone(context, master, start, 320, 0.16, 'triangle');
+            this.playTone(context, master, start + 0.12, 392, 0.18, 'triangle');
+            return 520;
+        }
+        if (word === 'top') {
+            this.playTone(context, master, start, 540, 0.12, 'sine');
+            this.playTone(context, master, start + 0.12, 430, 0.14, 'triangle');
+            this.playTone(context, master, start + 0.25, 560, 0.12, 'sine');
+            return 560;
+        }
+        if (word === 'araba') {
+            this.playSweep(context, master, start, 240, 430, 0.34, 'sawtooth');
+            return 620;
+        }
+        this.playTone(context, master, start, 780, 0.14, 'triangle');
+        this.playTone(context, master, start + 0.1, 930, 0.16, 'sine');
+        return 520;
+    }
+    playTone(context, destination, start, frequency, duration, type) {
+        const oscillator = context.createOscillator();
+        const gainNode = context.createGain();
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(frequency, start);
+        gainNode.gain.setValueAtTime(0.0001, start);
+        gainNode.gain.exponentialRampToValueAtTime(0.36, start + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+        oscillator.connect(gainNode);
+        gainNode.connect(destination);
+        oscillator.start(start);
+        oscillator.stop(start + duration + 0.02);
+    }
+    playSweep(context, destination, start, fromFrequency, toFrequency, duration, type) {
+        const oscillator = context.createOscillator();
+        const gainNode = context.createGain();
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(fromFrequency, start);
+        oscillator.frequency.exponentialRampToValueAtTime(toFrequency, start + duration);
+        gainNode.gain.setValueAtTime(0.0001, start);
+        gainNode.gain.exponentialRampToValueAtTime(0.24, start + 0.04);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+        oscillator.connect(gainNode);
+        gainNode.connect(destination);
+        oscillator.start(start);
+        oscillator.stop(start + duration + 0.04);
     }
     buildGuideWaitPrompt(word) {
         if (!word) {

@@ -1,5 +1,7 @@
 const GUIDE_MESSAGES = {
+  play: 'Hadi oynayalım.',
   hint: 'Hadi dokun.',
+  peek: 'Ceee!',
   repeat: 'Bir daha söyle.',
   next: 'Şimdi buna dokun.'
 } as const;
@@ -31,9 +33,36 @@ export class MascotGuide {
     this.setMessage(GUIDE_MESSAGES.hint);
   }
 
+  sayPlayStart(): void {
+    this.pulse();
+    this.setMessage(GUIDE_MESSAGES.play);
+    this.speakPrompt(GUIDE_MESSAGES.play, {
+      rate: 0.9,
+      pitch: 1.08,
+      volume: 0.88
+    });
+  }
+
+  sayPeekaboo(): void {
+    this.pulse();
+    this.setMessage(GUIDE_MESSAGES.peek);
+    this.playGuideChime();
+    this.speakPrompt(GUIDE_MESSAGES.peek, {
+      rate: 0.96,
+      pitch: 1.16,
+      volume: 0.92
+    });
+  }
+
   sayPraise(): void {
     this.pulse();
-    this.setMessage(this.praiseFlip ? 'Harika.' : 'Aferin.');
+    const message = this.praiseFlip ? 'Harika.' : 'Aferin.';
+    this.setMessage(message);
+    this.speakPrompt(message, {
+      rate: 0.92,
+      pitch: 1.08,
+      volume: 0.86
+    });
     this.primeGuideAudio();
     this.praiseFlip = !this.praiseFlip;
   }

@@ -238,6 +238,60 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
   - correct PIN unlocks the parent panel
   - wrong PIN keeps the child screen active
 - Updated Playwright coverage:
+
+## Continuation Update: Full-Screen Child Game Scene
+- Reworked `view-speech` into a true child-first full-screen play scene:
+  - no visible instructions
+  - no visible forms or settings
+  - only scene objects + bottom navigation
+- Scene now uses 5 large guided objects:
+  - `su`
+  - `baba`
+  - `top`
+  - `elma`
+  - `araba`
+- Added new illustrated father object asset:
+  - `public/assets/object-father.svg`
+- Added stronger room/play-area styling:
+  - curtain
+  - sofa
+  - framed wall art
+  - larger rug / mobile-first object spacing
+- Updated guided flow:
+  - Anka says `Hadi oynayalım.`
+  - default peekaboo runs with wing-hide
+  - Anka reveals with `Ceee!`
+  - target object becomes the only enabled object
+  - tap plays object animation + soft sound
+  - parent audio still plays when available, otherwise TTS fallback
+  - after playback Anka celebrates and advances to the next object
+- Added optional environment peek mode support in runtime:
+  - mascot can hide behind sofa / basket positions
+  - default remains wing-hide
+- Added hidden top-corner long-press access for parent/admin panel while keeping the existing hidden trigger for tests.
+- Extended speech state output for testing:
+  - `current_target`
+  - `scene_phase`
+  - `peek_mode`
+
+## Validation (Full-Screen Child Game Scene)
+- `npm run build` ✅
+- `npm test` ✅
+- `npm run lint` ✅
+- `npx playwright test --workers=1` ✅
+  - `21 passed`
+- Official skill client run ✅
+  - `output/web-game-fullscreen-scene/state-0.json`
+  - `output/web-game-fullscreen-scene/state-1.json`
+  - no `errors-*.json`
+
+## Notes
+- The official skill client still captures the largest canvas element, so its screenshot shows the sleep stars canvas instead of the full DOM game scene.
+- The reliable verification for the child scene in that client run is the state JSON:
+  - `active_view: view-speech`
+  - `current_target: su`
+  - `scene_phase: awaiting-tap`
+  - `peek_mode: wing`
   - shared parent unlock helper
   - regression updates for all parent-panel tests
   - explicit wrong-PIN test added

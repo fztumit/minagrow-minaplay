@@ -5,8 +5,10 @@ test('page loads with core module blocks', async ({ page }) => {
   await page.goto('/');
 
   await expect(page.locator('#speech-stage')).toBeVisible();
-  await expect(page.locator('#speech-grid .word-card')).toHaveCount(6);
-  await expect(page.locator('#speech-grid .word-object-image')).toHaveCount(5);
+  await expect(page.locator('#view-speech')).toHaveAttribute('data-scene-phase', 'awaiting-tap');
+  await expect(page.locator('#speech-grid .word-card')).toHaveCount(5);
+  await expect(page.locator('#speech-grid .word-object-image')).toHaveCount(4);
+  await expect(page.locator('#view-speech')).toHaveAttribute('data-current-target', 'su');
   await expect(page.locator('#view-parent')).not.toHaveClass(/active/);
   await expect(page.locator('#daily-word-record-start')).not.toBeVisible();
 

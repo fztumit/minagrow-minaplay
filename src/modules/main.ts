@@ -91,6 +91,7 @@ function wireTabs(mascot: MascotGuide): void {
   const activatePrimaryView = (selectedView: string) => {
     lastPrimaryView = selectedView;
     closeParentAuth();
+    document.body.setAttribute('data-active-view', selectedView);
 
     tabButtons.forEach((candidate) => {
       const active = candidate.dataset.view === selectedView;
@@ -121,6 +122,7 @@ function wireTabs(mascot: MascotGuide): void {
   const openParentPanel = () => {
     closeParentAuth();
     notifySpeechGuidance('pause');
+    document.body.setAttribute('data-active-view', 'parent');
     views.forEach((view) => {
       view.classList.toggle('active', view.id === 'view-parent');
     });
@@ -287,9 +289,12 @@ function installTestingHooks(): void {
       speech: {
         last_word: speechRoot?.getAttribute('data-last-word') ?? null,
         next_word: speechRoot?.getAttribute('data-next-word') ?? null,
+        current_target: speechRoot?.getAttribute('data-current-target') ?? null,
         guide_prompt: speechRoot?.getAttribute('data-guide-prompt') ?? '',
         guide_active: speechRoot?.getAttribute('data-guide-active') === 'true',
         guide_mode: speechRoot?.getAttribute('data-guide-mode') ?? 'idle',
+        scene_phase: speechRoot?.getAttribute('data-scene-phase') ?? 'idle',
+        peek_mode: speechRoot?.getAttribute('data-peek-mode') ?? 'wing',
         water_spilled: speechRoot?.getAttribute('data-water-spilled') === 'true',
         water_expanded: speechRoot?.getAttribute('data-water-expanded') === 'true',
         repeat_mode: speechRoot?.getAttribute('data-repeat-mode') ?? 'default',
@@ -341,6 +346,8 @@ function installTestingHooks(): void {
 
 function bootstrap(): void {
   const mascotOutput = document.getElementById('mascot-message');
+  const speechMascotShell = document.getElementById('speech-guide-mascot');
+  const speechMascotImage = speechMascotShell?.querySelector<HTMLImageElement>('img') ?? null;
   const dailyWordCard = document.getElementById('daily-word-card');
   const dailyActivityCard = document.getElementById('daily-activity-card');
   const speechRoot = document.getElementById('view-speech');
@@ -352,6 +359,7 @@ function bootstrap(): void {
 
   if (
     !mascotOutput ||
+    !speechMascotShell ||
     !dailyWordCard ||
     !dailyActivityCard ||
     !speechRoot ||
@@ -364,7 +372,7 @@ function bootstrap(): void {
     throw new Error('Required app roots not found.');
   }
 
-  const mascot = new MascotGuide(mascotOutput, null, null);
+  const mascot = new MascotGuide(mascotOutput, speechMascotImage, speechMascotShell);
 
   const dailyWordModule = new DailyWordModule(dailyWordCard, dailyWordOutput, VOCABULARY);
   dailyWordModule.init();
@@ -421,6 +429,7 @@ function bootstrap(): void {
   };
 
   wireTabs(mascot);
+  document.body.setAttribute('data-active-view', 'speech');
   installTestingHooks();
   registerServiceWorker();
 }

@@ -16,9 +16,9 @@
   </head>
   <body>
     <div class="app-shell">
-      <header class="app-chrome">
-        <h1 class="visually-hidden">MinaPlay</h1>
-        <p class="mascot-message" id="mascot-message">Hadi dokun.</p>
+      <header class="app-chrome visually-hidden">
+        <h1>MinaPlay</h1>
+        <p class="mascot-message" id="mascot-message" aria-live="polite">Hadi oynayalım.</p>
       </header>
 
       <main>
@@ -29,17 +29,28 @@
           </div>
 
           <div class="speech-stage" id="speech-stage" aria-label="Oyun sahnesi">
+            <button type="button" id="parent-panel-trigger" class="visually-hidden">Ebeveyn panelini aç</button>
+            <div class="parent-corner-hotspot" id="parent-corner-hotspot" aria-hidden="true"></div>
             <div class="speech-scene-backdrop" aria-hidden="true">
+              <div class="scene-sun-halo"></div>
               <div class="scene-window">
                 <div class="scene-window-sun"></div>
                 <div class="scene-window-cloud scene-window-cloud-a"></div>
                 <div class="scene-window-cloud scene-window-cloud-b"></div>
               </div>
+              <div class="scene-curtain scene-curtain-left"></div>
+              <div class="scene-curtain scene-curtain-right"></div>
               <div class="scene-shelf"></div>
+              <div class="scene-picture scene-picture-left"></div>
+              <div class="scene-picture scene-picture-right"></div>
+              <div class="scene-sofa">
+                <span class="scene-sofa-seat"></span>
+                <span class="scene-sofa-cushion scene-sofa-cushion-left"></span>
+                <span class="scene-sofa-cushion scene-sofa-cushion-right"></span>
+              </div>
               <div class="scene-rug"></div>
               <div class="scene-basket"></div>
             </div>
-            <button type="button" id="parent-panel-trigger" class="visually-hidden">Ebeveyn panelini aç</button>
             <div class="speech-guide-layer" id="speech-guide-layer" aria-hidden="true">
               <div class="speech-guide-mascot" id="speech-guide-mascot" aria-label="Anka">
                 <span class="speech-guide-wing speech-guide-wing-left" aria-hidden="true"></span>

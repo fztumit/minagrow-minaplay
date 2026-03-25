@@ -28,7 +28,14 @@ export const VOCABULARY: VocabularyItem[] = [
     featuredOnScene: true
   },
   { word: 'anne', label: 'anne', repeats: 2 },
-  { word: 'baba', label: 'baba', repeats: 2 },
+  {
+    word: 'baba',
+    label: 'baba',
+    repeats: 2,
+    asset: '/assets/object-father.svg',
+    sceneClass: 'scene-father',
+    featuredOnScene: true
+  },
   {
     word: 'top',
     label: 'top',
@@ -50,8 +57,7 @@ export const VOCABULARY: VocabularyItem[] = [
     label: 'kitap',
     repeats: 2,
     asset: '/assets/object-book.svg',
-    sceneClass: 'scene-book',
-    featuredOnScene: true
+    sceneClass: 'scene-book'
   },
   {
     word: 'elma',
@@ -66,8 +72,7 @@ export const VOCABULARY: VocabularyItem[] = [
     label: 'süt',
     repeats: 2,
     asset: '/assets/object-milk.svg',
-    sceneClass: 'scene-milk',
-    featuredOnScene: true
+    sceneClass: 'scene-milk'
   },
   { word: 'ekmek', label: 'ekmek', repeats: 2 }
 ];

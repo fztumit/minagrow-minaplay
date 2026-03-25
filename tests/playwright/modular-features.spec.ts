@@ -206,8 +206,14 @@ test('daily activity card tracks words, story, and interaction', async ({ page }
   await page.goto('/');
 
   await page.click('.word-card[data-word-id="su"]');
+  await page.waitForFunction(() => {
+    return document.getElementById('view-speech')?.getAttribute('data-current-target') === 'baba';
+  });
+  await page.click('.word-card[data-word-id="baba"]');
+  await page.waitForFunction(() => {
+    return document.getElementById('view-speech')?.getAttribute('data-current-target') === 'top';
+  });
   await page.click('.word-card[data-word-id="top"]');
-  await page.click('.word-card[data-word-id="araba"]');
 
   await page.click('.tab-btn[data-view="stories"]');
   await page.click('#story-listen');
