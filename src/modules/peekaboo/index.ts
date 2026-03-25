@@ -1,13 +1,34 @@
 import { MascotGuide } from '../mascot/index.js';
 
+type SceneMode = 'room' | 'center';
 type HideMode = 'self' | 'environment';
-type PeekState = 'idle' | 'visible' | 'hidden' | 'revealed';
+type PeekState = 'idle' | 'visible' | 'hidden' | 'revealed' | 'celebrate';
 type HideoutId = 'curtain' | 'sofa' | 'table';
+type AnchorId = HideoutId | 'center' | 'window' | 'toy' | 'lamp' | 'stage-left' | 'stage-right';
 
+type VoiceVariant = {
+  prompt: string;
+  rate: number;
+  pitch: number;
+  volume: number;
+  tone: number;
+  chime: number;
+};
+
+const ROOM_ROUTE: AnchorId[] = ['window', 'toy', 'lamp', 'stage-left', 'sofa', 'stage-right', 'table'];
 const HIDEOUT_SEQUENCE: HideoutId[] = ['curtain', 'sofa', 'table'];
-const INITIAL_VISIBLE_MS = navigator.webdriver ? 420 : 1200;
-const HIDE_WAIT_MS = navigator.webdriver ? 850 : 1500;
-const REVEAL_VISIBLE_MS = navigator.webdriver ? 880 : 1800;
+const VOICE_VARIANTS: VoiceVariant[] = [
+  { prompt: 'Ceee!', rate: 0.86, pitch: 1.14, volume: 0.95, tone: 720, chime: 980 },
+  { prompt: 'Ce-eee!', rate: 0.94, pitch: 1.2, volume: 0.92, tone: 760, chime: 1080 },
+  { prompt: 'Ceeey!', rate: 0.98, pitch: 1.26, volume: 0.9, tone: 820, chime: 1160 }
+];
+
+const INTRO_DELAY_MS = navigator.webdriver ? 220 : 760;
+const ROOM_VISIBLE_MS = navigator.webdriver ? 540 : 1780;
+const CENTER_VISIBLE_MS = navigator.webdriver ? 420 : 1480;
+const HIDE_WAIT_MS = navigator.webdriver ? 420 : 1180;
+const REVEAL_VISIBLE_MS = navigator.webdriver ? 620 : 1680;
+const REACTION_VISIBLE_MS = navigator.webdriver ? 260 : 760;
 
 export class PeekabooModeModule {
   private readonly rootEl: HTMLElement;
@@ -23,13 +44,17 @@ export class PeekabooModeModule {
   private timeoutIds: number[] = [];
   private audioContext: AudioContext | null = null;
   private isPaused = false;
+  private hasStartedOnce = false;
   private cycleIndex = 0;
   private revealCount = 0;
   private childReactionCount = 0;
   private parentHoldTimeoutId: number | null = null;
+  private currentScene: SceneMode = 'room';
   private currentHideMode: HideMode = 'self';
   private currentHideout: HideoutId | null = null;
   private currentState: PeekState = 'idle';
+  private currentAnchor: AnchorId = 'center';
+  private voiceVariantIndex = 0;
 
   constructor(rootEl: HTMLElement, mascot: MascotGuide) {
     const stageEl = rootEl.querySelector<HTMLElement>('#peekaboo-stage');
@@ -57,24 +82,35 @@ export class PeekabooModeModule {
 
   init(): void {
     this.rootEl.setAttribute('data-peek-state', 'idle');
+    this.rootEl.setAttribute('data-peek-scene', 'room');
     this.rootEl.setAttribute('data-hide-mode', 'self');
     this.rootEl.setAttribute('data-current-hideout', '');
     this.rootEl.setAttribute('data-peek-reveals', '0');
     this.rootEl.setAttribute('data-peek-reactions', '0');
     this.rootEl.setAttribute('data-can-tap-reveal', 'false');
+    this.rootEl.setAttribute('data-current-anchor', 'center');
     this.bindEvents();
   }
 
   start(): void {
     this.isPaused = false;
     this.clearTimers();
-    this.setPhoenixPosition(this.getAnchorPosition('center'));
-    this.enterVisiblePhase(true);
+    this.currentHideout = null;
+    this.setPhoenixPosition(this.getAnchorPosition('center'), 1.1, 0);
+
+    if (!this.hasStartedOnce) {
+      this.hasStartedOnce = true;
+      this.playIntro();
+      return;
+    }
+
+    this.enterVisiblePhase();
   }
 
   pause(): void {
     this.isPaused = true;
     this.clearTimers();
+    this.hideoutButtons.forEach((button) => button.classList.remove('is-active-hideout', 'is-tappable-hideout'));
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
@@ -92,7 +128,12 @@ export class PeekabooModeModule {
     });
 
     this.stageTapEl.addEventListener('click', () => {
-      if (this.currentState === 'revealed') {
+      if (this.currentState === 'hidden' && this.currentHideMode === 'self') {
+        this.revealPhoenix(true);
+        return;
+      }
+
+      if (this.currentState === 'revealed' || this.currentState === 'celebrate') {
         this.handleChildReaction();
       }
     });
@@ -113,7 +154,7 @@ export class PeekabooModeModule {
           return;
         }
 
-        if (this.currentState === 'revealed') {
+        if (this.currentState === 'revealed' || this.currentState === 'celebrate') {
           this.handleChildReaction();
         }
       });
@@ -153,27 +194,92 @@ export class PeekabooModeModule {
     this.parentHotspotEl.addEventListener('pointercancel', clearHold);
   }
 
-  private enterVisiblePhase(initial = false): void {
+  private playIntro(): void {
     if (this.isPaused) {
       return;
     }
 
+    this.currentScene = 'room';
+    this.currentHideMode = 'self';
+    this.currentState = 'visible';
+    this.currentAnchor = 'stage-left';
+    this.syncStateAttributes();
+    this.setPhoenixPosition(this.getAnchorPosition('stage-left'), 1.06, -8);
+    this.statusEl.textContent = 'Anka oyun için geldi.';
+    this.mascot.setMessage('Hadi oynayalım.');
+    this.playHelloAudio();
+    this.speakLine('Hadi oynayalım', 0.88, 1.03, 0.88);
+
+    const driftTimeout = window.setTimeout(() => {
+      this.setPhoenixPosition(this.getAnchorPosition('window'), 1.1, 10);
+    }, navigator.webdriver ? 80 : 280);
+
+    const startTimeout = window.setTimeout(() => {
+      this.enterVisiblePhase(true);
+    }, INTRO_DELAY_MS);
+
+    this.timeoutIds.push(driftTimeout, startTimeout);
+  }
+
+  private enterVisiblePhase(skipGreeting = false): void {
+    if (this.isPaused) {
+      return;
+    }
+
+    this.currentScene = this.cycleIndex % 2 === 0 ? 'room' : 'center';
+    this.currentHideMode = this.currentScene === 'room' && this.cycleIndex % 4 === 2 ? 'environment' : 'self';
     this.currentState = 'visible';
     this.currentHideout = null;
-    this.currentHideMode = this.cycleIndex % 2 === 0 ? 'self' : 'environment';
-    this.rootEl.setAttribute('data-peek-state', this.currentState);
-    this.rootEl.setAttribute('data-hide-mode', this.currentHideMode);
-    this.rootEl.setAttribute('data-current-hideout', '');
-    this.rootEl.setAttribute('data-can-tap-reveal', 'false');
+    this.currentAnchor = this.currentScene === 'room'
+      ? ROOM_ROUTE[this.cycleIndex % ROOM_ROUTE.length]
+      : 'center';
+
     this.hideoutButtons.forEach((button) => button.classList.remove('is-active-hideout', 'is-tappable-hideout'));
-    this.statusEl.textContent = 'Anka görünüyor.';
-    this.mascot.setMessage(initial ? 'Cee oyunu.' : 'Anka yine geldi.');
-    this.setPhoenixPosition(this.getAnchorPosition('center'));
+    this.syncStateAttributes();
+
+    if (this.currentScene === 'room') {
+      this.statusEl.textContent = 'Anka odada süzülüyor.';
+      this.setPhoenixPosition(this.getAnchorPosition(this.currentAnchor), 1.02, -6 + (this.cycleIndex % 3) * 4);
+      this.scheduleRoomDrift();
+      if (!skipGreeting) {
+        this.mascot.setMessage('Anka uçuyor.');
+      }
+    } else {
+      this.statusEl.textContent = 'Anka ortada bekliyor.';
+      this.setPhoenixPosition(this.getAnchorPosition('center'), 1.2, 0);
+      this.mascot.setMessage('Anka burada.');
+    }
 
     const timeoutId = window.setTimeout(() => {
       this.hidePhoenix();
-    }, initial ? INITIAL_VISIBLE_MS : INITIAL_VISIBLE_MS + 160);
+    }, this.currentScene === 'room' ? ROOM_VISIBLE_MS : CENTER_VISIBLE_MS);
     this.timeoutIds.push(timeoutId);
+  }
+
+  private scheduleRoomDrift(): void {
+    if (this.currentScene !== 'room') {
+      return;
+    }
+
+    const hops = navigator.webdriver ? 1 : 2;
+    for (let index = 0; index < hops; index += 1) {
+      const timeoutId = window.setTimeout(() => {
+        if (this.isPaused || this.currentState !== 'visible' || this.currentScene !== 'room') {
+          return;
+        }
+
+        const nextAnchor = ROOM_ROUTE[(this.cycleIndex + index + 1) % ROOM_ROUTE.length];
+        this.currentAnchor = nextAnchor;
+        this.rootEl.setAttribute('data-current-anchor', nextAnchor);
+        this.setPhoenixPosition(
+          this.getAnchorPosition(nextAnchor),
+          index === hops - 1 ? 1.08 : 1,
+          index % 2 === 0 ? 8 : -8
+        );
+      }, navigator.webdriver ? 120 + index * 120 : 380 + index * 360);
+
+      this.timeoutIds.push(timeoutId);
+    }
   }
 
   private hidePhoenix(): void {
@@ -182,26 +288,30 @@ export class PeekabooModeModule {
     }
 
     this.currentState = 'hidden';
-    this.rootEl.setAttribute('data-peek-state', this.currentState);
     this.statusEl.textContent = 'Anka saklandı.';
 
-    if (this.currentHideMode === 'self') {
-      this.rootEl.setAttribute('data-can-tap-reveal', 'false');
-      this.mascot.setMessage('Anka saklandı.');
-    } else {
+    if (this.currentHideMode === 'environment') {
       const hideout = HIDEOUT_SEQUENCE[this.cycleIndex % HIDEOUT_SEQUENCE.length];
       this.currentHideout = hideout;
+      this.currentAnchor = hideout;
       this.rootEl.setAttribute('data-current-hideout', hideout);
       this.rootEl.setAttribute('data-can-tap-reveal', 'true');
-      const targetButton = this.getHideoutButton(hideout);
-      targetButton?.classList.add('is-active-hideout', 'is-tappable-hideout');
-      this.setPhoenixPosition(this.getAnchorPosition(hideout), 0.9);
-      this.mascot.setMessage('Anka saklandı.');
+      this.getHideoutButton(hideout)?.classList.add('is-active-hideout', 'is-tappable-hideout');
+      this.setPhoenixPosition(this.getAnchorPosition(hideout), 0.9, 0);
+    } else {
+      this.currentHideout = null;
+      this.rootEl.setAttribute('data-current-hideout', '');
+      this.rootEl.setAttribute('data-can-tap-reveal', 'true');
+      const hiddenScale = this.currentScene === 'center' ? 1.18 : 1.02;
+      this.setPhoenixPosition(this.getAnchorPosition(this.currentAnchor), hiddenScale, this.currentScene === 'room' ? -4 : 0);
     }
+
+    this.rootEl.setAttribute('data-peek-state', this.currentState);
+    this.playHideAudio();
 
     const timeoutId = window.setTimeout(() => {
       this.revealPhoenix(false);
-    }, HIDE_WAIT_MS + (this.currentHideMode === 'environment' && !navigator.webdriver ? 420 : 0));
+    }, HIDE_WAIT_MS + (this.currentHideMode === 'environment' && !navigator.webdriver ? 260 : 0));
     this.timeoutIds.push(timeoutId);
   }
 
@@ -215,33 +325,32 @@ export class PeekabooModeModule {
       this.getHideoutButton(this.currentHideout)?.classList.remove('is-active-hideout', 'is-tappable-hideout');
     }
 
-    const revealAnchor = this.currentHideMode === 'environment' && this.currentHideout ? this.currentHideout : 'center';
-    this.setPhoenixPosition(this.getAnchorPosition(revealAnchor), 1);
+    const revealAnchor = this.currentHideMode === 'environment' && this.currentHideout ? this.currentHideout : this.currentAnchor;
+    const revealScale = this.currentScene === 'center' ? 1.24 : 1.1;
+    const revealRotation = triggeredByTap ? 6 : -6;
+    this.setPhoenixPosition(this.getAnchorPosition(revealAnchor), revealScale, revealRotation);
+
     this.currentState = 'revealed';
     this.revealCount += 1;
-    this.rootEl.setAttribute('data-peek-state', this.currentState);
+    if (triggeredByTap) {
+      this.childReactionCount += 1;
+      this.rootEl.setAttribute('data-peek-reactions', String(this.childReactionCount));
+    }
+    this.syncStateAttributes();
     this.rootEl.setAttribute('data-peek-reveals', String(this.revealCount));
     this.rootEl.setAttribute('data-can-tap-reveal', 'false');
-    this.statusEl.textContent = triggeredByTap ? 'Anka ortaya çıktı.' : 'Ceee!';
+
+    const variant = VOICE_VARIANTS[this.voiceVariantIndex % VOICE_VARIANTS.length];
+    this.voiceVariantIndex += 1;
+
+    this.statusEl.textContent = variant.prompt;
     this.mascot.setMessage('Ceee!');
-    this.playRevealAudio();
+    this.playRevealAudio(variant);
+    this.speakLine(variant.prompt, variant.rate, variant.pitch, variant.volume);
 
     const runtime = window as Window & { __peekabooPromptLog?: string[] };
     runtime.__peekabooPromptLog = runtime.__peekabooPromptLog ?? [];
-    runtime.__peekabooPromptLog.push('Ceee!');
-
-    if ('speechSynthesis' in window && typeof window.SpeechSynthesisUtterance !== 'undefined') {
-      const utterance = new SpeechSynthesisUtterance('Ceee!');
-      utterance.lang = 'tr-TR';
-      utterance.rate = 0.95;
-      utterance.pitch = 1.18;
-      utterance.volume = 0.9;
-      try {
-        window.speechSynthesis.speak(utterance);
-      } catch {
-        // Optional voice prompt.
-      }
-    }
+    runtime.__peekabooPromptLog.push(variant.prompt);
 
     const timeoutId = window.setTimeout(() => {
       this.cycleIndex += 1;
@@ -252,65 +361,104 @@ export class PeekabooModeModule {
 
   private handleChildReaction(): void {
     this.childReactionCount += 1;
+    this.currentState = 'celebrate';
+    this.rootEl.setAttribute('data-peek-state', 'celebrate');
     this.rootEl.setAttribute('data-peek-reactions', String(this.childReactionCount));
-    this.statusEl.textContent = 'Çocuk tepki verdi.';
+    this.statusEl.textContent = 'Anka sevindi.';
+    this.mascot.setMessage('Aferin.');
     this.playChildReactionAudio();
     this.clearTimers();
+
     const timeoutId = window.setTimeout(() => {
       this.cycleIndex += 1;
       this.enterVisiblePhase();
-    }, navigator.webdriver ? 220 : 520);
+    }, REACTION_VISIBLE_MS);
     this.timeoutIds.push(timeoutId);
   }
 
-  private setPhoenixPosition(position: { x: number; y: number }, scale = 1): void {
+  private setPhoenixPosition(position: { x: number; y: number }, scale = 1, rotate = 0): void {
     this.phoenixShellEl.style.setProperty('--peek-x', `${position.x}px`);
     this.phoenixShellEl.style.setProperty('--peek-y', `${position.y}px`);
     this.phoenixShellEl.style.setProperty('--peek-scale', String(scale));
+    this.phoenixShellEl.style.setProperty('--peek-rotate', `${rotate}deg`);
   }
 
-  private getAnchorPosition(anchor: HideoutId | 'center'): { x: number; y: number } {
+  private getAnchorPosition(anchor: AnchorId): { x: number; y: number } {
     const stageRect = this.stageEl.getBoundingClientRect();
     const shellRect = this.phoenixShellEl.getBoundingClientRect();
-    const shellWidth = shellRect.width || 110;
-    const shellHeight = shellRect.height || 110;
+    const shellWidth = shellRect.width || 150;
+    const shellHeight = shellRect.height || 150;
+    const percent = (x: number, y: number) => ({
+      x: stageRect.width * x - shellWidth / 2,
+      y: stageRect.height * y - shellHeight / 2
+    });
 
-    if (anchor === 'center') {
-      return {
-        x: stageRect.width / 2 - shellWidth / 2,
-        y: Math.max(36, stageRect.height * 0.2)
-      };
-    }
+    let position: { x: number; y: number };
 
-    const hideoutButton = this.getHideoutButton(anchor);
-    if (!hideoutButton) {
-      return {
-        x: stageRect.width / 2 - shellWidth / 2,
-        y: Math.max(36, stageRect.height * 0.2)
-      };
-    }
+    switch (anchor) {
+      case 'center':
+        position = percent(0.5, 0.43);
+        break;
+      case 'window':
+        position = percent(0.5, 0.18);
+        break;
+      case 'toy':
+        position = percent(0.2, 0.66);
+        break;
+      case 'lamp':
+        position = percent(0.83, 0.28);
+        break;
+      case 'stage-left':
+        position = percent(0.3, 0.36);
+        break;
+      case 'stage-right':
+        position = percent(0.68, 0.38);
+        break;
+      case 'curtain':
+      case 'sofa':
+      case 'table': {
+        const hideoutButton = this.getHideoutButton(anchor);
+        if (!hideoutButton) {
+          position = percent(0.5, 0.4);
+          break;
+        }
 
-    const hideoutRect = hideoutButton.getBoundingClientRect();
-    let x = hideoutRect.left - stageRect.left + hideoutRect.width / 2 - shellWidth / 2;
-    let y = hideoutRect.top - stageRect.top + hideoutRect.height * 0.12;
+        const hideoutRect = hideoutButton.getBoundingClientRect();
+        let x = hideoutRect.left - stageRect.left + hideoutRect.width / 2 - shellWidth / 2;
+        let y = hideoutRect.top - stageRect.top + hideoutRect.height / 2 - shellHeight / 2;
 
-    if (anchor === 'curtain') {
-      x = hideoutRect.left - stageRect.left + hideoutRect.width * 0.24;
-      y = hideoutRect.top - stageRect.top + hideoutRect.height * 0.18;
-    } else if (anchor === 'sofa') {
-      y = hideoutRect.top - stageRect.top - shellHeight * 0.05;
-    } else if (anchor === 'table') {
-      y = hideoutRect.top - stageRect.top - shellHeight * 0.1;
+        if (anchor === 'curtain') {
+          x = hideoutRect.left - stageRect.left + hideoutRect.width * 0.12;
+          y = hideoutRect.top - stageRect.top + hideoutRect.height * 0.1;
+        } else if (anchor === 'sofa') {
+          y = hideoutRect.top - stageRect.top - shellHeight * 0.06;
+        } else if (anchor === 'table') {
+          y = hideoutRect.top - stageRect.top - shellHeight * 0.16;
+        }
+
+        position = { x, y };
+        break;
+      }
+      default:
+        position = percent(0.5, 0.4);
     }
 
     return {
-      x: Math.max(6, Math.min(x, stageRect.width - shellWidth - 6)),
-      y: Math.max(10, Math.min(y, stageRect.height - shellHeight - 10))
+      x: Math.max(10, Math.min(position.x, stageRect.width - shellWidth - 10)),
+      y: Math.max(16, Math.min(position.y, stageRect.height - shellHeight - 12))
     };
   }
 
   private getHideoutButton(hideout: HideoutId): HTMLButtonElement | null {
     return this.hideoutButtons.find((button) => button.dataset.hideout === hideout) ?? null;
+  }
+
+  private syncStateAttributes(): void {
+    this.rootEl.setAttribute('data-peek-state', this.currentState);
+    this.rootEl.setAttribute('data-peek-scene', this.currentScene);
+    this.rootEl.setAttribute('data-hide-mode', this.currentHideMode);
+    this.rootEl.setAttribute('data-current-hideout', this.currentHideout ?? '');
+    this.rootEl.setAttribute('data-current-anchor', this.currentAnchor);
   }
 
   private clearTimers(): void {
@@ -319,6 +467,24 @@ export class PeekabooModeModule {
       if (typeof timeoutId === 'number') {
         window.clearTimeout(timeoutId);
       }
+    }
+  }
+
+  private speakLine(text: string, rate: number, pitch: number, volume: number): void {
+    if (!('speechSynthesis' in window) || typeof window.SpeechSynthesisUtterance === 'undefined') {
+      return;
+    }
+
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'tr-TR';
+      utterance.rate = rate;
+      utterance.pitch = pitch;
+      utterance.volume = volume;
+      window.speechSynthesis.speak(utterance);
+    } catch {
+      // Optional voice guidance.
     }
   }
 
@@ -342,7 +508,40 @@ export class PeekabooModeModule {
     return this.audioContext;
   }
 
-  private playRevealAudio(): void {
+  private playHelloAudio(): void {
+    const context = this.primeAudio();
+    if (!context || context.state !== 'running') {
+      return;
+    }
+
+    const start = context.currentTime + 0.02;
+    const master = context.createGain();
+    master.connect(context.destination);
+    master.gain.setValueAtTime(0.0001, start);
+    master.gain.exponentialRampToValueAtTime(0.16, start + 0.03);
+    master.gain.exponentialRampToValueAtTime(0.0001, start + 0.56);
+
+    this.playTone(context, master, start, 620, 0.16, 'sine');
+    this.playTone(context, master, start + 0.14, 840, 0.16, 'triangle');
+  }
+
+  private playHideAudio(): void {
+    const context = this.primeAudio();
+    if (!context || context.state !== 'running') {
+      return;
+    }
+
+    const start = context.currentTime + 0.02;
+    const master = context.createGain();
+    master.connect(context.destination);
+    master.gain.setValueAtTime(0.0001, start);
+    master.gain.exponentialRampToValueAtTime(0.08, start + 0.02);
+    master.gain.exponentialRampToValueAtTime(0.0001, start + 0.28);
+
+    this.playSweep(context, master, start, 980, 620, 0.18, 'triangle');
+  }
+
+  private playRevealAudio(variant: VoiceVariant): void {
     const runtime = window as Window & { __peekabooSoundLog?: string[] };
     runtime.__peekabooSoundLog = runtime.__peekabooSoundLog ?? [];
     runtime.__peekabooSoundLog.push('ceee');
@@ -358,13 +557,13 @@ export class PeekabooModeModule {
     const master = context.createGain();
     master.connect(context.destination);
     master.gain.setValueAtTime(0.0001, start);
-    master.gain.exponentialRampToValueAtTime(0.22, start + 0.03);
-    master.gain.exponentialRampToValueAtTime(0.0001, start + 0.82);
+    master.gain.exponentialRampToValueAtTime(0.24, start + 0.04);
+    master.gain.exponentialRampToValueAtTime(0.0001, start + 0.88);
 
-    this.playTone(context, master, start, 740, 0.12, 'triangle');
-    this.playTone(context, master, start + 0.08, 980, 0.14, 'sine');
-    this.playTone(context, master, start + 0.24, 660, 0.12, 'triangle');
-    this.playSweep(context, master, start + 0.34, 620, 980, 0.22, 'triangle');
+    this.playTone(context, master, start, variant.tone, 0.12, 'triangle');
+    this.playTone(context, master, start + 0.08, variant.chime, 0.16, 'sine');
+    this.playTone(context, master, start + 0.22, variant.tone * 0.92, 0.12, 'triangle');
+    this.playSweep(context, master, start + 0.32, 560, variant.chime, 0.26, 'sine');
   }
 
   private playChildReactionAudio(): void {
@@ -384,8 +583,9 @@ export class PeekabooModeModule {
     master.gain.exponentialRampToValueAtTime(0.18, start + 0.02);
     master.gain.exponentialRampToValueAtTime(0.0001, start + 0.42);
 
-    this.playTone(context, master, start, 880, 0.1, 'sine');
-    this.playTone(context, master, start + 0.08, 1120, 0.12, 'triangle');
+    this.playTone(context, master, start, 920, 0.08, 'triangle');
+    this.playTone(context, master, start + 0.08, 1180, 0.11, 'sine');
+    this.playTone(context, master, start + 0.18, 1040, 0.1, 'triangle');
   }
 
   private playTone(
@@ -427,7 +627,7 @@ export class PeekabooModeModule {
     oscillator.frequency.setValueAtTime(fromFrequency, start);
     oscillator.frequency.exponentialRampToValueAtTime(toFrequency, start + duration);
     gainNode.gain.setValueAtTime(0.0001, start);
-    gainNode.gain.exponentialRampToValueAtTime(0.26, start + 0.04);
+    gainNode.gain.exponentialRampToValueAtTime(0.24, start + 0.04);
     gainNode.gain.exponentialRampToValueAtTime(0.0001, start + duration);
 
     oscillator.connect(gainNode);

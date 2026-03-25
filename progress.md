@@ -1125,3 +1125,37 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
 ## Validation (Expanded Parent Panel)
 - `npm run build` ✅
 - `npx playwright test --workers=1` ✅
+
+## Continuation Update: Peekaboo Scene Refresh
+- Reworked `Peekaboo Mode` into two alternating child-friendly scenarios:
+  - `room`: Anka glides around a visible playroom, then hides and reveals
+  - `center`: Anka moves to the middle platform and plays peekaboo with bigger body motion
+- Strengthened the room visuals so the screen is no longer an empty white area:
+  - brighter window, curtain, sofa, lamp, table, frames, rug, toys, and center glow
+  - more obvious depth and warm room lighting
+- Upgraded the peekaboo phoenix presentation:
+  - switched to the richer `phoenix.svg` art for this mode
+  - larger shell, visible aura, stronger glow, clearer wing cover animation
+  - added reveal pop + celebrate jump motion
+- Updated peekaboo logic:
+  - intro voice: `Hadi oynayalım`
+  - varied `Ceee` voice tones
+  - room drift between anchor points
+  - self-hide in both scenarios
+  - occasional environment hide in the room scenario
+  - reveal tap now counts as child reaction
+- Extended `render_game_to_text` with:
+  - `peekaboo.scene`
+  - `peekaboo.current_anchor`
+- Added a visual regression-style Playwright check:
+  - `tests/playwright/peekaboo-visual.spec.ts`
+  - saves inspection screenshot to `output/peekaboo-visual.png`
+
+## Validation (Peekaboo Refresh)
+- `npm run build` ✅
+- `npm run lint` ✅
+- `npm test` ✅
+- `npx playwright test tests/playwright/peekaboo-mode.spec.ts tests/playwright/peekaboo-visual.spec.ts tests/playwright/page-load.spec.ts --workers=1` ✅
+- Official `develop-web-game` client run ✅
+  - state confirmed build loads, though the client screenshot itself remained unreliable for this DOM-first scene
+  - visual confirmation was completed using Playwright screenshot output at `output/peekaboo-visual.png`

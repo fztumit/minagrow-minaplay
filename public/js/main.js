@@ -289,8 +289,10 @@ function installTestingHooks() {
             },
             peekaboo: {
                 state: peekabooRoot?.getAttribute('data-peek-state') ?? 'idle',
+                scene: peekabooRoot?.getAttribute('data-peek-scene') ?? 'room',
                 hide_mode: peekabooRoot?.getAttribute('data-hide-mode') ?? 'self',
                 current_hideout: peekabooRoot?.getAttribute('data-current-hideout') ?? '',
+                current_anchor: peekabooRoot?.getAttribute('data-current-anchor') ?? 'center',
                 reveals: Number(peekabooRoot?.getAttribute('data-peek-reveals') ?? 0),
                 reactions: Number(peekabooRoot?.getAttribute('data-peek-reactions') ?? 0),
                 can_tap_reveal: peekabooRoot?.getAttribute('data-can-tap-reveal') === 'true'

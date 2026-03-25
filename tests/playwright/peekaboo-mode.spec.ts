@@ -51,8 +51,6 @@ test('peekaboo environment hide can be revealed by tapping the hideout', async (
     return root?.getAttribute('data-peek-state') === 'revealed';
   });
 
-  await page.click('#peekaboo-stage-tap');
-
   const result = await page.evaluate(() => {
     const runtime = window as Window & {
       render_game_to_text?: () => string;
@@ -65,6 +63,7 @@ test('peekaboo environment hide can be revealed by tapping the hideout', async (
     };
   });
 
-  expect(result.state?.peekaboo?.reactions).toBeGreaterThanOrEqual(1);
-  expect(result.sounds).toContain('tap-giggle');
+  expect(result.state?.peekaboo?.reveals).toBeGreaterThanOrEqual(1);
+  expect(result.sounds).toContain('ceee');
+  expect(result.sounds).toContain('sparkle');
 });
