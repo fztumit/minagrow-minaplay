@@ -1181,3 +1181,46 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
 - Official `develop-web-game` client run ✅
   - `active_view: "view-peekaboo"`
   - observed `peekaboo.state: "hide"` and later `peekaboo.state: "idle"`
+
+## Continuation Update: Peekaboo Wing Hide Timing
+- Tightened the self-hide wing animation to match the requested rhythm:
+  - `hide`: `300ms`
+  - `wait`: `1000ms`
+  - `reveal`: `200ms`
+- Wings now travel upward and inward so they more clearly cover the phoenix face during self-hide.
+- Raised wing layer priority above the mascot art so the face-cover motion reads correctly.
+- Shortened reveal-side shell/glow/sparkle timing so the wing-open motion feels quick and aligned with the new `200ms` reveal state.
+- Adjusted the reveal follow-up sparkle/laugh timing so it still plays inside the shorter reveal window.
+
+## Validation (Wing Hide Timing)
+- `npm run build` ✅
+- `npx playwright test tests/playwright/peekaboo-mode.spec.ts tests/playwright/peekaboo-visual.spec.ts --workers=1` ✅
+- Official `develop-web-game` client run ✅ (`output/web-game-peekaboo-wing-hide/*`)
+  - observed `peekaboo.state: "hide"` during the self-hide cycle
+  - observed `peekaboo.state: "reveal"` after the wing-open phase
+
+## Notes
+- The official client screenshot still captures the largest canvas in this DOM-first app, so the state JSON remains the more reliable assertion source for Peekaboo behavior.
+
+## Continuation Update: Peekaboo Game Finish Pass
+- Strengthened the first-play rhythm of `Cee` mode so it behaves more like a finished interaction game:
+  - scripted opening sequence for the first 3 cycles
+  - faster first two reveal beats
+  - clearer alternation between `room` and `center` scenarios
+  - more deliberate room-environment hide setup
+- Added `peekaboo.sequence` state output (`opening` / `loop`) for debugging and deterministic verification.
+- Improved room hide readability:
+  - active hideouts lift and glow more clearly
+  - environment-hide rounds now feel more intentional
+- Added a Playwright assertion that the opening delivers multiple reveals quickly.
+- Bumped the PWA cache version to `minaplay-v27`.
+
+## Validation (Peekaboo Finish Pass)
+- `npm run build` ✅
+- `npx playwright test tests/playwright/peekaboo-mode.spec.ts tests/playwright/peekaboo-visual.spec.ts tests/playwright/page-load.spec.ts --workers=1` ✅
+- Official `develop-web-game` client run ✅ (`output/web-game-peekaboo-finish/*`)
+  - observed `peekaboo.sequence: "opening"`
+  - observed `peekaboo.reveals: 2` in the opening pass
+
+## Suggestions
+- If desired, the next polish step is adding a dedicated blink/beak micro-animation during `center` reveals so the mascot feels even more alive.

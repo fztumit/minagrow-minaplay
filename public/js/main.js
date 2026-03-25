@@ -289,6 +289,7 @@ function installTestingHooks() {
             },
             peekaboo: {
                 state: peekabooRoot?.getAttribute('data-peek-state') ?? 'idle',
+                sequence: peekabooRoot?.getAttribute('data-peek-sequence') ?? 'opening',
                 scene: peekabooRoot?.getAttribute('data-peek-scene') ?? 'room',
                 hide_mode: peekabooRoot?.getAttribute('data-hide-mode') ?? 'self',
                 current_hideout: peekabooRoot?.getAttribute('data-current-hideout') ?? '',

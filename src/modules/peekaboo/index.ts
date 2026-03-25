@@ -5,6 +5,19 @@ type HideMode = 'self' | 'environment';
 type PeekState = 'idle' | 'hide' | 'wait' | 'reveal' | 'react';
 type HideoutId = 'curtain' | 'sofa' | 'table';
 type AnchorId = HideoutId | 'center' | 'window' | 'toy' | 'lamp' | 'stage-left' | 'stage-right';
+type PeekSequence = 'opening' | 'loop';
+
+type PeekCyclePlan = {
+  scene: SceneMode;
+  hideMode: HideMode;
+  anchor: AnchorId;
+  hideout?: HideoutId;
+  idleMs: number;
+  scale: number;
+  rotate: number;
+  message: string;
+  skipDrift?: boolean;
+};
 
 type VoiceVariant = {
   prompt: string;
@@ -26,10 +39,13 @@ const VOICE_VARIANTS: VoiceVariant[] = [
 const INTRO_DELAY_MS = navigator.webdriver ? 220 : 760;
 const ROOM_IDLE_MS = navigator.webdriver ? 540 : 1780;
 const CENTER_IDLE_MS = navigator.webdriver ? 420 : 1480;
-const HIDE_COVER_MS = navigator.webdriver ? 180 : 320;
-const WAIT_MS = navigator.webdriver ? 520 : 1000;
-const REVEAL_MS = navigator.webdriver ? 380 : 760;
+const HIDE_COVER_MS = navigator.webdriver ? 180 : 300;
+const WAIT_MS = 1000;
+const REVEAL_MS = navigator.webdriver ? 180 : 200;
 const REACT_MS = navigator.webdriver ? 260 : 680;
+const REVEAL_SOUND_DELAY_MS = 100;
+const REVEAL_AFTERGLOW_DELAY_MS = 160;
+const OPENING_SEQUENCE_LENGTH = 3;
 
 export class PeekabooModeModule {
   private readonly rootEl: HTMLElement;
@@ -44,6 +60,7 @@ export class PeekabooModeModule {
 
   private timeoutIds: number[] = [];
   private audioContext: AudioContext | null = null;
+  private audioUnlocked = false;
   private isPaused = false;
   private hasStartedOnce = false;
   private cycleIndex = 0;
@@ -55,6 +72,7 @@ export class PeekabooModeModule {
   private currentHideout: HideoutId | null = null;
   private currentState: PeekState = 'idle';
   private currentAnchor: AnchorId = 'center';
+  private currentSequence: PeekSequence = 'opening';
   private voiceVariantIndex = 0;
 
   constructor(rootEl: HTMLElement, mascot: MascotGuide) {
@@ -90,6 +108,7 @@ export class PeekabooModeModule {
     this.rootEl.setAttribute('data-peek-reactions', '0');
     this.rootEl.setAttribute('data-can-tap-reveal', 'false');
     this.rootEl.setAttribute('data-current-anchor', 'center');
+    this.rootEl.setAttribute('data-peek-sequence', 'opening');
     this.bindEvents();
   }
 
@@ -119,6 +138,13 @@ export class PeekabooModeModule {
   }
 
   private bindEvents(): void {
+    const unlockAudio = () => {
+      this.unlockAudio();
+    };
+
+    window.addEventListener('pointerdown', unlockAudio, { passive: true, once: true });
+    window.addEventListener('touchstart', unlockAudio, { passive: true, once: true });
+
     this.rootEl.addEventListener('peekaboo-resume', () => {
       if (this.rootEl.classList.contains('active')) {
         this.start();
@@ -228,32 +254,34 @@ export class PeekabooModeModule {
       return;
     }
 
-    this.currentScene = this.cycleIndex % 2 === 0 ? 'room' : 'center';
-    this.currentHideMode = this.currentScene === 'room' && this.cycleIndex % 4 === 2 ? 'environment' : 'self';
-    this.currentHideout = null;
-    this.currentAnchor = this.currentScene === 'room'
-      ? ROOM_ROUTE[this.cycleIndex % ROOM_ROUTE.length]
-      : 'center';
+    const cyclePlan = this.getCyclePlan(this.cycleIndex);
+    this.currentScene = cyclePlan.scene;
+    this.currentHideMode = cyclePlan.hideMode;
+    this.currentHideout = cyclePlan.hideout ?? null;
+    this.currentAnchor = cyclePlan.anchor;
+    this.currentSequence = this.cycleIndex < OPENING_SEQUENCE_LENGTH ? 'opening' : 'loop';
 
     this.hideoutButtons.forEach((button) => button.classList.remove('is-active-hideout', 'is-tappable-hideout'));
     this.setState('idle');
 
     if (this.currentScene === 'room') {
       this.statusEl.textContent = 'Anka odada süzülüyor.';
-      this.setPhoenixPosition(this.getAnchorPosition(this.currentAnchor), 1.02, -6 + (this.cycleIndex % 3) * 4);
-      this.scheduleRoomDrift();
+      this.setPhoenixPosition(this.getAnchorPosition(this.currentAnchor), cyclePlan.scale, cyclePlan.rotate);
+      if (!cyclePlan.skipDrift && this.currentHideMode === 'self') {
+        this.scheduleRoomDrift();
+      }
       if (!skipGreeting) {
-        this.mascot.setMessage('Anka uçuyor.');
+        this.mascot.setMessage(cyclePlan.message);
       }
     } else {
       this.statusEl.textContent = 'Anka ortada süzülüyor.';
-      this.setPhoenixPosition(this.getAnchorPosition('center'), 1.2, 0);
-      this.mascot.setMessage('Anka burada.');
+      this.setPhoenixPosition(this.getAnchorPosition(this.currentAnchor), cyclePlan.scale, cyclePlan.rotate);
+      this.mascot.setMessage(cyclePlan.message);
     }
 
     const timeoutId = window.setTimeout(() => {
       this.enterHideState();
-    }, this.currentScene === 'room' ? ROOM_IDLE_MS : CENTER_IDLE_MS);
+    }, cyclePlan.idleMs);
     this.timeoutIds.push(timeoutId);
   }
 
@@ -263,7 +291,7 @@ export class PeekabooModeModule {
     }
 
     if (this.currentHideMode === 'environment') {
-      const hideout = HIDEOUT_SEQUENCE[this.cycleIndex % HIDEOUT_SEQUENCE.length];
+      const hideout = this.currentHideout ?? HIDEOUT_SEQUENCE[this.cycleIndex % HIDEOUT_SEQUENCE.length];
       this.currentHideout = hideout;
       this.currentAnchor = hideout;
       this.getHideoutButton(hideout)?.classList.add('is-active-hideout');
@@ -326,8 +354,24 @@ export class PeekabooModeModule {
     this.voiceVariantIndex += 1;
 
     this.mascot.setMessage('Ceee!');
-    this.playRevealAudio(variant);
-    this.speakLine(variant.prompt, variant.rate, variant.pitch, variant.volume);
+    const revealSoundTimeout = window.setTimeout(() => {
+      if (this.isPaused || this.currentState !== 'reveal') {
+        return;
+      }
+
+      this.playRevealVoiceAudio(variant);
+      this.speakLine(variant.prompt, variant.rate, variant.pitch, variant.volume);
+    }, REVEAL_SOUND_DELAY_MS);
+
+    const revealAfterglowTimeout = window.setTimeout(() => {
+      if (this.isPaused || this.currentState !== 'reveal') {
+        return;
+      }
+
+      this.playRevealAfterglowAudio(variant);
+    }, REVEAL_AFTERGLOW_DELAY_MS);
+
+    this.timeoutIds.push(revealSoundTimeout, revealAfterglowTimeout);
 
     const runtime = window as Window & { __peekabooPromptLog?: string[] };
     runtime.__peekabooPromptLog = runtime.__peekabooPromptLog ?? [];
@@ -366,7 +410,97 @@ export class PeekabooModeModule {
     this.rootEl.setAttribute('data-hide-mode', this.currentHideMode);
     this.rootEl.setAttribute('data-current-hideout', this.currentHideout ?? '');
     this.rootEl.setAttribute('data-current-anchor', this.currentAnchor);
+    this.rootEl.setAttribute('data-peek-sequence', this.currentSequence);
     this.rootEl.setAttribute('data-can-tap-reveal', String(nextState === 'wait' || (nextState === 'hide' && this.currentHideMode === 'environment')));
+  }
+
+  private getCyclePlan(cycleIndex: number): PeekCyclePlan {
+    const openingPlan = this.getOpeningCyclePlan(cycleIndex);
+    if (openingPlan) {
+      return openingPlan;
+    }
+
+    return this.getLoopCyclePlan(cycleIndex - OPENING_SEQUENCE_LENGTH);
+  }
+
+  private getOpeningCyclePlan(cycleIndex: number): PeekCyclePlan | null {
+    const openingPlans: PeekCyclePlan[] = [
+      {
+        scene: 'room',
+        hideMode: 'self',
+        anchor: 'window',
+        idleMs: navigator.webdriver ? 280 : 760,
+        scale: 1.08,
+        rotate: 8,
+        message: 'Anka uçuyor.'
+      },
+      {
+        scene: 'center',
+        hideMode: 'self',
+        anchor: 'center',
+        idleMs: navigator.webdriver ? 240 : 620,
+        scale: 1.22,
+        rotate: 0,
+        message: 'Anka burada.',
+        skipDrift: true
+      },
+      {
+        scene: 'room',
+        hideMode: 'environment',
+        anchor: 'sofa',
+        hideout: 'curtain',
+        idleMs: navigator.webdriver ? 320 : 880,
+        scale: 1.04,
+        rotate: -6,
+        message: 'Anka saklanacak.',
+        skipDrift: true
+      }
+    ];
+
+    return openingPlans[cycleIndex] ?? null;
+  }
+
+  private getLoopCyclePlan(loopIndex: number): PeekCyclePlan {
+    const phase = loopIndex % 3;
+
+    if (phase === 1) {
+      return {
+        scene: 'center',
+        hideMode: 'self',
+        anchor: 'center',
+        idleMs: CENTER_IDLE_MS,
+        scale: 1.2,
+        rotate: 0,
+        message: 'Anka burada.',
+        skipDrift: true
+      };
+    }
+
+    if (phase === 2) {
+      const hideout = HIDEOUT_SEQUENCE[loopIndex % HIDEOUT_SEQUENCE.length];
+      return {
+        scene: 'room',
+        hideMode: 'environment',
+        anchor: hideout === 'curtain' ? 'window' : hideout === 'sofa' ? 'stage-left' : 'stage-right',
+        hideout,
+        idleMs: navigator.webdriver ? 420 : 1180,
+        scale: 1.04,
+        rotate: hideout === 'table' ? 8 : -8,
+        message: 'Anka saklanacak.',
+        skipDrift: true
+      };
+    }
+
+    const anchor = ROOM_ROUTE[loopIndex % ROOM_ROUTE.length];
+    return {
+      scene: 'room',
+      hideMode: 'self',
+      anchor,
+      idleMs: ROOM_IDLE_MS,
+      scale: 1.02,
+      rotate: -6 + (loopIndex % 3) * 6,
+      message: 'Anka uçuyor.'
+    };
   }
 
   private scheduleRoomDrift(): void {
@@ -519,6 +653,30 @@ export class PeekabooModeModule {
     return this.audioContext;
   }
 
+  private unlockAudio(): void {
+    const context = this.primeAudio();
+    if (!context || this.audioUnlocked) {
+      return;
+    }
+
+    this.audioUnlocked = true;
+
+    const start = context.currentTime + 0.01;
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(440, start);
+    gainNode.gain.setValueAtTime(0.0001, start);
+    gainNode.gain.exponentialRampToValueAtTime(0.0002, start + 0.01);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, start + 0.03);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(context.destination);
+    oscillator.start(start);
+    oscillator.stop(start + 0.04);
+  }
+
   private playHelloAudio(): void {
     const context = this.primeAudio();
     if (!context || context.state !== 'running') {
@@ -552,10 +710,31 @@ export class PeekabooModeModule {
     this.playSweep(context, master, start, 980, 620, 0.18, 'triangle');
   }
 
-  private playRevealAudio(variant: VoiceVariant): void {
+  private playRevealVoiceAudio(variant: VoiceVariant): void {
     const runtime = window as Window & { __peekabooSoundLog?: string[] };
     runtime.__peekabooSoundLog = runtime.__peekabooSoundLog ?? [];
     runtime.__peekabooSoundLog.push('ceee');
+
+    const context = this.primeAudio();
+    if (!context || context.state !== 'running') {
+      return;
+    }
+
+    const start = context.currentTime + 0.02;
+    const master = context.createGain();
+    master.connect(context.destination);
+    master.gain.setValueAtTime(0.0001, start);
+    master.gain.exponentialRampToValueAtTime(0.22, start + 0.05);
+    master.gain.exponentialRampToValueAtTime(0.0001, start + 0.58);
+
+    this.playTone(context, master, start, variant.tone, 0.14, 'triangle');
+    this.playTone(context, master, start + 0.09, variant.chime, 0.18, 'sine');
+    this.playSweep(context, master, start + 0.19, variant.tone * 0.9, variant.chime, 0.2, 'triangle');
+  }
+
+  private playRevealAfterglowAudio(variant: VoiceVariant): void {
+    const runtime = window as Window & { __peekabooSoundLog?: string[] };
+    runtime.__peekabooSoundLog = runtime.__peekabooSoundLog ?? [];
     runtime.__peekabooSoundLog.push('sparkle');
     runtime.__peekabooSoundLog.push('giggle');
 
@@ -568,13 +747,14 @@ export class PeekabooModeModule {
     const master = context.createGain();
     master.connect(context.destination);
     master.gain.setValueAtTime(0.0001, start);
-    master.gain.exponentialRampToValueAtTime(0.24, start + 0.04);
-    master.gain.exponentialRampToValueAtTime(0.0001, start + 0.88);
+    master.gain.exponentialRampToValueAtTime(0.16, start + 0.04);
+    master.gain.exponentialRampToValueAtTime(0.0001, start + 0.72);
 
-    this.playTone(context, master, start, variant.tone, 0.12, 'triangle');
-    this.playTone(context, master, start + 0.08, variant.chime, 0.16, 'sine');
-    this.playTone(context, master, start + 0.22, variant.tone * 0.92, 0.12, 'triangle');
-    this.playSweep(context, master, start + 0.32, 560, variant.chime, 0.26, 'sine');
+    this.playTone(context, master, start, variant.chime * 0.88, 0.12, 'sine');
+    this.playTone(context, master, start + 0.11, variant.chime * 1.08, 0.1, 'triangle');
+    this.playTone(context, master, start + 0.21, variant.chime * 1.18, 0.08, 'sine');
+    this.playSweep(context, master, start + 0.3, 420, 620, 0.2, 'triangle');
+    this.playTone(context, master, start + 0.39, 540, 0.08, 'sine');
   }
 
   private playChildReactionAudio(): void {
