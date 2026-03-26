@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { openWordMode } from './helpers/navigation.js';
 
 test('guided transition moves phoenix to the next word target', async ({ page }) => {
   await page.goto('/');
+  await openWordMode(page);
 
   await page.click('.word-card[data-word-id="su"]');
 

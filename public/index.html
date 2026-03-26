@@ -22,7 +22,63 @@
       </header>
 
       <main>
-        <section class="module-view active" id="view-speech" data-module="speech">
+        <section class="module-view active" id="view-home" data-module="home">
+          <div class="home-stage" id="home-stage" aria-label="MinaPlay ana ekranı">
+            <button type="button" id="home-parent-trigger" class="visually-hidden">Ebeveyn panelini aç</button>
+            <div class="parent-corner-hotspot" id="home-parent-hotspot" aria-hidden="true"></div>
+
+            <div class="home-hero" aria-hidden="true">
+              <div class="home-hero-glow"></div>
+              <div class="home-hero-badge">
+                <img src="/assets/phoenix-ui.svg" alt="" />
+              </div>
+              <div class="home-hero-copy">
+                <h2>MinaPlay</h2>
+                <p>Dört oyun alanı</p>
+              </div>
+            </div>
+
+            <div class="home-mode-grid" id="home-mode-grid">
+              <button type="button" class="home-mode-card is-word" data-view="speech" aria-label="Kelime Öğren">
+                <span class="home-mode-art" aria-hidden="true">
+                  <img class="home-mode-main" src="/assets/phoenix-ui.svg" alt="" />
+                  <img class="home-mode-side" src="/assets/water-glass.svg" alt="" />
+                  <img class="home-mode-side is-lower" src="/assets/object-ball.svg" alt="" />
+                </span>
+                <span class="home-mode-title">Kelime Öğren</span>
+              </button>
+
+              <button type="button" class="home-mode-card is-sentence" data-view="sentence" aria-label="Cümle Kur">
+                <span class="home-mode-art" aria-hidden="true">
+                  <img class="home-mode-main" src="/assets/object-father.svg" alt="" />
+                  <span class="home-mode-bubble"></span>
+                  <img class="home-mode-side" src="/assets/object-apple.svg" alt="" />
+                </span>
+                <span class="home-mode-title">Cümle Kur</span>
+              </button>
+
+              <button type="button" class="home-mode-card is-peekaboo" data-view="peekaboo" aria-label="Ceee Oyunu">
+                <span class="home-mode-art" aria-hidden="true">
+                  <span class="home-mode-curtain"></span>
+                  <img class="home-mode-main" src="/assets/phoenix-ui.svg" alt="" />
+                  <span class="home-mode-curtain is-right"></span>
+                </span>
+                <span class="home-mode-title">Ceee Oyunu</span>
+              </button>
+
+              <button type="button" class="home-mode-card is-sleep" data-view="sleep" aria-label="Uyku Modu">
+                <span class="home-mode-art" aria-hidden="true">
+                  <span class="home-mode-moon"></span>
+                  <img class="home-mode-main" src="/assets/phoenix-sleep.svg" alt="" />
+                  <span class="home-mode-stars"></span>
+                </span>
+                <span class="home-mode-title">Uyku Modu</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="module-view" id="view-speech" data-module="speech">
           <div class="module-header visually-hidden">
             <h2>Dokun ve Söyle</h2>
             <p>Nesnelere dokununca kelime sesli tekrar edilir. Su nesnesi 3 kez söylenir.</p>
@@ -70,6 +126,46 @@
               <div class="water-focus-splash"></div>
             </div>
           </div>
+        </section>
+
+        <section class="module-view" id="view-sentence" data-module="sentence">
+          <div class="module-header visually-hidden">
+            <h2>Cümle Kur</h2>
+            <p>İki resim seç, basit cümle kur ve aile kaydıyla dinle.</p>
+          </div>
+
+          <div class="sentence-stage" id="sentence-stage" aria-label="Cümle kurma sahnesi">
+            <button type="button" id="sentence-parent-trigger" class="visually-hidden">Ebeveyn panelini aç</button>
+            <div class="parent-corner-hotspot" id="sentence-parent-hotspot" aria-hidden="true"></div>
+
+            <div class="sentence-backdrop" aria-hidden="true">
+              <div class="sentence-cloud sentence-cloud-a"></div>
+              <div class="sentence-cloud sentence-cloud-b"></div>
+              <div class="sentence-floor"></div>
+              <div class="sentence-spark sentence-spark-a"></div>
+              <div class="sentence-spark sentence-spark-b"></div>
+            </div>
+
+            <div class="sentence-phoenix" aria-hidden="true">
+              <span class="sentence-phoenix-glow"></span>
+              <img src="/assets/phoenix-ui.svg" alt="" />
+            </div>
+
+            <div class="sentence-preview" aria-live="polite">
+              <div class="sentence-preview-icons" aria-hidden="true">
+                <span class="sentence-preview-slot" id="sentence-preview-actor"><span class="sentence-preview-plus">?</span></span>
+                <span class="sentence-preview-link">+</span>
+                <span class="sentence-preview-slot" id="sentence-preview-object"><span class="sentence-preview-plus">?</span></span>
+              </div>
+              <p class="sentence-preview-text" id="sentence-preview-text">İki resmi seç.</p>
+            </div>
+
+            <div class="sentence-choice-group">
+              <div class="sentence-choice-list sentence-choice-list-actors" id="sentence-actor-list" aria-label="Karakterler"></div>
+              <div class="sentence-choice-list sentence-choice-list-objects" id="sentence-object-list" aria-label="Nesneler"></div>
+            </div>
+          </div>
+          <p class="visually-hidden" id="sentence-status" aria-live="polite">Cümle için iki resim seç.</p>
         </section>
 
         <section class="module-view" id="view-peekaboo" data-module="peekaboo">
@@ -157,12 +253,14 @@
         </section>
 
         <section class="module-view" id="view-sleep" data-module="sleep">
-          <div class="module-header">
+          <div class="module-header visually-hidden">
             <h2>Uyku Modu</h2>
             <p>Karanlık sahnede yıldızlar, uyuyan Anka ve sakinleştirici sesler.</p>
           </div>
 
           <div class="sleep-stage">
+            <button type="button" id="sleep-parent-trigger" class="visually-hidden">Ebeveyn panelini aç</button>
+            <div class="parent-corner-hotspot" id="sleep-parent-hotspot" aria-hidden="true"></div>
             <canvas id="sleep-stars" width="640" height="260" aria-hidden="true"></canvas>
             <div class="sleep-phoenix-shell" aria-hidden="true">
               <img class="sleep-phoenix" id="sleep-phoenix" src="/assets/phoenix-sleep.svg" alt="Uyuyan Anka" />
@@ -342,13 +440,10 @@
             <div class="sleep-controls sleep-controls-parent">
               <label for="sleep-sound-select">Uyku Sesi</label>
               <select id="sleep-sound-select">
-                <option value="white">White Noise</option>
+                <option value="ocean" selected>Ocean Waves</option>
                 <option value="rain">Rain</option>
                 <option value="wind">Wind</option>
-                <option value="ocean">Ocean Waves</option>
-                <option value="vacuum">Vacuum Cleaner</option>
-                <option value="heartbeat">Heartbeat</option>
-                <option value="pispis">Pış Pış</option>
+                <option value="lullaby">Lullaby</option>
               </select>
 
               <div class="timer-row" id="sleep-timers" role="group" aria-label="Uyku Süresi">
@@ -449,10 +544,22 @@
       </div>
 
       <nav class="module-tabs" role="tablist" aria-label="Modüller">
-        <button class="tab-btn active" role="tab" aria-selected="true" data-view="speech">Oyun</button>
-        <button class="tab-btn" role="tab" aria-selected="false" data-view="peekaboo">Cee</button>
-        <button class="tab-btn" role="tab" aria-selected="false" data-view="stories">Hikaye</button>
-        <button class="tab-btn" role="tab" aria-selected="false" data-view="sleep">Uyku</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-view="speech" aria-label="Kelime Öğren">
+          <span class="tab-btn-icon" aria-hidden="true"><img src="/assets/object-ball.svg" alt="" /></span>
+          <span class="tab-btn-label">Kelime</span>
+        </button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-view="sentence" aria-label="Cümle Kur">
+          <span class="tab-btn-icon" aria-hidden="true"><img src="/assets/object-father.svg" alt="" /></span>
+          <span class="tab-btn-label">Cümle</span>
+        </button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-view="peekaboo" aria-label="Ceee Oyunu">
+          <span class="tab-btn-icon" aria-hidden="true"><img src="/assets/phoenix-ui.svg" alt="" /></span>
+          <span class="tab-btn-label">Ceee</span>
+        </button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-view="sleep" aria-label="Uyku Modu">
+          <span class="tab-btn-icon" aria-hidden="true"><img src="/assets/phoenix-sleep.svg" alt="" /></span>
+          <span class="tab-btn-label">Uyku</span>
+        </button>
       </nav>
     </div>
 

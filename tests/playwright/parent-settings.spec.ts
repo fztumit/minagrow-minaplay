@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openWordMode } from './helpers/navigation.js';
 import { unlockParentPanel } from './helpers/parent-access.js';
 
 test('parent settings repeat mode overrides default repeat count', async ({ page }) => {
@@ -7,6 +8,7 @@ test('parent settings repeat mode overrides default repeat count', async ({ page
   await unlockParentPanel(page);
   await page.selectOption('#speech-repeat-mode', '2');
   await page.click('#parent-panel-close');
+  await openWordMode(page);
   await page.click('.word-card[data-word-id="su"]');
   await page.waitForTimeout(1700);
 

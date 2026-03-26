@@ -1,4 +1,4 @@
-const CACHE_NAME = 'minaplay-v28';
+const CACHE_NAME = 'minaplay-v29';
 
 const PRECACHE_ASSETS = [
   '/',
@@ -17,7 +17,9 @@ const PRECACHE_ASSETS = [
   '/assets/object-milk.svg',
   '/assets/icon-192.svg',
   '/assets/icon-512.svg',
-  '/js/main.js'
+  '/js/main.js',
+  '/js/sentence/index.js',
+  '/js/sleep/index.js'
 ];
 
 self.addEventListener('install', (event) => {

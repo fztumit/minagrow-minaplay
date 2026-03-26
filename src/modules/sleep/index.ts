@@ -1,6 +1,6 @@
 import { MascotGuide } from '../mascot/index.js';
 
-type SleepSoundKind = 'white' | 'rain' | 'wind' | 'ocean' | 'vacuum' | 'heartbeat' | 'pispis';
+type SleepSoundKind = 'ocean' | 'rain' | 'wind' | 'lullaby';
 
 type Star = {
   x: number;
@@ -23,9 +23,6 @@ class SleepAudioEngine {
     }
 
     switch (kind) {
-      case 'white':
-        this.cleanups.push(this.playNoise(0.2, 'white'));
-        break;
       case 'rain':
         this.cleanups.push(this.playRain());
         break;
@@ -35,17 +32,11 @@ class SleepAudioEngine {
       case 'ocean':
         this.cleanups.push(this.playOcean());
         break;
-      case 'vacuum':
-        this.cleanups.push(this.playVacuum());
-        break;
-      case 'heartbeat':
-        this.cleanups.push(this.playHeartbeat());
-        break;
-      case 'pispis':
-        this.cleanups.push(this.playPispis());
+      case 'lullaby':
+        this.cleanups.push(this.playLullaby());
         break;
       default:
-        this.cleanups.push(this.playNoise(0.2, 'white'));
+        this.cleanups.push(this.playOcean());
     }
   }
 
@@ -270,7 +261,7 @@ class SleepAudioEngine {
     };
   }
 
-  private playPispis(): () => void {
+  private playLullaby(): () => void {
     const windCleanup = this.playWind();
     const hushCleanup = this.playNoise(0.035, 'pink');
 
@@ -348,6 +339,7 @@ export class SleepModeModule {
   init(): void {
     this.bindEvents();
     this.rootEl.setAttribute('data-running', 'false');
+    this.soundSelect.value = 'ocean';
     this.resizeCanvas();
     this.seedStars();
     this.animateStars();

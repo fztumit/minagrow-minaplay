@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { openWordMode } from './helpers/navigation.js';
 
 test('water object interaction triggers spill animation', async ({ page }) => {
   await page.goto('/');
+  await openWordMode(page);
 
   const waterCard = page.locator('.word-card[data-word-id="su"]');
   await waterCard.click();

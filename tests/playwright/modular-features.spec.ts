@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { gotoStoriesView, openStoriesMode, openWordMode } from './helpers/navigation.js';
 import { unlockParentPanel } from './helpers/parent-access.js';
 
 function getState() {
@@ -19,8 +20,7 @@ async function closeParentPanel(page: Page, expectedView = 'speech') {
 }
 
 test('stories pack selector switches dataset and content', async ({ page }) => {
-  await page.goto('/');
-  await page.click('.tab-btn[data-view="stories"]');
+  await gotoStoriesView(page);
 
   await openParentPanel(page);
   await expect(page.locator('#story-pack-select')).toHaveValue('core');
@@ -71,8 +71,7 @@ test('stories pack progress summary reflects selected pack metrics', async ({ pa
     );
   });
 
-  await page.goto('/');
-  await page.click('.tab-btn[data-view="stories"]');
+  await gotoStoriesView(page);
   await openParentPanel(page);
   await page.selectOption('#story-pack-select', 'animals');
 
@@ -127,8 +126,7 @@ test('pack comparison cards show leader and weekly momentum', async ({ page }) =
     );
   });
 
-  await page.goto('/');
-  await page.click('.tab-btn[data-view="stories"]');
+  await gotoStoriesView(page);
   await openParentPanel(page);
 
   await expect(page.locator('#story-pack-compare-summary')).toContainText('Lider paket: Temel Paket');
@@ -153,8 +151,7 @@ test('story audio panel lets parent choose a pack sentence directly', async ({ p
     );
   });
 
-  await page.goto('/');
-  await page.click('.tab-btn[data-view="stories"]');
+  await gotoStoriesView(page);
   await openParentPanel(page);
   await page.selectOption('#story-pack-select', 'animals');
 
@@ -204,6 +201,7 @@ test('daily activity card tracks words, story, and interaction', async ({ page }
   });
 
   await page.goto('/');
+  await openWordMode(page);
 
   await page.click('.word-card[data-word-id="su"]');
   await page.waitForFunction(() => {
@@ -215,7 +213,7 @@ test('daily activity card tracks words, story, and interaction', async ({ page }
   });
   await page.click('.word-card[data-word-id="top"]');
 
-  await page.click('.tab-btn[data-view="stories"]');
+  await openStoriesMode(page);
   await page.click('#story-listen');
 
   await openParentPanel(page);
@@ -301,7 +299,8 @@ test('progress metrics increase when recorded word is played', async ({ page }) 
 
   await page.goto('/');
   await openParentPanel(page);
-  await closeParentPanel(page);
+  await closeParentPanel(page, 'home');
+  await openWordMode(page);
   await page.click('.word-card[data-word-id="su"]');
   await page.waitForTimeout(2500);
 

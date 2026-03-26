@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { openPeekabooMode } from './helpers/navigation.js';
 
 test('peekaboo mode runs an automatic ceee reveal cycle', async ({ page }) => {
   await page.goto('/');
-  await page.click('.tab-btn[data-view="peekaboo"]');
+  await openPeekabooMode(page);
   await page.click('#peekaboo-stage-tap');
 
   await expect(page.locator('#view-peekaboo')).toHaveClass(/active/);
@@ -40,7 +41,7 @@ test('peekaboo mode runs an automatic ceee reveal cycle', async ({ page }) => {
 
 test('peekaboo environment hide can be revealed by tapping the hideout', async ({ page }) => {
   await page.goto('/');
-  await page.click('.tab-btn[data-view="peekaboo"]');
+  await openPeekabooMode(page);
 
   await page.waitForFunction(() => {
     const root = document.getElementById('view-peekaboo');

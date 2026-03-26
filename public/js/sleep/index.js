@@ -8,9 +8,6 @@ class SleepAudioEngine {
             await ctx.resume();
         }
         switch (kind) {
-            case 'white':
-                this.cleanups.push(this.playNoise(0.2, 'white'));
-                break;
             case 'rain':
                 this.cleanups.push(this.playRain());
                 break;
@@ -20,17 +17,11 @@ class SleepAudioEngine {
             case 'ocean':
                 this.cleanups.push(this.playOcean());
                 break;
-            case 'vacuum':
-                this.cleanups.push(this.playVacuum());
-                break;
-            case 'heartbeat':
-                this.cleanups.push(this.playHeartbeat());
-                break;
-            case 'pispis':
-                this.cleanups.push(this.playPispis());
+            case 'lullaby':
+                this.cleanups.push(this.playLullaby());
                 break;
             default:
-                this.cleanups.push(this.playNoise(0.2, 'white'));
+                this.cleanups.push(this.playOcean());
         }
     }
     stop() {
@@ -229,7 +220,7 @@ class SleepAudioEngine {
             gain.disconnect();
         };
     }
-    playPispis() {
+    playLullaby() {
         const windCleanup = this.playWind();
         const hushCleanup = this.playNoise(0.035, 'pink');
         return () => {
@@ -298,6 +289,7 @@ export class SleepModeModule {
     init() {
         this.bindEvents();
         this.rootEl.setAttribute('data-running', 'false');
+        this.soundSelect.value = 'ocean';
         this.resizeCanvas();
         this.seedStars();
         this.animateStars();

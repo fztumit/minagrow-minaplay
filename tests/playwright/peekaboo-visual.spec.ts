@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { openPeekabooMode } from './helpers/navigation.js';
 
 test('peekaboo mode renders a visible room scene and animated phoenix', async ({ page }) => {
   await page.goto('/');
-  await page.click('.tab-btn[data-view="peekaboo"]');
+  await openPeekabooMode(page);
 
   await expect(page.locator('#view-peekaboo')).toHaveClass(/active/);
   await expect(page.locator('.peekaboo-window')).toBeVisible();

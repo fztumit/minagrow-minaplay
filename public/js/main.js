@@ -4,6 +4,7 @@ import { VOCABULARY } from './data/vocabulary.js';
 import { FamilyAvatarModule } from './family/index.js';
 import { MascotGuide } from './mascot/index.js';
 import { PeekabooModeModule } from './peekaboo/index.js';
+import { SentenceBuilderModule } from './sentence/index.js';
 import { SleepModeModule } from './sleep/index.js';
 import { SpeechGameModule } from './speech/index.js';
 import { StoriesModule } from './stories/index.js';
@@ -36,9 +37,13 @@ function registerServiceWorker() {
 }
 function wireTabs(mascot) {
     const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
+    const homeModeButtons = Array.from(document.querySelectorAll('.home-mode-card'));
     const views = Array.from(document.querySelectorAll('.module-view'));
+    const homeRoot = document.getElementById('view-home');
     const speechRoot = document.getElementById('view-speech');
+    const sentenceRoot = document.getElementById('view-sentence');
     const peekabooRoot = document.getElementById('view-peekaboo');
+    const sleepRoot = document.getElementById('view-sleep');
     const parentRoot = document.getElementById('view-parent');
     const parentCloseBtn = document.getElementById('parent-panel-close');
     const authOverlay = document.getElementById('parent-auth-overlay');
@@ -50,17 +55,26 @@ function wireTabs(mascot) {
     const parentPinInput = document.getElementById('parent-pin-input');
     const parentPinConfirmInput = document.getElementById('parent-pin-confirm');
     const parentPinStatus = document.getElementById('parent-pin-status');
-    let lastPrimaryView = 'speech';
+    let lastPrimaryView = 'home';
     const notifySpeechGuidance = (state) => {
         speechRoot?.dispatchEvent(new CustomEvent(`speech-guidance-${state}`));
+    };
+    const notifySentenceLifecycle = (state) => {
+        sentenceRoot?.dispatchEvent(new CustomEvent(`sentence-${state}`));
     };
     const notifyPeekabooLifecycle = (state) => {
         peekabooRoot?.dispatchEvent(new CustomEvent(`peekaboo-${state}`));
     };
     const resumeActiveChildModule = () => {
         const activeViewId = document.querySelector('.module-view.active')?.id;
+        if (activeViewId === 'view-home') {
+            return;
+        }
         if (activeViewId === 'view-speech') {
             notifySpeechGuidance('resume');
+        }
+        if (activeViewId === 'view-sentence') {
+            notifySentenceLifecycle('resume');
         }
         if (activeViewId === 'view-peekaboo') {
             notifyPeekabooLifecycle('resume');
@@ -89,6 +103,41 @@ function wireTabs(mascot) {
             authError.textContent = '';
         }
     };
+    const bindHiddenParentAccess = (root, triggerId, hotspotId) => {
+        if (!root) {
+            return;
+        }
+        const triggerBtn = root.querySelector(`#${triggerId}`);
+        const hotspotEl = root.querySelector(`#${hotspotId}`);
+        if (!triggerBtn || !hotspotEl) {
+            return;
+        }
+        let holdTimeoutId = null;
+        triggerBtn.addEventListener('click', () => {
+            root.dispatchEvent(new CustomEvent('open-parent-panel', { bubbles: true }));
+        });
+        const clearHold = () => {
+            if (holdTimeoutId !== null) {
+                window.clearTimeout(holdTimeoutId);
+                holdTimeoutId = null;
+            }
+            hotspotEl.classList.remove('is-holding');
+        };
+        hotspotEl.addEventListener('pointerdown', (event) => {
+            if (event.pointerType === 'mouse' && event.button !== 0) {
+                return;
+            }
+            clearHold();
+            hotspotEl.classList.add('is-holding');
+            holdTimeoutId = window.setTimeout(() => {
+                triggerBtn.click();
+                clearHold();
+            }, 700);
+        });
+        hotspotEl.addEventListener('pointerup', clearHold);
+        hotspotEl.addEventListener('pointerleave', clearHold);
+        hotspotEl.addEventListener('pointercancel', clearHold);
+    };
     const activatePrimaryView = (selectedView) => {
         lastPrimaryView = selectedView;
         closeParentAuth();
@@ -108,14 +157,26 @@ function wireTabs(mascot) {
         else {
             notifySpeechGuidance('pause');
         }
+        if (selectedView === 'sentence') {
+            notifySentenceLifecycle('resume');
+        }
+        else {
+            notifySentenceLifecycle('pause');
+        }
         if (selectedView === 'peekaboo') {
             notifyPeekabooLifecycle('resume');
         }
         else {
             notifyPeekabooLifecycle('pause');
         }
-        if (selectedView === 'speech') {
+        if (selectedView === 'home') {
+            mascot.setMessage('Bir mod seç.');
+        }
+        else if (selectedView === 'speech') {
             mascot.sayHint();
+        }
+        else if (selectedView === 'sentence') {
+            mascot.setMessage('Cümle kuralım.');
         }
         else if (selectedView === 'peekaboo') {
             mascot.setMessage('Cee zamanı.');
@@ -127,9 +188,17 @@ function wireTabs(mascot) {
             mascot.setMessage('Uyku zamanı.');
         }
     };
+    document.addEventListener('activate-primary-view', (event) => {
+        const selectedView = event.detail;
+        if (!selectedView) {
+            return;
+        }
+        activatePrimaryView(selectedView);
+    });
     const openParentPanel = () => {
         closeParentAuth();
         notifySpeechGuidance('pause');
+        notifySentenceLifecycle('pause');
         notifyPeekabooLifecycle('pause');
         document.body.setAttribute('data-active-view', 'parent');
         views.forEach((view) => {
@@ -162,16 +231,38 @@ function wireTabs(mascot) {
             if (!selectedView) {
                 return;
             }
+            if (document.body.getAttribute('data-active-view') === selectedView) {
+                activatePrimaryView('home');
+                return;
+            }
+            activatePrimaryView(selectedView);
+        });
+    });
+    homeModeButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            const selectedView = button.dataset.view;
+            if (!selectedView) {
+                return;
+            }
             activatePrimaryView(selectedView);
         });
     });
     parentCloseBtn?.addEventListener('click', () => {
         activatePrimaryView(lastPrimaryView);
     });
+    homeRoot?.addEventListener('open-parent-panel', () => {
+        requestParentPin();
+    });
     speechRoot?.addEventListener('open-parent-panel', () => {
         requestParentPin();
     });
+    sentenceRoot?.addEventListener('open-parent-panel', () => {
+        requestParentPin();
+    });
     peekabooRoot?.addEventListener('open-parent-panel', () => {
+        requestParentPin();
+    });
+    sleepRoot?.addEventListener('open-parent-panel', () => {
         requestParentPin();
     });
     authInput?.addEventListener('input', () => {
@@ -234,6 +325,9 @@ function wireTabs(mascot) {
         mascot.setMessage('Şifre kaydedildi.');
     });
     syncParentPinStatus();
+    bindHiddenParentAccess(homeRoot, 'home-parent-trigger', 'home-parent-hotspot');
+    bindHiddenParentAccess(sentenceRoot, 'sentence-parent-trigger', 'sentence-parent-hotspot');
+    bindHiddenParentAccess(sleepRoot, 'sleep-parent-trigger', 'sleep-parent-hotspot');
     if (parentRoot?.classList.contains('active')) {
         openParentPanel();
     }
@@ -242,7 +336,9 @@ function installTestingHooks() {
     const runtime = window;
     runtime.render_game_to_text = () => {
         const activeViewId = document.querySelector('.module-view.active')?.id ?? null;
+        const homeRoot = document.getElementById('view-home');
         const speechRoot = document.getElementById('view-speech');
+        const sentenceRoot = document.getElementById('view-sentence');
         const peekabooRoot = document.getElementById('view-peekaboo');
         const sleepRoot = document.getElementById('view-sleep');
         const familyRoot = document.getElementById('family-panel');
@@ -258,6 +354,9 @@ function installTestingHooks() {
             parent_panel_open: activeViewId === 'view-parent',
             parent_auth_open: authOverlay?.classList.contains('is-active') ?? false,
             mascot_message: mascotMessage,
+            home: {
+                mode_count: homeRoot?.querySelectorAll('.home-mode-card').length ?? 0
+            },
             daily_word: dailyWordText,
             daily_word_audio: {
                 has_recording: dailyWordRoot?.getAttribute('data-daily-word-has-audio') === 'true'
@@ -286,6 +385,14 @@ function installTestingHooks() {
                 total_word_listens: Number(speechRoot?.getAttribute('data-total-word-listens') ?? 0),
                 top_sentence: speechRoot?.getAttribute('data-top-sentence') ?? '',
                 top_sentence_count: Number(speechRoot?.getAttribute('data-top-sentence-count') ?? 0)
+            },
+            sentence: {
+                selected_actor: sentenceRoot?.getAttribute('data-selected-actor') ?? '',
+                selected_object: sentenceRoot?.getAttribute('data-selected-object') ?? '',
+                current_sentence: sentenceRoot?.getAttribute('data-current-sentence') ?? '',
+                last_played_sentence: sentenceRoot?.getAttribute('data-last-played-sentence') ?? '',
+                has_audio: sentenceRoot?.getAttribute('data-current-sentence-has-audio') === 'true',
+                playing: sentenceRoot?.getAttribute('data-playing') === 'true'
             },
             peekaboo: {
                 state: peekabooRoot?.getAttribute('data-peek-state') ?? 'idle',
@@ -338,7 +445,9 @@ function bootstrap() {
     const speechMascotImage = speechMascotShell?.querySelector('img') ?? null;
     const dailyWordCard = document.getElementById('daily-word-card');
     const dailyActivityCard = document.getElementById('daily-activity-card');
+    const homeRoot = document.getElementById('view-home');
     const speechRoot = document.getElementById('view-speech');
+    const sentenceRoot = document.getElementById('view-sentence');
     const peekabooRoot = document.getElementById('view-peekaboo');
     const storiesRoot = document.getElementById('view-stories');
     const sleepRoot = document.getElementById('view-sleep');
@@ -349,7 +458,9 @@ function bootstrap() {
         !speechMascotShell ||
         !dailyWordCard ||
         !dailyActivityCard ||
+        !homeRoot ||
         !speechRoot ||
+        !sentenceRoot ||
         !peekabooRoot ||
         !storiesRoot ||
         !sleepRoot ||
@@ -365,6 +476,8 @@ function bootstrap() {
     dailyActivityModule.init();
     const speechModule = new SpeechGameModule(speechRoot, mascot, parentRoot);
     speechModule.init();
+    const sentenceModule = new SentenceBuilderModule(sentenceRoot, mascot);
+    sentenceModule.init();
     const peekabooModule = new PeekabooModeModule(peekabooRoot, mascot);
     peekabooModule.init();
     const sleepModule = new SleepModeModule(sleepRoot, mascot, parentRoot);
@@ -387,11 +500,15 @@ function bootstrap() {
         }
         dailyActivityModule.trackInteraction();
     });
+    sentenceRoot.addEventListener('sentence-activity', () => {
+        dailyActivityModule.trackInteraction();
+    });
     const runtime = window;
     runtime.__konusuYorumModules = {
         dailyWord: dailyWordModule,
         dailyActivity: dailyActivityModule,
         speech: speechModule,
+        sentence: sentenceModule,
         peekaboo: peekabooModule,
         sleep: sleepModule,
         family: familyModule,
@@ -399,12 +516,12 @@ function bootstrap() {
     };
     wireTabs(mascot);
     const requestedView = new URLSearchParams(window.location.search).get('view');
-    const allowedViews = new Set(['speech', 'peekaboo', 'stories', 'sleep']);
+    const allowedViews = new Set(['home', 'speech', 'sentence', 'peekaboo', 'stories', 'sleep']);
     if (requestedView && allowedViews.has(requestedView)) {
-        document.querySelector(`.tab-btn[data-view="${requestedView}"]`)?.click();
+        document.dispatchEvent(new CustomEvent('activate-primary-view', { detail: requestedView }));
     }
     else {
-        document.body.setAttribute('data-active-view', 'speech');
+        document.dispatchEvent(new CustomEvent('activate-primary-view', { detail: 'home' }));
     }
     installTestingHooks();
     registerServiceWorker();

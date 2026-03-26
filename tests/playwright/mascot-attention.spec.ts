@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { openWordMode } from './helpers/navigation.js';
 
 test('phoenix nudges the child after idle time with sound and location prompt', async ({ page }) => {
   await page.goto('/');
+  await openWordMode(page);
 
   await page.waitForFunction(() => {
     const message = document.getElementById('mascot-message')?.textContent ?? '';

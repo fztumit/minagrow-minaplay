@@ -4,7 +4,13 @@ export const DEFAULT_PARENT_PIN = '1234';
 
 export async function requestParentPanel(page: Page): Promise<void> {
   await page.evaluate(() => {
-    (document.getElementById('parent-panel-trigger') as HTMLButtonElement | null)?.click();
+    (
+      document.getElementById('home-parent-trigger') ||
+      document.getElementById('parent-panel-trigger') ||
+      document.getElementById('sentence-parent-trigger') ||
+      document.getElementById('peekaboo-parent-trigger') ||
+      document.getElementById('sleep-parent-trigger')
+    )?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
   });
   await expect(page.locator('#parent-auth-overlay')).toHaveClass(/is-active/);
 }

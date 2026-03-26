@@ -213,6 +213,47 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
 ## Notes
 - Skill client screenshots still reflect the largest canvas element; JSON state remains the reliable module behavior source.
 
+## Continuation Update: Modular Home + Sentence Builder
+- Added a new child-first modular home screen as the default entry view:
+  - `Kelime Öğren`
+  - `Cümle Kur`
+  - `Ceee Oyunu`
+  - `Uyku Modu`
+- Added a new independent `SentenceBuilderModule`:
+  - two-step visual selection flow (`actor` + `object`)
+  - simple sentence preview and playback
+  - parent-recorded sentence playback when available, TTS fallback otherwise
+- Updated tab routing:
+  - default view is now `home`
+  - visible child nav now includes `speech`, `sentence`, `peekaboo`, `sleep`
+  - `stories` remains independently addressable and testable via direct activation
+- Added hidden long-press parent access to:
+  - home
+  - sentence
+  - sleep
+- Updated sleep mode options to child-friendly defaults:
+  - `ocean`
+  - `rain`
+  - `wind`
+  - `lullaby`
+
+## Validation (Modular Home)
+- `npm run build` ✅
+- `npm test` ✅
+- `npm run lint` ✅
+- `npx playwright test --workers=1` ✅
+  - 27/27 passed
+- Official skill client run completed for:
+  - `output/web-game-home/state-0.json`
+  - `output/web-game-sentence/state-0.json`
+- Skill client state confirmed:
+  - home active with `mode_count: 4`
+  - sentence mode active with independent `sentence` state payload
+
+## Notes
+- Skill client screenshots still captured the largest canvas-like surface (sleep stars) instead of the full DOM layout. State JSON remained correct and was used as the reliable verification source for home/sentence flows.
+- Fixed a Playwright regression caused by `page.addInitScript()` re-running on `goto('/?view=stories')`. Added non-navigation helper `openStoriesMode()` for same-session state-preserving transitions.
+
 ## Continuation Update: Pronunciation Fix
 - Adjusted Stories speech synthesis text preprocessing for clearer Turkish articulation.
 - Two-word sentences are now spoken with an inserted pause punctuation (e.g. `Dede, gel.`) before TTS.
