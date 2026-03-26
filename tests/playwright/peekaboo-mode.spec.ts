@@ -91,3 +91,50 @@ test('peekaboo opening delivers multiple reveal beats quickly', async ({ page })
   expect(state?.peekaboo?.reveals).toBeGreaterThanOrEqual(2);
   expect(state?.peekaboo?.sequence).toMatch(/opening|loop/);
 });
+
+test('peekaboo reveal uses parent recorded ceee audio when available', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      'konusu_yorum_custom_audio_v1',
+      JSON.stringify({
+        'cee ee': 'data:audio/webm;base64,AAAA'
+      })
+    );
+
+    const runtime = window as Window & { __playedAudioSources?: string[] };
+    runtime.__playedAudioSources = [];
+
+    HTMLMediaElement.prototype.play = function play(): Promise<void> {
+      runtime.__playedAudioSources?.push(this.currentSrc || this.getAttribute('src') || this.src || '');
+      return Promise.resolve();
+    };
+  });
+
+  await page.goto('/?view=peekaboo');
+  await page.click('#peekaboo-stage-tap');
+
+  await page.waitForFunction(() => {
+    const runtime = window as Window & { __peekabooSoundLog?: string[] };
+    const soundLog = runtime.__peekabooSoundLog ?? [];
+    return soundLog.includes('custom-ceee') && soundLog.includes('sparkle');
+  });
+
+  const result = await page.evaluate(() => {
+    const runtime = window as Window & {
+      render_game_to_text?: () => string;
+      __peekabooSoundLog?: string[];
+      __playedAudioSources?: string[];
+    };
+
+    return {
+      state: typeof runtime.render_game_to_text === 'function' ? JSON.parse(runtime.render_game_to_text()) : null,
+      sounds: runtime.__peekabooSoundLog ?? [],
+      playedSources: runtime.__playedAudioSources ?? []
+    };
+  });
+
+  expect(result.state?.peekaboo?.custom_audio).toBe(true);
+  expect(result.sounds).toContain('custom-ceee');
+  expect(result.sounds).toContain('sparkle');
+  expect(result.playedSources.some((src) => src.startsWith('data:audio/webm;base64,'))).toBe(true);
+});

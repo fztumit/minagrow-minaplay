@@ -1,4 +1,9 @@
 import { MascotGuide } from '../mascot/index.js';
+import {
+  loadCustomAudioMap,
+  saveCustomAudioMap,
+  type CustomAudioMap
+} from '../speech/customAudio.js';
 
 type SceneMode = 'room' | 'center';
 type HideMode = 'self' | 'environment';
@@ -46,6 +51,7 @@ const REACT_MS = navigator.webdriver ? 260 : 680;
 const REVEAL_SOUND_DELAY_MS = 100;
 const REVEAL_AFTERGLOW_DELAY_MS = 160;
 const OPENING_SEQUENCE_LENGTH = 3;
+const PEEKABOO_REVEAL_AUDIO_KEY = 'cee ee';
 
 export class PeekabooModeModule {
   private readonly rootEl: HTMLElement;
@@ -56,10 +62,16 @@ export class PeekabooModeModule {
   private readonly parentTriggerBtn: HTMLButtonElement;
   private readonly parentHotspotEl: HTMLElement;
   private readonly hideoutButtons: HTMLButtonElement[];
+  private readonly revealRecordStartBtn: HTMLButtonElement;
+  private readonly revealRecordStopBtn: HTMLButtonElement;
+  private readonly revealPlayBtn: HTMLButtonElement;
+  private readonly revealDeleteBtn: HTMLButtonElement;
+  private readonly revealStatusEl: HTMLElement;
   private readonly mascot: MascotGuide;
 
   private timeoutIds: number[] = [];
   private audioContext: AudioContext | null = null;
+  private previewAudioEl: HTMLAudioElement | null = null;
   private audioUnlocked = false;
   private isPaused = false;
   private hasStartedOnce = false;
@@ -74,8 +86,12 @@ export class PeekabooModeModule {
   private currentAnchor: AnchorId = 'center';
   private currentSequence: PeekSequence = 'opening';
   private voiceVariantIndex = 0;
+  private customAudioMap: CustomAudioMap = {};
+  private mediaRecorder: MediaRecorder | null = null;
+  private recordingChunks: Blob[] = [];
+  private recordingStream: MediaStream | null = null;
 
-  constructor(rootEl: HTMLElement, mascot: MascotGuide) {
+  constructor(rootEl: HTMLElement, mascot: MascotGuide, controlsRoot: ParentNode = rootEl.ownerDocument) {
     const stageEl = rootEl.querySelector<HTMLElement>('#peekaboo-stage');
     const phoenixShellEl = rootEl.querySelector<HTMLElement>('#peekaboo-phoenix-shell');
     const stageTapEl = rootEl.querySelector<HTMLButtonElement>('#peekaboo-stage-tap');
@@ -83,9 +99,27 @@ export class PeekabooModeModule {
     const parentTriggerBtn = rootEl.querySelector<HTMLButtonElement>('#peekaboo-parent-trigger');
     const parentHotspotEl = rootEl.querySelector<HTMLElement>('#peekaboo-parent-hotspot');
     const hideoutButtons = Array.from(rootEl.querySelectorAll<HTMLButtonElement>('.peekaboo-hideout'));
+    const revealRecordStartBtn = controlsRoot.querySelector<HTMLButtonElement>('#peekaboo-audio-record-start');
+    const revealRecordStopBtn = controlsRoot.querySelector<HTMLButtonElement>('#peekaboo-audio-record-stop');
+    const revealPlayBtn = controlsRoot.querySelector<HTMLButtonElement>('#peekaboo-audio-play');
+    const revealDeleteBtn = controlsRoot.querySelector<HTMLButtonElement>('#peekaboo-audio-delete');
+    const revealStatusEl = controlsRoot.querySelector<HTMLElement>('#peekaboo-audio-status');
 
-    if (!stageEl || !phoenixShellEl || !stageTapEl || !statusEl || !parentTriggerBtn || !parentHotspotEl || hideoutButtons.length === 0) {
-      throw new Error('Peekaboo module requires stage, phoenix shell, hideouts, status, and parent access elements.');
+    if (
+      !stageEl ||
+      !phoenixShellEl ||
+      !stageTapEl ||
+      !statusEl ||
+      !parentTriggerBtn ||
+      !parentHotspotEl ||
+      hideoutButtons.length === 0 ||
+      !revealRecordStartBtn ||
+      !revealRecordStopBtn ||
+      !revealPlayBtn ||
+      !revealDeleteBtn ||
+      !revealStatusEl
+    ) {
+      throw new Error('Peekaboo module requires stage, phoenix shell, hideouts, parent access, and reveal audio controls.');
     }
 
     this.rootEl = rootEl;
@@ -96,10 +130,16 @@ export class PeekabooModeModule {
     this.parentTriggerBtn = parentTriggerBtn;
     this.parentHotspotEl = parentHotspotEl;
     this.hideoutButtons = hideoutButtons;
+    this.revealRecordStartBtn = revealRecordStartBtn;
+    this.revealRecordStopBtn = revealRecordStopBtn;
+    this.revealPlayBtn = revealPlayBtn;
+    this.revealDeleteBtn = revealDeleteBtn;
+    this.revealStatusEl = revealStatusEl;
     this.mascot = mascot;
   }
 
   init(): void {
+    this.refreshCustomAudioMap();
     this.rootEl.setAttribute('data-peek-state', 'idle');
     this.rootEl.setAttribute('data-peek-scene', 'room');
     this.rootEl.setAttribute('data-hide-mode', 'self');
@@ -109,7 +149,11 @@ export class PeekabooModeModule {
     this.rootEl.setAttribute('data-can-tap-reveal', 'false');
     this.rootEl.setAttribute('data-current-anchor', 'center');
     this.rootEl.setAttribute('data-peek-sequence', 'opening');
+    this.rootEl.setAttribute('data-peek-custom-audio', String(Boolean(this.getRevealAudioData())));
     this.bindEvents();
+    this.bindRevealAudioControls();
+    this.syncRevealAudioSupportState();
+    this.syncRevealAudioState();
   }
 
   start(): void {
@@ -132,6 +176,11 @@ export class PeekabooModeModule {
     this.isPaused = true;
     this.clearTimers();
     this.hideoutButtons.forEach((button) => button.classList.remove('is-active-hideout', 'is-tappable-hideout'));
+    if (this.previewAudioEl) {
+      this.previewAudioEl.pause();
+      this.previewAudioEl.currentTime = 0;
+      this.previewAudioEl = null;
+    }
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
@@ -220,6 +269,24 @@ export class PeekabooModeModule {
     this.parentHotspotEl.addEventListener('pointerup', clearHold);
     this.parentHotspotEl.addEventListener('pointerleave', clearHold);
     this.parentHotspotEl.addEventListener('pointercancel', clearHold);
+  }
+
+  private bindRevealAudioControls(): void {
+    this.revealRecordStartBtn.addEventListener('click', () => {
+      void this.startRevealRecording();
+    });
+
+    this.revealRecordStopBtn.addEventListener('click', () => {
+      this.stopRevealRecording();
+    });
+
+    this.revealPlayBtn.addEventListener('click', () => {
+      void this.playRevealRecordingPreview();
+    });
+
+    this.revealDeleteBtn.addEventListener('click', () => {
+      this.deleteRevealRecording();
+    });
   }
 
   private playIntro(): void {
@@ -359,8 +426,7 @@ export class PeekabooModeModule {
         return;
       }
 
-      this.playRevealVoiceAudio(variant);
-      this.speakLine(variant.prompt, variant.rate, variant.pitch, variant.volume);
+      void this.playRevealPromptAudio(variant);
     }, REVEAL_SOUND_DELAY_MS);
 
     const revealAfterglowTimeout = window.setTimeout(() => {
@@ -615,6 +681,196 @@ export class PeekabooModeModule {
     }
   }
 
+  private refreshCustomAudioMap(): void {
+    this.customAudioMap = loadCustomAudioMap();
+  }
+
+  private hasRecordingSupport(): boolean {
+    return (
+      typeof window.MediaRecorder !== 'undefined' &&
+      !!navigator.mediaDevices &&
+      typeof navigator.mediaDevices.getUserMedia === 'function'
+    );
+  }
+
+  private getRevealAudioData(): string | null {
+    return this.customAudioMap[PEEKABOO_REVEAL_AUDIO_KEY] ?? null;
+  }
+
+  private syncRevealAudioSupportState(): void {
+    if (this.hasRecordingSupport()) {
+      return;
+    }
+
+    this.revealRecordStartBtn.disabled = true;
+    this.revealRecordStopBtn.disabled = true;
+    this.revealStatusEl.textContent = 'Bu tarayicida Cee-ee kaydi desteklenmiyor.';
+  }
+
+  private syncRevealAudioState(message?: string): void {
+    this.refreshCustomAudioMap();
+    const hasRecording = Boolean(this.getRevealAudioData());
+    const isRecording = this.mediaRecorder?.state === 'recording';
+    const supported = this.hasRecordingSupport();
+
+    this.rootEl.setAttribute('data-peek-custom-audio', String(hasRecording));
+    this.revealRecordStartBtn.disabled = !supported || isRecording;
+    this.revealRecordStopBtn.disabled = !isRecording;
+    this.revealPlayBtn.disabled = isRecording || !hasRecording;
+    this.revealDeleteBtn.disabled = isRecording || !hasRecording;
+
+    if (message) {
+      this.revealStatusEl.textContent = message;
+      return;
+    }
+
+    if (!supported) {
+      this.revealStatusEl.textContent = 'Bu tarayicida Cee-ee kaydi desteklenmiyor.';
+      return;
+    }
+
+    if (isRecording) {
+      this.revealStatusEl.textContent = 'Cee-ee kaydi aliniyor...';
+      return;
+    }
+
+    this.revealStatusEl.textContent = hasRecording
+      ? 'Kendi Cee-ee kaydiniz hazir.'
+      : 'Varsayilan Ceee sesi aktif.';
+  }
+
+  private async startRevealRecording(): Promise<void> {
+    if (!this.hasRecordingSupport()) {
+      this.syncRevealAudioSupportState();
+      return;
+    }
+
+    if (this.mediaRecorder?.state === 'recording') {
+      this.syncRevealAudioState('Cee-ee kaydi zaten suruyor.');
+      return;
+    }
+
+    try {
+      this.recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.recordingChunks = [];
+      this.mediaRecorder = new MediaRecorder(this.recordingStream);
+      this.mediaRecorder.ondataavailable = (event: BlobEvent) => {
+        if (event.data.size > 0) {
+          this.recordingChunks.push(event.data);
+        }
+      };
+      this.mediaRecorder.onstop = () => {
+        void this.finalizeRevealRecording();
+      };
+      this.mediaRecorder.start();
+      this.syncRevealAudioState('Cee-ee kaydi aliniyor...');
+    } catch {
+      this.cleanupRecordingResources();
+      this.syncRevealAudioState('Mikrofon acilamadi. Tarayici izinlerini kontrol et.');
+    }
+  }
+
+  private stopRevealRecording(): void {
+    if (!this.mediaRecorder || this.mediaRecorder.state !== 'recording') {
+      this.syncRevealAudioState('Aktif Cee-ee kaydi yok.');
+      return;
+    }
+
+    this.mediaRecorder.stop();
+    this.revealRecordStopBtn.disabled = true;
+    this.revealStatusEl.textContent = 'Cee-ee kaydi isleniyor...';
+  }
+
+  private async finalizeRevealRecording(): Promise<void> {
+    let statusMessage = 'Varsayilan Ceee sesi aktif.';
+
+    try {
+      const blob = new Blob(this.recordingChunks, { type: this.mediaRecorder?.mimeType || 'audio/webm' });
+      if (blob.size === 0) {
+        statusMessage = 'Bos kayit alindi, tekrar dene.';
+        return;
+      }
+
+      const dataUrl = await this.blobToDataUrl(blob);
+      this.customAudioMap[PEEKABOO_REVEAL_AUDIO_KEY] = dataUrl;
+      saveCustomAudioMap(this.customAudioMap);
+      statusMessage = 'Kendi Cee-ee kaydiniz hazir.';
+    } finally {
+      this.cleanupRecordingResources();
+      this.syncRevealAudioState(statusMessage);
+    }
+  }
+
+  private async playRevealRecordingPreview(): Promise<void> {
+    this.syncRevealAudioState();
+    const dataUrl = this.getRevealAudioData();
+    if (!dataUrl) {
+      this.syncRevealAudioState('Kayitli Cee-ee sesi yok.');
+      return;
+    }
+
+    try {
+      await this.playAudioDataUrl(dataUrl);
+      this.syncRevealAudioState('Kendi Cee-ee kaydiniz caliniyor.');
+    } catch {
+      this.syncRevealAudioState('Cee-ee kaydi calinamadi.');
+    }
+  }
+
+  private deleteRevealRecording(): void {
+    this.syncRevealAudioState();
+    if (!this.getRevealAudioData()) {
+      this.syncRevealAudioState('Silinecek Cee-ee kaydi yok.');
+      return;
+    }
+
+    delete this.customAudioMap[PEEKABOO_REVEAL_AUDIO_KEY];
+    saveCustomAudioMap(this.customAudioMap);
+    this.syncRevealAudioState('Kayitli Cee-ee sesi silindi. Varsayilan ses kullanilacak.');
+  }
+
+  private async playAudioDataUrl(dataUrl: string): Promise<void> {
+    if (this.previewAudioEl) {
+      this.previewAudioEl.pause();
+      this.previewAudioEl.currentTime = 0;
+    }
+
+    const audio = new Audio(dataUrl);
+    this.previewAudioEl = audio;
+    audio.addEventListener(
+      'ended',
+      () => {
+        if (this.previewAudioEl === audio) {
+          this.previewAudioEl = null;
+        }
+      },
+      { once: true }
+    );
+
+    await audio.play();
+  }
+
+  private async playRevealPromptAudio(variant: VoiceVariant): Promise<void> {
+    const runtime = window as Window & { __peekabooSoundLog?: string[] };
+    const customRevealAudio = this.getRevealAudioData();
+    if (!customRevealAudio) {
+      this.playRevealVoiceAudio(variant);
+      this.speakLine(variant.prompt, variant.rate, variant.pitch, variant.volume);
+      return;
+    }
+
+    runtime.__peekabooSoundLog = runtime.__peekabooSoundLog ?? [];
+    runtime.__peekabooSoundLog.push('custom-ceee');
+
+    try {
+      await this.playAudioDataUrl(customRevealAudio);
+    } catch {
+      runtime.__peekabooSoundLog.push('custom-ceee-fallback');
+      this.playRevealVoiceAudio(variant);
+      this.speakLine(variant.prompt, variant.rate, variant.pitch, variant.volume);
+    }
+  }
+
   private speakLine(text: string, rate: number, pitch: number, volume: number): void {
     if (!('speechSynthesis' in window) || typeof window.SpeechSynthesisUtterance === 'undefined') {
       return;
@@ -777,6 +1033,27 @@ export class PeekabooModeModule {
     this.playTone(context, master, start, 920, 0.08, 'triangle');
     this.playTone(context, master, start + 0.08, 1180, 0.11, 'sine');
     this.playTone(context, master, start + 0.18, 1040, 0.1, 'triangle');
+  }
+
+  private blobToDataUrl(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result ?? ''));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  private cleanupRecordingResources(): void {
+    if (this.recordingStream) {
+      for (const track of this.recordingStream.getTracks()) {
+        track.stop();
+      }
+    }
+
+    this.recordingStream = null;
+    this.mediaRecorder = null;
+    this.recordingChunks = [];
   }
 
   private playTone(

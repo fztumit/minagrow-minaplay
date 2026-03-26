@@ -434,6 +434,21 @@ main {
   color: #4e4068;
 }
 
+.peekaboo-audio-note,
+.peekaboo-audio-status {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #5c4660;
+}
+
+.peekaboo-audio-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 6px;
+}
+
 .recording-library-panel,
 .progress-panel {
   margin-top: 10px;

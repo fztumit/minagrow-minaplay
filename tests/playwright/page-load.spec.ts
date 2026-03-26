@@ -14,6 +14,7 @@ test('page loads with core module blocks', async ({ page }) => {
 
   await unlockParentPanel(page);
   await expect(page.locator('#daily-word-record-start')).toBeVisible();
+  await expect(page.locator('#peekaboo-audio-record-start')).toBeVisible();
   await expect(page.locator('#progress-reset-btn')).toBeVisible();
 
   await page.click('.tab-btn[data-view="stories"]');
@@ -37,4 +38,5 @@ test('parent panel requires correct pin before opening', async ({ page }) => {
 
   await expect(page.locator('#view-parent')).toHaveClass(/active/);
   await expect(page.locator('#daily-word-record-start')).toBeVisible();
+  await expect(page.locator('#peekaboo-audio-record-start')).toBeVisible();
 });

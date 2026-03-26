@@ -338,7 +338,8 @@ function installTestingHooks(): void {
         current_anchor: peekabooRoot?.getAttribute('data-current-anchor') ?? 'center',
         reveals: Number(peekabooRoot?.getAttribute('data-peek-reveals') ?? 0),
         reactions: Number(peekabooRoot?.getAttribute('data-peek-reactions') ?? 0),
-        can_tap_reveal: peekabooRoot?.getAttribute('data-can-tap-reveal') === 'true'
+        can_tap_reveal: peekabooRoot?.getAttribute('data-can-tap-reveal') === 'true',
+        custom_audio: peekabooRoot?.getAttribute('data-peek-custom-audio') === 'true'
       },
       sleep: {
         running: sleepRoot?.getAttribute('data-running') === 'true'

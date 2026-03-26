@@ -1224,3 +1224,28 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
 
 ## Suggestions
 - If desired, the next polish step is adding a dedicated blink/beak micro-animation during `center` reveals so the mascot feels even more alive.
+
+## Continuation Update: Parent Recorded Peekaboo Reveal Audio
+- Added a dedicated `Cee-ee Sesi` section to the parent panel so a parent or sibling can record their own reveal voice for Peekaboo mode.
+- Hooked the new controls directly into the existing shared custom-audio storage:
+  - record
+  - stop
+  - preview
+  - delete
+- Peekaboo reveal playback now checks for a parent recording first.
+  - if present, it plays the recorded `Cee-ee`
+  - otherwise it falls back to the generated reveal voice + speech
+- Extended `render_game_to_text` with `peekaboo.custom_audio` for easier verification.
+- Added Playwright coverage for the custom reveal-audio path and for parent-panel visibility of the new controls.
+- Bumped the PWA cache version to `minaplay-v28` so the new reveal-audio logic updates reliably on devices.
+
+## Validation (Parent Peekaboo Audio)
+- `npm run build` ✅
+- `npx playwright test tests/playwright/peekaboo-mode.spec.ts tests/playwright/page-load.spec.ts --workers=1` ✅
+- Official `develop-web-game` client run ✅ (`output/web-game-peekaboo-parent-audio/*`)
+  - observed `active_view: "view-peekaboo"`
+  - observed `peekaboo.custom_audio: false` in the default no-recording state
+  - observed the state loop continue into `peekaboo.state: "wait"`
+
+## Notes
+- The official client screenshot again captured the largest canvas instead of the DOM-first Peekaboo scene, so the state JSON remained the reliable verification source for this pass.
