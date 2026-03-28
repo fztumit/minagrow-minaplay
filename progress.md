@@ -1325,3 +1325,4 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
 - Preview screenshot for review: `output/phoenix-preview/shot-0.png`
 
 - 2026-03-28: Aktif oyun maskotu Pofi olarak ayrildi; Anka seti public/assets/archive/anka-set-2026-03-28 altinda korundu.
+- 2026-03-28: Pofi maskotu sevimli bulut setine çevrildi; app icon seti de bulut olarak güncellendi.

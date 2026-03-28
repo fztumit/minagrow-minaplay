@@ -1,9 +1,40 @@
-<svg width="192" height="192" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="MinaPlay simgesi">
-  <rect width="192" height="192" rx="40" fill="#ff8f66" />
-  <circle cx="96" cy="98" r="44" fill="#fff3d3" />
-  <circle cx="82" cy="94" r="6" fill="#2b3552" />
-  <circle cx="110" cy="94" r="6" fill="#2b3552" />
-  <path d="M82 118c10 9 18 9 28 0" stroke="#2b3552" stroke-width="5" fill="none" stroke-linecap="round" />
-  <path d="M72 58c0-14 11-25 24-25s24 11 24 25" stroke="#ff5d73" stroke-width="9" fill="none" stroke-linecap="round" />
-  <path d="M44 140h104" stroke="#ffd7a9" stroke-width="12" stroke-linecap="round" />
+<svg width="192" height="192" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="MinaPlay bulut simgesi">
+  <defs>
+    <linearGradient id="bg192" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#b7ecff" />
+      <stop offset="100%" stop-color="#e7f8ff" />
+    </linearGradient>
+    <radialGradient id="sun192" cx="30%" cy="28%" r="48%">
+      <stop offset="0%" stop-color="#fff9d6" />
+      <stop offset="100%" stop-color="#ffd26d" />
+    </radialGradient>
+    <linearGradient id="cloud192" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#eef8ff" />
+    </linearGradient>
+  </defs>
+
+  <rect width="192" height="192" rx="42" fill="url(#bg192)" />
+  <circle cx="58" cy="54" r="24" fill="url(#sun192)" opacity="0.95" />
+  <circle cx="56" cy="52" r="38" fill="#fff5bc" opacity="0.22" />
+
+  <g transform="translate(0 6)">
+    <ellipse cx="96" cy="132" rx="54" ry="11" fill="#9bc9dd" opacity="0.22" />
+    <path
+      d="M57 117c0-16 12-28 28-28 5 0 10 1 14 3 5-10 15-16 27-16 17 0 31 12 34 28 11 1 20 10 20 22 0 12-10 22-22 22H66c-17 0-31-13-31-30 0-15 10-27 22-30z"
+      fill="url(#cloud192)"
+    />
+    <path
+      d="M57 117c0-16 12-28 28-28 5 0 10 1 14 3 5-10 15-16 27-16 17 0 31 12 34 28 11 1 20 10 20 22 0 12-10 22-22 22H66c-17 0-31-13-31-30 0-15 10-27 22-30z"
+      fill="none"
+      stroke="#d7edf8"
+      stroke-width="4"
+      stroke-linejoin="round"
+    />
+    <circle cx="82" cy="121" r="5.2" fill="#324d68" />
+    <circle cx="113" cy="121" r="5.2" fill="#324d68" />
+    <path d="M82 137c6 7 18 7 24 0" fill="none" stroke="#324d68" stroke-width="4.6" stroke-linecap="round" />
+    <circle cx="71" cy="132" r="5" fill="#ffc0c9" opacity="0.7" />
+    <circle cx="124" cy="132" r="5" fill="#ffc0c9" opacity="0.7" />
+  </g>
 </svg>

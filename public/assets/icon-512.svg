@@ -1,9 +1,40 @@
-<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="MinaPlay simgesi büyük">
-  <rect width="512" height="512" rx="112" fill="#ff8f66" />
-  <circle cx="256" cy="264" r="126" fill="#fff3d3" />
-  <circle cx="216" cy="252" r="18" fill="#2b3552" />
-  <circle cx="296" cy="252" r="18" fill="#2b3552" />
-  <path d="M216 322c28 24 52 24 80 0" stroke="#2b3552" stroke-width="16" fill="none" stroke-linecap="round" />
-  <path d="M188 154c0-40 30-72 68-72s68 32 68 72" stroke="#ff5d73" stroke-width="26" fill="none" stroke-linecap="round" />
-  <path d="M126 380h260" stroke="#ffd7a9" stroke-width="34" stroke-linecap="round" />
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="MinaPlay bulut simgesi büyük">
+  <defs>
+    <linearGradient id="bg512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#b6ecff" />
+      <stop offset="100%" stop-color="#eefbff" />
+    </linearGradient>
+    <radialGradient id="sun512" cx="30%" cy="28%" r="50%">
+      <stop offset="0%" stop-color="#fffce1" />
+      <stop offset="100%" stop-color="#ffd56e" />
+    </radialGradient>
+    <linearGradient id="cloud512" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#edf8ff" />
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="116" fill="url(#bg512)" />
+  <circle cx="154" cy="144" r="70" fill="url(#sun512)" opacity="0.98" />
+  <circle cx="146" cy="138" r="114" fill="#fff6c5" opacity="0.2" />
+
+  <g transform="translate(0 12)">
+    <ellipse cx="256" cy="356" rx="146" ry="28" fill="#9ecde0" opacity="0.2" />
+    <path
+      d="M153 315c0-42 31-74 72-74 14 0 27 3 38 9 13-25 40-40 70-40 46 0 83 31 91 74 31 3 54 26 54 57 0 34-27 61-61 61H177c-46 0-83-36-83-82 0-39 25-71 59-80z"
+      fill="url(#cloud512)"
+    />
+    <path
+      d="M153 315c0-42 31-74 72-74 14 0 27 3 38 9 13-25 40-40 70-40 46 0 83 31 91 74 31 3 54 26 54 57 0 34-27 61-61 61H177c-46 0-83-36-83-82 0-39 25-71 59-80z"
+      fill="none"
+      stroke="#d3ecf8"
+      stroke-width="10"
+      stroke-linejoin="round"
+    />
+    <circle cx="220" cy="327" r="14" fill="#324d68" />
+    <circle cx="302" cy="327" r="14" fill="#324d68" />
+    <path d="M222 368c15 17 52 17 67 0" fill="none" stroke="#324d68" stroke-width="12" stroke-linecap="round" />
+    <circle cx="192" cy="354" r="13" fill="#ffc0c9" opacity="0.72" />
+    <circle cx="330" cy="354" r="13" fill="#ffc0c9" opacity="0.72" />
+  </g>
 </svg>
