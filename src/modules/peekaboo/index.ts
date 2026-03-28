@@ -486,16 +486,16 @@ export class PeekabooModeModule {
   }
 
   private syncPhoenixAsset(): void {
-    let nextSrc = '/assets/pofi.svg';
+    let nextSrc = '/assets/pofi-reference.png';
 
     if (this.currentState === 'hide' || this.currentState === 'wait') {
-      nextSrc = this.currentHideMode === 'self' ? '/assets/pofi-hide.svg' : '/assets/pofi.svg';
+      nextSrc = '/assets/pofi-reference.png';
     } else if (this.currentState === 'reveal') {
-      nextSrc = '/assets/pofi-guide.svg';
+      nextSrc = '/assets/pofi-reference.png';
     } else if (this.currentState === 'react') {
-      nextSrc = '/assets/pofi-happy.svg';
+      nextSrc = '/assets/pofi-reference.png';
     } else if (this.currentScene === 'center') {
-      nextSrc = '/assets/pofi-guide.svg';
+      nextSrc = '/assets/pofi-reference.png';
     }
 
     if (this.phoenixImageEl.getAttribute('src') !== nextSrc) {

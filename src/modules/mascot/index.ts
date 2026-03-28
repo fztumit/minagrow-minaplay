@@ -94,7 +94,7 @@ export class MascotGuide {
     this.variant = enabled ? 'sleep' : 'normal';
 
     if (this.imageEl) {
-      this.imageEl.src = enabled ? '/assets/pofi-sleep.svg' : '/assets/pofi-ui.svg';
+      this.imageEl.src = '/assets/pofi-reference.png';
     }
 
     if (this.shellEl) {

@@ -23,7 +23,7 @@ const SENTENCE_ACTORS: SentenceActor[] = [
   {
     id: 'anka',
     label: 'Pofi',
-    imageSrc: '/assets/pofi-ui.svg',
+    imageSrc: '/assets/pofi-reference.png',
     accentClass: 'is-sunrise'
   },
   {
