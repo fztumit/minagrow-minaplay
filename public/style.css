@@ -2752,7 +2752,7 @@ main {
 .peekaboo-phoenix-glow,
 .peekaboo-phoenix-aura,
 .peekaboo-phoenix-sparkles,
-.peekaboo-phoenix-wing {
+.peekaboo-phoenix-hand {
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -2787,94 +2787,95 @@ main {
   animation: peekaboo-sparkle 4.1s linear infinite;
 }
 
-.peekaboo-phoenix-wing {
-  top: 34px;
-  width: 72px;
-  height: 94px;
+.peekaboo-phoenix-hand {
+  top: 46px;
+  width: 82px;
+  height: 82px;
   opacity: 0;
   z-index: 4;
-  border-radius: 58% 42% 44% 56% / 32% 34% 66% 68%;
+  border-radius: 60% 40% 56% 44% / 56% 48% 52% 44%;
   background:
-    radial-gradient(circle at 38% 28%, rgba(255, 235, 176, 0.96), rgba(255, 235, 176, 0) 34%),
-    linear-gradient(180deg, #ffc661 0%, #ff9f2a 52%, #ea7307 100%);
+    radial-gradient(circle at 36% 30%, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0) 32%),
+    linear-gradient(180deg, #faffff 0%, #e8f7ff 52%, #ccecff 100%);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 213, 135, 0.24),
-    0 10px 14px rgba(239, 138, 39, 0.16);
+    inset 0 0 0 1px rgba(214, 238, 249, 0.9),
+    0 10px 14px rgba(137, 196, 228, 0.18);
   transition:
     transform 300ms cubic-bezier(0.24, 0.82, 0.22, 1),
     opacity 120ms ease,
     filter 160ms ease;
 }
 
-.peekaboo-phoenix-wing::before,
-.peekaboo-phoenix-wing::after {
+.peekaboo-phoenix-hand::before,
+.peekaboo-phoenix-hand::after {
   content: '';
   position: absolute;
   inset: auto;
   border-radius: 999px;
-  background: rgba(255, 232, 174, 0.58);
+  background: rgba(241, 250, 255, 0.96);
+  box-shadow: inset 0 0 0 1px rgba(214, 238, 249, 0.8);
 }
 
-.peekaboo-phoenix-wing::before {
-  width: 20px;
-  height: 54px;
-  top: 18px;
-  left: 20px;
-  transform: rotate(16deg);
-}
-
-.peekaboo-phoenix-wing::after {
-  width: 16px;
+.peekaboo-phoenix-hand::before {
+  width: 28px;
   height: 40px;
-  top: 34px;
-  left: 36px;
-  transform: rotate(28deg);
+  top: 18px;
+  left: 12px;
+  transform: rotate(6deg);
 }
 
-.peekaboo-phoenix-wing-left {
-  left: 6px;
-  transform-origin: 100% 60%;
-  transform: translate(-10px, 6px) rotate(-24deg) scale(0.88);
+.peekaboo-phoenix-hand::after {
+  width: 26px;
+  height: 36px;
+  top: 28px;
+  left: 34px;
+  transform: rotate(22deg);
 }
 
-.peekaboo-phoenix-wing-right {
-  right: 6px;
-  transform-origin: 0% 60%;
-  transform: translate(10px, 6px) rotate(24deg) scale(0.88);
+.peekaboo-phoenix-hand-left {
+  left: 4px;
+  transform-origin: 100% 62%;
+  transform: translate(-14px, 8px) rotate(-18deg) scale(0.9);
 }
 
-.peekaboo-phoenix-wing-right::before,
-.peekaboo-phoenix-wing-right::after {
+.peekaboo-phoenix-hand-right {
+  right: 4px;
+  transform-origin: 0% 62%;
+  transform: translate(14px, 8px) rotate(18deg) scale(0.9);
+}
+
+.peekaboo-phoenix-hand-right::before,
+.peekaboo-phoenix-hand-right::after {
   left: auto;
-  right: 20px;
+  right: 12px;
 }
 
-.peekaboo-phoenix-wing-right::before {
-  transform: rotate(-16deg);
+.peekaboo-phoenix-hand-right::before {
+  transform: rotate(-6deg);
 }
 
-.peekaboo-phoenix-wing-right::after {
-  right: 36px;
-  transform: rotate(-28deg);
+.peekaboo-phoenix-hand-right::after {
+  right: 34px;
+  transform: rotate(-22deg);
 }
 
-#view-peekaboo[data-peek-state='hide'][data-hide-mode='self'] .peekaboo-phoenix-wing-left,
-#view-peekaboo[data-peek-state='wait'][data-hide-mode='self'] .peekaboo-phoenix-wing-left {
-  transform: translate(32px, -2px) rotate(38deg) scale(1.08);
+#view-peekaboo[data-peek-state='hide'][data-hide-mode='self'] .peekaboo-phoenix-hand-left,
+#view-peekaboo[data-peek-state='wait'][data-hide-mode='self'] .peekaboo-phoenix-hand-left {
+  transform: translate(38px, -4px) rotate(34deg) scale(1.06);
   opacity: 0.98;
 }
 
-#view-peekaboo[data-peek-state='hide'][data-hide-mode='self'] .peekaboo-phoenix-wing-right,
-#view-peekaboo[data-peek-state='wait'][data-hide-mode='self'] .peekaboo-phoenix-wing-right {
-  transform: translate(-32px, -2px) rotate(-38deg) scale(1.08);
+#view-peekaboo[data-peek-state='hide'][data-hide-mode='self'] .peekaboo-phoenix-hand-right,
+#view-peekaboo[data-peek-state='wait'][data-hide-mode='self'] .peekaboo-phoenix-hand-right {
+  transform: translate(-38px, -4px) rotate(-34deg) scale(1.06);
   opacity: 0.98;
 }
 
-#view-peekaboo[data-peek-state='hide'][data-hide-mode='self'] .peekaboo-phoenix-wing,
-#view-peekaboo[data-peek-state='wait'][data-hide-mode='self'] .peekaboo-phoenix-wing {
+#view-peekaboo[data-peek-state='hide'][data-hide-mode='self'] .peekaboo-phoenix-hand,
+#view-peekaboo[data-peek-state='wait'][data-hide-mode='self'] .peekaboo-phoenix-hand {
   animation: none;
   transition-duration: 300ms;
-  filter: drop-shadow(0 12px 10px rgba(255, 160, 74, 0.22));
+  filter: drop-shadow(0 12px 10px rgba(155, 205, 231, 0.28));
 }
 
 #view-peekaboo[data-peek-state='hide'][data-hide-mode='self'] .peekaboo-phoenix-glow,
@@ -2902,7 +2903,7 @@ main {
   animation: peekaboo-pop 200ms cubic-bezier(0.2, 0.84, 0.24, 1);
 }
 
-#view-peekaboo[data-peek-state='reveal'] .peekaboo-phoenix-wing {
+#view-peekaboo[data-peek-state='reveal'] .peekaboo-phoenix-hand {
   animation: none;
   transition-duration: 200ms;
   opacity: 0;

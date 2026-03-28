@@ -8,13 +8,19 @@
       <stop offset="0%" stop-color="#ffffff"/>
       <stop offset="100%" stop-color="#e3f4ff"/>
     </linearGradient>
+    <linearGradient id="hand" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f8fdff"/>
+      <stop offset="100%" stop-color="#d6efff"/>
+    </linearGradient>
   </defs>
   <circle cx="156" cy="146" r="116" fill="url(#glow)"/>
   <ellipse cx="154" cy="248" rx="80" ry="17" fill="#bfdbe8" opacity="0.16"/>
   <g transform="rotate(-6 154 176)">
     <path d="M100 194c-27 0-49-20-49-46 0-21 14-40 35-45 8-31 34-51 66-51 24 0 45 11 58 30 7-3 14-4 22-4 34 0 62 28 62 62 0 5-1 10-2 15 12 8 20 22 20 38 0 26-21 47-47 47H100z" fill="url(#cloud)" stroke="#d5edf8" stroke-width="6"/>
-    <path d="M106 210c-9 14-25 24-40 27 7-17 17-39 40-27z" fill="#d7effd"/>
-    <path d="M210 183c19 0 31 16 31 36 0 14-5 26-13 34-4-14-15-23-28-26z" fill="#d7effd"/>
+    <g fill="url(#hand)" stroke="#d5edf8" stroke-width="3">
+      <path d="M110 206c-14 5-26 16-31 30 13-3 25-1 36 4 6 7 13 11 21 13 4-8 4-17 1-25 6-6 10-12 12-20-12-3-25-4-39-2z"/>
+      <path d="M208 177c15 0 30 9 36 24 4 11 4 24 0 35-8-6-16-12-24-15-4-9-11-18-21-25 1-8 4-14 9-19z"/>
+    </g>
     <circle cx="125" cy="156" r="13" fill="#324d68"/>
     <circle cx="190" cy="150" r="13" fill="#324d68"/>
     <circle cx="129" cy="151" r="4" fill="#fff"/>

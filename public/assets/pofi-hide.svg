@@ -8,11 +8,17 @@
       <stop offset="0%" stop-color="#ffffff"/>
       <stop offset="100%" stop-color="#e7f6ff"/>
     </linearGradient>
+    <linearGradient id="hand" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f7fdff"/>
+      <stop offset="100%" stop-color="#d7efff"/>
+    </linearGradient>
   </defs>
   <circle cx="150" cy="150" r="110" fill="url(#glow)"/>
   <ellipse cx="150" cy="246" rx="78" ry="18" fill="#bfdbe8" opacity="0.14"/>
   <path d="M97 196c-27 0-49-20-49-46 0-21 14-40 35-45 8-31 34-51 66-51 24 0 45 11 58 30 7-3 14-4 22-4 34 0 62 28 62 62 0 5-1 10-2 15 12 8 20 22 20 38 0 26-21 47-47 47H97z" fill="url(#cloud)" stroke="#d5edf8" stroke-width="6"/>
-  <path d="M99 150c20 6 31 22 36 45-17-4-33-17-42-33 0-5 2-9 6-12z" fill="#dff3ff" stroke="#d5edf8" stroke-width="3"/>
-  <path d="M201 150c-20 6-31 22-36 45 17-4 33-17 42-33 0-5-2-9-6-12z" fill="#dff3ff" stroke="#d5edf8" stroke-width="3"/>
+  <g fill="url(#hand)" stroke="#d5edf8" stroke-width="3">
+    <path d="M98 149c18-1 33 14 41 37-11 8-24 12-38 12-7-8-11-18-13-28 2-9 5-16 10-21z"/>
+    <path d="M202 149c-18-1-33 14-41 37 11 8 24 12 38 12 7-8 11-18 13-28-2-9-5-16-10-21z"/>
+  </g>
   <path d="M137 191c7 8 20 8 27 0" fill="none" stroke="#36506e" stroke-width="5" stroke-linecap="round"/>
 </svg>

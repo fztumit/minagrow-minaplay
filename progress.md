@@ -1326,3 +1326,19 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
 
 - 2026-03-28: Aktif oyun maskotu Pofi olarak ayrildi; Anka seti public/assets/archive/anka-set-2026-03-28 altinda korundu.
 - 2026-03-28: Pofi maskotu sevimli bulut setine çevrildi; app icon seti de bulut olarak güncellendi.
+
+## Continuation Update: Pofi Hands in Peekaboo
+- Replaced the remaining bird-like wing shapes in active `Pofi` cloud assets with rounded cloud hand/arm forms:
+  - `public/assets/pofi-ui.svg`
+  - `public/assets/pofi.svg`
+  - `public/assets/pofi-guide.svg`
+  - `public/assets/pofi-hide.svg`
+  - `public/assets/pofi-happy.svg`
+- Updated the `Ceee` scene shell overlays from `wing` to `hand` elements in `public/index.html`.
+- Restyled the peekaboo self-hide animation in `public/style.css` so `Pofi` now covers its face with soft cloud hands instead of orange bird wings.
+- Bumped service worker cache to `minaplay-v33` so the new mascot shapes invalidate old cached assets.
+- Verification:
+  - `npm run build` ✅
+  - `npx playwright test tests/playwright/page-load.spec.ts tests/playwright/peekaboo-mode.spec.ts tests/playwright/sentence-builder.spec.ts --workers=1` ✅
+  - `npx playwright test tests/playwright/peekaboo-visual.spec.ts --workers=1` ✅
+  - Official web-game client run against `?view=peekaboo` captured state successfully in `output/pofi-hands-check/*`.

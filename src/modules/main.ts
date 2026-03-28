@@ -432,7 +432,7 @@ function installTestingHooks(): void {
         guide_active: speechRoot?.getAttribute('data-guide-active') === 'true',
         guide_mode: speechRoot?.getAttribute('data-guide-mode') ?? 'idle',
         scene_phase: speechRoot?.getAttribute('data-scene-phase') ?? 'idle',
-        peek_mode: speechRoot?.getAttribute('data-peek-mode') ?? 'wing',
+        peek_mode: speechRoot?.getAttribute('data-peek-mode') ?? 'hands',
         water_spilled: speechRoot?.getAttribute('data-water-spilled') === 'true',
         water_expanded: speechRoot?.getAttribute('data-water-expanded') === 'true',
         repeat_mode: speechRoot?.getAttribute('data-repeat-mode') ?? 'default',

@@ -8,10 +8,18 @@
       <stop offset="0%" stop-color="#ffffff"/>
       <stop offset="100%" stop-color="#e7f5ff"/>
     </linearGradient>
+    <linearGradient id="hand" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f8fdff"/>
+      <stop offset="100%" stop-color="#d8efff"/>
+    </linearGradient>
   </defs>
   <circle cx="150" cy="144" r="108" fill="url(#bg)"/>
   <ellipse cx="150" cy="226" rx="74" ry="16" fill="#b6d8e7" opacity="0.18"/>
   <path d="M96 184c-26 0-48-20-48-46 0-21 14-39 34-45 8-30 33-50 64-50 23 0 44 11 57 29 6-2 13-3 20-3 33 0 59 26 59 59 0 5-1 10-2 14 13 8 22 22 22 39 0 26-21 47-47 47H96z" fill="url(#cloud)" stroke="#d2ebf8" stroke-width="6" stroke-linejoin="round"/>
+  <g fill="url(#hand)" stroke="#d2ebf8" stroke-width="3">
+    <path d="M107 191c-12 2-22 10-27 22 9-3 18-3 26 0 5 6 11 10 18 11 2-7 1-14-1-20 4-4 7-9 8-15-8-1-16-1-24 2z"/>
+    <path d="M193 191c12 2 22 10 27 22-9-3-18-3-26 0-5 6-11 10-18 11-2-7-1-14 1-20-4-4-7-9-8-15 8-1 16-1 24 2z"/>
+  </g>
   <circle cx="124" cy="152" r="12" fill="#2f4a68"/>
   <circle cx="189" cy="152" r="12" fill="#2f4a68"/>
   <circle cx="128" cy="147" r="4" fill="#fff"/>

@@ -34,7 +34,7 @@ type SpeechTriggerDetail = {
 };
 
 type RepeatMode = 'default' | '1' | '2' | '3';
-type PeekabooMode = 'wing' | 'environment';
+type PeekabooMode = 'hands' | 'environment';
 type SpeechSettings = {
   repeatMode: RepeatMode;
 };
@@ -207,7 +207,7 @@ export class SpeechGameModule {
     this.rootEl.setAttribute('data-guide-active', 'false');
     this.rootEl.setAttribute('data-guide-mode', 'idle');
     this.rootEl.setAttribute('data-scene-phase', 'intro');
-    this.rootEl.setAttribute('data-peek-mode', 'wing');
+    this.rootEl.setAttribute('data-peek-mode', 'hands');
     this.rootEl.setAttribute('data-current-target', '');
     this.syncSettingsToDom();
     this.renderRecordingLibrary();
@@ -1112,11 +1112,11 @@ export class SpeechGameModule {
   private choosePeekabooMode(isIntro: boolean): PeekabooMode {
     if (isIntro) {
       this.peekCounter = 1;
-      return 'wing';
+      return 'hands';
     }
 
     this.peekCounter += 1;
-    return this.peekCounter % 4 === 0 ? 'environment' : 'wing';
+    return this.peekCounter % 4 === 0 ? 'environment' : 'hands';
   }
 
   private placeGuideMascotAtCenter(): void {

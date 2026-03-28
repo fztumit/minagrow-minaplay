@@ -8,12 +8,18 @@
       <stop offset="0%" stop-color="#ffffff"/>
       <stop offset="100%" stop-color="#e3f4ff"/>
     </linearGradient>
+    <linearGradient id="hand" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f8fdff"/>
+      <stop offset="100%" stop-color="#d5eeff"/>
+    </linearGradient>
   </defs>
   <circle cx="150" cy="146" r="120" fill="url(#glow)"/>
   <ellipse cx="150" cy="248" rx="84" ry="18" fill="#bfdbe8" opacity="0.16"/>
   <path d="M97 196c-27 0-49-20-49-46 0-21 14-40 35-45 8-31 34-51 66-51 24 0 45 11 58 30 7-3 14-4 22-4 34 0 62 28 62 62 0 5-1 10-2 15 12 8 20 22 20 38 0 26-21 47-47 47H97z" fill="url(#cloud)" stroke="#d5edf8" stroke-width="6"/>
-  <path d="M102 186c-4 13-1 28 7 40 8-7 15-19 18-31-9-7-16-10-25-9z" fill="#dff3ff"/>
-  <path d="M198 186c4 13 1 28-7 40-8-7-15-19-18-31 9-7 16-10 25-9z" fill="#dff3ff"/>
+  <g fill="url(#hand)" stroke="#d5edf8" stroke-width="3">
+    <path d="M108 177c-10 8-17 21-18 35 10 1 20-1 29-5 7 7 16 11 25 12 1-11-2-21-7-30 4-7 5-14 5-22-13 0-25 4-34 10z"/>
+    <path d="M192 177c10 8 17 21 18 35-10 1-20-1-29-5-7 7-16 11-25 12-1-11 2-21 7-30-4-7-5-14-5-22 13 0 25 4 34 10z"/>
+  </g>
   <path d="M109 157q14-14 28 0" fill="none" stroke="#36506e" stroke-width="6" stroke-linecap="round"/>
   <path d="M164 157q14-14 28 0" fill="none" stroke="#36506e" stroke-width="6" stroke-linecap="round"/>
   <ellipse cx="102" cy="179" rx="12" ry="8" fill="#ffc7d2" opacity="0.76"/>

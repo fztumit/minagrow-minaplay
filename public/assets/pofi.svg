@@ -8,12 +8,18 @@
       <stop offset="0%" stop-color="#ffffff"/>
       <stop offset="100%" stop-color="#e7f6ff"/>
     </linearGradient>
+    <linearGradient id="hand" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f8fdff"/>
+      <stop offset="100%" stop-color="#d8efff"/>
+    </linearGradient>
   </defs>
   <circle cx="150" cy="150" r="114" fill="url(#glow)"/>
   <ellipse cx="150" cy="246" rx="78" ry="18" fill="#bfdbe8" opacity="0.16"/>
   <path d="M97 196c-27 0-49-20-49-46 0-21 14-40 35-45 8-31 34-51 66-51 24 0 45 11 58 30 7-3 14-4 22-4 34 0 62 28 62 62 0 5-1 10-2 15 12 8 20 22 20 38 0 26-21 47-47 47H97z" fill="url(#cloud)" stroke="#d5edf8" stroke-width="6"/>
-  <path d="M112 210c-8 11-20 20-33 24 9-15 15-33 33-24z" fill="#dff3ff" opacity="0.9"/>
-  <path d="M188 210c8 11 20 20 33 24-9-15-15-33-33-24z" fill="#dff3ff" opacity="0.9"/>
+  <g fill="url(#hand)" stroke="#d5edf8" stroke-width="3">
+    <path d="M109 204c-18 1-34 14-40 31 13-5 26-5 38-2 6 8 14 13 24 15 2-8 1-17-3-25 6-6 10-13 12-21-10-1-21-1-31 2z"/>
+    <path d="M191 204c18 1 34 14 40 31-13-5-26-5-38-2-6 8-14 13-24 15-2-8-1-17 3-25-6-6-10-13-12-21 10-1 21-1 31 2z"/>
+  </g>
   <circle cx="121" cy="160" r="13" fill="#324d68"/>
   <circle cx="187" cy="160" r="13" fill="#324d68"/>
   <circle cx="125" cy="155" r="4" fill="#fff"/>
