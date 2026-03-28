@@ -1047,13 +1047,13 @@ export class SpeechGameModule {
 
     this.rootEl.setAttribute('data-scene-phase', 'peek-hide');
     this.guideLayerEl.classList.add('is-active', 'is-peek-hide');
-    this.feedbackEl.textContent = 'Anka saklanıyor.';
+    this.feedbackEl.textContent = 'Pofi saklanıyor.';
 
     const timeoutId = window.setTimeout(() => {
       this.guideLayerEl.classList.remove('is-peek-hide');
       this.rootEl.setAttribute('data-scene-phase', 'peek-reveal');
       this.mascot.sayPeekaboo();
-      this.feedbackEl.textContent = 'Anka ortaya çıktı.';
+      this.feedbackEl.textContent = 'Pofi ortaya çıktı.';
 
       const revealTimeoutId = window.setTimeout(() => {
         this.revealTarget(targetButton);

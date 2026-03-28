@@ -22,8 +22,8 @@ type SentenceObject = {
 const SENTENCE_ACTORS: SentenceActor[] = [
   {
     id: 'anka',
-    label: 'Anka',
-    imageSrc: '/assets/phoenix-ui.svg',
+    label: 'Pofi',
+    imageSrc: '/assets/pofi-ui.svg',
     accentClass: 'is-sunrise'
   },
   {
@@ -43,10 +43,10 @@ const SENTENCE_OBJECTS: SentenceObject[] = [
 
 const SENTENCE_MAP: Record<SentenceActorId, Record<SentenceObjectId, string>> = {
   anka: {
-    su: 'Anka su içti.',
-    top: 'Anka top buldu.',
-    elma: 'Anka elma getirdi.',
-    araba: 'Anka arabaya baktı.'
+    su: 'Pofi su içti.',
+    top: 'Pofi top buldu.',
+    elma: 'Pofi elma getirdi.',
+    araba: 'Pofi arabaya baktı.'
   },
   baba: {
     su: 'Baba su içti.',

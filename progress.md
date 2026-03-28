@@ -1290,3 +1290,38 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
 
 ## Notes
 - The official client screenshot again captured the largest canvas instead of the DOM-first Peekaboo scene, so the state JSON remained the reliable verification source for this pass.
+
+## Mascot Redesign Iteration (Reference-Led)
+- Rebuilt `phoenix.svg`, `phoenix-ui.svg`, and `phoenix-sleep.svg` from scratch to move closer to the user-provided reference image.
+- Shifted the mascot away from a flat chick/icon look toward:
+  - larger head and eyes
+  - taller oval body
+  - asymmetric raised wing pose
+  - longer flowing tail trail
+  - warmer internal glow
+- Verified assets build successfully with `npm run build`.
+- Generated local preview screenshot at `output/phoenix-preview/shot-0.png` for visual review before integration.
+- Current assessment: closer than prior attempt, but still more vector/clean than the soft illustrative reference; likely needs either one more illustration-heavy pass or direct use of the provided raster artwork as a base.
+
+## Phoenix Rig States From User SVG
+- Replaced the prior mascot attempt with a simpler state-driven rig derived directly from the user's provided SVG skeleton.
+- Updated base app assets:
+  - `public/assets/phoenix.svg`
+  - `public/assets/phoenix-ui.svg`
+  - `public/assets/phoenix-sleep.svg`
+- Added new peekaboo/game states:
+  - `public/assets/phoenix-guide.svg`
+  - `public/assets/phoenix-hide.svg`
+  - `public/assets/phoenix-happy.svg`
+- Wired peekaboo state transitions to swap mascot assets by state:
+  - `idle -> phoenix.svg`
+  - `hide/wait(self) -> phoenix-hide.svg`
+  - `reveal -> phoenix-guide.svg`
+  - `react -> phoenix-happy.svg`
+- Updated service worker precache list for new mascot assets (`minaplay-v30`).
+- Validation:
+  - `npm run build` ✅
+  - `npx playwright test tests/playwright/peekaboo-mode.spec.ts tests/playwright/page-load.spec.ts --workers=1` ✅ (`6 passed`)
+- Preview screenshot for review: `output/phoenix-preview/shot-0.png`
+
+- 2026-03-28: Aktif oyun maskotu Pofi olarak ayrildi; Anka seti public/assets/archive/anka-set-2026-03-28 altinda korundu.

@@ -21,6 +21,7 @@ export class PeekabooModeModule {
     rootEl;
     stageEl;
     phoenixShellEl;
+    phoenixImageEl;
     stageTapEl;
     statusEl;
     parentTriggerBtn;
@@ -56,6 +57,7 @@ export class PeekabooModeModule {
     constructor(rootEl, mascot, controlsRoot = rootEl.ownerDocument) {
         const stageEl = rootEl.querySelector('#peekaboo-stage');
         const phoenixShellEl = rootEl.querySelector('#peekaboo-phoenix-shell');
+        const phoenixImageEl = phoenixShellEl?.querySelector('img');
         const stageTapEl = rootEl.querySelector('#peekaboo-stage-tap');
         const statusEl = rootEl.querySelector('#peekaboo-status');
         const parentTriggerBtn = rootEl.querySelector('#peekaboo-parent-trigger');
@@ -68,6 +70,7 @@ export class PeekabooModeModule {
         const revealStatusEl = controlsRoot.querySelector('#peekaboo-audio-status');
         if (!stageEl ||
             !phoenixShellEl ||
+            !phoenixImageEl ||
             !stageTapEl ||
             !statusEl ||
             !parentTriggerBtn ||
@@ -83,6 +86,7 @@ export class PeekabooModeModule {
         this.rootEl = rootEl;
         this.stageEl = stageEl;
         this.phoenixShellEl = phoenixShellEl;
+        this.phoenixImageEl = phoenixImageEl;
         this.stageTapEl = stageTapEl;
         this.statusEl = statusEl;
         this.parentTriggerBtn = parentTriggerBtn;
@@ -230,7 +234,7 @@ export class PeekabooModeModule {
         this.currentAnchor = 'stage-left';
         this.setState('idle');
         this.setPhoenixPosition(this.getAnchorPosition('stage-left'), 1.06, -8);
-        this.statusEl.textContent = 'Anka oyun için geldi.';
+        this.statusEl.textContent = 'Pofi oyun için geldi.';
         this.mascot.setMessage('Hadi oynayalım.');
         this.playHelloAudio();
         this.speakLine('Hadi oynayalım', 0.88, 1.03, 0.88);
@@ -255,7 +259,7 @@ export class PeekabooModeModule {
         this.hideoutButtons.forEach((button) => button.classList.remove('is-active-hideout', 'is-tappable-hideout'));
         this.setState('idle');
         if (this.currentScene === 'room') {
-            this.statusEl.textContent = 'Anka odada süzülüyor.';
+            this.statusEl.textContent = 'Pofi odada süzülüyor.';
             this.setPhoenixPosition(this.getAnchorPosition(this.currentAnchor), cyclePlan.scale, cyclePlan.rotate);
             if (!cyclePlan.skipDrift && this.currentHideMode === 'self') {
                 this.scheduleRoomDrift();
@@ -265,7 +269,7 @@ export class PeekabooModeModule {
             }
         }
         else {
-            this.statusEl.textContent = 'Anka ortada süzülüyor.';
+            this.statusEl.textContent = 'Pofi ortada süzülüyor.';
             this.setPhoenixPosition(this.getAnchorPosition(this.currentAnchor), cyclePlan.scale, cyclePlan.rotate);
             this.mascot.setMessage(cyclePlan.message);
         }
@@ -290,7 +294,7 @@ export class PeekabooModeModule {
             const hiddenScale = this.currentScene === 'center' ? 1.18 : 1.02;
             this.setPhoenixPosition(this.getAnchorPosition(this.currentAnchor), hiddenScale, this.currentScene === 'room' ? -4 : 0);
         }
-        this.statusEl.textContent = 'Anka yüzünü kapattı.';
+        this.statusEl.textContent = 'Pofi yüzünü kapattı.';
         this.setState('hide');
         this.playHideAudio();
         const timeoutId = window.setTimeout(() => {
@@ -305,7 +309,7 @@ export class PeekabooModeModule {
         if (this.currentHideMode === 'environment' && this.currentHideout) {
             this.getHideoutButton(this.currentHideout)?.classList.add('is-tappable-hideout');
         }
-        this.statusEl.textContent = 'Anka bekliyor.';
+        this.statusEl.textContent = 'Pofi bekliyor.';
         this.setState('wait');
         const timeoutId = window.setTimeout(() => {
             this.enterRevealState(false);
@@ -358,7 +362,7 @@ export class PeekabooModeModule {
         }
         this.clearTimers();
         this.childReactionCount += 1;
-        this.statusEl.textContent = triggeredByTap ? 'Anka seninle sevindi.' : 'Anka sevindi.';
+        this.statusEl.textContent = triggeredByTap ? 'Pofi seninle sevindi.' : 'Pofi sevindi.';
         this.setState('react');
         this.rootEl.setAttribute('data-peek-reactions', String(this.childReactionCount));
         this.mascot.setMessage('Aferin.');
@@ -378,6 +382,25 @@ export class PeekabooModeModule {
         this.rootEl.setAttribute('data-current-anchor', this.currentAnchor);
         this.rootEl.setAttribute('data-peek-sequence', this.currentSequence);
         this.rootEl.setAttribute('data-can-tap-reveal', String(nextState === 'wait' || (nextState === 'hide' && this.currentHideMode === 'environment')));
+        this.syncPhoenixAsset();
+    }
+    syncPhoenixAsset() {
+        let nextSrc = '/assets/pofi.svg';
+        if (this.currentState === 'hide' || this.currentState === 'wait') {
+            nextSrc = this.currentHideMode === 'self' ? '/assets/pofi-hide.svg' : '/assets/pofi.svg';
+        }
+        else if (this.currentState === 'reveal') {
+            nextSrc = '/assets/pofi-guide.svg';
+        }
+        else if (this.currentState === 'react') {
+            nextSrc = '/assets/pofi-happy.svg';
+        }
+        else if (this.currentScene === 'center') {
+            nextSrc = '/assets/pofi-guide.svg';
+        }
+        if (this.phoenixImageEl.getAttribute('src') !== nextSrc) {
+            this.phoenixImageEl.src = nextSrc;
+        }
     }
     getCyclePlan(cycleIndex) {
         const openingPlan = this.getOpeningCyclePlan(cycleIndex);
@@ -395,7 +418,7 @@ export class PeekabooModeModule {
                 idleMs: navigator.webdriver ? 280 : 760,
                 scale: 1.08,
                 rotate: 8,
-                message: 'Anka uçuyor.'
+                message: 'Pofi uçuyor.'
             },
             {
                 scene: 'center',
@@ -404,7 +427,7 @@ export class PeekabooModeModule {
                 idleMs: navigator.webdriver ? 240 : 620,
                 scale: 1.22,
                 rotate: 0,
-                message: 'Anka burada.',
+                message: 'Pofi burada.',
                 skipDrift: true
             },
             {
@@ -415,7 +438,7 @@ export class PeekabooModeModule {
                 idleMs: navigator.webdriver ? 320 : 880,
                 scale: 1.04,
                 rotate: -6,
-                message: 'Anka saklanacak.',
+                message: 'Pofi saklanacak.',
                 skipDrift: true
             }
         ];
@@ -431,7 +454,7 @@ export class PeekabooModeModule {
                 idleMs: CENTER_IDLE_MS,
                 scale: 1.2,
                 rotate: 0,
-                message: 'Anka burada.',
+                message: 'Pofi burada.',
                 skipDrift: true
             };
         }
@@ -445,7 +468,7 @@ export class PeekabooModeModule {
                 idleMs: navigator.webdriver ? 420 : 1180,
                 scale: 1.04,
                 rotate: hideout === 'table' ? 8 : -8,
-                message: 'Anka saklanacak.',
+                message: 'Pofi saklanacak.',
                 skipDrift: true
             };
         }
@@ -457,7 +480,7 @@ export class PeekabooModeModule {
             idleMs: ROOM_IDLE_MS,
             scale: 1.02,
             rotate: -6 + (loopIndex % 3) * 6,
-            message: 'Anka uçuyor.'
+            message: 'Pofi uçuyor.'
         };
     }
     scheduleRoomDrift() {

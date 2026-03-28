@@ -1,0 +1,46 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Anka UI state">
+  <defs>
+    <radialGradient id="ui-aura" cx="50%" cy="42%" r="44%">
+      <stop offset="0%" stop-color="#fffbe8" stop-opacity="0.74"/>
+      <stop offset="54%" stop-color="#ffe3a1" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#ffc666" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="ui-face" cx="46%" cy="30%" r="68%">
+      <stop offset="0%" stop-color="#fffef7"/>
+      <stop offset="62%" stop-color="#ffeebe"/>
+      <stop offset="100%" stop-color="#ffcf7c"/>
+    </radialGradient>
+    <linearGradient id="ui-body" x1="28%" y1="8%" x2="74%" y2="100%">
+      <stop offset="0%" stop-color="#ffd97a"/>
+      <stop offset="38%" stop-color="#ffb044"/>
+      <stop offset="76%" stop-color="#fb8c1e"/>
+      <stop offset="100%" stop-color="#ef6c18"/>
+    </linearGradient>
+    <linearGradient id="ui-wing" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffc94a"/>
+      <stop offset="56%" stop-color="#ff9f2f"/>
+      <stop offset="100%" stop-color="#ef6d1e"/>
+    </linearGradient>
+    <linearGradient id="ui-crest" x1="24%" y1="100%" x2="76%" y2="0%">
+      <stop offset="0%" stop-color="#ff971c"/>
+      <stop offset="56%" stop-color="#ff6d1f"/>
+      <stop offset="100%" stop-color="#fff7a8"/>
+    </linearGradient>
+  </defs>
+
+  <ellipse cx="128" cy="128" rx="82" ry="78" fill="url(#ui-aura)"/>
+  <ellipse cx="122" cy="220" rx="48" ry="9" fill="#e8bd7a" opacity="0.14"/>
+  <path d="M76 156c-16 18-30 34-43 52 26-7 49-18 70-34" fill="none" stroke="#ffb73a" stroke-width="12" stroke-linecap="round" opacity="0.88"/>
+  <ellipse cx="126" cy="146" rx="50" ry="60" fill="url(#ui-body)" transform="rotate(-8 126 146)"/>
+  <path d="M109 111c-17 6-31 20-38 38 22 2 40-3 52-13 6 10 15 18 28 24 4-27-10-45-42-49z" fill="url(#ui-wing)" opacity="0.94"/>
+  <path d="M152 116c11 8 18 19 22 33-14 0-26-4-36-10 2-8 7-15 14-23z" fill="url(#ui-wing)" opacity="0.92"/>
+  <path d="M106 150c11 0 20 4 28 12 7-7 16-11 27-11-4 20-13 33-29 39-17-6-26-19-26-40z" fill="#fff4d2" opacity="0.96"/>
+  <circle cx="126" cy="88" r="46" fill="url(#ui-face)"/>
+  <path d="M126 26c6 13 15 18 22 17-6 4-11 6-16 7 11 6 18 15 21 28-12-2-21-7-27-17-1 11-7 22-18 33-5-17-3-31 6-43-8 1-16-1-25-5 11-6 18-12 22-20 4 7 9 12 15 15z" fill="url(#ui-crest)"/>
+  <circle cx="109" cy="94" r="16" fill="#2c150d"/>
+  <circle cx="146" cy="90" r="15" fill="#2c150d"/>
+  <circle cx="104" cy="88" r="6.8" fill="#fff"/>
+  <circle cx="141" cy="84" r="6.2" fill="#fff"/>
+  <path d="M119 108c4-5 12-6 18-1 0 0-2 10-9 14-6-4-9-8-9-13z" fill="#f7b423"/>
+  <path d="M117 124q11 11 23 0" fill="none" stroke="#8a421f" stroke-width="4" stroke-linecap="round"/>
+</svg>
