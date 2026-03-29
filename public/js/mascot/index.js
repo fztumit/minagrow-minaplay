@@ -5,25 +5,35 @@ const GUIDE_MESSAGES = {
     repeat: 'Bir daha söyle.',
     next: 'Şimdi buna dokun.'
 };
+const FACE_SRC = {
+    idle: '/assets/pofi-pack/face-idle.svg',
+    surprised: '/assets/pofi-pack/face-surprised.svg',
+    calm: '/assets/pofi-pack/face-calm.svg',
+    happy: '/assets/pofi-pack/face-happy.svg',
+    sleep: '/assets/pofi-pack/face-sleep.svg'
+};
 export class MascotGuide {
     outputEl;
-    imageEl;
+    faceEl;
     shellEl;
     praiseFlip = false;
     activeTimeoutId = null;
+    faceTimeoutId = null;
     guideAudioContext = null;
     variant = 'normal';
-    constructor(outputEl, imageEl, shellEl) {
+    constructor(outputEl, faceEl, shellEl) {
         this.outputEl = outputEl;
-        this.imageEl = imageEl;
+        this.faceEl = faceEl;
         this.shellEl = shellEl;
     }
     sayHint() {
         this.pulse();
+        this.setFace('idle');
         this.setMessage(GUIDE_MESSAGES.hint);
     }
     sayPlayStart() {
         this.pulse();
+        this.setTransientFace('surprised', 1200);
         this.setMessage(GUIDE_MESSAGES.play);
         this.speakPrompt(GUIDE_MESSAGES.play, {
             rate: 0.9,
@@ -33,6 +43,7 @@ export class MascotGuide {
     }
     sayPeekaboo() {
         this.pulse();
+        this.setTransientFace('surprised', 1200);
         this.setMessage(GUIDE_MESSAGES.peek);
         this.playGuideChime();
         this.speakPrompt(GUIDE_MESSAGES.peek, {
@@ -43,6 +54,7 @@ export class MascotGuide {
     }
     sayPraise() {
         this.pulse();
+        this.setTransientFace('happy', 1300);
         const message = this.praiseFlip ? 'Harika.' : 'Aferin.';
         this.setMessage(message);
         this.speakPrompt(message, {
@@ -55,16 +67,19 @@ export class MascotGuide {
     }
     sayRepeat() {
         this.pulse();
+        this.setFace('calm');
         this.setMessage(GUIDE_MESSAGES.repeat);
     }
     sayNextPrompt() {
         this.pulse();
+        this.setTransientFace('surprised', 1100);
         this.setMessage(GUIDE_MESSAGES.next);
         this.playGuideChime();
         this.speakPrompt(GUIDE_MESSAGES.next);
     }
     sayAttention(message) {
         this.pulse();
+        this.setTransientFace('surprised', 1400);
         this.setMessage(message);
         this.playAttentionChirp();
         this.speakPrompt(message, {
@@ -75,9 +90,7 @@ export class MascotGuide {
     }
     setSleepMode(enabled) {
         this.variant = enabled ? 'sleep' : 'normal';
-        if (this.imageEl) {
-            this.imageEl.src = enabled ? '/assets/pofi-sleep.svg' : '/assets/pofi-ui.svg';
-        }
+        this.setFace(enabled ? 'sleep' : 'idle');
         if (this.shellEl) {
             this.shellEl.dataset.mascotVariant = this.variant;
             if (enabled) {
@@ -100,6 +113,26 @@ export class MascotGuide {
             this.shellEl?.classList.remove('is-active');
             this.activeTimeoutId = null;
         }, 1200);
+    }
+    setTransientFace(face, durationMs) {
+        this.setFace(face);
+        if (this.faceTimeoutId !== null) {
+            window.clearTimeout(this.faceTimeoutId);
+        }
+        this.faceTimeoutId = window.setTimeout(() => {
+            this.setFace(this.variant === 'sleep' ? 'sleep' : 'idle');
+            this.faceTimeoutId = null;
+        }, durationMs);
+    }
+    setFace(face) {
+        if (!this.faceEl) {
+            return;
+        }
+        const nextSrc = FACE_SRC[face];
+        if (this.faceEl.getAttribute('src') !== nextSrc) {
+            this.faceEl.src = nextSrc;
+        }
+        this.faceEl.dataset.face = face;
     }
     speakPrompt(message, options = {}) {
         const runtime = window;

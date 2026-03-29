@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Pofi idle face">
+  <defs>
+    <radialGradient id="eyeFill" cx="42%" cy="28%" r="78%">
+      <stop offset="0%" stop-color="#3a353b"/>
+      <stop offset="76%" stop-color="#242126"/>
+      <stop offset="100%" stop-color="#1a181b"/>
+    </radialGradient>
+    <linearGradient id="eyeLower" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#958fc5" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#8d87c3" stop-opacity="0.95"/>
+    </linearGradient>
+    <linearGradient id="mouthFill" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#6b4252"/>
+      <stop offset="100%" stop-color="#4d3140"/>
+    </linearGradient>
+    <linearGradient id="tongueFill" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ff9cac"/>
+      <stop offset="100%" stop-color="#f37d93"/>
+    </linearGradient>
+    <filter id="blushBlur" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+  </defs>
+
+  <path d="M401 448C416 434 434 426 454 428" fill="none" stroke="#3a3439" stroke-width="10" stroke-linecap="round"/>
+  <path d="M572 428C591 426 609 434 623 447" fill="none" stroke="#3a3439" stroke-width="10" stroke-linecap="round"/>
+
+  <g>
+    <ellipse cx="452" cy="524" rx="53" ry="59" fill="url(#eyeFill)"/>
+    <path d="M399 547C416 578 490 586 506 547C499 569 483 583 452 586C421 583 406 569 399 547Z" fill="url(#eyeLower)"/>
+    <circle cx="427" cy="496" r="17" fill="#ffffff"/>
+    <circle cx="484" cy="517" r="8" fill="#ffffff"/>
+    <circle cx="475" cy="497" r="11" fill="#ffffff"/>
+  </g>
+
+  <g>
+    <ellipse cx="598" cy="524" rx="53" ry="59" fill="url(#eyeFill)"/>
+    <path d="M545 547C562 578 636 586 652 547C645 569 629 583 598 586C567 583 552 569 545 547Z" fill="url(#eyeLower)"/>
+    <circle cx="573" cy="496" r="17" fill="#ffffff"/>
+    <circle cx="630" cy="517" r="8" fill="#ffffff"/>
+    <circle cx="621" cy="497" r="11" fill="#ffffff"/>
+  </g>
+
+  <ellipse cx="389" cy="583" rx="39" ry="22" fill="#ffc6da" opacity="0.82" filter="url(#blushBlur)"/>
+  <ellipse cx="671" cy="548" rx="39" ry="22" fill="#ffc6da" opacity="0.82" filter="url(#blushBlur)"/>
+
+  <path d="M487 580C501 592 551 592 565 580C578 591 586 608 584 626C580 655 553 680 526 680C499 680 472 655 468 626C466 608 474 591 487 580Z" fill="url(#mouthFill)"/>
+  <path d="M494 591C507 601 545 601 558 591" fill="none" stroke="#8f5a6a" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+  <path d="M495 626C509 643 543 643 557 626C556 654 541 667 526 667C511 667 496 654 495 626Z" fill="url(#tongueFill)"/>
+  <ellipse cx="526" cy="620" rx="15" ry="8" fill="#ffb2bf" opacity="0.28"/>
+</svg>

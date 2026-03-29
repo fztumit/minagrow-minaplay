@@ -505,7 +505,7 @@ function installTestingHooks(): void {
 function bootstrap(): void {
   const mascotOutput = document.getElementById('mascot-message');
   const speechMascotShell = document.getElementById('speech-guide-mascot');
-  const speechMascotImage = speechMascotShell?.querySelector<HTMLImageElement>('img') ?? null;
+  const speechMascotFace = speechMascotShell?.querySelector<HTMLImageElement>('.pofi-face-layer') ?? null;
   const dailyWordCard = document.getElementById('daily-word-card');
   const dailyActivityCard = document.getElementById('daily-activity-card');
   const homeRoot = document.getElementById('view-home');
@@ -536,7 +536,7 @@ function bootstrap(): void {
     throw new Error('Required app roots not found.');
   }
 
-  const mascot = new MascotGuide(mascotOutput, speechMascotImage, speechMascotShell);
+  const mascot = new MascotGuide(mascotOutput, speechMascotFace, speechMascotShell);
 
   const dailyWordModule = new DailyWordModule(dailyWordCard, dailyWordOutput, VOCABULARY);
   dailyWordModule.init();

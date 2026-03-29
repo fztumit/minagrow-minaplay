@@ -57,7 +57,7 @@ export class PeekabooModeModule {
   private readonly rootEl: HTMLElement;
   private readonly stageEl: HTMLElement;
   private readonly phoenixShellEl: HTMLElement;
-  private readonly phoenixImageEl: HTMLImageElement;
+  private readonly phoenixFaceEl: HTMLImageElement;
   private readonly stageTapEl: HTMLButtonElement;
   private readonly statusEl: HTMLElement;
   private readonly parentTriggerBtn: HTMLButtonElement;
@@ -95,7 +95,7 @@ export class PeekabooModeModule {
   constructor(rootEl: HTMLElement, mascot: MascotGuide, controlsRoot: ParentNode = rootEl.ownerDocument) {
     const stageEl = rootEl.querySelector<HTMLElement>('#peekaboo-stage');
     const phoenixShellEl = rootEl.querySelector<HTMLElement>('#peekaboo-phoenix-shell');
-    const phoenixImageEl = phoenixShellEl?.querySelector<HTMLImageElement>('img');
+    const phoenixFaceEl = phoenixShellEl?.querySelector<HTMLImageElement>('.pofi-face-layer');
     const stageTapEl = rootEl.querySelector<HTMLButtonElement>('#peekaboo-stage-tap');
     const statusEl = rootEl.querySelector<HTMLElement>('#peekaboo-status');
     const parentTriggerBtn = rootEl.querySelector<HTMLButtonElement>('#peekaboo-parent-trigger');
@@ -110,7 +110,7 @@ export class PeekabooModeModule {
     if (
       !stageEl ||
       !phoenixShellEl ||
-      !phoenixImageEl ||
+      !phoenixFaceEl ||
       !stageTapEl ||
       !statusEl ||
       !parentTriggerBtn ||
@@ -128,7 +128,7 @@ export class PeekabooModeModule {
     this.rootEl = rootEl;
     this.stageEl = stageEl;
     this.phoenixShellEl = phoenixShellEl;
-    this.phoenixImageEl = phoenixImageEl;
+    this.phoenixFaceEl = phoenixFaceEl;
     this.stageTapEl = stageTapEl;
     this.statusEl = statusEl;
     this.parentTriggerBtn = parentTriggerBtn;
@@ -486,20 +486,20 @@ export class PeekabooModeModule {
   }
 
   private syncPhoenixAsset(): void {
-    let nextSrc = '/assets/pofi-reference.png';
+    let nextSrc = '/assets/pofi-pack/face-idle.svg';
 
     if (this.currentState === 'hide' || this.currentState === 'wait') {
-      nextSrc = '/assets/pofi-reference.png';
+      nextSrc = '/assets/pofi-pack/face-idle.svg';
     } else if (this.currentState === 'reveal') {
-      nextSrc = '/assets/pofi-reference.png';
+      nextSrc = '/assets/pofi-pack/face-surprised.svg';
     } else if (this.currentState === 'react') {
-      nextSrc = '/assets/pofi-reference.png';
+      nextSrc = '/assets/pofi-pack/face-happy.svg';
     } else if (this.currentScene === 'center') {
-      nextSrc = '/assets/pofi-reference.png';
+      nextSrc = '/assets/pofi-pack/face-calm.svg';
     }
 
-    if (this.phoenixImageEl.getAttribute('src') !== nextSrc) {
-      this.phoenixImageEl.src = nextSrc;
+    if (this.phoenixFaceEl.getAttribute('src') !== nextSrc) {
+      this.phoenixFaceEl.src = nextSrc;
     }
   }
 

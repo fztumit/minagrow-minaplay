@@ -5,7 +5,7 @@ const SENTENCE_ACTORS = [
     {
         id: 'anka',
         label: 'Pofi',
-        imageSrc: '/assets/pofi-ui.svg',
+        imageSrc: '/assets/pofi-pack/mascot-idle.svg',
         accentClass: 'is-sunrise'
     },
     {

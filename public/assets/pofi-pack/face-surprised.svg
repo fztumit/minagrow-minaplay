@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Pofi surprised face">
+  <defs>
+    <radialGradient id="eyeFill" cx="42%" cy="28%" r="78%">
+      <stop offset="0%" stop-color="#3a353b"/>
+      <stop offset="76%" stop-color="#242126"/>
+      <stop offset="100%" stop-color="#1a181b"/>
+    </radialGradient>
+    <linearGradient id="eyeLower" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#958fc5" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#8d87c3" stop-opacity="0.95"/>
+    </linearGradient>
+    <filter id="blushBlur" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+  </defs>
+
+  <path d="M406 446C423 430 441 422 460 425" fill="none" stroke="#3a3439" stroke-width="10" stroke-linecap="round"/>
+  <path d="M568 425C587 422 606 430 621 446" fill="none" stroke="#3a3439" stroke-width="10" stroke-linecap="round"/>
+
+  <g>
+    <ellipse cx="456" cy="521" rx="50" ry="55" fill="url(#eyeFill)"/>
+    <path d="M406 543C422 573 490 580 506 543C498 563 484 577 456 580C428 577 414 563 406 543Z" fill="url(#eyeLower)"/>
+    <circle cx="432" cy="494" r="16" fill="#ffffff"/>
+    <circle cx="486" cy="514" r="8" fill="#ffffff"/>
+    <circle cx="478" cy="495" r="10" fill="#ffffff"/>
+  </g>
+
+  <g>
+    <ellipse cx="594" cy="521" rx="50" ry="55" fill="url(#eyeFill)"/>
+    <path d="M544 543C560 573 628 580 644 543C636 563 622 577 594 580C566 577 552 563 544 543Z" fill="url(#eyeLower)"/>
+    <circle cx="570" cy="494" r="16" fill="#ffffff"/>
+    <circle cx="624" cy="514" r="8" fill="#ffffff"/>
+    <circle cx="616" cy="495" r="10" fill="#ffffff"/>
+  </g>
+
+  <ellipse cx="389" cy="584" rx="39" ry="22" fill="#ffc6da" opacity="0.82" filter="url(#blushBlur)"/>
+  <ellipse cx="671" cy="550" rx="39" ry="22" fill="#ffc6da" opacity="0.82" filter="url(#blushBlur)"/>
+
+  <ellipse cx="526" cy="612" rx="41" ry="48" fill="#6b4252"/>
+  <ellipse cx="526" cy="626" rx="25" ry="21" fill="#f48a9e"/>
+</svg>

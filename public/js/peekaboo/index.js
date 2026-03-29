@@ -21,7 +21,7 @@ export class PeekabooModeModule {
     rootEl;
     stageEl;
     phoenixShellEl;
-    phoenixImageEl;
+    phoenixFaceEl;
     stageTapEl;
     statusEl;
     parentTriggerBtn;
@@ -57,7 +57,7 @@ export class PeekabooModeModule {
     constructor(rootEl, mascot, controlsRoot = rootEl.ownerDocument) {
         const stageEl = rootEl.querySelector('#peekaboo-stage');
         const phoenixShellEl = rootEl.querySelector('#peekaboo-phoenix-shell');
-        const phoenixImageEl = phoenixShellEl?.querySelector('img');
+        const phoenixFaceEl = phoenixShellEl?.querySelector('.pofi-face-layer');
         const stageTapEl = rootEl.querySelector('#peekaboo-stage-tap');
         const statusEl = rootEl.querySelector('#peekaboo-status');
         const parentTriggerBtn = rootEl.querySelector('#peekaboo-parent-trigger');
@@ -70,7 +70,7 @@ export class PeekabooModeModule {
         const revealStatusEl = controlsRoot.querySelector('#peekaboo-audio-status');
         if (!stageEl ||
             !phoenixShellEl ||
-            !phoenixImageEl ||
+            !phoenixFaceEl ||
             !stageTapEl ||
             !statusEl ||
             !parentTriggerBtn ||
@@ -86,7 +86,7 @@ export class PeekabooModeModule {
         this.rootEl = rootEl;
         this.stageEl = stageEl;
         this.phoenixShellEl = phoenixShellEl;
-        this.phoenixImageEl = phoenixImageEl;
+        this.phoenixFaceEl = phoenixFaceEl;
         this.stageTapEl = stageTapEl;
         this.statusEl = statusEl;
         this.parentTriggerBtn = parentTriggerBtn;
@@ -385,21 +385,21 @@ export class PeekabooModeModule {
         this.syncPhoenixAsset();
     }
     syncPhoenixAsset() {
-        let nextSrc = '/assets/pofi.svg';
+        let nextSrc = '/assets/pofi-pack/face-idle.svg';
         if (this.currentState === 'hide' || this.currentState === 'wait') {
-            nextSrc = this.currentHideMode === 'self' ? '/assets/pofi-hide.svg' : '/assets/pofi.svg';
+            nextSrc = '/assets/pofi-pack/face-idle.svg';
         }
         else if (this.currentState === 'reveal') {
-            nextSrc = '/assets/pofi-guide.svg';
+            nextSrc = '/assets/pofi-pack/face-surprised.svg';
         }
         else if (this.currentState === 'react') {
-            nextSrc = '/assets/pofi-happy.svg';
+            nextSrc = '/assets/pofi-pack/face-happy.svg';
         }
         else if (this.currentScene === 'center') {
-            nextSrc = '/assets/pofi-guide.svg';
+            nextSrc = '/assets/pofi-pack/face-calm.svg';
         }
-        if (this.phoenixImageEl.getAttribute('src') !== nextSrc) {
-            this.phoenixImageEl.src = nextSrc;
+        if (this.phoenixFaceEl.getAttribute('src') !== nextSrc) {
+            this.phoenixFaceEl.src = nextSrc;
         }
     }
     getCyclePlan(cycleIndex) {

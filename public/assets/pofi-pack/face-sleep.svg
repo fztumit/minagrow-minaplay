@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Pofi sleepy face">
+  <defs>
+    <filter id="blushBlur" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+    <linearGradient id="mouthSleep" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#774b5d"/>
+      <stop offset="100%" stop-color="#5b3848"/>
+    </linearGradient>
+  </defs>
+  <path d="M405 450C421 438 438 433 454 437" fill="none" stroke="#3a3439" stroke-width="9" stroke-linecap="round"/>
+  <path d="M573 437C589 433 606 437 621 450" fill="none" stroke="#3a3439" stroke-width="9" stroke-linecap="round"/>
+  <path d="M405 522C422 544 481 544 498 522" fill="none" stroke="#2f2a2f" stroke-width="10" stroke-linecap="round"/>
+  <path d="M553 522C570 544 629 544 646 522" fill="none" stroke="#2f2a2f" stroke-width="10" stroke-linecap="round"/>
+  <ellipse cx="392" cy="584" rx="39" ry="22" fill="#ffc6da" opacity="0.78" filter="url(#blushBlur)"/>
+  <ellipse cx="670" cy="549" rx="39" ry="22" fill="#ffc6da" opacity="0.78" filter="url(#blushBlur)"/>
+  <path d="M501 609C514 621 538 621 551 609C556 614 559 620 559 627C559 649 544 666 526 666C508 666 493 649 493 627C493 620 496 614 501 609Z" fill="url(#mouthSleep)"/>
+  <path d="M512 629C518 637 534 637 540 629C540 641 533 648 526 648C519 648 512 641 512 629Z" fill="#f08ea2"/>
+  <path d="M370 410L386 412L377 431L398 434L388 458" fill="none" stroke="#9eb9da" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+  <path d="M410 382L428 384L418 405L440 408L430 434" fill="none" stroke="#9eb9da" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+  <path d="M448 356L468 358L458 380L482 383L470 412" fill="none" stroke="#9eb9da" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+</svg>

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1200" width="1800" height="1200">
+  <rect width="1800" height="1200" fill="#fbfdff"/>
+  <style>
+    .label{font: 700 34px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; fill:#4c5564}
+  </style>
+  <g transform="translate(70 40)">
+    <text class="label" x="220" y="40" text-anchor="middle">Idle</text>
+    <image href="body.png" x="0" y="70" width="440" height="440"/>
+    <image href="face-idle.svg" x="0" y="70" width="440" height="440"/>
+  </g>
+  <g transform="translate(500 40)">
+    <text class="label" x="220" y="40" text-anchor="middle">Surprised</text>
+    <image href="body.png" x="0" y="70" width="440" height="440"/>
+    <image href="face-surprised.svg" x="0" y="70" width="440" height="440"/>
+  </g>
+  <g transform="translate(930 40)">
+    <text class="label" x="220" y="40" text-anchor="middle">Calm</text>
+    <image href="body.png" x="0" y="70" width="440" height="440"/>
+    <image href="face-calm.svg" x="0" y="70" width="440" height="440"/>
+  </g>
+  <g transform="translate(1360 40)">
+    <text class="label" x="220" y="40" text-anchor="middle">Happy</text>
+    <image href="body.png" x="0" y="70" width="440" height="440"/>
+    <image href="face-happy.svg" x="0" y="70" width="440" height="440"/>
+  </g>
+  <g transform="translate(285 610)">
+    <text class="label" x="220" y="40" text-anchor="middle">Sleep</text>
+    <image href="body.png" x="0" y="70" width="440" height="440"/>
+    <image href="face-sleep.svg" x="0" y="70" width="440" height="440"/>
+  </g>
+  <g transform="translate(930 610)">
+    <text class="label" x="220" y="40" text-anchor="middle">Hide</text>
+    <image href="body.png" x="0" y="70" width="440" height="440"/>
+    <image href="face-idle.svg" x="0" y="70" width="440" height="440"/>
+    <image href="hands-hide.svg" x="0" y="70" width="440" height="440"/>
+  </g>
+</svg>

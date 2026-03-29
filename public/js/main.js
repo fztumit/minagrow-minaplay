@@ -376,7 +376,7 @@ function installTestingHooks() {
                 guide_active: speechRoot?.getAttribute('data-guide-active') === 'true',
                 guide_mode: speechRoot?.getAttribute('data-guide-mode') ?? 'idle',
                 scene_phase: speechRoot?.getAttribute('data-scene-phase') ?? 'idle',
-                peek_mode: speechRoot?.getAttribute('data-peek-mode') ?? 'wing',
+                peek_mode: speechRoot?.getAttribute('data-peek-mode') ?? 'hands',
                 water_spilled: speechRoot?.getAttribute('data-water-spilled') === 'true',
                 water_expanded: speechRoot?.getAttribute('data-water-expanded') === 'true',
                 repeat_mode: speechRoot?.getAttribute('data-repeat-mode') ?? 'default',
@@ -442,7 +442,7 @@ function installTestingHooks() {
 function bootstrap() {
     const mascotOutput = document.getElementById('mascot-message');
     const speechMascotShell = document.getElementById('speech-guide-mascot');
-    const speechMascotImage = speechMascotShell?.querySelector('img') ?? null;
+    const speechMascotFace = speechMascotShell?.querySelector('.pofi-face-layer') ?? null;
     const dailyWordCard = document.getElementById('daily-word-card');
     const dailyActivityCard = document.getElementById('daily-activity-card');
     const homeRoot = document.getElementById('view-home');
@@ -469,7 +469,7 @@ function bootstrap() {
         !dailyWordOutput) {
         throw new Error('Required app roots not found.');
     }
-    const mascot = new MascotGuide(mascotOutput, speechMascotImage, speechMascotShell);
+    const mascot = new MascotGuide(mascotOutput, speechMascotFace, speechMascotShell);
     const dailyWordModule = new DailyWordModule(dailyWordCard, dailyWordOutput, VOCABULARY);
     dailyWordModule.init();
     const dailyActivityModule = new DailyActivityModule(dailyActivityCard);
