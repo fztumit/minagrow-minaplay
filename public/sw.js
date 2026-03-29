@@ -1,17 +1,19 @@
-const CACHE_NAME = 'minaplay-v34';
+const CACHE_NAME = 'minaplay-v35';
 
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/style.css',
   '/manifest.webmanifest',
-  '/assets/pofi-reference.png',
-  '/assets/pofi-ui.svg',
-  '/assets/pofi.svg',
-  '/assets/pofi-guide.svg',
-  '/assets/pofi-hide.svg',
-  '/assets/pofi-happy.svg',
-  '/assets/pofi-sleep.svg',
+  '/assets/pofi-pack/body.png',
+  '/assets/pofi-pack/face-idle.svg',
+  '/assets/pofi-pack/face-surprised.svg',
+  '/assets/pofi-pack/face-calm.svg',
+  '/assets/pofi-pack/face-happy.svg',
+  '/assets/pofi-pack/face-sleep.svg',
+  '/assets/pofi-pack/hands-hide.svg',
+  '/assets/pofi-pack/mascot-idle.svg',
+  '/assets/pofi-pack/mascot-sleep.svg',
   '/assets/water-glass.svg',
   '/assets/object-ball.svg',
   '/assets/object-car.svg',
@@ -22,7 +24,10 @@ const PRECACHE_ASSETS = [
   '/assets/icon-192.svg',
   '/assets/icon-512.svg',
   '/js/main.js',
+  '/js/mascot/index.js',
+  '/js/peekaboo/index.js',
   '/js/sentence/index.js',
+  '/js/speech/index.js',
   '/js/sleep/index.js'
 ];
 
