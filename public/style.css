@@ -1596,18 +1596,19 @@ main {
   position: absolute;
   left: 0;
   top: 0;
-  width: 88px;
-  height: 88px;
+  width: 272px;
+  height: 272px;
   opacity: 0;
   --guide-x: 0px;
   --guide-y: 0px;
-  --guide-scale: 0.82;
-  transform: translate(var(--guide-x), var(--guide-y)) scale(var(--guide-scale));
+  --guide-scale: 1;
+  --guide-y-lift: -112px;
+  transform: translate(var(--guide-x), calc(var(--guide-y) + var(--guide-y-lift))) scale(var(--guide-scale));
   transition:
     transform 0.62s cubic-bezier(0.2, 0.84, 0.24, 1),
     opacity 0.2s ease,
     filter 0.2s ease;
-  filter: drop-shadow(0 12px 16px rgba(255, 173, 67, 0.2));
+  filter: drop-shadow(0 18px 26px rgba(123, 168, 255, 0.22));
   pointer-events: auto;
   touch-action: manipulation;
   cursor: pointer;
@@ -1705,11 +1706,12 @@ main {
 .word-card {
   position: absolute;
   width: clamp(142px, 26vw, 214px);
-  aspect-ratio: 1 / 1;
+  min-height: clamp(142px, 26vw, 214px);
+  aspect-ratio: auto;
   border: 3px solid rgba(255, 255, 255, 0.82);
   border-radius: 36px;
   background: linear-gradient(180deg, rgba(255, 251, 244, 0.9), rgba(255, 244, 232, 0.82));
-  padding: 12px;
+  padding: clamp(12px, 1.8vw, 18px);
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -1771,16 +1773,19 @@ main {
 
 .word-illustration {
   position: relative;
-  width: 88%;
-  height: 88%;
+  width: 100%;
+  height: 100%;
+  min-height: clamp(108px, 17vw, 170px);
   display: grid;
   place-items: center;
   z-index: 1;
 }
 
 .word-object-image {
-  width: 100%;
-  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
   filter: drop-shadow(0 12px 14px rgba(120, 92, 63, 0.12));
 }
@@ -1789,13 +1794,16 @@ main {
   position: relative;
   width: 100%;
   height: 100%;
+  min-height: clamp(108px, 17vw, 170px);
   display: grid;
   place-items: center;
 }
 
 .water-glass-image {
-  width: 82%;
-  height: 82%;
+  max-width: 86%;
+  max-height: 86%;
+  width: auto;
+  height: auto;
   object-fit: contain;
   filter: drop-shadow(0 8px 10px rgba(29, 96, 138, 0.2));
   transition: transform 0.35s ease;
@@ -3710,11 +3718,13 @@ main {
 
   .word-card {
     width: clamp(118px, 30vw, 152px);
+    min-height: clamp(118px, 30vw, 152px);
   }
 
   .speech-guide-mascot {
-    width: 76px;
-    height: 76px;
+    width: 232px;
+    height: 232px;
+    --guide-y-lift: -96px;
   }
 
   .scene-water {
@@ -3907,7 +3917,14 @@ main {
 
   .word-card {
     width: clamp(104px, 31vw, 132px);
+    min-height: clamp(104px, 31vw, 132px);
     border-radius: 28px;
+  }
+
+  .speech-guide-mascot {
+    width: 208px;
+    height: 208px;
+    --guide-y-lift: -84px;
   }
 
   .scene-water {
