@@ -87,6 +87,24 @@ export class MascotGuide {
     this.setMessage(GUIDE_MESSAGES.repeat);
   }
 
+  showCalm(message: string = GUIDE_MESSAGES.repeat, durationMs = 1100): void {
+    this.pulse();
+    this.setTransientFace('calm', durationMs);
+    this.setMessage(message);
+  }
+
+  showSleepy(message = 'Pofi uyukluyor.', durationMs = 1200): void {
+    this.setTransientFace('sleep', durationMs);
+    this.setMessage(message);
+  }
+
+  showIdle(message?: string): void {
+    this.setFace(this.variant === 'sleep' ? 'sleep' : 'idle');
+    if (message) {
+      this.setMessage(message);
+    }
+  }
+
   sayNextPrompt(): void {
     this.pulse();
     this.setTransientFace('surprised', 1100);

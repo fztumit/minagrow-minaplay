@@ -34,19 +34,17 @@ type SpeechTriggerDetail = {
 };
 
 type RepeatMode = 'default' | '1' | '2' | '3';
-type PeekabooMode = 'hands' | 'environment';
 type SpeechSettings = {
   repeatMode: RepeatMode;
 };
 
 const SETTINGS_STORAGE_KEY = 'konusu_yorum_speech_settings_v1';
 const SCENE_VOCABULARY = VOCABULARY.filter((item) => item.featuredOnScene);
-const GUIDE_REMINDER_DELAY_MS = navigator.webdriver ? 1400 : 9400;
+const GUIDE_REMINDER_DELAY_MS = navigator.webdriver ? 4800 : 9400;
 const GUIDE_REMINDER_VARIANCE_MS = navigator.webdriver ? 0 : 2400;
 const GUIDE_REMINDER_RETRY_MS = navigator.webdriver ? 300 : 1800;
-const PEEKABOO_HIDE_MS = 1000;
-const PEEKABOO_REVEAL_DELAY_MS = 260;
 const GUIDE_TRAVEL_MS = 720;
+type AttentionEffect = 'rain' | 'snow' | 'storm' | 'rainbow';
 const GUIDE_WAIT_PROMPTS: Partial<Record<VocabularyWord, string>> = {
   su: 'Ben suyun yanında bekliyorum.',
   baba: 'Ben babanın yanında bekliyorum.',
@@ -99,7 +97,8 @@ export class SpeechGameModule {
   private recordingStream: MediaStream | null = null;
   private readonly sequenceTimeoutIds: number[] = [];
   private sceneAudioContext: AudioContext | null = null;
-  private peekCounter = 0;
+  private attentionEffectIndex = 0;
+  private idleReminderCount = 0;
   private settings: SpeechSettings = {
     repeatMode: 'default'
   };
@@ -207,7 +206,7 @@ export class SpeechGameModule {
     this.rootEl.setAttribute('data-guide-active', 'false');
     this.rootEl.setAttribute('data-guide-mode', 'idle');
     this.rootEl.setAttribute('data-scene-phase', 'intro');
-    this.rootEl.setAttribute('data-peek-mode', 'hands');
+    this.rootEl.setAttribute('data-peek-mode', 'none');
     this.rootEl.setAttribute('data-current-target', '');
     this.syncSettingsToDom();
     this.renderRecordingLibrary();
@@ -352,7 +351,12 @@ export class SpeechGameModule {
         return;
       }
 
-      if (target !== this.activeNextButton || this.rootEl.getAttribute('data-scene-phase') !== 'awaiting-tap') {
+      if (this.rootEl.getAttribute('data-scene-phase') !== 'awaiting-tap') {
+        return;
+      }
+
+      if (target !== this.activeNextButton) {
+        this.onWrongWordTapped(target);
         return;
       }
 
@@ -988,6 +992,7 @@ export class SpeechGameModule {
     wordLabel: string,
     defaultRepeats: number
   ): void {
+    this.idleReminderCount = 0;
     const resolvedRepeats = this.resolveRepeats(defaultRepeats);
     this.rootEl.setAttribute('data-last-word', wordLabel);
     this.rootEl.setAttribute('data-scene-phase', 'playing');
@@ -1028,71 +1033,13 @@ export class SpeechGameModule {
     this.mascot.sayPlayStart();
 
     const timeoutId = window.setTimeout(() => {
-      this.beginPeekabooCycle(firstButton, true);
+      this.revealTarget(firstButton);
     }, 460);
     this.sequenceTimeoutIds.push(timeoutId);
   }
 
-  private beginPeekabooCycle(targetButton: HTMLButtonElement, isIntro = false): void {
-    const peekMode = this.choosePeekabooMode(isIntro);
-    this.rootEl.setAttribute('data-peek-mode', peekMode);
-    this.rootEl.setAttribute('data-guide-active', 'true');
-    this.clearAttentionState();
-    this.setCardsInteractive(null);
-
-    if (peekMode === 'environment') {
-      this.runEnvironmentPeekaboo(targetButton);
-      return;
-    }
-
-    this.rootEl.setAttribute('data-scene-phase', 'peek-hide');
-    this.guideLayerEl.classList.add('is-active', 'is-peek-hide');
-    this.feedbackEl.textContent = 'Pofi saklanıyor.';
-
-    const timeoutId = window.setTimeout(() => {
-      this.guideLayerEl.classList.remove('is-peek-hide');
-      this.rootEl.setAttribute('data-scene-phase', 'peek-reveal');
-      this.mascot.sayPeekaboo();
-      this.feedbackEl.textContent = 'Pofi ortaya çıktı.';
-
-      const revealTimeoutId = window.setTimeout(() => {
-        this.revealTarget(targetButton);
-      }, PEEKABOO_REVEAL_DELAY_MS);
-      this.sequenceTimeoutIds.push(revealTimeoutId);
-    }, PEEKABOO_HIDE_MS);
-
-    this.sequenceTimeoutIds.push(timeoutId);
-  }
-
-  private runEnvironmentPeekaboo(targetButton: HTMLButtonElement): void {
-    const hideBehindBasket = this.peekCounter % 2 === 0;
-    const hideTarget = hideBehindBasket
-      ? this.stageEl.querySelector<HTMLElement>('.scene-basket')
-      : this.stageEl.querySelector<HTMLElement>('.scene-sofa');
-
-    this.rootEl.setAttribute('data-scene-phase', 'peek-hide');
-    this.guideLayerEl.classList.add('is-active', 'is-environment-hide');
-
-    if (hideTarget) {
-      const hidePosition = this.resolveHideoutPosition(hideTarget);
-      this.setGuideTransform(hidePosition.x, hidePosition.y, 0.96);
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      this.guideLayerEl.classList.remove('is-environment-hide');
-      this.rootEl.setAttribute('data-scene-phase', 'peek-reveal');
-      this.mascot.sayPeekaboo();
-
-      const revealTimeoutId = window.setTimeout(() => {
-        this.revealTarget(targetButton);
-      }, PEEKABOO_REVEAL_DELAY_MS);
-      this.sequenceTimeoutIds.push(revealTimeoutId);
-    }, PEEKABOO_HIDE_MS);
-
-    this.sequenceTimeoutIds.push(timeoutId);
-  }
-
   private revealTarget(targetButton: HTMLButtonElement): void {
+    this.idleReminderCount = 0;
     this.clearCurrentNextTarget();
     this.activeNextButton = targetButton;
     targetButton.classList.add('is-next-target');
@@ -1105,18 +1052,37 @@ export class SpeechGameModule {
     this.rootEl.setAttribute('data-scene-phase', 'awaiting-tap');
     this.feedbackEl.textContent = 'Hedef nesne hazır.';
     this.placeGuideMascot(targetButton);
+    this.mascot.showIdle('Şimdi buna dokun');
     this.mascot.sayNextPrompt();
     this.scheduleIdleReminder(targetButton);
   }
 
-  private choosePeekabooMode(isIntro: boolean): PeekabooMode {
-    if (isIntro) {
-      this.peekCounter = 1;
-      return 'hands';
+  private onWrongWordTapped(button: HTMLButtonElement): void {
+    if (!this.activeNextButton) {
+      return;
     }
 
-    this.peekCounter += 1;
-    return this.peekCounter % 4 === 0 ? 'environment' : 'hands';
+    this.idleReminderCount = 0;
+    this.clearIdleReminder();
+    this.clearAttentionState();
+    button.classList.remove('is-wrong');
+    void button.offsetWidth;
+    button.classList.add('is-wrong');
+    this.feedbackEl.textContent = 'Pofi doğru resmi tekrar gösteriyor.';
+    this.rootEl.setAttribute('data-guide-mode', 'calm');
+    this.rootEl.setAttribute('data-guide-prompt', 'Bir daha deneyelim');
+    this.mascot.showCalm('Bir daha deneyelim.');
+
+    const resetTimeoutId = window.setTimeout(() => {
+      button.classList.remove('is-wrong');
+      if (this.activeNextButton) {
+        this.placeGuideMascot(this.activeNextButton);
+        this.rootEl.setAttribute('data-guide-mode', 'idle');
+        this.rootEl.setAttribute('data-guide-prompt', 'Şimdi buna dokun');
+        this.scheduleIdleReminder(this.activeNextButton);
+      }
+    }, 760);
+    this.sequenceTimeoutIds.push(resetTimeoutId);
   }
 
   private placeGuideMascotAtCenter(): void {
@@ -1325,7 +1291,9 @@ export class SpeechGameModule {
 
   private clearAttentionState(): void {
     this.guideLayerEl.classList.remove('is-attention');
+    this.guideLayerEl.classList.remove('is-sleepy');
     this.activeNextButton?.classList.remove('is-attention-target');
+    delete this.guideLayerEl.dataset.attentionEffect;
 
     if (this.attentionResetTimeoutId !== null) {
       window.clearTimeout(this.attentionResetTimeoutId);
@@ -1346,12 +1314,18 @@ export class SpeechGameModule {
     if (this.activeNextButton) {
       this.activeNextButton.classList.remove('is-next-target');
       this.activeNextButton.classList.remove('is-attention-target');
+      this.activeNextButton.classList.remove('is-wrong');
+      this.activeNextButton.classList.remove('is-choice-enabled');
       this.activeNextButton.removeAttribute('data-next-target');
       this.activeNextButton = null;
     }
+    Array.from(this.gridEl.querySelectorAll<HTMLButtonElement>('.word-card')).forEach((button) => {
+      button.classList.remove('is-choice-enabled', 'is-wrong');
+    });
     this.rootEl.setAttribute('data-next-word', '');
     this.rootEl.setAttribute('data-current-target', '');
     this.rootEl.setAttribute('data-guide-active', 'false');
+    this.idleReminderCount = 0;
   }
 
   private scheduleGuidedTransition(
@@ -1369,10 +1343,10 @@ export class SpeechGameModule {
       this.rootEl.setAttribute('data-scene-phase', 'transition');
       this.moveGuideMascot(currentButton, nextButton);
       this.feedbackEl.textContent = 'Yeni hedefe geçiliyor.';
-      const peekTimeoutId = window.setTimeout(() => {
-        this.beginPeekabooCycle(nextButton);
+      const revealTimeoutId = window.setTimeout(() => {
+        this.revealTarget(nextButton);
       }, GUIDE_TRAVEL_MS - 80);
-      this.sequenceTimeoutIds.push(peekTimeoutId);
+      this.sequenceTimeoutIds.push(revealTimeoutId);
       this.guideTimeoutId = null;
     }, delayMs);
   }
@@ -1424,9 +1398,12 @@ export class SpeechGameModule {
   private setCardsInteractive(activeButton: HTMLButtonElement | null): void {
     const buttons = Array.from(this.gridEl.querySelectorAll<HTMLButtonElement>('.word-card'));
     buttons.forEach((button) => {
-      const enabled = button === activeButton;
-      button.disabled = !enabled;
-      button.setAttribute('aria-disabled', String(!enabled));
+      const canChoose = activeButton !== null;
+      const isTarget = button === activeButton;
+      button.disabled = false;
+      button.classList.toggle('is-choice-enabled', canChoose);
+      button.classList.toggle('is-next-target', isTarget);
+      button.setAttribute('aria-disabled', String(!canChoose));
     });
   }
 
@@ -1477,40 +1454,72 @@ export class SpeechGameModule {
         return;
       }
 
-      this.runAttentionSequence(targetButton);
+      this.idleReminderCount += 1;
+      this.runAttentionSequence(targetButton, this.idleReminderCount >= 2);
       this.scheduleIdleReminder(targetButton);
     }, resolvedDelay);
   }
 
-  private runAttentionSequence(targetButton: HTMLButtonElement): void {
+  private runAttentionSequence(targetButton: HTMLButtonElement, sleepyFirst = false): void {
     const target = this.resolveGuidePosition(targetButton);
     const prompt = this.buildGuideWaitPrompt(targetButton.dataset.wordId as VocabularyWord | undefined);
+    const effect = this.getNextAttentionEffect();
+    const sleepyLeadMs = sleepyFirst ? 880 : 0;
 
     this.clearAttentionState();
     this.guideLayerEl.classList.add('is-active');
     this.guideLayerEl.classList.remove('is-attention');
+    this.guideLayerEl.classList.remove('is-sleepy');
     targetButton.classList.remove('is-attention-target');
     void this.guideLayerEl.offsetWidth;
 
-    this.setGuideTransform(target.x, target.y, 1.06);
-    this.guideLayerEl.classList.add('is-attention');
-    targetButton.classList.add('is-attention-target');
-    this.rootEl.setAttribute('data-guide-mode', 'attention');
-    this.rootEl.setAttribute('data-scene-phase', 'awaiting-tap');
-    this.rootEl.setAttribute('data-guide-prompt', prompt);
+    this.setGuideTransform(target.x, target.y, sleepyFirst ? 0.98 : 1.12);
     this.rootEl.setAttribute('data-guide-active', 'true');
-    this.feedbackEl.textContent = prompt;
-    this.mascot.sayAttention(prompt);
+    this.rootEl.setAttribute('data-scene-phase', 'awaiting-tap');
 
-    this.attentionResetTimeoutId = window.setTimeout(() => {
-      if (this.activeNextButton === targetButton) {
-        targetButton.classList.remove('is-attention-target');
+    if (sleepyFirst) {
+      this.guideLayerEl.classList.add('is-sleepy');
+      this.rootEl.setAttribute('data-guide-mode', 'sleepy');
+      this.rootEl.setAttribute('data-guide-prompt', 'Pofi biraz uyukladı');
+      this.feedbackEl.textContent = 'Pofi biraz uyukladı.';
+      this.mascot.showSleepy('Pofi biraz uyukladı.');
+    }
+
+    const attentionTimeoutId = window.setTimeout(() => {
+      if (this.activeNextButton !== targetButton) {
+        return;
       }
-      this.guideLayerEl.classList.remove('is-attention');
-      this.setGuideTransform(target.x, target.y, 1);
-      this.rootEl.setAttribute('data-guide-mode', 'idle');
-      this.attentionResetTimeoutId = null;
-    }, 1550);
+
+      this.guideLayerEl.classList.remove('is-sleepy');
+      this.guideLayerEl.classList.add('is-attention');
+      this.guideLayerEl.dataset.attentionEffect = effect;
+      targetButton.classList.add('is-attention-target');
+      this.setGuideTransform(target.x, target.y, 1.16);
+      this.rootEl.setAttribute('data-guide-mode', 'attention');
+      this.rootEl.setAttribute('data-guide-prompt', prompt);
+      this.feedbackEl.textContent = prompt;
+      this.mascot.sayAttention(prompt);
+
+      this.attentionResetTimeoutId = window.setTimeout(() => {
+        if (this.activeNextButton === targetButton) {
+          targetButton.classList.remove('is-attention-target');
+        }
+        this.guideLayerEl.classList.remove('is-attention');
+        delete this.guideLayerEl.dataset.attentionEffect;
+        this.setGuideTransform(target.x, target.y, 1);
+        this.rootEl.setAttribute('data-guide-mode', 'idle');
+        this.attentionResetTimeoutId = null;
+      }, 1550);
+    }, sleepyLeadMs);
+
+    this.sequenceTimeoutIds.push(attentionTimeoutId);
+  }
+
+  private getNextAttentionEffect(): AttentionEffect {
+    const effects: AttentionEffect[] = ['rain', 'snow', 'rainbow', 'storm'];
+    const effect = effects[this.attentionEffectIndex % effects.length] ?? 'rain';
+    this.attentionEffectIndex += 1;
+    return effect;
   }
 
   private triggerMascotCelebrate(): void {

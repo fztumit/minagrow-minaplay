@@ -1626,19 +1626,14 @@ main {
   animation: guide-attention-burst 1.55s cubic-bezier(0.22, 0.84, 0.24, 1);
 }
 
-.speech-guide-layer.is-peek-hide .speech-guide-hands {
-  opacity: 1;
-  transform: translateY(0) scale(1);
+.speech-guide-layer.is-sleepy .speech-guide-mascot {
+  animation: guide-sleepy-drift 1.15s ease-in-out;
 }
 
-.speech-guide-layer.is-peek-hide .speech-guide-glow,
-.speech-guide-layer.is-peek-hide .speech-guide-sparkles {
-  opacity: 0.12;
-}
-
-.speech-guide-layer.is-environment-hide .speech-guide-mascot {
-  opacity: 0.42;
-  filter: drop-shadow(0 8px 12px rgba(255, 173, 67, 0.08));
+.speech-guide-layer.is-sleepy .speech-guide-stack {
+  animation: guide-idle-float 4.8s ease-in-out infinite;
+  filter: saturate(0.92) brightness(0.98);
+  opacity: 0.96;
 }
 
 .speech-guide-mascot.is-holding {
@@ -1658,10 +1653,11 @@ main {
   width: 100%;
   height: 100%;
   animation: guide-idle-float 3.2s ease-in-out infinite;
+  transition: filter 0.22s ease, opacity 0.22s ease;
 }
 
 .speech-guide-hands {
-  transform: translateY(10px) scale(0.8);
+  display: none;
 }
 
 .speech-guide-glow {
@@ -1687,20 +1683,81 @@ main {
   transition: opacity 0.28s ease;
 }
 
-.speech-guide-layer.is-attention .speech-guide-hands {
-  animation: guide-hand-bob 0.34s ease-in-out 4;
-}
-
-.speech-guide-layer.is-peek-hide .speech-guide-stack .pofi-face-layer {
-  opacity: 0.38;
-}
-
 .speech-guide-layer.is-attention .speech-guide-glow {
   animation: guide-glow-burst 1.55s ease-in-out;
 }
 
 .speech-guide-layer.is-attention .speech-guide-sparkles {
   animation: guide-sparkle-burst 1.55s ease-out;
+}
+
+.speech-guide-weather {
+  position: absolute;
+  inset: -18px;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.speech-guide-layer.is-attention .speech-guide-stack {
+  animation: guide-idle-float 3.2s ease-in-out infinite, guide-cloud-tint 1.55s ease-in-out;
+}
+
+.speech-guide-layer[data-attention-effect='rain'] .speech-guide-weather-rain {
+  opacity: 0.9;
+  animation: guide-rain-fall 1.55s linear forwards;
+}
+
+.speech-guide-layer[data-attention-effect='snow'] .speech-guide-weather-snow {
+  opacity: 0.95;
+  animation: guide-snow-fall 1.55s ease-in-out forwards;
+}
+
+.speech-guide-layer[data-attention-effect='rainbow'] .speech-guide-weather-rainbow {
+  opacity: 0.95;
+  animation: guide-rainbow-shimmer 1.55s ease-in-out forwards;
+}
+
+.speech-guide-layer[data-attention-effect='storm'] .speech-guide-weather-lightning {
+  opacity: 1;
+  animation: guide-lightning-flash 1.55s ease-out forwards;
+}
+
+.speech-guide-layer[data-attention-effect='rainbow'] .speech-guide-stack {
+  animation: guide-idle-float 3.2s ease-in-out infinite, guide-cloud-rainbow 1.55s ease-in-out;
+}
+
+.speech-guide-weather-rain {
+  background:
+    linear-gradient(180deg, rgba(158, 216, 255, 0) 0%, rgba(158, 216, 255, 0.9) 46%, rgba(158, 216, 255, 0) 100%) 10% 10% / 7% 28% no-repeat,
+    linear-gradient(180deg, rgba(158, 216, 255, 0) 0%, rgba(158, 216, 255, 0.85) 46%, rgba(158, 216, 255, 0) 100%) 26% 4% / 6% 24% no-repeat,
+    linear-gradient(180deg, rgba(158, 216, 255, 0) 0%, rgba(158, 216, 255, 0.85) 46%, rgba(158, 216, 255, 0) 100%) 44% 12% / 7% 30% no-repeat,
+    linear-gradient(180deg, rgba(158, 216, 255, 0) 0%, rgba(158, 216, 255, 0.82) 46%, rgba(158, 216, 255, 0) 100%) 62% 2% / 6% 26% no-repeat,
+    linear-gradient(180deg, rgba(158, 216, 255, 0) 0%, rgba(158, 216, 255, 0.88) 46%, rgba(158, 216, 255, 0) 100%) 80% 10% / 7% 30% no-repeat;
+}
+
+.speech-guide-weather-snow {
+  background:
+    radial-gradient(circle at 14% 18%, rgba(255, 255, 255, 0.95) 0 3px, transparent 3.4px),
+    radial-gradient(circle at 34% 8%, rgba(255, 255, 255, 0.95) 0 2.8px, transparent 3.2px),
+    radial-gradient(circle at 52% 18%, rgba(255, 255, 255, 0.96) 0 3px, transparent 3.5px),
+    radial-gradient(circle at 72% 10%, rgba(255, 255, 255, 0.95) 0 2.8px, transparent 3.2px),
+    radial-gradient(circle at 86% 20%, rgba(255, 255, 255, 0.92) 0 3px, transparent 3.5px),
+    radial-gradient(circle at 22% 30%, rgba(244, 249, 255, 0.92) 0 3px, transparent 3.6px),
+    radial-gradient(circle at 64% 28%, rgba(244, 249, 255, 0.92) 0 3px, transparent 3.6px);
+}
+
+.speech-guide-weather-rainbow {
+  inset: -12px -18px -8px;
+  background:
+    radial-gradient(circle at 50% 94%, rgba(255, 255, 255, 0) 0 38%, rgba(255, 119, 160, 0.32) 39% 42%, rgba(255, 198, 92, 0.3) 43% 46%, rgba(153, 228, 173, 0.28) 47% 50%, rgba(136, 202, 255, 0.28) 51% 54%, rgba(189, 178, 255, 0.28) 55% 58%, rgba(255, 255, 255, 0) 59%);
+  filter: blur(0.3px);
+}
+
+.speech-guide-weather-lightning {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 250, 196, 0.95) 26%, rgba(255, 220, 92, 0.92) 54%, rgba(255, 255, 255, 0) 100%) 52% 12% / 10% 54% no-repeat,
+    radial-gradient(circle at 56% 34%, rgba(255, 248, 202, 0.88), rgba(255, 248, 202, 0) 52%);
+  clip-path: polygon(54% 10%, 60% 10%, 54% 38%, 63% 38%, 48% 78%, 53% 50%, 44% 50%);
 }
 
 .word-card {
@@ -1725,6 +1782,11 @@ main {
     inset 0 1px 0 rgba(255, 255, 255, 0.76);
   opacity: 0.58;
   pointer-events: none;
+}
+
+.word-card.is-choice-enabled {
+  opacity: 0.76;
+  pointer-events: auto;
 }
 
 .word-card:disabled {
@@ -1758,6 +1820,13 @@ main {
   box-shadow:
     0 20px 38px rgba(255, 205, 113, 0.24),
     0 0 0 10px rgba(255, 246, 202, 0.8);
+}
+
+.word-card.is-wrong {
+  animation: wrong-word-wobble 560ms ease-in-out;
+  box-shadow:
+    0 16px 28px rgba(156, 185, 231, 0.22),
+    0 0 0 8px rgba(226, 239, 255, 0.7);
 }
 
 .word-card.is-next-target::after {
@@ -2063,49 +2132,47 @@ main {
 
 @keyframes guide-attention-burst {
   0% {
-    transform: translate(var(--guide-x), var(--guide-y)) scale(1) rotate(0deg);
+    transform: translate(var(--guide-x), calc(var(--guide-y) + var(--guide-y-lift))) scale(1) rotate(0deg);
   }
   16% {
-    transform: translate(calc(var(--guide-x) - 4px), calc(var(--guide-y) - 16px)) scale(1.08) rotate(-14deg);
+    transform: translate(calc(var(--guide-x) - 10px), calc(var(--guide-y) + var(--guide-y-lift) - 24px)) scale(1.14) rotate(-12deg);
   }
   36% {
-    transform: translate(calc(var(--guide-x) + 6px), calc(var(--guide-y) - 24px)) scale(1.18) rotate(185deg);
+    transform: translate(calc(var(--guide-x) + 12px), calc(var(--guide-y) + var(--guide-y-lift) - 40px)) scale(1.28) rotate(14deg);
   }
   56% {
-    transform: translate(calc(var(--guide-x) - 3px), calc(var(--guide-y) - 12px)) scale(1.12) rotate(360deg);
+    transform: translate(calc(var(--guide-x) - 7px), calc(var(--guide-y) + var(--guide-y-lift) - 20px)) scale(0.9) rotate(-7deg);
   }
   78% {
-    transform: translate(calc(var(--guide-x) + 2px), calc(var(--guide-y) - 8px)) scale(1.08) rotate(376deg);
+    transform: translate(calc(var(--guide-x) + 7px), calc(var(--guide-y) + var(--guide-y-lift) - 12px)) scale(1.2) rotate(9deg);
   }
   100% {
-    transform: translate(var(--guide-x), var(--guide-y)) scale(1) rotate(360deg);
+    transform: translate(var(--guide-x), calc(var(--guide-y) + var(--guide-y-lift))) scale(1) rotate(0deg);
   }
 }
 
 @keyframes guide-celebrate-hop {
   0% {
-    transform: translate(var(--guide-x), var(--guide-y)) scale(1) rotate(0deg);
+    transform: translate(var(--guide-x), calc(var(--guide-y) + var(--guide-y-lift))) scale(1) rotate(0deg);
   }
   28% {
-    transform: translate(var(--guide-x), calc(var(--guide-y) - 24px)) scale(1.12) rotate(-10deg);
+    transform: translate(var(--guide-x), calc(var(--guide-y) + var(--guide-y-lift) - 28px)) scale(1.16) rotate(-10deg);
   }
   52% {
-    transform: translate(var(--guide-x), calc(var(--guide-y) - 10px)) scale(1.06) rotate(8deg);
+    transform: translate(var(--guide-x), calc(var(--guide-y) + var(--guide-y-lift) - 12px)) scale(1.08) rotate(8deg);
   }
   100% {
-    transform: translate(var(--guide-x), var(--guide-y)) scale(1) rotate(0deg);
+    transform: translate(var(--guide-x), calc(var(--guide-y) + var(--guide-y-lift))) scale(1) rotate(0deg);
   }
 }
 
-@keyframes guide-hand-bob {
+@keyframes guide-sleepy-drift {
   0%,
   100% {
-    transform: translateY(10px) scale(0.8);
-    opacity: 0;
+    transform: translate(var(--guide-x), calc(var(--guide-y) + var(--guide-y-lift))) scale(1) rotate(0deg);
   }
   50% {
-    transform: translateY(2px) scale(0.94);
-    opacity: 0.9;
+    transform: translate(var(--guide-x), calc(var(--guide-y) + var(--guide-y-lift) + 10px)) scale(0.96) rotate(-4deg);
   }
 }
 
@@ -2163,16 +2230,131 @@ main {
   }
 }
 
+@keyframes guide-cloud-tint {
+  0%,
+  100% {
+    filter: saturate(1) hue-rotate(0deg) brightness(1);
+  }
+  40% {
+    filter: saturate(1.12) hue-rotate(-10deg) brightness(1.04);
+  }
+  72% {
+    filter: saturate(1.18) hue-rotate(10deg) brightness(1.06);
+  }
+}
+
+@keyframes guide-cloud-rainbow {
+  0%,
+  100% {
+    filter: saturate(1) hue-rotate(0deg) brightness(1);
+  }
+  25% {
+    filter: saturate(1.14) hue-rotate(18deg) brightness(1.05);
+  }
+  50% {
+    filter: saturate(1.2) hue-rotate(-18deg) brightness(1.08);
+  }
+  75% {
+    filter: saturate(1.14) hue-rotate(12deg) brightness(1.05);
+  }
+}
+
+@keyframes guide-rainbow-shimmer {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.92);
+  }
+  20% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-4px) scale(1.04);
+  }
+}
+
+@keyframes guide-rain-fall {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scaleY(0.88);
+  }
+  20% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(26px) scaleY(1.08);
+  }
+}
+
+@keyframes guide-snow-fall {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) translateX(0);
+  }
+  22% {
+    opacity: 0.95;
+  }
+  50% {
+    transform: translateY(12px) translateX(-4px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(28px) translateX(5px);
+  }
+}
+
+@keyframes guide-lightning-flash {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  18% {
+    opacity: 0.12;
+  }
+  24% {
+    opacity: 0.82;
+    transform: scale(1.04);
+  }
+  30% {
+    opacity: 0.16;
+  }
+  46% {
+    opacity: 0.68;
+    transform: scale(0.98);
+  }
+  58% {
+    opacity: 0;
+  }
+}
+
 @keyframes attention-target-pop {
   0%,
   100% {
     transform: scale(1.08);
   }
   35% {
-    transform: scale(1.14);
+    transform: scale(1.2);
   }
   70% {
-    transform: scale(1.1);
+    transform: scale(1.14);
+  }
+}
+
+@keyframes wrong-word-wobble {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  22% {
+    transform: scale(0.98) rotate(-4deg);
+  }
+  46% {
+    transform: scale(1.01) rotate(4deg);
+  }
+  68% {
+    transform: scale(0.99) rotate(-3deg);
   }
 }
 
