@@ -1342,3 +1342,7 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
   - `npx playwright test tests/playwright/page-load.spec.ts tests/playwright/peekaboo-mode.spec.ts tests/playwright/sentence-builder.spec.ts --workers=1` ✅
   - `npx playwright test tests/playwright/peekaboo-visual.spec.ts --workers=1` ✅
   - Official web-game client run against `?view=peekaboo` captured state successfully in `output/pofi-hands-check/*`.
+
+- 2026-04-01: Kelime ekrani geri bildirime gore yeniden rafine edildi; merkezi sahne/platform arka plandan kaldirildi, arka plan daha image-benzeri yumusak ikon/siluet dekorlari ile guncellendi.
+- 2026-04-01: Pofi icin kelime-bazli guvenli bekleme noktalari eklendi; suya giderken elma kartinin ustune binmemesi icin `src/modules/speech/index.ts` icinde ozel anchor mantigi tanimlandi.
+- 2026-04-01: Cache `minaplay-v42` yapildi. Doğrulama: `npm run build` ve `npx playwright test tests/playwright/page-load.spec.ts --workers=1` gecti.

@@ -45,6 +45,12 @@ const GUIDE_REMINDER_VARIANCE_MS = navigator.webdriver ? 0 : 2400;
 const GUIDE_REMINDER_RETRY_MS = navigator.webdriver ? 300 : 1800;
 const GUIDE_TRAVEL_MS = 720;
 type AttentionEffect = 'rain' | 'snow' | 'storm' | 'rainbow';
+type GuideAnchor = {
+  xAlign: 'left' | 'center' | 'right';
+  yAlign: 'top' | 'middle' | 'bottom';
+  xShift?: number;
+  yShift?: number;
+};
 const GUIDE_WAIT_PROMPTS: Partial<Record<VocabularyWord, string>> = {
   su: 'Ben suyun yanında bekliyorum.',
   baba: 'Ben babanın yanında bekliyorum.',
@@ -52,6 +58,13 @@ const GUIDE_WAIT_PROMPTS: Partial<Record<VocabularyWord, string>> = {
   araba: 'Ben arabanın yanında bekliyorum.',
   elma: 'Ben elmanın yanında bekliyorum.',
   anne: 'Ben annenin yanında bekliyorum.'
+};
+const GUIDE_WORD_ANCHORS: Partial<Record<VocabularyWord, GuideAnchor>> = {
+  su: { xAlign: 'left', yAlign: 'middle', xShift: -18, yShift: -8 },
+  baba: { xAlign: 'right', yAlign: 'middle', xShift: 18, yShift: -8 },
+  top: { xAlign: 'center', yAlign: 'top', yShift: -18 },
+  araba: { xAlign: 'center', yAlign: 'top', yShift: -16 },
+  elma: { xAlign: 'right', yAlign: 'top', xShift: 14, yShift: -14 }
 };
 
 export class SpeechGameModule {
@@ -1411,8 +1424,30 @@ export class SpeechGameModule {
     const stageRect = this.stageEl.getBoundingClientRect();
     const buttonRect = button.getBoundingClientRect();
     const mascotSize = this.guideMascotEl.getBoundingClientRect().width || 84;
-    const x = buttonRect.left - stageRect.left + buttonRect.width / 2 - mascotSize / 2;
-    const y = buttonRect.top - stageRect.top - mascotSize * 0.82;
+    const wordId = button.dataset.wordId as VocabularyWord | undefined;
+    const anchor = (wordId ? GUIDE_WORD_ANCHORS[wordId] : null) ?? {
+      xAlign: 'center',
+      yAlign: 'top',
+      xShift: 0,
+      yShift: 0
+    };
+
+    let x = buttonRect.left - stageRect.left + buttonRect.width / 2 - mascotSize / 2;
+    if (anchor.xAlign === 'left') {
+      x = buttonRect.left - stageRect.left - mascotSize * 0.64;
+    } else if (anchor.xAlign === 'right') {
+      x = buttonRect.right - stageRect.left - mascotSize * 0.36;
+    }
+
+    let y = buttonRect.top - stageRect.top - mascotSize * 0.82;
+    if (anchor.yAlign === 'middle') {
+      y = buttonRect.top - stageRect.top + buttonRect.height / 2 - mascotSize * 0.58;
+    } else if (anchor.yAlign === 'bottom') {
+      y = buttonRect.bottom - stageRect.top - mascotSize * 0.22;
+    }
+
+    x += anchor.xShift ?? 0;
+    y += anchor.yShift ?? 0;
 
     return {
       x: Math.max(4, Math.min(x, Math.max(4, stageRect.width - mascotSize - 4))),

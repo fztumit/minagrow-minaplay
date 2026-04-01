@@ -9,28 +9,72 @@
       <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.5"/>
       <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="stage">
-      <stop offset="0%" stop-color="#FFE082"/>
-      <stop offset="100%" stop-color="#FFCC80"/>
+    <radialGradient id="peachGlow">
+      <stop offset="0%" stop-color="#FFE1C4" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#FFE1C4" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="blueGlow">
+      <stop offset="0%" stop-color="#DCEEFF" stop-opacity="0.48"/>
+      <stop offset="100%" stop-color="#DCEEFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="cardSilhouette" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFF4E7" stop-opacity="0.42"/>
+      <stop offset="100%" stop-color="#FDEBDD" stop-opacity="0.18"/>
     </radialGradient>
     <filter id="blur">
       <feGaussianBlur stdDeviation="20"/>
     </filter>
+    <filter id="softBlur">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
   </defs>
   <rect width="800" height="450" fill="url(#bg)"/>
   <ellipse cx="400" cy="180" rx="250" ry="150" fill="url(#centerGlow)"/>
-  <g opacity="0.15" filter="url(#blur)">
+  <g opacity="0.14" filter="url(#blur)">
     <circle cx="120" cy="100" r="70" fill="#BBDEFB"/>
     <circle cx="680" cy="120" r="80" fill="#C8E6C9"/>
   </g>
-  <g opacity="0.1">
-    <circle cx="250" cy="300" r="10" fill="#FFFFFF"/>
-    <circle cx="500" cy="280" r="12" fill="#FFFFFF"/>
+
+  <g opacity="0.16">
+    <ellipse cx="160" cy="338" rx="156" ry="96" fill="url(#peachGlow)"/>
+    <ellipse cx="654" cy="334" rx="148" ry="92" fill="url(#blueGlow)"/>
   </g>
-  <g fill="white" opacity="0.5">
+
+  <g opacity="0.12" filter="url(#softBlur)">
+    <circle cx="88" cy="282" r="28" fill="#FFD8B4"/>
+    <circle cx="122" cy="346" r="36" fill="#F8CCE4"/>
+    <circle cx="706" cy="326" r="32" fill="#FFDFA8"/>
+    <circle cx="740" cy="270" r="24" fill="#D8EDFF"/>
+  </g>
+
+  <g opacity="0.11">
+    <rect x="64" y="174" width="92" height="134" rx="28" fill="url(#cardSilhouette)"/>
+    <rect x="646" y="176" width="90" height="130" rx="28" fill="url(#cardSilhouette)"/>
+    <rect x="586" y="220" width="68" height="68" rx="22" fill="#D8E9FF"/>
+    <rect x="652" y="244" width="72" height="72" rx="22" fill="#FFD8D3"/>
+  </g>
+
+  <g opacity="0.1">
+    <path d="M128 136 C118 124 128 96 154 100 C160 86 182 84 194 96 C212 94 226 112 220 130 C236 132 242 150 226 162 C206 178 154 178 132 160 C118 152 116 142 128 136 Z" fill="#FFB8A9"/>
+    <path d="M663 86 C681 70 718 74 736 94 C752 90 772 102 774 122 C788 124 796 140 784 152 C772 166 734 170 702 164 C676 160 650 142 652 116 C652 104 656 94 663 86 Z" fill="#F9BA9E"/>
+    <path d="M606 247 C614 233 636 230 648 242 C660 254 656 276 640 282 C624 288 604 278 602 262 C600 256 602 250 606 247 Z" fill="#AFC8FF"/>
+    <path d="M674 264 C684 252 704 250 716 260 C728 270 728 290 714 298 C700 306 678 304 668 292 C660 282 662 270 674 264 Z" fill="#FFC3C2"/>
+  </g>
+
+  <g opacity="0.18" filter="url(#softBlur)">
+    <circle cx="255" cy="292" r="10" fill="#FFFFFF"/>
+    <circle cx="500" cy="274" r="12" fill="#FFFFFF"/>
+    <circle cx="112" cy="206" r="9" fill="#FFFFFF"/>
+    <circle cx="694" cy="212" r="8" fill="#FFFFFF"/>
+  </g>
+
+  <g fill="white" opacity="0.56">
     <circle cx="200" cy="80" r="2"/>
     <circle cx="400" cy="60" r="2"/>
     <circle cx="600" cy="90" r="2"/>
+    <circle cx="146" cy="240" r="2.2"/>
+    <circle cx="648" cy="238" r="2.2"/>
+    <circle cx="540" cy="312" r="1.8"/>
+    <circle cx="266" cy="328" r="1.8"/>
   </g>
-  <ellipse cx="400" cy="320" rx="240" ry="70" fill="url(#stage)" opacity="0.85"/>
 </svg>
