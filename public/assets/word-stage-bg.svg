@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" role="img" aria-label="Kelime oyunu arka planı">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF3E0"/>
+      <stop offset="100%" stop-color="#E3F2FD"/>
+    </linearGradient>
+    <radialGradient id="stageGrad" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#FFCC80"/>
+      <stop offset="100%" stop-color="#FFA726"/>
+    </radialGradient>
+    <radialGradient id="softCircle" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="400" fill="url(#bgGrad)"/>
+  <circle cx="100" cy="80" r="60" fill="url(#softCircle)" opacity="0.3"/>
+  <circle cx="700" cy="100" r="80" fill="#FFE0B2" opacity="0.2"/>
+  <rect x="50" y="200" width="120" height="150" rx="40" fill="#BBDEFB" opacity="0.15"/>
+  <rect x="650" y="180" width="100" height="140" rx="30" fill="#FFCCBC" opacity="0.15"/>
+  <circle cx="300" cy="100" r="20" fill="#FFAB91" opacity="0.1"/>
+  <circle cx="500" cy="90" r="15" fill="#81D4FA" opacity="0.1"/>
+  <circle cx="200" cy="50" r="3" fill="white" opacity="0.5"/>
+  <circle cx="600" cy="60" r="2" fill="white" opacity="0.5"/>
+  <circle cx="400" cy="40" r="2" fill="white" opacity="0.4"/>
+  <ellipse cx="400" cy="280" rx="250" ry="70" fill="url(#stageGrad)" opacity="0.9"/>
+  <ellipse cx="400" cy="280" rx="280" ry="90" fill="#FFB74D" opacity="0.15"/>
+</svg>

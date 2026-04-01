@@ -1259,10 +1259,7 @@ main {
   position: relative;
   min-height: calc(100svh - 104px);
   overflow: hidden;
-  background:
-    radial-gradient(circle at 18% 14%, rgba(255, 245, 198, 0.92), rgba(255, 245, 198, 0) 24%),
-    radial-gradient(circle at 82% 18%, rgba(196, 232, 255, 0.78), rgba(196, 232, 255, 0) 26%),
-    linear-gradient(180deg, #fffaf0 0%, #fff9f4 51%, #f7dec4 51%, #efc39d 100%);
+  background: linear-gradient(180deg, #fff9f0 0%, #eef8ff 100%);
   border: none;
   box-shadow: none;
 }
@@ -1272,16 +1269,18 @@ main {
   inset: 0;
   overflow: hidden;
   pointer-events: none;
+  background: url('/assets/word-stage-bg.svg') center center / cover no-repeat;
 }
 
 .speech-scene-backdrop::before {
   content: '';
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(circle at 18% 16%, rgba(255, 241, 187, 0.72), transparent 20%),
-    radial-gradient(circle at 84% 12%, rgba(202, 234, 255, 0.56), transparent 22%),
-    linear-gradient(180deg, rgba(255, 252, 245, 0.88), rgba(255, 252, 245, 0));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06));
+}
+
+.speech-scene-backdrop > * {
+  display: none;
 }
 
 .scene-sun-halo {
