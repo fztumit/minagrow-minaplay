@@ -14,28 +14,28 @@
     </filter>
   </defs>
 
-  <path d="M406 446C423 430 441 422 460 425" fill="none" stroke="#3a3439" stroke-width="10" stroke-linecap="round"/>
-  <path d="M568 425C587 422 606 430 621 446" fill="none" stroke="#3a3439" stroke-width="10" stroke-linecap="round"/>
+  <path d="M396 436C420 417 447 408 474 412" fill="none" stroke="#3a3439" stroke-width="12" stroke-linecap="round"/>
+  <path d="M550 412C577 408 605 417 628 436" fill="none" stroke="#3a3439" stroke-width="12" stroke-linecap="round"/>
+
+  <ellipse cx="391" cy="584" rx="54" ry="30" fill="#ffc6da" opacity="0.72" filter="url(#blushBlur)"/>
+  <ellipse cx="662" cy="578" rx="54" ry="30" fill="#ffc6da" opacity="0.72" filter="url(#blushBlur)"/>
 
   <g>
-    <ellipse cx="456" cy="521" rx="50" ry="55" fill="url(#eyeFill)"/>
-    <path d="M406 543C422 573 490 580 506 543C498 563 484 577 456 580C428 577 414 563 406 543Z" fill="url(#eyeLower)"/>
-    <circle cx="432" cy="494" r="16" fill="#ffffff"/>
-    <circle cx="486" cy="514" r="8" fill="#ffffff"/>
-    <circle cx="478" cy="495" r="10" fill="#ffffff"/>
+    <ellipse cx="454" cy="519" rx="62" ry="72" fill="url(#eyeFill)"/>
+    <path d="M392 544C414 583 494 594 516 544C507 572 487 590 454 593C421 590 401 572 392 544Z" fill="url(#eyeLower)"/>
+    <circle cx="425" cy="486" r="20" fill="#ffffff"/>
+    <circle cx="489" cy="512" r="11" fill="#ffffff"/>
+    <circle cx="475" cy="491" r="13" fill="#ffffff"/>
   </g>
 
   <g>
-    <ellipse cx="594" cy="521" rx="50" ry="55" fill="url(#eyeFill)"/>
-    <path d="M544 543C560 573 628 580 644 543C636 563 622 577 594 580C566 577 552 563 544 543Z" fill="url(#eyeLower)"/>
-    <circle cx="570" cy="494" r="16" fill="#ffffff"/>
-    <circle cx="624" cy="514" r="8" fill="#ffffff"/>
-    <circle cx="616" cy="495" r="10" fill="#ffffff"/>
+    <ellipse cx="598" cy="519" rx="62" ry="72" fill="url(#eyeFill)"/>
+    <path d="M536 544C558 583 638 594 660 544C651 572 631 590 598 593C565 590 545 572 536 544Z" fill="url(#eyeLower)"/>
+    <circle cx="569" cy="486" r="20" fill="#ffffff"/>
+    <circle cx="633" cy="512" r="11" fill="#ffffff"/>
+    <circle cx="619" cy="491" r="13" fill="#ffffff"/>
   </g>
 
-  <ellipse cx="389" cy="584" rx="39" ry="22" fill="#ffc6da" opacity="0.82" filter="url(#blushBlur)"/>
-  <ellipse cx="671" cy="550" rx="39" ry="22" fill="#ffc6da" opacity="0.82" filter="url(#blushBlur)"/>
-
-  <ellipse cx="526" cy="612" rx="41" ry="48" fill="#6b4252"/>
-  <ellipse cx="526" cy="626" rx="25" ry="21" fill="#f48a9e"/>
+  <ellipse cx="526" cy="624" rx="48" ry="56" fill="#6b4252"/>
+  <ellipse cx="526" cy="640" rx="30" ry="25" fill="#f48a9e"/>
 </svg>

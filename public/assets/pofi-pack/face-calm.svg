@@ -4,11 +4,11 @@
       <feGaussianBlur stdDeviation="7"/>
     </filter>
   </defs>
-  <path d="M405 450C421 437 438 433 454 437" fill="none" stroke="#3a3439" stroke-width="9" stroke-linecap="round"/>
-  <path d="M573 437C589 433 606 437 621 450" fill="none" stroke="#3a3439" stroke-width="9" stroke-linecap="round"/>
-  <path d="M406 510C424 531 482 531 500 510" fill="none" stroke="#2f2a2f" stroke-width="10" stroke-linecap="round"/>
-  <path d="M552 510C570 531 628 531 646 510" fill="none" stroke="#2f2a2f" stroke-width="10" stroke-linecap="round"/>
-  <ellipse cx="392" cy="586" rx="39" ry="22" fill="#ffc6da" opacity="0.8" filter="url(#blushBlur)"/>
-  <ellipse cx="670" cy="550" rx="39" ry="22" fill="#ffc6da" opacity="0.8" filter="url(#blushBlur)"/>
-  <path d="M492 621C505 607 519 606 530 613C542 606 554 607 564 619" fill="none" stroke="#54404a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M396 440C418 423 444 415 470 419" fill="none" stroke="#3a3439" stroke-width="11" stroke-linecap="round"/>
+  <path d="M556 419C582 415 608 423 629 440" fill="none" stroke="#3a3439" stroke-width="11" stroke-linecap="round"/>
+  <ellipse cx="392" cy="585" rx="54" ry="30" fill="#ffc6da" opacity="0.7" filter="url(#blushBlur)"/>
+  <ellipse cx="662" cy="579" rx="54" ry="30" fill="#ffc6da" opacity="0.7" filter="url(#blushBlur)"/>
+  <path d="M396 506C418 534 488 534 510 506" fill="none" stroke="#2f2a2f" stroke-width="11" stroke-linecap="round"/>
+  <path d="M542 506C564 534 634 534 656 506" fill="none" stroke="#2f2a2f" stroke-width="11" stroke-linecap="round"/>
+  <path d="M486 631C502 614 519 612 531 620C545 611 559 613 570 629" fill="none" stroke="#54404a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

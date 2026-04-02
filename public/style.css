@@ -438,6 +438,8 @@ main {
 .pofi-face-layer {
   z-index: 2;
   display: block;
+  transform: translateY(-2.5%) scale(1.16);
+  transform-origin: center center;
 }
 
 .pofi-hands-layer {
