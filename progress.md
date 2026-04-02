@@ -1346,3 +1346,11 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
 - 2026-04-01: Kelime ekrani geri bildirime gore yeniden rafine edildi; merkezi sahne/platform arka plandan kaldirildi, arka plan daha image-benzeri yumusak ikon/siluet dekorlari ile guncellendi.
 - 2026-04-01: Pofi icin kelime-bazli guvenli bekleme noktalari eklendi; suya giderken elma kartinin ustune binmemesi icin `src/modules/speech/index.ts` icinde ozel anchor mantigi tanimlandi.
 - 2026-04-01: Cache `minaplay-v42` yapildi. Doğrulama: `npm run build` ve `npx playwright test tests/playwright/page-load.spec.ts --workers=1` gecti.
+
+## Continuation Update: Pofi Layer Recovery
+- Reworked `public/assets/pofi_Images/Pofi.svg` into a body-only asset by removing baked-in eye/eyebrow/mouth/blush groups.
+- Restored dynamic face layering in word scene and peekaboo scene with `pofi-face-layer` using `face-idle/surprised/happy/sleep` assets.
+- Updated `mascot-idle.svg` and `mascot-sleep.svg` wrappers to combine `Pofi.svg` body with matching face overlays.
+- Switched word/peekaboo body rendering back to `object-fit: contain` to avoid cropping while preserving full cloud body visibility.
+- Refreshed service worker cache name to `minaplay-v54`.
+- Validation: `npm run build` ✅, `npx playwright test tests/playwright/page-load.spec.ts --workers=1` ✅.

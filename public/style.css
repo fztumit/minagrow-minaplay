@@ -431,13 +431,13 @@ main {
 
 .speech-guide-stack .pofi-body-layer,
 .peekaboo-phoenix-stack .pofi-body-layer {
-  object-fit: cover;
+  object-fit: contain;
   object-position: center 50%;
 }
 
 .pofi-face-layer {
   z-index: 2;
-  display: none;
+  display: block;
 }
 
 .pofi-hands-layer {
