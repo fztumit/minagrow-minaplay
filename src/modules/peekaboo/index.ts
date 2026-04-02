@@ -57,7 +57,7 @@ export class PeekabooModeModule {
   private readonly rootEl: HTMLElement;
   private readonly stageEl: HTMLElement;
   private readonly phoenixShellEl: HTMLElement;
-  private readonly phoenixFaceEl: HTMLImageElement;
+  private readonly phoenixFaceEl: HTMLImageElement | null;
   private readonly stageTapEl: HTMLButtonElement;
   private readonly statusEl: HTMLElement;
   private readonly parentTriggerBtn: HTMLButtonElement;
@@ -95,7 +95,7 @@ export class PeekabooModeModule {
   constructor(rootEl: HTMLElement, mascot: MascotGuide, controlsRoot: ParentNode = rootEl.ownerDocument) {
     const stageEl = rootEl.querySelector<HTMLElement>('#peekaboo-stage');
     const phoenixShellEl = rootEl.querySelector<HTMLElement>('#peekaboo-phoenix-shell');
-    const phoenixFaceEl = phoenixShellEl?.querySelector<HTMLImageElement>('.pofi-face-layer');
+    const phoenixFaceEl = phoenixShellEl?.querySelector<HTMLImageElement>('.pofi-face-layer') ?? null;
     const stageTapEl = rootEl.querySelector<HTMLButtonElement>('#peekaboo-stage-tap');
     const statusEl = rootEl.querySelector<HTMLElement>('#peekaboo-status');
     const parentTriggerBtn = rootEl.querySelector<HTMLButtonElement>('#peekaboo-parent-trigger');
@@ -110,7 +110,6 @@ export class PeekabooModeModule {
     if (
       !stageEl ||
       !phoenixShellEl ||
-      !phoenixFaceEl ||
       !stageTapEl ||
       !statusEl ||
       !parentTriggerBtn ||
@@ -498,7 +497,7 @@ export class PeekabooModeModule {
       nextSrc = '/assets/pofi-pack/face-calm.svg';
     }
 
-    if (this.phoenixFaceEl.getAttribute('src') !== nextSrc) {
+    if (this.phoenixFaceEl && this.phoenixFaceEl.getAttribute('src') !== nextSrc) {
       this.phoenixFaceEl.src = nextSrc;
     }
   }
