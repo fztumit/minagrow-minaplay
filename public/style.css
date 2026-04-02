@@ -425,7 +425,7 @@ main {
 
 .pofi-face-layer {
   z-index: 2;
-  transition: opacity 180ms ease;
+  display: none;
 }
 
 .pofi-hands-layer {
