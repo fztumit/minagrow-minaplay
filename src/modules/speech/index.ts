@@ -1403,8 +1403,24 @@ export class SpeechGameModule {
   }
 
   private setGuideTransform(x: number, y: number, scale: number): void {
-    this.guideMascotEl.style.setProperty('--guide-x', `${x}px`);
-    this.guideMascotEl.style.setProperty('--guide-y', `${y}px`);
+    const stageRect = this.stageEl.getBoundingClientRect();
+    const mascotSize = this.guideMascotEl.getBoundingClientRect().width || 84;
+    const guideLift = Number.parseFloat(getComputedStyle(this.guideMascotEl).getPropertyValue('--guide-y-lift')) || 0;
+    const safeX = 18;
+    const safeTop = 20;
+    const safeBottom = 14;
+
+    const clampedX = Math.max(
+      safeX,
+      Math.min(x, Math.max(safeX, stageRect.width - mascotSize - safeX))
+    );
+
+    const minY = safeTop - guideLift;
+    const maxY = stageRect.height - mascotSize - safeBottom - guideLift;
+    const clampedY = Math.max(minY, Math.min(y, Math.max(minY, maxY)));
+
+    this.guideMascotEl.style.setProperty('--guide-x', `${clampedX}px`);
+    this.guideMascotEl.style.setProperty('--guide-y', `${clampedY}px`);
     this.guideMascotEl.style.setProperty('--guide-scale', String(scale));
   }
 
