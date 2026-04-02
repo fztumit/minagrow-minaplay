@@ -1,4 +1,4 @@
-const CACHE_NAME = 'minaplay-v47';
+const CACHE_NAME = 'minaplay-v48';
 
 const PRECACHE_ASSETS = [
   '/',
@@ -21,7 +21,7 @@ const PRECACHE_ASSETS = [
   '/assets/object-book.svg',
   '/assets/object-apple.svg',
   '/assets/object-milk.svg',
-  '/assets/pofi_Images/Pofi.svg',
+  '/assets/pofi_Images/Pofi.png',
   '/assets/icon-192.svg',
   '/assets/icon-512.svg',
   '/js/main.js',

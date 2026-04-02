@@ -27,7 +27,7 @@ body {
 }
 
 body[data-active-view='speech'] {
-  background: url('/assets/pofi_Images/Pofi.svg') center center / cover no-repeat fixed;
+  background: #ffffff;
 }
 
 .visually-hidden {
