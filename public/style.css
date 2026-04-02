@@ -27,7 +27,7 @@ body {
 }
 
 body[data-active-view='speech'] {
-  background: url('/assets/back.svg') center center / cover no-repeat fixed;
+  background: #ffffff;
 }
 
 .visually-hidden {
@@ -1288,12 +1288,7 @@ main {
 }
 
 .speech-scene-backdrop {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  background: url('/assets/back.svg') center center / cover no-repeat;
-  z-index: 0;
+  display: none;
 }
 
 .speech-scene-backdrop::before {
