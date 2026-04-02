@@ -12,14 +12,14 @@
       <stop offset="100%" stop-color="#f07f98"/>
     </linearGradient>
   </defs>
-  <path d="M396 434C420 416 448 408 476 412" fill="none" stroke="#3a3439" stroke-width="12" stroke-linecap="round"/>
-  <path d="M551 412C579 408 607 416 630 434" fill="none" stroke="#3a3439" stroke-width="12" stroke-linecap="round"/>
-  <ellipse cx="392" cy="583" rx="54" ry="30" fill="#ffc6da" opacity="0.72" filter="url(#blushBlur)"/>
-  <ellipse cx="661" cy="577" rx="54" ry="30" fill="#ffc6da" opacity="0.72" filter="url(#blushBlur)"/>
-  <path d="M394 528C422 572 486 572 514 528" fill="none" stroke="#262126" stroke-width="12" stroke-linecap="round"/>
-  <path d="M538 528C566 572 630 572 658 528" fill="none" stroke="#262126" stroke-width="12" stroke-linecap="round"/>
-  <path d="M476 602C495 617 557 617 576 602C592 617 601 640 598 663C594 702 560 735 526 735C492 735 458 702 454 663C451 640 460 617 476 602Z" fill="url(#mouthHappy)"/>
-  <path d="M488 615C505 628 547 628 564 615" fill="none" stroke="#946272" stroke-width="5" stroke-linecap="round" opacity="0.62"/>
-  <path d="M494 664C511 684 541 684 558 664C558 694 543 709 526 709C509 709 494 694 494 664Z" fill="url(#tongueHappy)"/>
-  <ellipse cx="526" cy="652" rx="20" ry="10" fill="#ffbac5" opacity="0.25"/>
+  <path d="M396 416C420 398 448 390 476 394" fill="none" stroke="#3a3439" stroke-width="12" stroke-linecap="round"/>
+  <path d="M551 394C579 390 607 398 630 416" fill="none" stroke="#3a3439" stroke-width="12" stroke-linecap="round"/>
+  <ellipse cx="392" cy="565" rx="54" ry="30" fill="#ffc6da" opacity="0.72" filter="url(#blushBlur)"/>
+  <ellipse cx="661" cy="559" rx="54" ry="30" fill="#ffc6da" opacity="0.72" filter="url(#blushBlur)"/>
+  <path d="M394 510C422 554 486 554 514 510" fill="none" stroke="#262126" stroke-width="12" stroke-linecap="round"/>
+  <path d="M538 510C566 554 630 554 658 510" fill="none" stroke="#262126" stroke-width="12" stroke-linecap="round"/>
+  <path d="M478 575C496 589 556 589 574 575C589 589 597 610 594 631C590 668 558 699 526 699C494 699 462 668 458 631C455 610 463 589 478 575Z" fill="url(#mouthHappy)"/>
+  <path d="M489 587C505 599 547 599 563 587" fill="none" stroke="#946272" stroke-width="5" stroke-linecap="round" opacity="0.62"/>
+  <path d="M496 633C512 652 540 652 556 633C556 662 542 676 526 676C510 676 496 662 496 633Z" fill="url(#tongueHappy)"/>
+  <ellipse cx="526" cy="623" rx="19" ry="9" fill="#ffbac5" opacity="0.25"/>
 </svg>

@@ -22,30 +22,30 @@
     </filter>
   </defs>
 
-  <path d="M393 437C415 419 441 410 470 414" fill="none" stroke="#3a3439" stroke-width="12" stroke-linecap="round"/>
-  <path d="M555 414C584 410 609 419 631 437" fill="none" stroke="#3a3439" stroke-width="12" stroke-linecap="round"/>
+  <path d="M393 419C415 401 441 392 470 396" fill="none" stroke="#3a3439" stroke-width="12" stroke-linecap="round"/>
+  <path d="M555 396C584 392 609 401 631 419" fill="none" stroke="#3a3439" stroke-width="12" stroke-linecap="round"/>
 
-  <ellipse cx="392" cy="582" rx="54" ry="30" fill="#ffc6da" opacity="0.72" filter="url(#blushBlur)"/>
-  <ellipse cx="662" cy="576" rx="54" ry="30" fill="#ffc6da" opacity="0.72" filter="url(#blushBlur)"/>
+  <ellipse cx="392" cy="565" rx="54" ry="30" fill="#ffc6da" opacity="0.72" filter="url(#blushBlur)"/>
+  <ellipse cx="662" cy="559" rx="54" ry="30" fill="#ffc6da" opacity="0.72" filter="url(#blushBlur)"/>
 
   <g>
-    <ellipse cx="452" cy="520" rx="62" ry="72" fill="url(#eyeFill)"/>
-    <path d="M390 545C412 584 492 595 514 545C505 574 485 592 452 595C419 592 399 574 390 545Z" fill="url(#eyeLower)"/>
-    <circle cx="423" cy="486" r="20" fill="#ffffff"/>
-    <circle cx="488" cy="513" r="11" fill="#ffffff"/>
-    <circle cx="474" cy="491" r="13" fill="#ffffff"/>
+    <ellipse cx="452" cy="500" rx="62" ry="72" fill="url(#eyeFill)"/>
+    <path d="M390 525C412 564 492 575 514 525C505 554 485 572 452 575C419 572 399 554 390 525Z" fill="url(#eyeLower)"/>
+    <circle cx="423" cy="466" r="20" fill="#ffffff"/>
+    <circle cx="488" cy="493" r="11" fill="#ffffff"/>
+    <circle cx="474" cy="471" r="13" fill="#ffffff"/>
   </g>
 
   <g>
-    <ellipse cx="602" cy="520" rx="62" ry="72" fill="url(#eyeFill)"/>
-    <path d="M540 545C562 584 642 595 664 545C655 574 635 592 602 595C569 592 549 574 540 545Z" fill="url(#eyeLower)"/>
-    <circle cx="573" cy="486" r="20" fill="#ffffff"/>
-    <circle cx="638" cy="513" r="11" fill="#ffffff"/>
-    <circle cx="624" cy="491" r="13" fill="#ffffff"/>
+    <ellipse cx="602" cy="500" rx="62" ry="72" fill="url(#eyeFill)"/>
+    <path d="M540 525C562 564 642 575 664 525C655 554 635 572 602 575C569 572 549 554 540 525Z" fill="url(#eyeLower)"/>
+    <circle cx="573" cy="466" r="20" fill="#ffffff"/>
+    <circle cx="638" cy="493" r="11" fill="#ffffff"/>
+    <circle cx="624" cy="471" r="13" fill="#ffffff"/>
   </g>
 
-  <path d="M481 594C498 608 555 608 572 594C588 608 597 629 594 650C590 686 558 716 526 716C494 716 462 686 458 650C455 629 464 608 481 594Z" fill="url(#mouthFill)"/>
-  <path d="M490 606C506 618 546 618 562 606" fill="none" stroke="#936171" stroke-width="5" stroke-linecap="round" opacity="0.62"/>
-  <path d="M493 647C510 667 542 667 559 647C558 682 543 697 526 697C509 697 494 682 493 647Z" fill="url(#tongueFill)"/>
-  <ellipse cx="526" cy="639" rx="19" ry="10" fill="#ffb2bf" opacity="0.28"/>
+  <path d="M484 568C500 581 552 581 568 568C583 580 591 599 589 618C585 651 556 678 526 678C496 678 467 651 463 618C461 599 469 580 484 568Z" fill="url(#mouthFill)"/>
+  <path d="M492 579C507 589 545 589 560 579" fill="none" stroke="#936171" stroke-width="5" stroke-linecap="round" opacity="0.62"/>
+  <path d="M496 614C511 632 541 632 556 614C555 644 541 658 526 658C511 658 497 644 496 614Z" fill="url(#tongueFill)"/>
+  <ellipse cx="526" cy="607" rx="18" ry="9" fill="#ffb2bf" opacity="0.28"/>
 </svg>
