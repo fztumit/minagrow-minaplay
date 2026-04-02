@@ -407,6 +407,7 @@ main {
   display: block;
   width: 100%;
   height: 100%;
+  overflow: visible;
 }
 
 .pofi-stack > img {
@@ -421,6 +422,17 @@ main {
 
 .pofi-body-layer {
   z-index: 1;
+}
+
+.speech-guide-mascot,
+.peekaboo-phoenix-shell {
+  overflow: visible;
+}
+
+.speech-guide-stack .pofi-body-layer,
+.peekaboo-phoenix-stack .pofi-body-layer {
+  object-fit: cover;
+  object-position: center 50%;
 }
 
 .pofi-face-layer {

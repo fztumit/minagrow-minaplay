@@ -1,4 +1,4 @@
-const CACHE_NAME = 'minaplay-v52';
+const CACHE_NAME = 'minaplay-v53';
 
 const PRECACHE_ASSETS = [
   '/',
