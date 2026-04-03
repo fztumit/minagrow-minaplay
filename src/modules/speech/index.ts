@@ -63,8 +63,8 @@ const GUIDE_WORD_ANCHORS: Partial<Record<VocabularyWord, GuideAnchor>> = {
   su: { xAlign: 'left', yAlign: 'top', xShift: -18, yShift: -18 },
   baba: { xAlign: 'center', yAlign: 'top', xShift: 0, yShift: -22 },
   top: { xAlign: 'right', yAlign: 'top', xShift: 18, yShift: -18 },
-  araba: { xAlign: 'left', yAlign: 'top', xShift: -10, yShift: -14 },
-  elma: { xAlign: 'right', yAlign: 'top', xShift: 10, yShift: -14 }
+  araba: { xAlign: 'left', yAlign: 'middle', xShift: -28, yShift: 4 },
+  elma: { xAlign: 'right', yAlign: 'middle', xShift: 28, yShift: 4 }
 };
 
 export class SpeechGameModule {
