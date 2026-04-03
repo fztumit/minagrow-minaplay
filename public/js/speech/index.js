@@ -178,7 +178,14 @@ export class SpeechGameModule {
             this.handleWordProfilesUpdated();
         });
         window.requestAnimationFrame(() => {
-            this.startIntroSequence();
+            if (document.body.getAttribute('data-active-view') === 'speech') {
+                this.startIntroSequence();
+            }
+            else {
+                this.rootEl.setAttribute('data-scene-phase', 'awaiting-tap');
+                this.rootEl.setAttribute('data-guide-active', 'false');
+                this.rootEl.setAttribute('data-guide-prompt', '');
+            }
         });
     }
     renderCards(vocabulary) {
@@ -420,9 +427,12 @@ export class SpeechGameModule {
     }
     bindGuideLifecycleEvents() {
         this.rootEl.addEventListener('speech-guidance-pause', () => {
+            this.clearPendingSpeech();
             this.clearIdleReminder();
             this.clearAttentionState();
             this.clearSequenceTimeouts();
+            this.rootEl.setAttribute('data-guide-active', 'false');
+            this.rootEl.setAttribute('data-guide-prompt', '');
         });
         this.rootEl.addEventListener('speech-guidance-resume', () => {
             if (!this.activeNextButton) {

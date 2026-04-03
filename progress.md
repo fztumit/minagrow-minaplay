@@ -1362,3 +1362,7 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
 ## 2026-04-03
 - Replaced hidden parent access hold gesture with a new corner gesture across modules: 4 quick taps in the top-left hotspot, then swipe down, then PIN.
 - Moved the hidden hotspot from top-right to top-left and kept trigger buttons only for internal/test plumbing.
+
+## 2026-04-04
+- Kept the home screen silent by preventing the speech module intro prompts from starting unless the speech view is active and by cancelling pending speech when guidance is paused.
+- Verified with a temporary Playwright test that home does not call speech synthesis while the home view is active.
