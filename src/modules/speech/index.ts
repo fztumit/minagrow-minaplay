@@ -607,7 +607,6 @@ export class SpeechGameModule {
       element.addEventListener('pointercancel', clearHold);
     };
 
-    registerHold(this.guideMascotEl);
     registerHold(this.parentCornerHotspotEl);
   }
 

@@ -1647,9 +1647,8 @@ main {
     opacity 0.2s ease,
     filter 0.2s ease;
   filter: drop-shadow(0 22px 34px rgba(124, 166, 216, 0.2));
-  pointer-events: auto;
-  touch-action: manipulation;
-  cursor: pointer;
+  pointer-events: none;
+  touch-action: none;
 }
 
 .speech-guide-layer.is-active .speech-guide-mascot {
@@ -1692,6 +1691,11 @@ main {
   height: 100%;
   animation: guide-idle-float 3.2s ease-in-out infinite;
   transition: filter 0.22s ease, opacity 0.22s ease;
+  pointer-events: none;
+}
+
+.speech-guide-stack > * {
+  pointer-events: none;
 }
 
 .speech-guide-hands {

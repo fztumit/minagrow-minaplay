@@ -1354,3 +1354,7 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
 - Switched word/peekaboo body rendering back to `object-fit: contain` to avoid cropping while preserving full cloud body visibility.
 - Refreshed service worker cache name to `minaplay-v54`.
 - Validation: `npm run build` ✅, `npx playwright test tests/playwright/page-load.spec.ts --workers=1` ✅.
+
+## 2026-04-03
+- Fixed word scene Pofi hitbox bug by disabling pointer events on the visible mascot and removing long-press registration from the mascot itself; parent access remains on the hidden corner hotspot.
+- Verified with build + Playwright: guided-transition, object-interaction, page-load.

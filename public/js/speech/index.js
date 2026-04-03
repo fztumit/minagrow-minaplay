@@ -497,7 +497,6 @@ export class SpeechGameModule {
             element.addEventListener('pointerleave', clearHold);
             element.addEventListener('pointercancel', clearHold);
         };
-        registerHold(this.guideMascotEl);
         registerHold(this.parentCornerHotspotEl);
     }
     syncCustomAudioSupportState() {
