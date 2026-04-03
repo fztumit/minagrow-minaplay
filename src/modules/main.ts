@@ -8,6 +8,7 @@ import { SentenceBuilderModule } from './sentence/index.js';
 import { SleepModeModule } from './sleep/index.js';
 import { SpeechGameModule } from './speech/index.js';
 import { StoriesModule } from './stories/index.js';
+import { bindParentGesture } from './shared/parentGesture.js';
 
 const DEFAULT_PARENT_PIN = '1234';
 const PARENT_PIN_STORAGE_KEY = 'minaplay_parent_pin_v1';
@@ -127,35 +128,16 @@ function wireTabs(mascot: MascotGuide): void {
       return;
     }
 
-    let holdTimeoutId: number | null = null;
     triggerBtn.addEventListener('click', () => {
       root.dispatchEvent(new CustomEvent('open-parent-panel', { bubbles: true }));
     });
 
-    const clearHold = () => {
-      if (holdTimeoutId !== null) {
-        window.clearTimeout(holdTimeoutId);
-        holdTimeoutId = null;
-      }
-      hotspotEl.classList.remove('is-holding');
-    };
-
-    hotspotEl.addEventListener('pointerdown', (event) => {
-      if (event.pointerType === 'mouse' && event.button !== 0) {
-        return;
-      }
-
-      clearHold();
-      hotspotEl.classList.add('is-holding');
-      holdTimeoutId = window.setTimeout(() => {
+    bindParentGesture({
+      hotspotEl,
+      onTrigger: () => {
         triggerBtn.click();
-        clearHold();
-      }, 700);
+      }
     });
-
-    hotspotEl.addEventListener('pointerup', clearHold);
-    hotspotEl.addEventListener('pointerleave', clearHold);
-    hotspotEl.addEventListener('pointercancel', clearHold);
   };
 
   const activatePrimaryView = (selectedView: string) => {

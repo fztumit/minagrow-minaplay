@@ -1,6 +1,7 @@
 import { VOCABULARY } from '../data/vocabulary.js';
 import { clearWordImage, getAllWordProfiles, normalizeWordLabel, updateWordImage, updateWordLabel } from '../data/wordProfiles.js';
 import { getTopSentenceListens, getWordListenCount, incrementWordListen, renameWordListenKey, resetListenProgress } from '../progress/listening.js';
+import { bindParentGesture } from '../shared/parentGesture.js';
 import { buildCustomAudioBackup, listCustomAudioEntries, loadCustomAudioMap, mergeCustomAudioMaps, normalizeSpeechKey, renameCustomAudioKey, parseCustomAudioBackup, saveCustomAudioMap } from './customAudio.js';
 const SETTINGS_STORAGE_KEY = 'konusu_yorum_speech_settings_v1';
 const SCENE_VOCABULARY = VOCABULARY.filter((item) => item.featuredOnScene);
@@ -472,32 +473,12 @@ export class SpeechGameModule {
         this.parentPanelTriggerBtn.addEventListener('click', () => {
             this.rootEl.dispatchEvent(new CustomEvent('open-parent-panel', { bubbles: true }));
         });
-        let holdTimeoutId = null;
-        const clearHold = () => {
-            if (holdTimeoutId !== null) {
-                window.clearTimeout(holdTimeoutId);
-                holdTimeoutId = null;
+        bindParentGesture({
+            hotspotEl: this.parentCornerHotspotEl,
+            onTrigger: () => {
+                this.parentPanelTriggerBtn.click();
             }
-            this.guideMascotEl.classList.remove('is-holding');
-            this.parentCornerHotspotEl.classList.remove('is-holding');
-        };
-        const registerHold = (element) => {
-            element.addEventListener('pointerdown', (event) => {
-                if (event.pointerType === 'mouse' && event.button !== 0) {
-                    return;
-                }
-                clearHold();
-                element.classList.add('is-holding');
-                holdTimeoutId = window.setTimeout(() => {
-                    this.parentPanelTriggerBtn.click();
-                    clearHold();
-                }, 700);
-            });
-            element.addEventListener('pointerup', clearHold);
-            element.addEventListener('pointerleave', clearHold);
-            element.addEventListener('pointercancel', clearHold);
-        };
-        registerHold(this.parentCornerHotspotEl);
+        });
     }
     syncCustomAudioSupportState() {
         const supported = typeof window.MediaRecorder !== 'undefined' &&

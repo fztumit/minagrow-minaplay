@@ -1593,12 +1593,17 @@ main {
 .parent-corner-hotspot {
   position: absolute;
   top: 0;
-  right: 0;
-  width: min(18vw, 112px);
-  height: min(16vh, 96px);
+  left: 0;
+  width: min(18vw, 96px);
+  height: min(16vh, 92px);
   z-index: 8;
   pointer-events: auto;
   background: transparent;
+  touch-action: none;
+}
+
+.parent-corner-hotspot.is-armed {
+  background: radial-gradient(circle at 28px 24px, rgba(255, 214, 153, 0.18), transparent 62%);
 }
 
 .scene-basket::before {

@@ -1,3 +1,4 @@
+import { bindParentGesture } from '../shared/parentGesture.js';
 import { loadCustomAudioMap, saveCustomAudioMap } from '../speech/customAudio.js';
 const ROOM_ROUTE = ['window', 'toy', 'lamp', 'stage-left', 'sofa', 'stage-right', 'table'];
 const HIDEOUT_SEQUENCE = ['curtain', 'sofa', 'table'];
@@ -42,7 +43,6 @@ export class PeekabooModeModule {
     cycleIndex = 0;
     revealCount = 0;
     childReactionCount = 0;
-    parentHoldTimeoutId = null;
     currentScene = 'room';
     currentHideMode = 'self';
     currentHideout = null;
@@ -57,7 +57,7 @@ export class PeekabooModeModule {
     constructor(rootEl, mascot, controlsRoot = rootEl.ownerDocument) {
         const stageEl = rootEl.querySelector('#peekaboo-stage');
         const phoenixShellEl = rootEl.querySelector('#peekaboo-phoenix-shell');
-        const phoenixFaceEl = phoenixShellEl?.querySelector('.pofi-face-layer');
+        const phoenixFaceEl = phoenixShellEl?.querySelector('.pofi-face-layer') ?? null;
         const stageTapEl = rootEl.querySelector('#peekaboo-stage-tap');
         const statusEl = rootEl.querySelector('#peekaboo-status');
         const parentTriggerBtn = rootEl.querySelector('#peekaboo-parent-trigger');
@@ -70,7 +70,6 @@ export class PeekabooModeModule {
         const revealStatusEl = controlsRoot.querySelector('#peekaboo-audio-status');
         if (!stageEl ||
             !phoenixShellEl ||
-            !phoenixFaceEl ||
             !stageTapEl ||
             !statusEl ||
             !parentTriggerBtn ||
@@ -188,27 +187,12 @@ export class PeekabooModeModule {
         this.parentTriggerBtn.addEventListener('click', () => {
             this.rootEl.dispatchEvent(new CustomEvent('open-parent-panel', { bubbles: true }));
         });
-        const clearHold = () => {
-            if (this.parentHoldTimeoutId !== null) {
-                window.clearTimeout(this.parentHoldTimeoutId);
-                this.parentHoldTimeoutId = null;
-            }
-            this.parentHotspotEl.classList.remove('is-holding');
-        };
-        this.parentHotspotEl.addEventListener('pointerdown', (event) => {
-            if (event.pointerType === 'mouse' && event.button !== 0) {
-                return;
-            }
-            clearHold();
-            this.parentHotspotEl.classList.add('is-holding');
-            this.parentHoldTimeoutId = window.setTimeout(() => {
+        bindParentGesture({
+            hotspotEl: this.parentHotspotEl,
+            onTrigger: () => {
                 this.parentTriggerBtn.click();
-                clearHold();
-            }, 700);
+            }
         });
-        this.parentHotspotEl.addEventListener('pointerup', clearHold);
-        this.parentHotspotEl.addEventListener('pointerleave', clearHold);
-        this.parentHotspotEl.addEventListener('pointercancel', clearHold);
     }
     bindRevealAudioControls() {
         this.revealRecordStartBtn.addEventListener('click', () => {
@@ -398,7 +382,7 @@ export class PeekabooModeModule {
         else if (this.currentScene === 'center') {
             nextSrc = '/assets/pofi-pack/face-calm.svg';
         }
-        if (this.phoenixFaceEl.getAttribute('src') !== nextSrc) {
+        if (this.phoenixFaceEl && this.phoenixFaceEl.getAttribute('src') !== nextSrc) {
             this.phoenixFaceEl.src = nextSrc;
         }
     }

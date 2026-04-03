@@ -1358,3 +1358,7 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
 ## 2026-04-03
 - Fixed word scene Pofi hitbox bug by disabling pointer events on the visible mascot and removing long-press registration from the mascot itself; parent access remains on the hidden corner hotspot.
 - Verified with build + Playwright: guided-transition, object-interaction, page-load.
+
+## 2026-04-03
+- Replaced hidden parent access hold gesture with a new corner gesture across modules: 4 quick taps in the top-left hotspot, then swipe down, then PIN.
+- Moved the hidden hotspot from top-right to top-left and kept trigger buttons only for internal/test plumbing.

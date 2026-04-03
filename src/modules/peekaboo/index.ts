@@ -1,4 +1,5 @@
 import { MascotGuide } from '../mascot/index.js';
+import { bindParentGesture } from '../shared/parentGesture.js';
 import {
   loadCustomAudioMap,
   saveCustomAudioMap,
@@ -79,7 +80,6 @@ export class PeekabooModeModule {
   private cycleIndex = 0;
   private revealCount = 0;
   private childReactionCount = 0;
-  private parentHoldTimeoutId: number | null = null;
   private currentScene: SceneMode = 'room';
   private currentHideMode: HideMode = 'self';
   private currentHideout: HideoutId | null = null;
@@ -248,30 +248,12 @@ export class PeekabooModeModule {
       this.rootEl.dispatchEvent(new CustomEvent('open-parent-panel', { bubbles: true }));
     });
 
-    const clearHold = () => {
-      if (this.parentHoldTimeoutId !== null) {
-        window.clearTimeout(this.parentHoldTimeoutId);
-        this.parentHoldTimeoutId = null;
-      }
-      this.parentHotspotEl.classList.remove('is-holding');
-    };
-
-    this.parentHotspotEl.addEventListener('pointerdown', (event) => {
-      if (event.pointerType === 'mouse' && event.button !== 0) {
-        return;
-      }
-
-      clearHold();
-      this.parentHotspotEl.classList.add('is-holding');
-      this.parentHoldTimeoutId = window.setTimeout(() => {
+    bindParentGesture({
+      hotspotEl: this.parentHotspotEl,
+      onTrigger: () => {
         this.parentTriggerBtn.click();
-        clearHold();
-      }, 700);
+      }
     });
-
-    this.parentHotspotEl.addEventListener('pointerup', clearHold);
-    this.parentHotspotEl.addEventListener('pointerleave', clearHold);
-    this.parentHotspotEl.addEventListener('pointercancel', clearHold);
   }
 
   private bindRevealAudioControls(): void {

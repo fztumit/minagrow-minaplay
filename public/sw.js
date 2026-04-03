@@ -1,4 +1,4 @@
-const CACHE_NAME = 'minaplay-v60';
+const CACHE_NAME = 'minaplay-v61';
 
 const PRECACHE_ASSETS = [
   '/',
@@ -26,6 +26,7 @@ const PRECACHE_ASSETS = [
   '/js/main.js',
   '/js/mascot/index.js',
   '/js/peekaboo/index.js',
+  '/js/shared/parentGesture.js',
   '/js/sentence/index.js',
   '/js/speech/index.js',
   '/js/sleep/index.js'
