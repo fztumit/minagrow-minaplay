@@ -1612,6 +1612,15 @@ main {
 .speech-grid {
   position: absolute;
   inset: 0;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-content: center;
+  justify-items: center;
+  column-gap: clamp(14px, 2vw, 24px);
+  row-gap: clamp(18px, 2.6vw, 28px);
+  padding: clamp(126px, 18vh, 174px) clamp(22px, 4vw, 42px) clamp(104px, 14vh, 134px);
+  box-sizing: border-box;
 }
 
 .speech-guide-layer {
@@ -1631,7 +1640,7 @@ main {
   --guide-x: 0px;
   --guide-y: 0px;
   --guide-scale: 1;
-  --guide-y-lift: -122px;
+  --guide-y-lift: -72px;
   transform: translate(var(--guide-x), calc(var(--guide-y) + var(--guide-y-lift))) scale(var(--guide-scale));
   transition:
     transform 0.62s cubic-bezier(0.2, 0.84, 0.24, 1),
@@ -1790,10 +1799,11 @@ main {
 }
 
 .word-card {
-  position: absolute;
-  width: clamp(150px, 24vw, 212px);
-  min-height: clamp(150px, 24vw, 212px);
-  aspect-ratio: auto;
+  position: relative;
+  grid-column: span 2;
+  width: min(100%, clamp(146px, 21vw, 198px));
+  min-height: 0;
+  aspect-ratio: 1 / 1;
   border: 1.5px solid rgba(255, 255, 255, 0.74);
   border-radius: 34px;
   background:
@@ -1826,6 +1836,14 @@ main {
     radial-gradient(circle at 50% 26%, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0) 54%);
   opacity: 0.72;
   pointer-events: none;
+}
+
+.word-card:nth-child(4) {
+  grid-column: 2 / span 2;
+}
+
+.word-card:nth-child(5) {
+  grid-column: 4 / span 2;
 }
 
 .word-card.is-choice-enabled {
@@ -1988,28 +2006,38 @@ main {
 }
 
 .scene-water {
-  left: 9%;
-  bottom: 16%;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
 }
 
 .scene-father {
-  right: 9%;
-  bottom: 16%;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
 }
 
 .scene-ball {
-  left: 39%;
-  bottom: 8%;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
 }
 
 .scene-car {
-  right: 11%;
-  top: 19%;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
 }
 
 .scene-apple {
-  left: 11%;
-  top: 20%;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
 }
 
 .scene-father .word-object-image {
@@ -3946,40 +3974,20 @@ main {
     height: 62px;
   }
 
+  .speech-grid {
+    padding: 118px 18px 118px;
+    column-gap: 14px;
+    row-gap: 18px;
+  }
+
   .word-card {
-    width: clamp(124px, 29vw, 156px);
-    min-height: clamp(124px, 29vw, 156px);
+    width: min(100%, 150px);
   }
 
   .speech-guide-mascot {
     width: 260px;
     height: 260px;
-    --guide-y-lift: -104px;
-  }
-
-  .scene-water {
-    left: 4%;
-    bottom: 16%;
-  }
-
-  .scene-father {
-    right: 4%;
-    bottom: 17%;
-  }
-
-  .scene-ball {
-    left: 35%;
-    bottom: 5%;
-  }
-
-  .scene-car {
-    right: 6%;
-    top: 20%;
-  }
-
-  .scene-apple {
-    left: 8%;
-    top: 22%;
+    --guide-y-lift: -62px;
   }
 
   .parent-panel-header {
@@ -4145,40 +4153,20 @@ main {
     height: 140px;
   }
 
+  .speech-grid {
+    padding: 110px 12px 112px;
+    column-gap: 10px;
+    row-gap: 14px;
+  }
+
   .word-card {
-    width: clamp(112px, 31vw, 138px);
-    min-height: clamp(112px, 31vw, 138px);
+    width: min(100%, 136px);
     border-radius: 30px;
   }
 
   .speech-guide-mascot {
     width: 228px;
     height: 228px;
-    --guide-y-lift: -88px;
-  }
-
-  .scene-water {
-    left: 3%;
-    bottom: 18%;
-  }
-
-  .scene-father {
-    right: 4%;
-    bottom: 18%;
-  }
-
-  .scene-ball {
-    left: 36%;
-    bottom: 8%;
-  }
-
-  .scene-car {
-    right: 7%;
-    top: 28%;
-  }
-
-  .scene-apple {
-    left: 8%;
-    top: 30%;
+    --guide-y-lift: -52px;
   }
 }

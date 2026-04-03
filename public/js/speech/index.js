@@ -16,6 +16,13 @@ const GUIDE_WAIT_PROMPTS = {
     elma: 'Ben elmanın yanında bekliyorum.',
     anne: 'Ben annenin yanında bekliyorum.'
 };
+const GUIDE_WORD_ANCHORS = {
+    su: { xAlign: 'left', yAlign: 'top', xShift: -18, yShift: -18 },
+    baba: { xAlign: 'center', yAlign: 'top', xShift: 0, yShift: -22 },
+    top: { xAlign: 'right', yAlign: 'top', xShift: 18, yShift: -18 },
+    araba: { xAlign: 'left', yAlign: 'top', xShift: -10, yShift: -14 },
+    elma: { xAlign: 'right', yAlign: 'top', xShift: 10, yShift: -14 }
+};
 export class SpeechGameModule {
     rootEl;
     stageEl;
@@ -1174,8 +1181,18 @@ export class SpeechGameModule {
         };
     }
     setGuideTransform(x, y, scale) {
-        this.guideMascotEl.style.setProperty('--guide-x', `${x}px`);
-        this.guideMascotEl.style.setProperty('--guide-y', `${y}px`);
+        const stageRect = this.stageEl.getBoundingClientRect();
+        const mascotSize = this.guideMascotEl.getBoundingClientRect().width || 84;
+        const guideLift = Number.parseFloat(getComputedStyle(this.guideMascotEl).getPropertyValue('--guide-y-lift')) || 0;
+        const safeX = 18;
+        const safeTop = 20;
+        const safeBottom = 14;
+        const clampedX = Math.max(safeX, Math.min(x, Math.max(safeX, stageRect.width - mascotSize - safeX)));
+        const minY = safeTop - guideLift;
+        const maxY = stageRect.height - mascotSize - safeBottom - guideLift;
+        const clampedY = Math.max(minY, Math.min(y, Math.max(minY, maxY)));
+        this.guideMascotEl.style.setProperty('--guide-x', `${clampedX}px`);
+        this.guideMascotEl.style.setProperty('--guide-y', `${clampedY}px`);
         this.guideMascotEl.style.setProperty('--guide-scale', String(scale));
     }
     setCardsInteractive(activeButton) {
@@ -1193,11 +1210,34 @@ export class SpeechGameModule {
         const stageRect = this.stageEl.getBoundingClientRect();
         const buttonRect = button.getBoundingClientRect();
         const mascotSize = this.guideMascotEl.getBoundingClientRect().width || 84;
-        const x = buttonRect.left - stageRect.left + buttonRect.width / 2 - mascotSize / 2;
-        const y = buttonRect.top - stageRect.top - mascotSize * 0.82;
+        const wordId = button.dataset.wordId;
+        const anchor = (wordId ? GUIDE_WORD_ANCHORS[wordId] : null) ?? {
+            xAlign: 'center',
+            yAlign: 'top',
+            xShift: 0,
+            yShift: 0
+        };
+        let x = buttonRect.left - stageRect.left + buttonRect.width / 2 - mascotSize / 2;
+        if (anchor.xAlign === 'left') {
+            x = buttonRect.left - stageRect.left - mascotSize * 0.64;
+        }
+        else if (anchor.xAlign === 'right') {
+            x = buttonRect.right - stageRect.left - mascotSize * 0.36;
+        }
+        let y = buttonRect.top - stageRect.top - mascotSize * 0.82;
+        if (anchor.yAlign === 'middle') {
+            y = buttonRect.top - stageRect.top + buttonRect.height / 2 - mascotSize * 0.58;
+        }
+        else if (anchor.yAlign === 'bottom') {
+            y = buttonRect.bottom - stageRect.top - mascotSize * 0.22;
+        }
+        x += anchor.xShift ?? 0;
+        y += anchor.yShift ?? 0;
+        const safeInsetX = 20;
+        const safeInsetY = 18;
         return {
-            x: Math.max(4, Math.min(x, Math.max(4, stageRect.width - mascotSize - 4))),
-            y: Math.max(0, y)
+            x: Math.max(safeInsetX, Math.min(x, Math.max(safeInsetX, stageRect.width - mascotSize - safeInsetX))),
+            y: Math.max(safeInsetY, Math.min(y, Math.max(safeInsetY, stageRect.height - mascotSize - safeInsetY)))
         };
     }
     getNextButton(currentWordId) {

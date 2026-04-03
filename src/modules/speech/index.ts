@@ -60,11 +60,11 @@ const GUIDE_WAIT_PROMPTS: Partial<Record<VocabularyWord, string>> = {
   anne: 'Ben annenin yanında bekliyorum.'
 };
 const GUIDE_WORD_ANCHORS: Partial<Record<VocabularyWord, GuideAnchor>> = {
-  su: { xAlign: 'left', yAlign: 'middle', xShift: -18, yShift: -8 },
-  baba: { xAlign: 'right', yAlign: 'middle', xShift: 18, yShift: -8 },
-  top: { xAlign: 'center', yAlign: 'top', yShift: -18 },
-  araba: { xAlign: 'center', yAlign: 'top', yShift: -16 },
-  elma: { xAlign: 'right', yAlign: 'top', xShift: 14, yShift: -14 }
+  su: { xAlign: 'left', yAlign: 'top', xShift: -18, yShift: -18 },
+  baba: { xAlign: 'center', yAlign: 'top', xShift: 0, yShift: -22 },
+  top: { xAlign: 'right', yAlign: 'top', xShift: 18, yShift: -18 },
+  araba: { xAlign: 'left', yAlign: 'top', xShift: -10, yShift: -14 },
+  elma: { xAlign: 'right', yAlign: 'top', xShift: 10, yShift: -14 }
 };
 
 export class SpeechGameModule {
@@ -1465,9 +1465,12 @@ export class SpeechGameModule {
     x += anchor.xShift ?? 0;
     y += anchor.yShift ?? 0;
 
+    const safeInsetX = 20;
+    const safeInsetY = 18;
+
     return {
-      x: Math.max(4, Math.min(x, Math.max(4, stageRect.width - mascotSize - 4))),
-      y: Math.max(0, y)
+      x: Math.max(safeInsetX, Math.min(x, Math.max(safeInsetX, stageRect.width - mascotSize - safeInsetX))),
+      y: Math.max(safeInsetY, Math.min(y, Math.max(safeInsetY, stageRect.height - mascotSize - safeInsetY)))
     };
   }
 
