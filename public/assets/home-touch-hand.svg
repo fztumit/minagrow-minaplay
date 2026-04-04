@@ -1,34 +1,49 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Dokunma eli">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 168 96" role="img" aria-label="Dokunma eli">
   <defs>
-    <linearGradient id="handFill" x1="50%" y1="0%" x2="50%" y2="100%">
-      <stop offset="0%" stop-color="#ffd9c8"/>
-      <stop offset="100%" stop-color="#ffb89f"/>
+    <linearGradient id="skinFill" x1="20%" y1="20%" x2="80%" y2="80%">
+      <stop offset="0%" stop-color="#ffd9c9" />
+      <stop offset="100%" stop-color="#f6c0aa" />
     </linearGradient>
-    <linearGradient id="handEdge" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffcbb6"/>
-      <stop offset="100%" stop-color="#f5a98e"/>
-    </linearGradient>
-    <radialGradient id="tapGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#fff6d7" stop-opacity="0.95"/>
-      <stop offset="100%" stop-color="#fff6d7" stop-opacity="0"/>
-    </radialGradient>
   </defs>
 
-  <circle cx="182" cy="56" r="36" fill="url(#tapGlow)"/>
-  <circle cx="182" cy="56" r="10" fill="#ffd98d"/>
-  <circle cx="182" cy="56" r="25" fill="none" stroke="#ffd7b1" stroke-width="8" opacity="0.65"/>
-
-  <g transform="translate(56 34)">
+  <g fill="none" stroke="#8b422f" stroke-linecap="round" stroke-linejoin="round">
     <path
-      d="M58 160c-17 0-30-13-30-30V82c0-8 6-14 14-14s14 6 14 14v24h6V50c0-8 6-14 14-14s14 6 14 14v56h6V32c0-9 7-16 16-16s16 7 16 16v84h6V66c0-8 6-14 14-14s14 6 14 14v68c0 31-24 56-56 56H58Z"
-      fill="url(#handFill)"
-      stroke="url(#handEdge)"
-      stroke-width="7"
-      stroke-linejoin="round"
+      d="M22 60
+         H60
+         c8 0 14-6 14-14
+         v-8
+         c0-8 6-14 14-14
+         h8
+         c8 0 14 6 14 14
+         v2
+         c0 2 2 4 4 4
+         h30
+         c10 0 18 8 18 18
+         s-8 18-18 18
+         h-26
+         c-4 0-8 1-11 3
+         l-10 5
+         c-4 2-8 3-13 3
+         H22
+         c-7 0-12-5-12-12
+         V72
+         c0-7 5-12 12-12Z"
+      fill="url(#skinFill)"
+      stroke-width="4"
     />
-    <path d="M116 20v78" stroke="#fff0ea" stroke-width="6" stroke-linecap="round" opacity="0.72"/>
-    <path d="M88 40v60" stroke="#fff0ea" stroke-width="5" stroke-linecap="round" opacity="0.62"/>
-    <path d="M58 74v34" stroke="#fff0ea" stroke-width="5" stroke-linecap="round" opacity="0.56"/>
-    <path d="M145 58v42" stroke="#fff0ea" stroke-width="5" stroke-linecap="round" opacity="0.56"/>
+    <path
+      d="M72 50
+         c-5 0-10-2-14-6
+         l-8-8
+         c-6-6-6-15 0-21
+         s15-6 21 0
+         l10 10"
+      fill="url(#skinFill)"
+      stroke-width="4"
+    />
+    <path d="M108 28c4 0 7 3 7 7" stroke-width="3" opacity="0.55" />
+    <path d="M116 49h18" stroke-width="3" opacity="0.48" />
+    <path d="M50 76h24" stroke-width="3" opacity="0.35" />
+    <path d="M57 44 48 35" stroke-width="3" opacity="0.35" />
   </g>
 </svg>
