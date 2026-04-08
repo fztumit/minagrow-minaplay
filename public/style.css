@@ -636,7 +636,7 @@ img.home-mode-target {
 }
 
 .home-mode-card.is-word .home-mode-target.is-glass {
-  left: 26px;
+  left: 54px;
   right: auto;
   top: auto;
   bottom: 8px;
@@ -647,10 +647,10 @@ img.home-mode-target {
 }
 
 .home-mode-card.is-word .home-mode-touch-burst.is-glass {
-  left: 52px;
+  left: 82px;
   right: auto;
   top: auto;
-  bottom: 30px;
+  bottom: 34px;
   width: 56px;
   height: 56px;
   z-index: 1;
@@ -668,13 +668,13 @@ img.home-mode-target {
 }
 
 .home-mode-reach-hand {
-  left: 66px;
-  bottom: 26px;
-  width: 42px;
-  height: 36px;
-  overflow: hidden;
-  border-radius: 18px;
-  transform: rotate(-6deg);
+  left: 4px;
+  bottom: 10px;
+  width: 122px;
+  height: 70px;
+  overflow: visible;
+  border-radius: 0;
+  transform: rotate(-2deg);
   z-index: 4;
 }
 
@@ -685,12 +685,11 @@ img.home-mode-target {
 
 .home-mode-reach-hand-image {
   position: absolute;
-  left: -22px;
-  top: -34px;
-  width: 112px;
-  height: 112px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 4px 10px rgba(191, 154, 180, 0.18));
+  filter: drop-shadow(0 6px 12px rgba(171, 116, 92, 0.16));
   pointer-events: none;
 }
 
@@ -4166,7 +4165,7 @@ img.home-mode-target {
   }
 
   .home-mode-card.is-word .home-mode-target.is-glass {
-    left: 18px;
+    left: 30px;
     right: auto;
     top: auto;
     bottom: 10px;
@@ -4175,10 +4174,10 @@ img.home-mode-target {
   }
 
   .home-mode-card.is-word .home-mode-touch-burst.is-glass {
-    left: 34px;
+    left: 50px;
     right: auto;
     top: auto;
-    bottom: 26px;
+    bottom: 30px;
     width: 42px;
     height: 42px;
   }
@@ -4188,17 +4187,16 @@ img.home-mode-target {
   }
 
   .home-mode-reach-hand {
-    left: 43px;
-    bottom: 21px;
-    width: 32px;
-    height: 28px;
+    left: 2px;
+    bottom: 11px;
+    width: 88px;
+    height: 50px;
   }
 
   .home-mode-reach-hand-image {
-    left: -17px;
-    top: -26px;
-    width: 84px;
-    height: 84px;
+    inset: 0;
+    width: 100%;
+    height: 100%;
   }
 
   .home-mode-card.is-sentence .home-mode-main,
