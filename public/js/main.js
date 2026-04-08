@@ -378,9 +378,13 @@ function installTestingHooks() {
                 date: dailyActivityRoot?.getAttribute('data-daily-task-date') ?? ''
             },
             speech: {
+                active_level: speechRoot?.getAttribute('data-active-level') ?? 'starter',
+                active_set: speechRoot?.getAttribute('data-active-set') ?? 'starter-first-words',
                 last_word: speechRoot?.getAttribute('data-last-word') ?? null,
                 next_word: speechRoot?.getAttribute('data-next-word') ?? null,
                 current_target: speechRoot?.getAttribute('data-current-target') ?? null,
+                guided_target: speechRoot?.getAttribute('data-guided-target') ?? null,
+                focused_word: speechRoot?.getAttribute('data-focused-word') ?? null,
                 guide_prompt: speechRoot?.getAttribute('data-guide-prompt') ?? '',
                 guide_active: speechRoot?.getAttribute('data-guide-active') === 'true',
                 guide_mode: speechRoot?.getAttribute('data-guide-mode') ?? 'idle',
@@ -388,6 +392,8 @@ function installTestingHooks() {
                 peek_mode: speechRoot?.getAttribute('data-peek-mode') ?? 'hands',
                 water_spilled: speechRoot?.getAttribute('data-water-spilled') === 'true',
                 water_expanded: speechRoot?.getAttribute('data-water-expanded') === 'true',
+                auto_progress: speechRoot?.getAttribute('data-auto-progress') === 'true',
+                set_completion: speechRoot?.getAttribute('data-set-completion') ?? '0/0',
                 repeat_mode: speechRoot?.getAttribute('data-repeat-mode') ?? 'default',
                 custom_audio_count: Number(speechRoot?.getAttribute('data-custom-audio-count') ?? 0),
                 word_recording_coverage: speechRoot?.getAttribute('data-word-recording-coverage') ?? '0/0',

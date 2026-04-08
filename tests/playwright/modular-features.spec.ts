@@ -382,7 +382,6 @@ test('parent can rename a word and add a matching image from the progress list',
 
   await expect(page.locator('.progress-row[data-word-id="elma"] .progress-word-input')).toHaveValue('Meyve');
   await expect(page.locator('#custom-audio-status')).toContainText('Meyve');
-  await expect(page.locator('.word-card[data-word-id="elma"]')).toHaveAttribute('aria-label', 'Meyve');
 
   await page.setInputFiles('.progress-row[data-word-id="elma"] .progress-image-input', {
     name: 'meyve.svg',
@@ -392,9 +391,25 @@ test('parent can rename a word and add a matching image from the progress list',
     )
   });
 
+  await page.setInputFiles('.progress-row[data-word-id="elma"] .progress-guided-gif-input', {
+    name: 'meyve-guide.gif',
+    mimeType: 'image/gif',
+    buffer: Buffer.from(
+      'R0lGODlhAQABAIABAP///wAAACwAAAAAAQABAAACAkQBADs=',
+      'base64'
+    )
+  });
+
   await expect(page.locator('.progress-row[data-word-id="elma"] .progress-word-preview img')).toHaveAttribute(
     'src',
     /data:image/
   );
+  await expect(page.locator('.progress-row[data-word-id="elma"]')).toContainText('Rehber GIF: Var');
+
+  await page.selectOption('#speech-set-select', 'starter-play-set');
+  await closeParentPanel(page, 'home');
+  await openWordMode(page);
+
+  await expect(page.locator('.word-card[data-word-id="elma"]')).toHaveAttribute('aria-label', 'Meyve');
   await expect(page.locator('.word-card[data-word-id="elma"] .word-object-image')).toHaveAttribute('src', /data:image/);
 });

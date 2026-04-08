@@ -3,6 +3,7 @@ import { expect, type Page } from '@playwright/test';
 export async function openWordMode(page: Page): Promise<void> {
   await page.click('.tab-btn[data-view="speech"]');
   await expect(page.locator('#view-speech')).toHaveClass(/active/);
+  await expect(page.locator('#view-speech')).toHaveAttribute('data-scene-phase', 'awaiting-tap');
 }
 
 export async function openSentenceMode(page: Page): Promise<void> {

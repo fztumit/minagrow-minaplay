@@ -16,9 +16,12 @@ test('page loads with core module blocks', async ({ page }) => {
   await openWordMode(page);
   await expect(page.locator('#speech-stage')).toBeVisible();
   await expect(page.locator('#view-speech')).toHaveAttribute('data-scene-phase', 'awaiting-tap');
-  await expect(page.locator('#speech-grid .word-card')).toHaveCount(5);
-  await expect(page.locator('#speech-grid .word-object-image')).toHaveCount(4);
+  await expect(page.locator('#speech-grid .word-card')).toHaveCount(3);
+  await expect(page.locator('#speech-focus-card')).toContainText('Su');
+  await expect(page.locator('#speech-tray-status')).toContainText('0/3');
   await expect(page.locator('#view-speech')).toHaveAttribute('data-current-target', 'su');
+  await expect(page.locator('#view-speech')).toHaveAttribute('data-active-set', 'starter-first-words');
+  await expect(page.locator('#view-speech')).toHaveAttribute('data-guided-target', 'su');
 
   await unlockParentPanel(page);
   await expect(page.locator('#daily-word-record-start')).toBeVisible();

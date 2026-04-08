@@ -5,11 +5,14 @@ const WORD_PROFILE_STORAGE_KEY = 'konusu_yorum_word_profiles_v1';
 export type WordProfileOverride = {
   label?: string;
   imageDataUrl?: string;
+  guidedGifDataUrl?: string;
 };
 
 export type ResolvedWordProfile = VocabularyItem & {
   imageSrc: string;
+  guidedGifSrc: string;
   hasCustomImage: boolean;
+  hasCustomGuidedGif: boolean;
 };
 
 type WordProfileOverrideMap = Partial<Record<VocabularyWord, WordProfileOverride>>;
@@ -36,11 +39,16 @@ export function loadWordProfileOverrides(): WordProfileOverrideMap {
         .map(([wordId, value]) => {
           const label = typeof value?.label === 'string' ? normalizeWordLabel(value.label) : '';
           const imageDataUrl = typeof value?.imageDataUrl === 'string' ? value.imageDataUrl : '';
+          const guidedGifDataUrl =
+            typeof value?.guidedGifDataUrl === 'string' && value.guidedGifDataUrl.startsWith('data:image/')
+              ? value.guidedGifDataUrl
+              : '';
           return [
             wordId,
             {
               ...(label ? { label } : {}),
-              ...(imageDataUrl.startsWith('data:image/') ? { imageDataUrl } : {})
+              ...(imageDataUrl.startsWith('data:image/') ? { imageDataUrl } : {}),
+              ...(guidedGifDataUrl ? { guidedGifDataUrl } : {})
             }
           ];
         })
@@ -57,11 +65,16 @@ export function saveWordProfileOverrides(overrides: WordProfileOverrideMap): voi
     .map(([wordId, value]) => {
       const label = typeof value.label === 'string' ? normalizeWordLabel(value.label) : '';
       const imageDataUrl = typeof value.imageDataUrl === 'string' ? value.imageDataUrl : '';
+      const guidedGifDataUrl =
+        typeof value.guidedGifDataUrl === 'string' && value.guidedGifDataUrl.startsWith('data:image/')
+          ? value.guidedGifDataUrl
+          : '';
       return [
         wordId,
         {
           ...(label ? { label } : {}),
-          ...(imageDataUrl.startsWith('data:image/') ? { imageDataUrl } : {})
+          ...(imageDataUrl.startsWith('data:image/') ? { imageDataUrl } : {}),
+          ...(guidedGifDataUrl ? { guidedGifDataUrl } : {})
         }
       ];
     })
@@ -80,12 +93,15 @@ export function getWordProfile(wordId: VocabularyWord, vocabulary: VocabularyIte
   const override = overrides[wordId];
   const label = override?.label || item.label;
   const imageSrc = override?.imageDataUrl || item.asset || '';
+  const guidedGifSrc = override?.guidedGifDataUrl || item.guidedGifSrc || '';
 
   return {
     ...item,
     label,
     imageSrc,
-    hasCustomImage: Boolean(override?.imageDataUrl)
+    guidedGifSrc,
+    hasCustomImage: Boolean(override?.imageDataUrl),
+    hasCustomGuidedGif: Boolean(override?.guidedGifDataUrl)
   };
 }
 
@@ -129,6 +145,30 @@ export function clearWordImage(wordId: VocabularyWord): void {
   }
 
   delete current.imageDataUrl;
+  if (Object.keys(current).length === 0) {
+    delete overrides[wordId];
+  } else {
+    overrides[wordId] = current;
+  }
+  saveWordProfileOverrides(overrides);
+}
+
+export function updateWordGuidedGif(wordId: VocabularyWord, imageDataUrl: string): void {
+  const overrides = loadWordProfileOverrides();
+  const current = overrides[wordId] ?? {};
+  current.guidedGifDataUrl = imageDataUrl;
+  overrides[wordId] = current;
+  saveWordProfileOverrides(overrides);
+}
+
+export function clearWordGuidedGif(wordId: VocabularyWord): void {
+  const overrides = loadWordProfileOverrides();
+  const current = overrides[wordId];
+  if (!current) {
+    return;
+  }
+
+  delete current.guidedGifDataUrl;
   if (Object.keys(current).length === 0) {
     delete overrides[wordId];
   } else {

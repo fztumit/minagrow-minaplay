@@ -18,11 +18,15 @@ export function loadWordProfileOverrides() {
             .map(([wordId, value]) => {
             const label = typeof value?.label === 'string' ? normalizeWordLabel(value.label) : '';
             const imageDataUrl = typeof value?.imageDataUrl === 'string' ? value.imageDataUrl : '';
+            const guidedGifDataUrl = typeof value?.guidedGifDataUrl === 'string' && value.guidedGifDataUrl.startsWith('data:image/')
+                ? value.guidedGifDataUrl
+                : '';
             return [
                 wordId,
                 {
                     ...(label ? { label } : {}),
-                    ...(imageDataUrl.startsWith('data:image/') ? { imageDataUrl } : {})
+                    ...(imageDataUrl.startsWith('data:image/') ? { imageDataUrl } : {}),
+                    ...(guidedGifDataUrl ? { guidedGifDataUrl } : {})
                 }
             ];
         })
@@ -38,11 +42,15 @@ export function saveWordProfileOverrides(overrides) {
         .map(([wordId, value]) => {
         const label = typeof value.label === 'string' ? normalizeWordLabel(value.label) : '';
         const imageDataUrl = typeof value.imageDataUrl === 'string' ? value.imageDataUrl : '';
+        const guidedGifDataUrl = typeof value.guidedGifDataUrl === 'string' && value.guidedGifDataUrl.startsWith('data:image/')
+            ? value.guidedGifDataUrl
+            : '';
         return [
             wordId,
             {
                 ...(label ? { label } : {}),
-                ...(imageDataUrl.startsWith('data:image/') ? { imageDataUrl } : {})
+                ...(imageDataUrl.startsWith('data:image/') ? { imageDataUrl } : {}),
+                ...(guidedGifDataUrl ? { guidedGifDataUrl } : {})
             }
         ];
     })
@@ -58,11 +66,14 @@ export function getWordProfile(wordId, vocabulary = VOCABULARY) {
     const override = overrides[wordId];
     const label = override?.label || item.label;
     const imageSrc = override?.imageDataUrl || item.asset || '';
+    const guidedGifSrc = override?.guidedGifDataUrl || item.guidedGifSrc || '';
     return {
         ...item,
         label,
         imageSrc,
-        hasCustomImage: Boolean(override?.imageDataUrl)
+        guidedGifSrc,
+        hasCustomImage: Boolean(override?.imageDataUrl),
+        hasCustomGuidedGif: Boolean(override?.guidedGifDataUrl)
     };
 }
 export function getAllWordProfiles(vocabulary = VOCABULARY) {
@@ -100,6 +111,28 @@ export function clearWordImage(wordId) {
         return;
     }
     delete current.imageDataUrl;
+    if (Object.keys(current).length === 0) {
+        delete overrides[wordId];
+    }
+    else {
+        overrides[wordId] = current;
+    }
+    saveWordProfileOverrides(overrides);
+}
+export function updateWordGuidedGif(wordId, imageDataUrl) {
+    const overrides = loadWordProfileOverrides();
+    const current = overrides[wordId] ?? {};
+    current.guidedGifDataUrl = imageDataUrl;
+    overrides[wordId] = current;
+    saveWordProfileOverrides(overrides);
+}
+export function clearWordGuidedGif(wordId) {
+    const overrides = loadWordProfileOverrides();
+    const current = overrides[wordId];
+    if (!current) {
+        return;
+    }
+    delete current.guidedGifDataUrl;
     if (Object.keys(current).length === 0) {
         delete overrides[wordId];
     }

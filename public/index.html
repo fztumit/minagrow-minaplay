@@ -167,7 +167,30 @@
                 </span>
               </div>
             </div>
-            <div class="speech-grid" id="speech-grid" aria-label="Sesli nesneler"></div>
+
+            <div class="speech-play-shell">
+              <section class="speech-focus-panel" aria-label="Pofi'nin hedefi">
+                <div class="speech-focus-copy">
+                  <span class="speech-focus-kicker" id="speech-focus-kicker">Pofi'nin hedefi</span>
+                  <h3 class="speech-focus-label" id="speech-focus-label">Hazır mısın?</h3>
+                  <p class="speech-focus-prompt" id="speech-focus-prompt">Pofi birazdan bir nesne gösterecek.</p>
+                </div>
+
+                <button type="button" class="speech-focus-card" id="speech-focus-card" aria-live="polite">
+                  <span class="speech-focus-badge" id="speech-focus-badge">Hedef</span>
+                  <span class="speech-focus-illustration" id="speech-focus-illustration" aria-hidden="true"></span>
+                  <span class="speech-focus-caption" id="speech-focus-caption">Bir nesne seçilecek.</span>
+                </button>
+              </section>
+
+              <section class="speech-tray-panel" aria-label="Dokunulabilir nesneler">
+                <div class="speech-tray-heading">
+                  <span class="speech-tray-kicker">Nesneler</span>
+                  <p class="speech-tray-status" id="speech-tray-status">Pofi'nin seçtiği nesneye dokun.</p>
+                </div>
+                <div class="speech-grid" id="speech-grid" aria-label="Sesli nesneler"></div>
+              </section>
+            </div>
           </div>
           <p class="speech-feedback visually-hidden" id="speech-feedback" aria-live="polite">Bir nesneye dokun.</p>
           <div class="water-focus-overlay" id="water-focus-overlay" aria-hidden="true">
@@ -397,6 +420,14 @@
             <h3>Konuşma Ayarları</h3>
             <div class="parent-settings-grid">
               <label>
+                Seviye
+                <select id="speech-level-select"></select>
+              </label>
+              <label>
+                Set
+                <select id="speech-set-select"></select>
+              </label>
+              <label>
                 Tekrar Sayısı
                 <select id="speech-repeat-mode">
                   <option value="default">Kelimeye göre (önerilen)</option>
@@ -406,6 +437,19 @@
                 </select>
               </label>
             </div>
+
+            <div class="speech-set-controls">
+              <label class="toggle-row">
+                <input id="speech-auto-progress" type="checkbox" checked />
+                <span>Set bitince otomatik ilerle</span>
+              </label>
+              <label class="toggle-row">
+                <input id="speech-pin-set" type="checkbox" />
+                <span>Aktif seti sabitle</span>
+              </label>
+            </div>
+            <p class="speech-set-summary" id="speech-set-summary">Aktif set hazırlanıyor...</p>
+
             <div class="custom-audio-panel" aria-label="Kendi ses kaydi">
               <h4>Kendi Sesinle Oku (TTS yerine)</h4>
               <div class="custom-audio-inline">

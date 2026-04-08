@@ -1,9 +1,17 @@
-import type { VocabularyWord } from '../data/vocabulary.js';
-import { VOCABULARY } from '../data/vocabulary.js';
+import type { SpeechLevelId, SpeechSetId, VocabularyWord } from '../data/vocabulary.js';
 import {
+  VOCABULARY,
+  getSpeechLevelIds,
+  getSpeechSetDefinition,
+  getSpeechSets,
+  SPEECH_LEVEL_LABELS
+} from '../data/vocabulary.js';
+import {
+  clearWordGuidedGif,
   clearWordImage,
   getAllWordProfiles,
   normalizeWordLabel,
+  updateWordGuidedGif,
   updateWordImage,
   updateWordLabel,
   type ResolvedWordProfile
@@ -37,10 +45,13 @@ type SpeechTriggerDetail = {
 type RepeatMode = 'default' | '1' | '2' | '3';
 type SpeechSettings = {
   repeatMode: RepeatMode;
+  activeLevel: SpeechLevelId;
+  activeSet: SpeechSetId;
+  autoProgress: boolean;
+  pinnedSet: boolean;
 };
 
 const SETTINGS_STORAGE_KEY = 'konusu_yorum_speech_settings_v1';
-const SCENE_VOCABULARY = VOCABULARY.filter((item) => item.featuredOnScene);
 const GUIDE_REMINDER_DELAY_MS = navigator.webdriver ? 4800 : 9400;
 const GUIDE_REMINDER_VARIANCE_MS = navigator.webdriver ? 0 : 2400;
 const GUIDE_REMINDER_RETRY_MS = navigator.webdriver ? 300 : 1800;
@@ -58,7 +69,10 @@ const GUIDE_WAIT_PROMPTS: Partial<Record<VocabularyWord, string>> = {
   top: 'Ben topun yanında bekliyorum.',
   araba: 'Ben arabanın yanında bekliyorum.',
   elma: 'Ben elmanın yanında bekliyorum.',
-  anne: 'Ben annenin yanında bekliyorum.'
+  anne: 'Ben annenin yanında bekliyorum.',
+  kitap: 'Ben kitabın yanında bekliyorum.',
+  süt: 'Ben sütün yanında bekliyorum.',
+  ekmek: 'Ben ekmeğin yanında bekliyorum.'
 };
 const GUIDE_WORD_ANCHORS: Partial<Record<VocabularyWord, GuideAnchor>> = {
   su: { xAlign: 'left', yAlign: 'top', xShift: -18, yShift: -18 },
@@ -68,16 +82,32 @@ const GUIDE_WORD_ANCHORS: Partial<Record<VocabularyWord, GuideAnchor>> = {
   elma: { xAlign: 'right', yAlign: 'middle', xShift: 28, yShift: 4 }
 };
 
+const DEFAULT_SPEECH_LEVEL: SpeechLevelId = 'starter';
+const DEFAULT_SPEECH_SET: SpeechSetId = 'starter-first-words';
+
 export class SpeechGameModule {
   private readonly rootEl: HTMLElement;
   private readonly stageEl: HTMLElement;
   private readonly gridEl: HTMLElement;
+  private readonly focusCardBtn: HTMLButtonElement;
+  private readonly focusKickerEl: HTMLElement;
+  private readonly focusLabelEl: HTMLElement;
+  private readonly focusPromptEl: HTMLElement;
+  private readonly focusBadgeEl: HTMLElement;
+  private readonly focusIllustrationEl: HTMLElement;
+  private readonly focusCaptionEl: HTMLElement;
+  private readonly trayStatusEl: HTMLElement;
   private readonly guideLayerEl: HTMLElement;
   private readonly guideMascotEl: HTMLElement;
   private readonly parentPanelTriggerBtn: HTMLButtonElement;
   private readonly parentCornerHotspotEl: HTMLElement;
   private readonly feedbackEl: HTMLElement;
+  private readonly levelSelect: HTMLSelectElement;
+  private readonly setSelect: HTMLSelectElement;
   private readonly repeatModeSelect: HTMLSelectElement;
+  private readonly autoProgressCheckbox: HTMLInputElement;
+  private readonly pinSetCheckbox: HTMLInputElement;
+  private readonly setSummaryEl: HTMLElement;
   private readonly customAudioTextInput: HTMLInputElement;
   private readonly customAudioStartBtn: HTMLButtonElement;
   private readonly customAudioStopBtn: HTMLButtonElement;
@@ -113,19 +143,37 @@ export class SpeechGameModule {
   private sceneAudioContext: AudioContext | null = null;
   private attentionEffectIndex = 0;
   private idleReminderCount = 0;
+  private readonly completedWordIds = new Set<VocabularyWord>();
   private settings: SpeechSettings = {
-    repeatMode: 'default'
+    repeatMode: 'default',
+    activeLevel: DEFAULT_SPEECH_LEVEL,
+    activeSet: DEFAULT_SPEECH_SET,
+    autoProgress: true,
+    pinnedSet: false
   };
 
   constructor(rootEl: HTMLElement, mascot: MascotGuide, controlsRootEl: ParentNode = rootEl) {
     const stageEl = rootEl.querySelector<HTMLElement>('#speech-stage');
     const gridEl = rootEl.querySelector<HTMLElement>('#speech-grid');
+    const focusCardBtn = rootEl.querySelector<HTMLButtonElement>('#speech-focus-card');
+    const focusKickerEl = rootEl.querySelector<HTMLElement>('#speech-focus-kicker');
+    const focusLabelEl = rootEl.querySelector<HTMLElement>('#speech-focus-label');
+    const focusPromptEl = rootEl.querySelector<HTMLElement>('#speech-focus-prompt');
+    const focusBadgeEl = rootEl.querySelector<HTMLElement>('#speech-focus-badge');
+    const focusIllustrationEl = rootEl.querySelector<HTMLElement>('#speech-focus-illustration');
+    const focusCaptionEl = rootEl.querySelector<HTMLElement>('#speech-focus-caption');
+    const trayStatusEl = rootEl.querySelector<HTMLElement>('#speech-tray-status');
     const guideLayerEl = rootEl.querySelector<HTMLElement>('#speech-guide-layer');
     const guideMascotEl = rootEl.querySelector<HTMLElement>('#speech-guide-mascot');
     const parentPanelTriggerBtn = rootEl.querySelector<HTMLButtonElement>('#parent-panel-trigger');
     const parentCornerHotspotEl = rootEl.querySelector<HTMLElement>('#parent-corner-hotspot');
     const feedbackEl = rootEl.querySelector<HTMLElement>('#speech-feedback');
+    const levelSelect = controlsRootEl.querySelector<HTMLSelectElement>('#speech-level-select');
+    const setSelect = controlsRootEl.querySelector<HTMLSelectElement>('#speech-set-select');
     const repeatModeSelect = controlsRootEl.querySelector<HTMLSelectElement>('#speech-repeat-mode');
+    const autoProgressCheckbox = controlsRootEl.querySelector<HTMLInputElement>('#speech-auto-progress');
+    const pinSetCheckbox = controlsRootEl.querySelector<HTMLInputElement>('#speech-pin-set');
+    const setSummaryEl = controlsRootEl.querySelector<HTMLElement>('#speech-set-summary');
     const customAudioTextInput = controlsRootEl.querySelector<HTMLInputElement>('#custom-audio-text');
     const customAudioStartBtn = controlsRootEl.querySelector<HTMLButtonElement>('#custom-audio-record-start');
     const customAudioStopBtn = controlsRootEl.querySelector<HTMLButtonElement>('#custom-audio-record-stop');
@@ -147,12 +195,25 @@ export class SpeechGameModule {
     if (
       !stageEl ||
       !gridEl ||
+      !focusCardBtn ||
+      !focusKickerEl ||
+      !focusLabelEl ||
+      !focusPromptEl ||
+      !focusBadgeEl ||
+      !focusIllustrationEl ||
+      !focusCaptionEl ||
+      !trayStatusEl ||
       !guideLayerEl ||
       !guideMascotEl ||
       !parentPanelTriggerBtn ||
       !parentCornerHotspotEl ||
       !feedbackEl ||
+      !levelSelect ||
+      !setSelect ||
       !repeatModeSelect ||
+      !autoProgressCheckbox ||
+      !pinSetCheckbox ||
+      !setSummaryEl ||
       !customAudioTextInput ||
       !customAudioStartBtn ||
       !customAudioStopBtn ||
@@ -177,12 +238,25 @@ export class SpeechGameModule {
     this.rootEl = rootEl;
     this.stageEl = stageEl;
     this.gridEl = gridEl;
+    this.focusCardBtn = focusCardBtn;
+    this.focusKickerEl = focusKickerEl;
+    this.focusLabelEl = focusLabelEl;
+    this.focusPromptEl = focusPromptEl;
+    this.focusBadgeEl = focusBadgeEl;
+    this.focusIllustrationEl = focusIllustrationEl;
+    this.focusCaptionEl = focusCaptionEl;
+    this.trayStatusEl = trayStatusEl;
     this.guideLayerEl = guideLayerEl;
     this.guideMascotEl = guideMascotEl;
     this.parentPanelTriggerBtn = parentPanelTriggerBtn;
     this.parentCornerHotspotEl = parentCornerHotspotEl;
     this.feedbackEl = feedbackEl;
+    this.levelSelect = levelSelect;
+    this.setSelect = setSelect;
     this.repeatModeSelect = repeatModeSelect;
+    this.autoProgressCheckbox = autoProgressCheckbox;
+    this.pinSetCheckbox = pinSetCheckbox;
+    this.setSummaryEl = setSummaryEl;
     this.customAudioTextInput = customAudioTextInput;
     this.customAudioStartBtn = customAudioStartBtn;
     this.customAudioStopBtn = customAudioStopBtn;
@@ -204,8 +278,11 @@ export class SpeechGameModule {
   }
 
   init(): void {
-    this.renderCards(this.getSceneProfiles());
     this.loadSettings();
+    this.ensureValidActiveSet();
+    this.populateSpeechSetControls();
+    this.renderCards(this.getActiveSetProfiles());
+    this.renderFocusCard(this.getActiveSetProfiles()[0] ?? null);
     this.refreshCustomAudioMap();
     this.bindEvents();
     this.bindSettingsEvents();
@@ -222,6 +299,8 @@ export class SpeechGameModule {
     this.rootEl.setAttribute('data-scene-phase', 'intro');
     this.rootEl.setAttribute('data-peek-mode', 'none');
     this.rootEl.setAttribute('data-current-target', '');
+    this.rootEl.setAttribute('data-guided-target', '');
+    this.rootEl.setAttribute('data-focused-word', '');
     this.syncSettingsToDom();
     this.renderRecordingLibrary();
     this.renderProgressPanel();
@@ -243,27 +322,6 @@ export class SpeechGameModule {
   private renderCards(vocabulary: ResolvedWordProfile[]): void {
     this.gridEl.innerHTML = vocabulary
       .map((item) => {
-        if (item.word === 'su') {
-          return `
-            <button
-              class="word-card ${item.sceneClass ?? ''}"
-              type="button"
-              data-word-id="${item.word}"
-              data-word-label="${this.escapeHtml(item.label)}"
-              data-repeats="${item.repeats}"
-              aria-label="${this.escapeHtml(item.label)}"
-            >
-              <div class="word-illustration water-visual" aria-hidden="true">
-                <img class="water-glass-image" src="${this.escapeHtml(item.imageSrc || '/assets/water-glass.svg')}" alt="" />
-                <div class="water-glass-shimmer"></div>
-                <div class="spill-stream"></div>
-                <div class="spill-pool"></div>
-              </div>
-              <span class="visually-hidden">${this.escapeHtml(item.label)}</span>
-            </button>
-          `;
-        }
-
         return `
           <button
             class="word-card ${item.sceneClass ?? ''}"
@@ -271,20 +329,29 @@ export class SpeechGameModule {
             data-word-id="${item.word}"
             data-word-label="${this.escapeHtml(item.label)}"
             data-repeats="${item.repeats}"
+            data-level="${item.level}"
+            data-set-id="${item.setId}"
+            data-order="${item.order}"
+            data-media-type="${item.mediaType}"
             aria-label="${this.escapeHtml(item.label)}"
           >
-            <div class="word-illustration" aria-hidden="true">
-              <img class="word-object-image" src="${this.escapeHtml(item.imageSrc)}" alt="" />
-            </div>
+            ${this.renderWordMedia(item, { variant: 'tray' })}
+            <span class="word-card-label">${this.escapeHtml(this.toDisplayLabel(item.label))}</span>
             <span class="visually-hidden">${this.escapeHtml(item.label)}</span>
           </button>
         `;
       })
       .join('');
+
+    this.syncCompletedWordState();
+    this.updateTrayStatus();
   }
 
-  private getSceneProfiles(): ResolvedWordProfile[] {
-    return getAllWordProfiles(SCENE_VOCABULARY);
+  private getActiveSetProfiles(): ResolvedWordProfile[] {
+    const vocabulary = VOCABULARY.filter((item) => item.setId === this.settings.activeSet).sort(
+      (left, right) => left.order - right.order
+    );
+    return getAllWordProfiles(vocabulary);
   }
 
   private getResolvedWordProfile(wordId: VocabularyWord): ResolvedWordProfile {
@@ -296,33 +363,19 @@ export class SpeechGameModule {
   }
 
   private handleWordProfilesUpdated(): void {
-    const previousActiveWordId = this.activeNextButton?.dataset.wordId as VocabularyWord | undefined;
-    this.renderCards(this.getSceneProfiles());
+    this.renderCards(this.getActiveSetProfiles());
     this.renderProgressPanel();
     this.renderRecordingLibrary();
+    this.syncSettingsToDom();
 
-    const nextWordLabel = this.rootEl.getAttribute('data-next-word') ?? '';
-    const restoredButton =
-      (previousActiveWordId
-        ? Array.from(this.gridEl.querySelectorAll<HTMLButtonElement>('.word-card')).find(
-            (button) => button.dataset.wordId === previousActiveWordId
-          )
-        : null) ??
-      Array.from(this.gridEl.querySelectorAll<HTMLButtonElement>('.word-card')).find(
-        (button) => button.dataset.wordLabel === nextWordLabel
-      ) ??
-      this.gridEl.querySelector<HTMLButtonElement>('.word-card');
-
-    if (restoredButton) {
-      this.clearCurrentNextTarget();
-      this.activeNextButton = restoredButton;
-      restoredButton.classList.add('is-next-target');
-      restoredButton.setAttribute('data-next-target', 'true');
-      this.rootEl.setAttribute('data-next-word', restoredButton.dataset.wordLabel ?? '');
-      this.rootEl.setAttribute('data-current-target', restoredButton.dataset.wordId ?? '');
-      this.setCardsInteractive(restoredButton);
-      this.placeGuideMascot(restoredButton);
+    const activeViewId = document.body.getAttribute('data-active-view');
+    if (activeViewId === 'speech') {
+      this.resetPlayfield(true);
+      return;
     }
+
+    this.clearCurrentNextTarget();
+    this.renderFocusCard(this.getActiveSetProfiles()[0] ?? null);
   }
 
   private notifyWordProfilesUpdated(): void {
@@ -350,18 +403,163 @@ export class SpeechGameModule {
     this.customAudioStatusEl.textContent = `"${nextLabel}" kelimesi guncellendi.`;
   }
 
-  private async updateWordImageFromFile(wordId: VocabularyWord, file: File): Promise<void> {
+  private async updateWordImageFromFile(
+    wordId: VocabularyWord,
+    file: File,
+    variant: 'image' | 'guided-gif' = 'image'
+  ): Promise<void> {
     if (!file.type.startsWith('image/')) {
       this.customAudioStatusEl.textContent = 'Lutfen gecerli bir gorsel sec.';
       return;
     }
 
     const dataUrl = await this.blobToDataUrl(file);
-    updateWordImage(wordId, dataUrl);
-    this.renderCards(this.getSceneProfiles());
-    this.renderProgressPanel();
+    if (variant === 'guided-gif') {
+      updateWordGuidedGif(wordId, dataUrl);
+    } else {
+      updateWordImage(wordId, dataUrl);
+    }
     this.notifyWordProfilesUpdated();
-    this.customAudioStatusEl.textContent = `"${this.getResolvedWordProfile(wordId).label}" gorseli guncellendi.`;
+    this.customAudioStatusEl.textContent =
+      variant === 'guided-gif'
+        ? `"${this.getResolvedWordProfile(wordId).label}" rehber GIF gorseli guncellendi.`
+        : `"${this.getResolvedWordProfile(wordId).label}" gorseli guncellendi.`;
+  }
+
+  private renderWordMedia(
+    profile: ResolvedWordProfile,
+    options: { variant: 'focus' | 'tray'; preferGuidedGif?: boolean }
+  ): string {
+    const mediaSrc =
+      options.preferGuidedGif && profile.guidedGifSrc ? profile.guidedGifSrc : profile.imageSrc || profile.asset || '';
+    const variantClass = options.variant === 'focus' ? 'is-focus' : 'is-tray';
+
+    if (profile.word === 'su') {
+      return `
+        <div class="word-illustration water-visual ${variantClass}" aria-hidden="true">
+          <img class="water-glass-image" src="${this.escapeHtml(mediaSrc || '/assets/water-glass.svg')}" alt="" />
+          <div class="water-glass-shimmer"></div>
+          <div class="spill-stream"></div>
+          <div class="spill-pool"></div>
+        </div>
+      `;
+    }
+
+    if (mediaSrc) {
+      return `
+        <div class="word-illustration ${variantClass}" aria-hidden="true">
+          <img class="word-object-image" src="${this.escapeHtml(mediaSrc)}" alt="" />
+        </div>
+      `;
+    }
+
+    return `
+      <div class="word-illustration word-illustration-fallback ${variantClass}" aria-hidden="true">
+        <span class="word-object-fallback">${this.escapeHtml(this.toDisplayLabel(profile.label).slice(0, 1))}</span>
+      </div>
+    `;
+  }
+
+  private renderFocusCard(profile: ResolvedWordProfile | null, isTarget = false): void {
+    if (!profile) {
+      this.focusCardBtn.disabled = true;
+      this.focusCardBtn.classList.remove('is-target');
+      this.focusCardBtn.removeAttribute('data-word-id');
+      this.focusCardBtn.removeAttribute('data-word-label');
+      this.focusCardBtn.removeAttribute('data-repeats');
+      this.focusKickerEl.textContent = "Pofi'nin hedefi";
+      this.focusLabelEl.textContent = 'Hazır mısın?';
+      this.focusPromptEl.textContent = 'Pofi birazdan bir nesne gösterecek.';
+      this.focusBadgeEl.textContent = 'Hazır';
+      this.focusIllustrationEl.innerHTML = '';
+      this.focusCaptionEl.textContent = 'Bir nesne seçilecek.';
+      this.rootEl.setAttribute('data-focused-word', '');
+      return;
+    }
+
+    const focusPrompt = this.buildTargetPrompt(profile);
+    this.focusCardBtn.disabled = !isTarget;
+    this.focusCardBtn.classList.toggle('is-target', isTarget);
+    this.focusCardBtn.dataset.wordId = profile.word;
+    this.focusCardBtn.dataset.wordLabel = profile.label;
+    this.focusCardBtn.dataset.repeats = String(profile.repeats);
+    this.focusKickerEl.textContent = isTarget ? "Pofi'nin seçtiği nesne" : "Birazdan sırada";
+    this.focusLabelEl.textContent = this.toDisplayLabel(profile.label);
+    this.focusPromptEl.textContent = isTarget ? focusPrompt : 'Pofi birazdan sana yön verecek.';
+    this.focusBadgeEl.textContent = isTarget ? 'Hedef' : 'Sırada';
+    this.focusIllustrationEl.innerHTML = this.renderWordMedia(profile, {
+      variant: 'focus',
+      preferGuidedGif: isTarget && Boolean(profile.guidedGifSrc)
+    });
+    this.focusCaptionEl.textContent = isTarget
+      ? `${this.toDisplayLabel(profile.label)} burada büyük görünür.`
+      : 'Pofi önce hedefi gösterecek.';
+    this.rootEl.setAttribute('data-focused-word', profile.word);
+  }
+
+  private getAvailableSetsForActiveLevel() {
+    return getSpeechSets(this.settings.activeLevel);
+  }
+
+  private ensureValidActiveSet(): void {
+    const availableSets = this.getAvailableSetsForActiveLevel();
+    if (availableSets.some((item) => item.id === this.settings.activeSet)) {
+      return;
+    }
+
+    this.settings.activeSet = availableSets[0]?.id ?? DEFAULT_SPEECH_SET;
+  }
+
+  private populateSpeechSetControls(): void {
+    this.levelSelect.innerHTML = getSpeechLevelIds()
+      .map((levelId) => `<option value="${levelId}">${this.escapeHtml(SPEECH_LEVEL_LABELS[levelId])}</option>`)
+      .join('');
+
+    const setOptions = this.getAvailableSetsForActiveLevel();
+    this.setSelect.innerHTML = setOptions
+      .map(
+        (setItem) =>
+          `<option value="${setItem.id}">${this.escapeHtml(this.toDisplayLabel(setItem.label))}</option>`
+      )
+      .join('');
+  }
+
+  private syncCompletedWordState(): void {
+    const completedIds = this.completedWordIds;
+    Array.from(this.gridEl.querySelectorAll<HTMLButtonElement>('.word-card')).forEach((button) => {
+      const wordId = button.dataset.wordId as VocabularyWord | undefined;
+      button.classList.toggle('is-completed', Boolean(wordId && completedIds.has(wordId)));
+    });
+  }
+
+  private updateTrayStatus(): void {
+    const setDefinition = getSpeechSetDefinition(this.settings.activeSet);
+    const totalCount = this.getActiveSetProfiles().length;
+    const completionText = `${this.completedWordIds.size}/${totalCount}`;
+    this.trayStatusEl.textContent = setDefinition
+      ? `${this.toDisplayLabel(setDefinition.label)} • Tamamlanan ${completionText}`
+      : `Tamamlanan ${completionText}`;
+    this.rootEl.setAttribute('data-set-completion', completionText);
+  }
+
+  private buildTargetPrompt(profile: ResolvedWordProfile): string {
+    const promptLabel = profile.promptLabel || profile.label;
+    const normalizedPrompt = promptLabel.trim();
+    if (!normalizedPrompt) {
+      return 'Buna dokun.';
+    }
+
+    const capitalized = normalizedPrompt.charAt(0).toLocaleUpperCase('tr-TR') + normalizedPrompt.slice(1);
+    return `${capitalized} dokun.`;
+  }
+
+  private toDisplayLabel(value: string): string {
+    const normalized = value.trim();
+    if (!normalized) {
+      return '';
+    }
+
+    return normalized.charAt(0).toLocaleUpperCase('tr-TR') + normalized.slice(1);
   }
 
   private bindEvents(): void {
@@ -376,7 +574,14 @@ export class SpeechGameModule {
       }
 
       if (target !== this.activeNextButton) {
-        this.onWrongWordTapped(target);
+        const wordId = target.dataset.wordId as VocabularyWord | undefined;
+        const wordLabel = target.dataset.wordLabel ?? '';
+        const defaultRepeats = Number(target.dataset.repeats ?? 1);
+        if (!wordId || !wordLabel || Number.isNaN(defaultRepeats)) {
+          return;
+        }
+
+        this.onWrongWordTapped(target, wordId, wordLabel, defaultRepeats);
         return;
       }
 
@@ -388,6 +593,21 @@ export class SpeechGameModule {
       }
 
       this.onWordTapped(target, wordId, wordLabel, defaultRepeats);
+    });
+
+    this.focusCardBtn.addEventListener('click', () => {
+      if (this.rootEl.getAttribute('data-scene-phase') !== 'awaiting-tap' || !this.activeNextButton) {
+        return;
+      }
+
+      const wordId = this.activeNextButton.dataset.wordId as VocabularyWord | undefined;
+      const wordLabel = this.activeNextButton.dataset.wordLabel ?? '';
+      const defaultRepeats = Number(this.activeNextButton.dataset.repeats ?? 1);
+      if (!wordId || !wordLabel || Number.isNaN(defaultRepeats)) {
+        return;
+      }
+
+      this.onWordTapped(this.activeNextButton, wordId, wordLabel, defaultRepeats);
     });
 
     this.recordingLibraryListEl.addEventListener('click', (event) => {
@@ -461,10 +681,15 @@ export class SpeechGameModule {
 
       if (action === 'clear-image') {
         clearWordImage(wordId);
-        this.renderCards(this.getSceneProfiles());
-        this.renderProgressPanel();
         this.notifyWordProfilesUpdated();
         this.customAudioStatusEl.textContent = `"${nextLabel}" gorseli silindi.`;
+        return;
+      }
+
+      if (action === 'clear-guided-gif') {
+        clearWordGuidedGif(wordId);
+        this.notifyWordProfilesUpdated();
+        this.customAudioStatusEl.textContent = `"${nextLabel}" rehber GIF gorseli silindi.`;
         return;
       }
 
@@ -502,7 +727,10 @@ export class SpeechGameModule {
 
     this.progressWordListEl.addEventListener('change', (event) => {
       const target = event.target as HTMLInputElement | null;
-      if (!target || !target.classList.contains('progress-image-input')) {
+      if (
+        !target ||
+        (!target.classList.contains('progress-image-input') && !target.classList.contains('progress-guided-gif-input'))
+      ) {
         return;
       }
 
@@ -512,7 +740,8 @@ export class SpeechGameModule {
         return;
       }
 
-      void this.updateWordImageFromFile(wordId, file).finally(() => {
+      const variant = target.classList.contains('progress-guided-gif-input') ? 'guided-gif' : 'image';
+      void this.updateWordImageFromFile(wordId, file, variant).finally(() => {
         target.value = '';
       });
     });
@@ -534,24 +763,63 @@ export class SpeechGameModule {
         return;
       }
 
-      this.placeGuideMascot(this.activeNextButton);
+      this.placeGuideMascot(this.getGuideTargetButton(this.activeNextButton));
       this.rootEl.setAttribute('data-guide-active', 'true');
       if (!this.rootEl.getAttribute('data-guide-prompt')) {
-        this.rootEl.setAttribute('data-guide-prompt', 'Şimdi buna dokun');
+        this.rootEl.setAttribute('data-guide-prompt', this.buildTargetPrompt(this.getResolvedWordProfile(this.activeNextButton.dataset.wordId as VocabularyWord)));
       }
       this.rootEl.setAttribute('data-scene-phase', 'awaiting-tap');
       this.setCardsInteractive(this.activeNextButton);
-      this.scheduleIdleReminder(this.activeNextButton);
+      this.scheduleIdleReminder(this.getGuideTargetButton(this.activeNextButton));
     });
   }
 
   private bindSettingsEvents(): void {
+    this.levelSelect.addEventListener('change', () => {
+      const nextLevel = this.normalizeLevelId(this.levelSelect.value);
+      if (nextLevel === this.settings.activeLevel) {
+        return;
+      }
+
+      this.settings.activeLevel = nextLevel;
+      this.ensureValidActiveSet();
+      this.handleSetSelectionChange('Seviye guncellendi.');
+    });
+
+    this.setSelect.addEventListener('change', () => {
+      const nextSet = this.normalizeSetId(this.setSelect.value, this.settings.activeLevel);
+      if (nextSet === this.settings.activeSet) {
+        return;
+      }
+
+      this.settings.activeSet = nextSet;
+      const activeSetDefinition = getSpeechSetDefinition(nextSet);
+      if (activeSetDefinition) {
+        this.settings.activeLevel = activeSetDefinition.level;
+      }
+      this.handleSetSelectionChange('Set guncellendi.');
+    });
+
     this.repeatModeSelect.addEventListener('change', () => {
       const repeatMode = this.repeatModeSelect.value as RepeatMode;
       this.settings.repeatMode = repeatMode;
       this.saveSettings();
       this.syncSettingsToDom();
       this.feedbackEl.textContent = 'Ebeveyn ayarlari guncellendi.';
+    });
+
+    this.autoProgressCheckbox.addEventListener('change', () => {
+      this.settings.autoProgress = this.autoProgressCheckbox.checked;
+      this.saveSettings();
+      this.syncSettingsToDom();
+      this.feedbackEl.textContent = 'Set ilerleme ayari guncellendi.';
+    });
+
+    this.pinSetCheckbox.addEventListener('change', () => {
+      this.settings.pinnedSet = this.pinSetCheckbox.checked;
+      this.saveSettings();
+      this.syncSettingsToDom();
+      this.feedbackEl.textContent = 'Set sabitleme ayari guncellendi.';
     });
 
     this.customAudioStartBtn.addEventListener('click', () => {
@@ -581,6 +849,94 @@ export class SpeechGameModule {
     this.progressResetBtn.addEventListener('click', () => {
       this.resetProgressCounters();
     });
+  }
+
+  private handleSetSelectionChange(statusMessage: string): void {
+    this.saveSettings();
+    this.populateSpeechSetControls();
+    this.resetSetState();
+    this.renderCards(this.getActiveSetProfiles());
+    this.renderFocusCard(this.getActiveSetProfiles()[0] ?? null);
+    this.syncSettingsToDom();
+    this.renderProgressPanel();
+    this.feedbackEl.textContent = statusMessage;
+
+    if (document.body.getAttribute('data-active-view') === 'speech') {
+      this.resetPlayfield(true);
+    }
+  }
+
+  private resetSetState(): void {
+    this.completedWordIds.clear();
+    this.clearPendingSpeech();
+    this.clearPendingGuidance();
+    this.clearIdleReminder();
+    this.clearAttentionState();
+    this.clearSequenceTimeouts();
+    this.clearCurrentNextTarget();
+    this.rootEl.setAttribute('data-scene-phase', 'intro');
+    this.rootEl.setAttribute('data-guide-prompt', '');
+    this.rootEl.setAttribute('data-guide-mode', 'idle');
+    this.updateTrayStatus();
+  }
+
+  private resetPlayfield(playIntroIfActive = false): void {
+    this.resetSetState();
+    this.renderCards(this.getActiveSetProfiles());
+    this.renderFocusCard(this.getActiveSetProfiles()[0] ?? null);
+    this.syncSettingsToDom();
+
+    if (playIntroIfActive && document.body.getAttribute('data-active-view') === 'speech') {
+      this.startIntroSequence();
+    }
+  }
+
+  private getGuideTargetButton(targetButton: HTMLButtonElement): HTMLButtonElement {
+    const focusWordId = this.focusCardBtn.dataset.wordId as VocabularyWord | undefined;
+    if (focusWordId && targetButton.dataset.wordId === focusWordId) {
+      return this.focusCardBtn;
+    }
+    return targetButton;
+  }
+
+  private scheduleSetCompletion(delayMs: number): void {
+    this.guideTimeoutId = window.setTimeout(() => {
+      this.guideTimeoutId = null;
+      this.rootEl.setAttribute('data-scene-phase', 'set-complete');
+      this.rootEl.setAttribute('data-guide-active', 'true');
+      this.rootEl.setAttribute('data-guide-mode', 'celebrate');
+      this.rootEl.setAttribute('data-guide-prompt', 'Set tamamlandi');
+      this.trayStatusEl.textContent = this.getEffectiveAutoProgress()
+        ? 'Harika, yeni sete geciyoruz.'
+        : 'Harika, ayni set yeniden baslayacak.';
+      this.focusKickerEl.textContent = 'Set tamamlandı';
+      this.focusPromptEl.textContent = this.getEffectiveAutoProgress()
+        ? 'Pofi siradaki sete geciyor.'
+        : 'Pofi bu seti yeniden baslatacak.';
+
+      const continueTimeoutId = window.setTimeout(() => {
+        this.advanceToNextSetOrRestart();
+      }, 920);
+      this.sequenceTimeoutIds.push(continueTimeoutId);
+    }, delayMs + 280);
+  }
+
+  private advanceToNextSetOrRestart(): void {
+    const allSets = getSpeechSets();
+    const currentIndex = allSets.findIndex((item) => item.id === this.settings.activeSet);
+    const nextSet = this.getEffectiveAutoProgress() ? allSets[currentIndex + 1] ?? null : null;
+
+    if (nextSet) {
+      this.settings.activeLevel = nextSet.level;
+      this.settings.activeSet = nextSet.id;
+      this.populateSpeechSetControls();
+      this.saveSettings();
+      this.feedbackEl.textContent = `${this.toDisplayLabel(nextSet.label)} setine gecildi.`;
+    } else {
+      this.feedbackEl.textContent = 'Ayni set yeniden basliyor.';
+    }
+
+    this.resetPlayfield(document.body.getAttribute('data-active-view') === 'speech');
   }
 
   private bindParentPanelAccess(): void {
@@ -826,12 +1182,18 @@ export class SpeechGameModule {
       const key = normalizeSpeechKey(item.label);
       const hasRecording = Boolean(this.customAudioMap[key]);
       const listenCount = getWordListenCount(item.label);
+      const setDefinition = getSpeechSetDefinition(item.setId);
       return {
         id: item.word,
         word: item.word,
         label: item.label,
+        level: item.level,
+        setId: item.setId,
+        setLabel: setDefinition?.label ?? item.setId,
         imageSrc: item.imageSrc,
+        guidedGifSrc: item.guidedGifSrc,
         hasCustomImage: item.hasCustomImage,
+        hasCustomGuidedGif: item.hasCustomGuidedGif,
         hasRecording,
         listenCount
       };
@@ -840,6 +1202,8 @@ export class SpeechGameModule {
     const withRecordingCount = wordRows.filter((row) => row.hasRecording).length;
     const totalListens = wordRows.reduce((sum, row) => sum + row.listenCount, 0);
     const topSentences = getTopSentenceListens(5);
+    const activeSetRows = wordRows.filter((row) => row.setId === this.settings.activeSet);
+    const activeSetRecordingCount = activeSetRows.filter((row) => row.hasRecording).length;
 
     this.rootEl.setAttribute('data-word-recording-coverage', `${withRecordingCount}/${VOCABULARY.length}`);
     this.rootEl.setAttribute('data-total-word-listens', String(totalListens));
@@ -865,6 +1229,7 @@ export class SpeechGameModule {
                     aria-label="${this.escapeHtml(row.word)} kelimesi"
                   />
                   <span class="progress-value">Kayit: ${row.hasRecording ? 'Var' : 'Yok'} | Dinleme: ${row.listenCount}</span>
+                  <span class="progress-value">Set: ${this.escapeHtml(this.toDisplayLabel(row.setLabel))} | Seviye: ${this.escapeHtml(SPEECH_LEVEL_LABELS[row.level])}</span>
                 </div>
               </div>
             </div>
@@ -886,6 +1251,15 @@ export class SpeechGameModule {
                   accept="image/*"
                 />
               </label>
+              <label class="progress-record-btn file-btn">
+                Rehber GIF
+                <input
+                  class="progress-guided-gif-input"
+                  data-word-id="${row.id}"
+                  type="file"
+                  accept="image/*"
+                />
+              </label>
               <button
                 type="button"
                 class="progress-record-btn"
@@ -894,6 +1268,15 @@ export class SpeechGameModule {
                 ${row.hasCustomImage ? '' : 'disabled'}
               >
                 Gorseli Sil
+              </button>
+              <button
+                type="button"
+                class="progress-record-btn"
+                data-action="clear-guided-gif"
+                data-word-id="${row.id}"
+                ${row.hasCustomGuidedGif ? '' : 'disabled'}
+              >
+                GIF'i Sil
               </button>
               <button
                 type="button"
@@ -922,10 +1305,19 @@ export class SpeechGameModule {
                 Sil
               </button>
             </div>
+            <div class="progress-row-tail">
+              <span class="progress-value">Rehber GIF: ${row.guidedGifSrc ? 'Var' : 'Yok'}</span>
+            </div>
           </div>
         `
       )
       .join('');
+
+    const activeSetDefinition = getSpeechSetDefinition(this.settings.activeSet);
+    const completionText = `${this.completedWordIds.size}/${activeSetRows.length || 0}`;
+    this.setSummaryEl.textContent = activeSetDefinition
+      ? `${this.toDisplayLabel(SPEECH_LEVEL_LABELS[this.settings.activeLevel])} • ${this.toDisplayLabel(activeSetDefinition.label)} • Tamamlanan ${completionText} • Kayit ${activeSetRecordingCount}/${activeSetRows.length || 0}`
+      : `Tamamlanan ${completionText}`;
 
     if (topSentences.length === 0) {
       this.rootEl.setAttribute('data-top-sentence', '');
@@ -999,6 +1391,9 @@ export class SpeechGameModule {
     this.clearIdleReminder();
     this.clearAttentionState();
     this.clearSequenceTimeouts();
+    this.completedWordIds.add(wordId);
+    this.syncCompletedWordState();
+    this.updateTrayStatus();
     this.setCardsInteractive(null);
     this.clearCurrentNextTarget();
     const visualDuration = this.triggerVisual(button, wordId);
@@ -1006,13 +1401,20 @@ export class SpeechGameModule {
     const speechDuration = this.triggerSpeech({ word: wordLabel, repeats: resolvedRepeats });
     const sequenceDuration = Math.max(visualDuration, speechDuration, soundEffectDuration);
     const nextButton = this.getNextButton(wordId);
+    this.renderProgressPanel();
 
     const celebrateTimeoutId = window.setTimeout(() => {
       this.triggerMascotCelebrate();
       this.mascot.sayPraise();
     }, sequenceDuration);
     this.sequenceTimeoutIds.push(celebrateTimeoutId);
-    this.scheduleGuidedTransition(button, nextButton, sequenceDuration);
+
+    if (nextButton) {
+      this.scheduleGuidedTransition(button, nextButton, sequenceDuration);
+      return;
+    }
+
+    this.scheduleSetCompletion(sequenceDuration);
   }
 
   private startIntroSequence(): void {
@@ -1026,6 +1428,7 @@ export class SpeechGameModule {
     this.rootEl.setAttribute('data-scene-phase', 'intro');
     this.rootEl.setAttribute('data-guide-active', 'true');
     this.rootEl.setAttribute('data-guide-prompt', 'Hadi oynayalım');
+    this.renderFocusCard(this.getActiveSetProfiles()[0] ?? null);
     this.feedbackEl.textContent = 'Oyun başlıyor.';
     this.placeGuideMascotAtCenter();
     this.mascot.sayPlayStart();
@@ -1045,27 +1448,44 @@ export class SpeechGameModule {
     this.setCardsInteractive(targetButton);
     this.rootEl.setAttribute('data-next-word', targetButton.dataset.wordLabel ?? '');
     this.rootEl.setAttribute('data-current-target', targetButton.dataset.wordId ?? '');
-    this.rootEl.setAttribute('data-guide-prompt', 'Şimdi buna dokun');
+    this.rootEl.setAttribute('data-guided-target', targetButton.dataset.wordId ?? '');
+    const profile = this.getResolvedWordProfile(targetButton.dataset.wordId as VocabularyWord);
+    const promptText = this.buildTargetPrompt(profile);
+    this.rootEl.setAttribute('data-guide-prompt', promptText);
     this.rootEl.setAttribute('data-guide-active', 'true');
     this.rootEl.setAttribute('data-scene-phase', 'awaiting-tap');
+    this.renderFocusCard(profile, true);
     this.feedbackEl.textContent = 'Hedef nesne hazır.';
-    this.placeGuideMascot(targetButton);
-    this.mascot.showIdle('Şimdi buna dokun');
+    this.placeGuideMascot(this.getGuideTargetButton(targetButton));
+    this.mascot.showIdle(promptText);
     this.mascot.sayNextPrompt();
-    this.scheduleIdleReminder(targetButton);
+    this.scheduleIdleReminder(this.getGuideTargetButton(targetButton));
   }
 
-  private onWrongWordTapped(button: HTMLButtonElement): void {
+  private onWrongWordTapped(
+    button: HTMLButtonElement,
+    wordId: VocabularyWord,
+    wordLabel: string,
+    defaultRepeats: number
+  ): void {
     if (!this.activeNextButton) {
       return;
     }
 
     this.idleReminderCount = 0;
+    this.rootEl.setAttribute('data-last-word', wordLabel);
+    this.rootEl.setAttribute('data-scene-phase', 'playing');
     this.clearIdleReminder();
     this.clearAttentionState();
+    this.clearPendingSpeech();
     button.classList.remove('is-wrong');
     void button.offsetWidth;
     button.classList.add('is-wrong');
+    const resolvedRepeats = this.resolveRepeats(defaultRepeats);
+    const visualDuration = this.triggerVisual(button, wordId);
+    const soundEffectDuration = this.playObjectSound(wordId);
+    const speechDuration = this.triggerSpeech({ word: wordLabel, repeats: resolvedRepeats });
+    const resetDelay = Math.max(visualDuration, soundEffectDuration, speechDuration);
     this.feedbackEl.textContent = 'Pofi doğru resmi tekrar gösteriyor.';
     this.rootEl.setAttribute('data-guide-mode', 'calm');
     this.rootEl.setAttribute('data-guide-prompt', 'Bir daha deneyelim');
@@ -1074,12 +1494,16 @@ export class SpeechGameModule {
     const resetTimeoutId = window.setTimeout(() => {
       button.classList.remove('is-wrong');
       if (this.activeNextButton) {
-        this.placeGuideMascot(this.activeNextButton);
+        const profile = this.getResolvedWordProfile(this.activeNextButton.dataset.wordId as VocabularyWord);
+        const promptText = this.buildTargetPrompt(profile);
+        this.renderFocusCard(profile, true);
+        this.placeGuideMascot(this.getGuideTargetButton(this.activeNextButton));
+        this.rootEl.setAttribute('data-scene-phase', 'awaiting-tap');
         this.rootEl.setAttribute('data-guide-mode', 'idle');
-        this.rootEl.setAttribute('data-guide-prompt', 'Şimdi buna dokun');
-        this.scheduleIdleReminder(this.activeNextButton);
+        this.rootEl.setAttribute('data-guide-prompt', promptText);
+        this.scheduleIdleReminder(this.getGuideTargetButton(this.activeNextButton));
       }
-    }, 760);
+    }, resetDelay + 220);
     this.sequenceTimeoutIds.push(resetTimeoutId);
   }
 
@@ -1102,6 +1526,7 @@ export class SpeechGameModule {
 
   private triggerVisual(button: HTMLButtonElement, word: VocabularyWord): number {
     const duration = word === 'su' ? 1600 : 820;
+    const shouldAnimateFocus = this.focusCardBtn.dataset.wordId === word;
 
     if (this.visualResetTimeoutId !== null) {
       window.clearTimeout(this.visualResetTimeoutId);
@@ -1109,10 +1534,18 @@ export class SpeechGameModule {
     }
 
     button.classList.remove('is-speaking');
+    if (shouldAnimateFocus) {
+      this.focusCardBtn.classList.remove('is-speaking');
+    }
     void button.offsetWidth;
     button.classList.add('is-speaking');
+    if (shouldAnimateFocus) {
+      void this.focusCardBtn.offsetWidth;
+      this.focusCardBtn.classList.add('is-speaking');
+    }
     this.visualResetTimeoutId = window.setTimeout(() => {
       button.classList.remove('is-speaking');
+      this.focusCardBtn.classList.remove('is-speaking');
       this.visualResetTimeoutId = null;
     }, duration);
 
@@ -1122,11 +1555,16 @@ export class SpeechGameModule {
 
     this.rootEl.setAttribute('data-water-spilled', 'true');
     button.classList.remove('is-spilling');
+    this.focusCardBtn.classList.remove('is-spilling');
     void button.offsetWidth;
     button.classList.add('is-spilling');
+    if (shouldAnimateFocus) {
+      this.focusCardBtn.classList.add('is-spilling');
+    }
     this.triggerWaterFocusVisual();
     window.setTimeout(() => {
       button.classList.remove('is-spilling');
+      this.focusCardBtn.classList.remove('is-spilling');
     }, 1100);
     return duration;
   }
@@ -1146,7 +1584,7 @@ export class SpeechGameModule {
       this.waterFocusOverlayEl.classList.remove('is-active', 'is-spilling');
       this.rootEl.setAttribute('data-water-expanded', 'false');
       this.waterFocusTimeoutId = null;
-    }, 1600);
+    }, 2600);
   }
 
   private triggerSpeech(payload: SpeechTriggerDetail): number {
@@ -1206,12 +1644,21 @@ export class SpeechGameModule {
 
     try {
       const parsed = JSON.parse(raw) as Partial<SpeechSettings>;
+      const activeLevel = this.normalizeLevelId(parsed.activeLevel);
       this.settings = {
-        repeatMode: this.normalizeRepeatMode(parsed.repeatMode)
+        repeatMode: this.normalizeRepeatMode(parsed.repeatMode),
+        activeLevel,
+        activeSet: this.normalizeSetId(parsed.activeSet, activeLevel),
+        autoProgress: typeof parsed.autoProgress === 'boolean' ? parsed.autoProgress : true,
+        pinnedSet: typeof parsed.pinnedSet === 'boolean' ? parsed.pinnedSet : false
       };
     } catch {
       this.settings = {
-        repeatMode: 'default'
+        repeatMode: 'default',
+        activeLevel: DEFAULT_SPEECH_LEVEL,
+        activeSet: DEFAULT_SPEECH_SET,
+        autoProgress: true,
+        pinnedSet: false
       };
     }
   }
@@ -1221,10 +1668,34 @@ export class SpeechGameModule {
   }
 
   private syncSettingsToDom(): void {
+    this.levelSelect.value = this.settings.activeLevel;
+    this.setSelect.value = this.settings.activeSet;
     this.repeatModeSelect.value = this.settings.repeatMode;
+    this.autoProgressCheckbox.checked = this.settings.autoProgress;
+    this.pinSetCheckbox.checked = this.settings.pinnedSet;
 
+    this.rootEl.setAttribute('data-active-level', this.settings.activeLevel);
+    this.rootEl.setAttribute('data-active-set', this.settings.activeSet);
+    this.rootEl.setAttribute('data-auto-progress', String(this.getEffectiveAutoProgress()));
+    this.rootEl.setAttribute('data-pinned-set', String(this.settings.pinnedSet));
     this.rootEl.setAttribute('data-repeat-mode', this.settings.repeatMode);
     this.rootEl.setAttribute('data-custom-audio-count', String(Object.keys(this.customAudioMap).length));
+    this.updateTrayStatus();
+  }
+
+  private normalizeLevelId(value: unknown): SpeechLevelId {
+    return getSpeechLevelIds().includes(value as SpeechLevelId)
+      ? (value as SpeechLevelId)
+      : DEFAULT_SPEECH_LEVEL;
+  }
+
+  private normalizeSetId(value: unknown, activeLevel = DEFAULT_SPEECH_LEVEL): SpeechSetId {
+    const matchingSet = getSpeechSets(activeLevel).find((item) => item.id === value);
+    return matchingSet?.id ?? getSpeechSets(activeLevel)[0]?.id ?? DEFAULT_SPEECH_SET;
+  }
+
+  private getEffectiveAutoProgress(): boolean {
+    return this.settings.autoProgress && !this.settings.pinnedSet;
   }
 
   private normalizeRepeatMode(value: unknown): RepeatMode {
@@ -1320,8 +1791,11 @@ export class SpeechGameModule {
     Array.from(this.gridEl.querySelectorAll<HTMLButtonElement>('.word-card')).forEach((button) => {
       button.classList.remove('is-choice-enabled', 'is-wrong');
     });
+    this.focusCardBtn.classList.remove('is-target', 'is-speaking', 'is-spilling');
+    this.focusCardBtn.disabled = true;
     this.rootEl.setAttribute('data-next-word', '');
     this.rootEl.setAttribute('data-current-target', '');
+    this.rootEl.setAttribute('data-guided-target', '');
     this.rootEl.setAttribute('data-guide-active', 'false');
     this.idleReminderCount = 0;
   }
@@ -1350,8 +1824,8 @@ export class SpeechGameModule {
   }
 
   private moveGuideMascot(currentButton: HTMLButtonElement, nextButton: HTMLButtonElement): void {
-    const from = this.resolveGuidePosition(currentButton);
-    const to = this.resolveGuidePosition(nextButton);
+    const from = this.resolveGuidePosition(this.getGuideTargetButton(currentButton));
+    const to = this.resolveGuidePosition(this.getGuideTargetButton(nextButton));
 
     this.clearAttentionState();
     this.guideLayerEl.classList.add('is-active');
@@ -1419,12 +1893,26 @@ export class SpeechGameModule {
       button.classList.toggle('is-next-target', isTarget);
       button.setAttribute('aria-disabled', String(!canChoose));
     });
+
+    const canChoose = activeButton !== null;
+    this.focusCardBtn.disabled = !canChoose;
+    this.focusCardBtn.setAttribute('aria-disabled', String(!canChoose));
   }
 
   private resolveGuidePosition(button: HTMLButtonElement): { x: number; y: number } {
     const stageRect = this.stageEl.getBoundingClientRect();
     const buttonRect = button.getBoundingClientRect();
     const mascotSize = this.guideMascotEl.getBoundingClientRect().width || 84;
+
+    if (button === this.focusCardBtn) {
+      const x = buttonRect.right - stageRect.left - mascotSize * 0.18;
+      const y = buttonRect.top - stageRect.top + buttonRect.height * 0.12;
+      return {
+        x: Math.max(20, Math.min(x, Math.max(20, stageRect.width - mascotSize - 20))),
+        y: Math.max(20, Math.min(y, Math.max(20, stageRect.height - mascotSize - 20)))
+      };
+    }
+
     const wordId = button.dataset.wordId as VocabularyWord | undefined;
     const anchor = (wordId ? GUIDE_WORD_ANCHORS[wordId] : null) ?? {
       xAlign: 'center',
@@ -1470,7 +1958,7 @@ export class SpeechGameModule {
       return buttons[0] ?? null;
     }
 
-    return buttons[(currentIndex + 1) % buttons.length] ?? null;
+    return buttons[currentIndex + 1] ?? null;
   }
 
   private scheduleIdleReminder(targetButton: HTMLButtonElement | null, delayMs?: number): void {
@@ -1484,7 +1972,7 @@ export class SpeechGameModule {
       (GUIDE_REMINDER_DELAY_MS + Math.round(Math.random() * GUIDE_REMINDER_VARIANCE_MS));
 
     this.idleReminderTimeoutId = window.setTimeout(() => {
-      if (!this.activeNextButton || this.activeNextButton !== targetButton) {
+      if (!this.activeNextButton || !this.isGuideTargetStillActive(targetButton)) {
         return;
       }
 
@@ -1525,7 +2013,7 @@ export class SpeechGameModule {
     }
 
     const attentionTimeoutId = window.setTimeout(() => {
-      if (this.activeNextButton !== targetButton) {
+      if (!this.isGuideTargetStillActive(targetButton)) {
         return;
       }
 
@@ -1540,7 +2028,7 @@ export class SpeechGameModule {
       this.mascot.sayAttention(prompt);
 
       this.attentionResetTimeoutId = window.setTimeout(() => {
-        if (this.activeNextButton === targetButton) {
+        if (this.isGuideTargetStillActive(targetButton)) {
           targetButton.classList.remove('is-attention-target');
         }
         this.guideLayerEl.classList.remove('is-attention');
@@ -1559,6 +2047,11 @@ export class SpeechGameModule {
     const effect = effects[this.attentionEffectIndex % effects.length] ?? 'rain';
     this.attentionEffectIndex += 1;
     return effect;
+  }
+
+  private isGuideTargetStillActive(targetButton: HTMLButtonElement): boolean {
+    const activeWordId = this.activeNextButton?.dataset.wordId ?? '';
+    return Boolean(activeWordId && targetButton.dataset.wordId === activeWordId);
   }
 
   private triggerMascotCelebrate(): void {
@@ -1690,11 +2183,12 @@ export class SpeechGameModule {
       return 'Ben burada bekliyorum.';
     }
 
-    const fallbackLabel = this.getResolvedWordProfile(word).label;
-    if (fallbackLabel !== word) {
-      return `${fallbackLabel} icin bekliyorum.`;
+    const profile = this.getResolvedWordProfile(word);
+    const promptLabel = profile.promptLabel || profile.label;
+    if (promptLabel !== word) {
+      return `${this.toDisplayLabel(promptLabel)} icin bekliyorum.`;
     }
 
-    return GUIDE_WAIT_PROMPTS[word] ?? `${fallbackLabel} icin bekliyorum.`;
+    return GUIDE_WAIT_PROMPTS[word] ?? `${this.toDisplayLabel(promptLabel)} icin bekliyorum.`;
   }
 }
