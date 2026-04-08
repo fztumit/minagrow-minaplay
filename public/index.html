@@ -30,7 +30,10 @@
             <div class="home-hero" aria-hidden="true">
               <div class="home-hero-glow"></div>
               <div class="home-hero-badge">
-                <img src="/assets/pofi-pack/mascot-idle.svg" alt="" />
+                <span class="pofi-stack home-hero-stack">
+                  <img class="pofi-body-layer" src="/assets/pofi_Images/Pofi.svg" alt="" />
+                  <img class="pofi-face-layer" src="/assets/pofi-pack/face-happy.svg" alt="" />
+                </span>
               </div>
               <div class="home-hero-copy">
                 <h2>MinaPlay</h2>
@@ -41,17 +44,18 @@
             <div class="home-mode-grid" id="home-mode-grid">
               <button type="button" class="home-mode-card is-word" data-view="speech" aria-label="Kelime Öğren">
                 <span class="home-mode-title">Dokun</span>
-                <span class="home-mode-subtitle">Kelime oyunu</span>
+                <span class="home-mode-subtitle">Dokun ve dinle</span>
                 <span class="home-mode-art" aria-hidden="true">
                   <img class="home-mode-main" src="/assets/home-touch-hand.svg" alt="" />
+                  <span class="home-mode-touch-burst"></span>
+                  <img class="home-mode-target" src="/assets/object-apple.svg" alt="" />
                   <img class="home-mode-side" src="/assets/water-glass.svg" alt="" />
-                  <img class="home-mode-side is-lower" src="/assets/object-apple.svg" alt="" />
                 </span>
               </button>
 
               <button type="button" class="home-mode-card is-sentence" data-view="sentence" aria-label="Cümle Kur">
                 <span class="home-mode-title">Birleştir</span>
-                <span class="home-mode-subtitle">Cümle kur</span>
+                <span class="home-mode-subtitle">İki resmi eşleştir</span>
                 <span class="home-mode-art" aria-hidden="true">
                   <img class="home-mode-main" src="/assets/object-father.svg" alt="" />
                   <span class="home-mode-bubble"></span>
@@ -61,20 +65,27 @@
 
               <button type="button" class="home-mode-card is-peekaboo" data-view="peekaboo" aria-label="Ceee Oyunu">
                 <span class="home-mode-title">Sürpriz</span>
-                <span class="home-mode-subtitle">Cee oyunu</span>
+                <span class="home-mode-subtitle">Bul ve gül</span>
                 <span class="home-mode-art" aria-hidden="true">
                   <span class="home-mode-curtain"></span>
-                  <img class="home-mode-main" src="/assets/pofi-pack/mascot-hide.svg" alt="" />
+                  <span class="pofi-stack home-mode-main home-card-pofi is-hide">
+                    <img class="pofi-body-layer" src="/assets/pofi_Images/Pofi.svg" alt="" />
+                    <img class="pofi-face-layer" src="/assets/pofi-pack/face-idle.svg" alt="" />
+                    <img class="pofi-hands-layer" src="/assets/pofi-pack/hands-hide.svg" alt="" />
+                  </span>
                   <span class="home-mode-curtain is-right"></span>
                 </span>
               </button>
 
               <button type="button" class="home-mode-card is-sleep" data-view="sleep" aria-label="Uyku Modu">
                 <span class="home-mode-title">Dinlen</span>
-                <span class="home-mode-subtitle">Uyku modu</span>
+                <span class="home-mode-subtitle">Sakinleş ve dinlen</span>
                 <span class="home-mode-art" aria-hidden="true">
                   <span class="home-mode-moon"></span>
-                  <img class="home-mode-main" src="/assets/pofi-pack/mascot-sleep.svg" alt="" />
+                  <span class="pofi-stack home-mode-main home-card-pofi is-sleep">
+                    <img class="pofi-body-layer" src="/assets/pofi_Images/Pofi.svg" alt="" />
+                    <img class="pofi-face-layer" src="/assets/pofi-pack/face-sleep.svg" alt="" />
+                  </span>
                   <span class="home-mode-stars"></span>
                 </span>
               </button>
@@ -565,11 +576,22 @@
           <span class="tab-btn-label">Cümle</span>
         </button>
         <button class="tab-btn" role="tab" aria-selected="false" data-view="peekaboo" aria-label="Ceee Oyunu">
-          <span class="tab-btn-icon" aria-hidden="true"><img src="/assets/pofi-pack/mascot-hide.svg" alt="" /></span>
+          <span class="tab-btn-icon pofi-tab-icon" aria-hidden="true">
+            <span class="pofi-stack pofi-tab-stack is-hide">
+              <img class="pofi-body-layer" src="/assets/pofi_Images/Pofi.svg" alt="" />
+              <img class="pofi-face-layer" src="/assets/pofi-pack/face-idle.svg" alt="" />
+              <img class="pofi-hands-layer" src="/assets/pofi-pack/hands-hide.svg" alt="" />
+            </span>
+          </span>
           <span class="tab-btn-label">Ceee</span>
         </button>
         <button class="tab-btn" role="tab" aria-selected="false" data-view="sleep" aria-label="Uyku Modu">
-          <span class="tab-btn-icon" aria-hidden="true"><img src="/assets/pofi-pack/mascot-sleep.svg" alt="" /></span>
+          <span class="tab-btn-icon pofi-tab-icon" aria-hidden="true">
+            <span class="pofi-stack pofi-tab-stack is-sleep">
+              <img class="pofi-body-layer" src="/assets/pofi_Images/Pofi.svg" alt="" />
+              <img class="pofi-face-layer" src="/assets/pofi-pack/face-sleep.svg" alt="" />
+            </span>
+          </span>
           <span class="tab-btn-label">Uyku</span>
         </button>
       </nav>
