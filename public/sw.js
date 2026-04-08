@@ -1,4 +1,4 @@
-const CACHE_NAME = 'minaplay-v67';
+const CACHE_NAME = 'minaplay-v68';
 
 const PRECACHE_ASSETS = [
   '/',
@@ -6,8 +6,7 @@ const PRECACHE_ASSETS = [
   '/style.css',
   '/manifest.webmanifest',
   '/assets/pofi_Images/Pofi.svg',
-  '/assets/home-touch-hand.svg',
-  '/assets/index-finger_Images/index-finger_ImgID1.png',
+  '/assets/home-touch-hand.png',
   '/assets/pofi-pack/face-idle.svg',
   '/assets/pofi-pack/face-surprised.svg',
   '/assets/pofi-pack/face-calm.svg',
