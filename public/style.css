@@ -712,9 +712,12 @@ img.home-mode-target {
 }
 
 .home-mode-card.is-peekaboo .home-mode-main {
-  width: 114px;
-  height: 114px;
-  bottom: 4px;
+  right: 18px;
+  bottom: 10px;
+  width: 210px;
+  height: 118px;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 24px rgba(181, 121, 110, 0.14));
 }
 
 .home-mode-moon {
@@ -4135,10 +4138,16 @@ img.home-mode-target {
   }
 
   .home-mode-card.is-sentence .home-mode-main,
-  .home-mode-card.is-peekaboo .home-mode-main,
   .home-mode-card.is-sleep .home-mode-main {
     width: 100px;
     height: 100px;
+  }
+
+  .home-mode-card.is-peekaboo .home-mode-main {
+    right: 10px;
+    bottom: 14px;
+    width: 148px;
+    height: 84px;
   }
 
   .sentence-preview-slot {
