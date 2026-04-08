@@ -8,6 +8,7 @@ export async function requestParentPanel(page: Page): Promise<void> {
       document.getElementById('home-parent-trigger') ||
       document.getElementById('parent-panel-trigger') ||
       document.getElementById('sentence-parent-trigger') ||
+      document.getElementById('stories-parent-trigger') ||
       document.getElementById('peekaboo-parent-trigger') ||
       document.getElementById('sleep-parent-trigger')
     )?.dispatchEvent(new MouseEvent('click', { bubbles: true }));

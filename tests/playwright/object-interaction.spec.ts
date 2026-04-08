@@ -11,6 +11,10 @@ test('water object interaction triggers spill animation', async ({ page }) => {
   const waterOverlay = page.locator('#water-focus-overlay');
   await expect(waterOverlay).toHaveClass(/is-active/);
   await expect(waterOverlay).toHaveClass(/is-spilling/);
+  await page.screenshot({
+    path: '/Users/umitaydin/.codex/worktrees/f830/Konusu-Yorum/output/speech-water-focus.png',
+    fullPage: true
+  });
   const focusStageMetrics = await page.evaluate(() => {
     const stage = document.querySelector<HTMLElement>('#water-focus-overlay .water-focus-stage');
     if (!stage) {

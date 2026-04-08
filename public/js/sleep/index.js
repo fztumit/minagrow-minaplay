@@ -267,6 +267,7 @@ export class SleepModeModule {
     stopTimeout = null;
     stars = [];
     starLoopHandle = 0;
+    visualsActive = false;
     constructor(rootEl, mascot, controlsRoot = rootEl) {
         const soundSelect = controlsRoot.querySelector('#sleep-sound-select');
         const timerGroup = controlsRoot.querySelector('#sleep-timers');
@@ -290,10 +291,12 @@ export class SleepModeModule {
         this.bindEvents();
         this.rootEl.setAttribute('data-running', 'false');
         this.soundSelect.value = 'ocean';
-        this.resizeCanvas();
-        this.seedStars();
-        this.animateStars();
-        window.addEventListener('resize', () => this.resizeCanvas());
+        this.setVisualsActive(this.rootEl.classList.contains('active'));
+        window.addEventListener('resize', () => {
+            if (this.visualsActive) {
+                this.resizeCanvas();
+            }
+        });
     }
     bindEvents() {
         this.timerGroup.addEventListener('click', (event) => {
@@ -316,6 +319,12 @@ export class SleepModeModule {
                 return;
             }
             await this.start();
+        });
+        this.rootEl.addEventListener('sleep-resume', () => {
+            this.setVisualsActive(true);
+        });
+        this.rootEl.addEventListener('sleep-pause', () => {
+            this.setVisualsActive(false);
         });
     }
     async start() {
@@ -383,6 +392,9 @@ export class SleepModeModule {
         this.countdownEl.textContent = `Kalan süre: ${parts}`;
     }
     resizeCanvas() {
+        if (!this.visualsActive) {
+            return;
+        }
         const ratio = window.devicePixelRatio || 1;
         const width = this.starCanvas.clientWidth || 640;
         const height = this.starCanvas.clientHeight || 260;
@@ -394,6 +406,9 @@ export class SleepModeModule {
         }
     }
     seedStars() {
+        if (!this.visualsActive) {
+            return;
+        }
         const width = this.starCanvas.clientWidth || 640;
         const height = this.starCanvas.clientHeight || 260;
         this.stars = Array.from({ length: 64 }, () => ({
@@ -405,6 +420,9 @@ export class SleepModeModule {
         }));
     }
     animateStars() {
+        if (!this.visualsActive) {
+            return;
+        }
         const context = this.starCanvas.getContext('2d');
         if (!context) {
             return;
@@ -431,8 +449,33 @@ export class SleepModeModule {
         });
         this.starLoopHandle = window.requestAnimationFrame(() => this.animateStars());
     }
+    setVisualsActive(active) {
+        if (active === this.visualsActive && (active || this.starCanvas.width === 0)) {
+            return;
+        }
+        this.visualsActive = active;
+        if (active) {
+            this.starCanvas.style.visibility = 'visible';
+            this.resizeCanvas();
+            this.seedStars();
+            this.animateStars();
+            return;
+        }
+        if (this.starLoopHandle) {
+            window.cancelAnimationFrame(this.starLoopHandle);
+            this.starLoopHandle = 0;
+        }
+        const context = this.starCanvas.getContext('2d');
+        if (context) {
+            context.clearRect(0, 0, this.starCanvas.width || 0, this.starCanvas.height || 0);
+        }
+        this.starCanvas.style.visibility = 'hidden';
+        this.starCanvas.width = 0;
+        this.starCanvas.height = 0;
+    }
     destroy() {
         this.stop();
+        this.setVisualsActive(false);
         window.cancelAnimationFrame(this.starLoopHandle);
     }
 }

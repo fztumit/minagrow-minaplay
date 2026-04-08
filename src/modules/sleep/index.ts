@@ -313,6 +313,7 @@ export class SleepModeModule {
   private stopTimeout: number | null = null;
   private stars: Star[] = [];
   private starLoopHandle = 0;
+  private visualsActive = false;
 
   constructor(rootEl: HTMLElement, mascot: MascotGuide, controlsRoot: ParentNode = rootEl) {
     const soundSelect = controlsRoot.querySelector<HTMLSelectElement>('#sleep-sound-select');
@@ -340,10 +341,12 @@ export class SleepModeModule {
     this.bindEvents();
     this.rootEl.setAttribute('data-running', 'false');
     this.soundSelect.value = 'ocean';
-    this.resizeCanvas();
-    this.seedStars();
-    this.animateStars();
-    window.addEventListener('resize', () => this.resizeCanvas());
+    this.setVisualsActive(this.rootEl.classList.contains('active'));
+    window.addEventListener('resize', () => {
+      if (this.visualsActive) {
+        this.resizeCanvas();
+      }
+    });
   }
 
   private bindEvents(): void {
@@ -372,6 +375,14 @@ export class SleepModeModule {
       }
 
       await this.start();
+    });
+
+    this.rootEl.addEventListener('sleep-resume', () => {
+      this.setVisualsActive(true);
+    });
+
+    this.rootEl.addEventListener('sleep-pause', () => {
+      this.setVisualsActive(false);
     });
   }
 
@@ -457,6 +468,10 @@ export class SleepModeModule {
   }
 
   private resizeCanvas(): void {
+    if (!this.visualsActive) {
+      return;
+    }
+
     const ratio = window.devicePixelRatio || 1;
     const width = this.starCanvas.clientWidth || 640;
     const height = this.starCanvas.clientHeight || 260;
@@ -471,6 +486,10 @@ export class SleepModeModule {
   }
 
   private seedStars(): void {
+    if (!this.visualsActive) {
+      return;
+    }
+
     const width = this.starCanvas.clientWidth || 640;
     const height = this.starCanvas.clientHeight || 260;
     this.stars = Array.from({ length: 64 }, () => ({
@@ -483,6 +502,10 @@ export class SleepModeModule {
   }
 
   private animateStars(): void {
+    if (!this.visualsActive) {
+      return;
+    }
+
     const context = this.starCanvas.getContext('2d');
     if (!context) {
       return;
@@ -516,8 +539,37 @@ export class SleepModeModule {
     this.starLoopHandle = window.requestAnimationFrame(() => this.animateStars());
   }
 
+  private setVisualsActive(active: boolean): void {
+    if (active === this.visualsActive && (active || this.starCanvas.width === 0)) {
+      return;
+    }
+
+    this.visualsActive = active;
+    if (active) {
+      this.starCanvas.style.visibility = 'visible';
+      this.resizeCanvas();
+      this.seedStars();
+      this.animateStars();
+      return;
+    }
+
+    if (this.starLoopHandle) {
+      window.cancelAnimationFrame(this.starLoopHandle);
+      this.starLoopHandle = 0;
+    }
+
+    const context = this.starCanvas.getContext('2d');
+    if (context) {
+      context.clearRect(0, 0, this.starCanvas.width || 0, this.starCanvas.height || 0);
+    }
+    this.starCanvas.style.visibility = 'hidden';
+    this.starCanvas.width = 0;
+    this.starCanvas.height = 0;
+  }
+
   destroy(): void {
     this.stop();
+    this.setVisualsActive(false);
     window.cancelAnimationFrame(this.starLoopHandle);
   }
 }

@@ -36,15 +36,16 @@
                 </span>
               </div>
               <div class="home-hero-copy">
+                <p class="home-hero-eyebrow">Pofi ile sakin oyun zamanı</p>
                 <h2>MinaPlay</h2>
-                <p>Bir oyun seç</p>
+                <p>Bugün bir öğrenme modu seç.</p>
               </div>
             </div>
 
             <div class="home-mode-grid" id="home-mode-grid">
-              <button type="button" class="home-mode-card is-word" data-view="speech" aria-label="Kelime Öğren">
+              <button type="button" class="home-mode-card is-word" data-view="speech" aria-label="Dokun ve Dinle">
                 <span class="home-mode-title">Dokun</span>
-                <span class="home-mode-subtitle">Dokun ve dinle</span>
+                <span class="home-mode-subtitle">Kelimeyi duy, hedefi takip et</span>
                 <span class="home-mode-art" aria-hidden="true">
                   <span class="pofi-stack home-mode-main home-card-pofi is-word-guide">
                     <img class="pofi-body-layer" src="/assets/pofi_Images/Pofi.svg" alt="" />
@@ -58,8 +59,8 @@
               </button>
 
               <button type="button" class="home-mode-card is-sentence" data-view="sentence" aria-label="Cümle Kur">
-                <span class="home-mode-title">Birleştir</span>
-                <span class="home-mode-subtitle">İki resmi eşleştir</span>
+                <span class="home-mode-title">Cümle</span>
+                <span class="home-mode-subtitle">İki resmi seç ve birlikte dinle</span>
                 <span class="home-mode-art" aria-hidden="true">
                   <span class="pofi-stack home-mode-main home-card-pofi is-sentence-guide">
                     <img class="pofi-body-layer" src="/assets/pofi_Images/Pofi.svg" alt="" />
@@ -69,23 +70,24 @@
                 </span>
               </button>
 
-              <button type="button" class="home-mode-card is-peekaboo" data-view="peekaboo" aria-label="Ceee Oyunu">
-                <span class="home-mode-title">Sürpriz</span>
-                <span class="home-mode-subtitle">Bul ve gül</span>
+              <button type="button" class="home-mode-card is-stories" data-view="stories" aria-label="Hikayeler">
+                <span class="home-mode-title">Hikaye</span>
+                <span class="home-mode-subtitle">Dinle, tekrar et, sırayla ilerle</span>
                 <span class="home-mode-art" aria-hidden="true">
-                  <span class="home-mode-curtain"></span>
-                  <span class="pofi-stack home-mode-main home-card-pofi is-hide">
+                  <span class="home-mode-book"></span>
+                  <span class="home-mode-book-page is-left"></span>
+                  <span class="home-mode-book-page is-right"></span>
+                  <span class="home-mode-story-chip">Dinle</span>
+                  <span class="pofi-stack home-mode-main home-card-pofi is-story-guide">
                     <img class="pofi-body-layer" src="/assets/pofi_Images/Pofi.svg" alt="" />
-                    <img class="pofi-face-layer" src="/assets/pofi-pack/face-idle.svg" alt="" />
-                    <img class="pofi-hands-layer" src="/assets/pofi-pack/hands-hide.svg" alt="" />
+                    <img class="pofi-face-layer" src="/assets/pofi-pack/face-happy.svg" alt="" />
                   </span>
-                  <span class="home-mode-curtain is-right"></span>
                 </span>
               </button>
 
               <button type="button" class="home-mode-card is-sleep" data-view="sleep" aria-label="Uyku Modu">
-                <span class="home-mode-title">Dinlen</span>
-                <span class="home-mode-subtitle">Sakinleş ve dinlen</span>
+                <span class="home-mode-title">Uyku</span>
+                <span class="home-mode-subtitle">Sakinleş, sesi başlat ve dinlen</span>
                 <span class="home-mode-art" aria-hidden="true">
                   <span class="home-mode-moon"></span>
                   <span class="pofi-stack home-mode-main home-card-pofi is-sleep">
@@ -96,6 +98,26 @@
                 </span>
               </button>
             </div>
+
+            <section class="home-bonus-strip" aria-label="Bonus oyun">
+              <div class="home-bonus-copy">
+                <span class="home-bonus-kicker">Bonus Oyun</span>
+                <strong>Ceee zamanı</strong>
+                <p>Pofi bazen saklanır. Hazırsan sürpriz oyununu aç.</p>
+              </div>
+              <button type="button" class="home-bonus-card" data-view="peekaboo" aria-label="Ceee bonus oyunu">
+                <span class="home-bonus-art" aria-hidden="true">
+                  <span class="home-mode-curtain"></span>
+                  <span class="pofi-stack home-card-pofi is-hide">
+                    <img class="pofi-body-layer" src="/assets/pofi_Images/Pofi.svg" alt="" />
+                    <img class="pofi-face-layer" src="/assets/pofi-pack/face-idle.svg" alt="" />
+                    <img class="pofi-hands-layer" src="/assets/pofi-pack/hands-hide.svg" alt="" />
+                  </span>
+                  <span class="home-mode-curtain is-right"></span>
+                </span>
+                <span class="home-bonus-label">Ceee'yi Aç</span>
+              </button>
+            </section>
           </div>
         </section>
 
@@ -259,25 +281,46 @@
         </section>
 
         <section class="module-view" id="view-stories" data-module="stories">
-          <div class="module-header">
-            <h2>Hikayeler</h2>
-            <p>Kısa hikayeleri dinle, cümleyi tekrar et ve sonraki cümleye geç.</p>
-          </div>
+          <div class="stories-stage" id="stories-stage" aria-label="Hikaye sahnesi">
+            <button type="button" id="stories-parent-trigger" class="visually-hidden">Ebeveyn panelini aç</button>
+            <div class="parent-corner-hotspot" id="stories-parent-hotspot" aria-hidden="true"></div>
 
-          <div class="stories-layout">
-            <aside class="story-list" id="story-list" aria-label="Hikaye listesi"></aside>
-
-            <article class="story-reader">
-              <h3 id="story-title">Hikaye</h3>
-              <p class="story-sentence" id="story-sentence">Hikaye seç.</p>
-              <p class="story-counter" id="story-counter"></p>
-
-              <div class="story-controls">
-                <button type="button" id="story-listen" class="primary-btn">Dinle</button>
-                <button type="button" id="story-repeat" class="secondary-btn">Tekrar Et</button>
-                <button type="button" id="story-next" class="secondary-btn">Sonraki Cümle</button>
+            <div class="stories-hero">
+              <div class="stories-hero-copy">
+                <span class="stories-hero-kicker">Hikaye Saati</span>
+                <h2>Kısa cümleleri dinle</h2>
+                <p>Pofi sıradaki cümleyi okur, sen tekrar eder ve bir sonrakine geçersin.</p>
               </div>
-            </article>
+              <div class="stories-hero-art" aria-hidden="true">
+                <span class="stories-hero-glow"></span>
+                <span class="stories-hero-book"></span>
+                <span class="stories-hero-page is-left"></span>
+                <span class="stories-hero-page is-right"></span>
+                <span class="pofi-stack stories-hero-pofi">
+                  <img class="pofi-body-layer" src="/assets/pofi_Images/Pofi.svg" alt="" />
+                  <img class="pofi-face-layer" src="/assets/pofi-pack/face-happy.svg" alt="" />
+                </span>
+              </div>
+            </div>
+
+            <div class="stories-layout">
+              <div class="story-list-panel">
+                <p class="story-list-kicker">Bugünün seçimi</p>
+                <aside class="story-list" id="story-list" aria-label="Hikaye listesi"></aside>
+              </div>
+
+              <article class="story-reader">
+                <h3 id="story-title">Hikaye</h3>
+                <p class="story-sentence" id="story-sentence">Hikaye seç.</p>
+                <p class="story-counter" id="story-counter"></p>
+
+                <div class="story-controls">
+                  <button type="button" id="story-listen" class="primary-btn">Dinle</button>
+                  <button type="button" id="story-repeat" class="secondary-btn">Tekrar Et</button>
+                  <button type="button" id="story-next" class="secondary-btn">Sonraki Cümle</button>
+                </div>
+              </article>
+            </div>
           </div>
         </section>
 
@@ -313,32 +356,40 @@
             <button type="button" id="parent-panel-close" class="secondary-btn">Çocuk Ekranına Dön</button>
           </div>
 
-          <div class="parent-overview-grid">
-            <section class="daily-word-card" id="daily-word-card" aria-live="polite">
-              <span>Bugünün Kelimesi</span>
-              <strong id="daily-word-text">SU</strong>
-              <div class="daily-word-actions">
-                <button type="button" id="daily-word-record-start" class="secondary-btn">Kelimeyi Kaydet</button>
-                <button type="button" id="daily-word-record-stop" class="secondary-btn" disabled>Durdur</button>
-                <button type="button" id="daily-word-play" class="secondary-btn">Çal</button>
-                <button type="button" id="daily-word-delete" class="secondary-btn">Sil</button>
-              </div>
-              <p class="daily-word-status" id="daily-word-record-status">
-                Bugünün kelimesini ebeveyn sesiyle kaydedin.
-              </p>
-            </section>
+          <section class="parent-section-group">
+            <div class="parent-section-heading">
+              <span class="parent-section-kicker">Genel Özet</span>
+              <h3>Bugün ve günlük ilerleme</h3>
+              <p>Günün kelimesini kaydet, günlük hedefleri tek yerden takip et.</p>
+            </div>
 
-            <section class="daily-activity-card" id="daily-activity-card" aria-live="polite">
-              <span>Günlük Aktivite Kartı</span>
-              <p class="daily-activity-summary" id="daily-activity-summary">0/3 tamamlandı</p>
-              <div class="daily-activity-list">
-                <p class="daily-activity-item" id="daily-task-words">⬜ 3 kelime: 0/3</p>
-                <p class="daily-activity-item" id="daily-task-story">⬜ 1 hikaye: 0/1</p>
-                <p class="daily-activity-item" id="daily-task-interaction">⬜ 1 etkileşim: 0/1</p>
-              </div>
-              <p class="daily-activity-date" id="daily-activity-date"></p>
-            </section>
-          </div>
+            <div class="parent-overview-grid">
+              <section class="daily-word-card" id="daily-word-card" aria-live="polite">
+                <span>Bugünün Kelimesi</span>
+                <strong id="daily-word-text">SU</strong>
+                <div class="daily-word-actions">
+                  <button type="button" id="daily-word-record-start" class="secondary-btn">Kelimeyi Kaydet</button>
+                  <button type="button" id="daily-word-record-stop" class="secondary-btn" disabled>Durdur</button>
+                  <button type="button" id="daily-word-play" class="secondary-btn">Çal</button>
+                  <button type="button" id="daily-word-delete" class="secondary-btn">Sil</button>
+                </div>
+                <p class="daily-word-status" id="daily-word-record-status">
+                  Bugünün kelimesini ebeveyn sesiyle kaydedin.
+                </p>
+              </section>
+
+              <section class="daily-activity-card" id="daily-activity-card" aria-live="polite">
+                <span>Günlük Aktivite Kartı</span>
+                <p class="daily-activity-summary" id="daily-activity-summary">0/3 tamamlandı</p>
+                <div class="daily-activity-list">
+                  <p class="daily-activity-item" id="daily-task-words">⬜ 3 kelime: 0/3</p>
+                  <p class="daily-activity-item" id="daily-task-story">⬜ 1 hikaye: 0/1</p>
+                  <p class="daily-activity-item" id="daily-task-interaction">⬜ 1 etkileşim: 0/1</p>
+                </div>
+                <p class="daily-activity-date" id="daily-activity-date"></p>
+              </section>
+            </div>
+          </section>
 
           <section class="parent-settings" aria-label="Ebeveyn ayarları">
             <h3>Konuşma Ayarları</h3>
@@ -392,18 +443,6 @@
               <div class="progress-word-list" id="progress-word-list"></div>
               <div class="progress-sentence-list" id="progress-sentence-list"></div>
             </div>
-          </section>
-
-          <section class="parent-settings" id="peekaboo-settings-panel" aria-label="Cee sesi ayarlari">
-            <h3>Cee-ee Sesi</h3>
-            <p class="peekaboo-audio-note">Pofi ortaya çıktığında bu kayıt çalınır. Ebeveyn veya kardeş kendi sesiyle kaydedebilir.</p>
-            <div class="peekaboo-audio-actions">
-              <button type="button" id="peekaboo-audio-record-start" class="secondary-btn">Kayda Basla</button>
-              <button type="button" id="peekaboo-audio-record-stop" class="secondary-btn" disabled>Durdur</button>
-              <button type="button" id="peekaboo-audio-play" class="secondary-btn" disabled>Cal</button>
-              <button type="button" id="peekaboo-audio-delete" class="secondary-btn" disabled>Sil</button>
-            </div>
-            <p class="peekaboo-audio-status" id="peekaboo-audio-status">Varsayilan Ceee sesi aktif.</p>
           </section>
 
           <section class="parent-settings" id="stories-settings-panel" aria-label="Hikaye ayarlari">
@@ -484,32 +523,16 @@
             </div>
           </section>
 
-          <section class="parent-settings" id="parent-security-panel" aria-label="Ebeveyn sifresi">
-            <h3>Ebeveyn Şifresi</h3>
-            <form class="parent-pin-form" id="parent-pin-form">
-              <label>
-                Yeni 4 Haneli Şifre
-                <input
-                  id="parent-pin-input"
-                  inputmode="numeric"
-                  maxlength="4"
-                  pattern="[0-9]*"
-                  placeholder="1234"
-                />
-              </label>
-              <label>
-                Tekrar
-                <input
-                  id="parent-pin-confirm"
-                  inputmode="numeric"
-                  maxlength="4"
-                  pattern="[0-9]*"
-                  placeholder="1234"
-                />
-              </label>
-              <button type="submit" class="secondary-btn">Şifreyi Kaydet</button>
-            </form>
-            <p class="parent-pin-status" id="parent-pin-status">Varsayılan şifre aktif: 1234</p>
+          <section class="parent-settings" id="peekaboo-settings-panel" aria-label="Cee sesi ayarlari">
+            <h3>Bonus Oyun: Cee-ee Sesi</h3>
+            <p class="peekaboo-audio-note">Pofi ortaya çıktığında bu kayıt çalınır. Ebeveyn veya kardeş kendi sesiyle kaydedebilir.</p>
+            <div class="peekaboo-audio-actions">
+              <button type="button" id="peekaboo-audio-record-start" class="secondary-btn">Kayda Basla</button>
+              <button type="button" id="peekaboo-audio-record-stop" class="secondary-btn" disabled>Durdur</button>
+              <button type="button" id="peekaboo-audio-play" class="secondary-btn" disabled>Cal</button>
+              <button type="button" id="peekaboo-audio-delete" class="secondary-btn" disabled>Sil</button>
+            </div>
+            <p class="peekaboo-audio-status" id="peekaboo-audio-status">Varsayilan Ceee sesi aktif.</p>
           </section>
 
           <section id="family-panel" class="parent-family-panel" data-module="family">
@@ -545,6 +568,34 @@
 
             <div class="family-list" id="family-list"></div>
           </section>
+
+          <section class="parent-settings" id="parent-security-panel" aria-label="Ebeveyn sifresi">
+            <h3>Ebeveyn Şifresi</h3>
+            <form class="parent-pin-form" id="parent-pin-form">
+              <label>
+                Yeni 4 Haneli Şifre
+                <input
+                  id="parent-pin-input"
+                  inputmode="numeric"
+                  maxlength="4"
+                  pattern="[0-9]*"
+                  placeholder="1234"
+                />
+              </label>
+              <label>
+                Tekrar
+                <input
+                  id="parent-pin-confirm"
+                  inputmode="numeric"
+                  maxlength="4"
+                  pattern="[0-9]*"
+                  placeholder="1234"
+                />
+              </label>
+              <button type="submit" class="secondary-btn">Şifreyi Kaydet</button>
+            </form>
+            <p class="parent-pin-status" id="parent-pin-status">Varsayılan şifre aktif: 1234</p>
+          </section>
         </section>
       </main>
 
@@ -573,14 +624,14 @@
       </div>
 
       <nav class="module-tabs" role="tablist" aria-label="Modüller">
-        <button class="tab-btn" role="tab" aria-selected="false" data-view="speech" aria-label="Kelime Öğren">
+        <button class="tab-btn" role="tab" aria-selected="false" data-view="speech" aria-label="Dokun ve Dinle">
           <span class="tab-btn-icon pofi-tab-icon" aria-hidden="true">
             <span class="pofi-stack pofi-tab-stack is-idle">
               <img class="pofi-body-layer" src="/assets/pofi_Images/Pofi.svg" alt="" />
               <img class="pofi-face-layer" src="/assets/pofi-pack/face-idle.svg" alt="" />
             </span>
           </span>
-          <span class="tab-btn-label">Kelime</span>
+          <span class="tab-btn-label">Dokun</span>
         </button>
         <button class="tab-btn" role="tab" aria-selected="false" data-view="sentence" aria-label="Cümle Kur">
           <span class="tab-btn-icon pofi-tab-icon" aria-hidden="true">
@@ -591,15 +642,14 @@
           </span>
           <span class="tab-btn-label">Cümle</span>
         </button>
-        <button class="tab-btn" role="tab" aria-selected="false" data-view="peekaboo" aria-label="Ceee Oyunu">
+        <button class="tab-btn" role="tab" aria-selected="false" data-view="stories" aria-label="Hikayeler">
           <span class="tab-btn-icon pofi-tab-icon" aria-hidden="true">
-            <span class="pofi-stack pofi-tab-stack is-hide">
+            <span class="pofi-stack pofi-tab-stack is-happy">
               <img class="pofi-body-layer" src="/assets/pofi_Images/Pofi.svg" alt="" />
-              <img class="pofi-face-layer" src="/assets/pofi-pack/face-idle.svg" alt="" />
-              <img class="pofi-hands-layer" src="/assets/pofi-pack/hands-hide.svg" alt="" />
+              <img class="pofi-face-layer" src="/assets/pofi-pack/face-happy.svg" alt="" />
             </span>
           </span>
-          <span class="tab-btn-label">Ceee</span>
+          <span class="tab-btn-label">Hikaye</span>
         </button>
         <button class="tab-btn" role="tab" aria-selected="false" data-view="sleep" aria-label="Uyku Modu">
           <span class="tab-btn-icon pofi-tab-icon" aria-hidden="true">

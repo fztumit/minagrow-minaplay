@@ -38,12 +38,13 @@ function registerServiceWorker() {
 }
 function wireTabs(mascot) {
     const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
-    const homeModeButtons = Array.from(document.querySelectorAll('.home-mode-card'));
+    const homeLauncherButtons = Array.from(document.querySelectorAll('.home-mode-card, .home-bonus-card'));
     const views = Array.from(document.querySelectorAll('.module-view'));
     const homeRoot = document.getElementById('view-home');
     const speechRoot = document.getElementById('view-speech');
     const sentenceRoot = document.getElementById('view-sentence');
     const peekabooRoot = document.getElementById('view-peekaboo');
+    const storiesRoot = document.getElementById('view-stories');
     const sleepRoot = document.getElementById('view-sleep');
     const parentRoot = document.getElementById('view-parent');
     const parentCloseBtn = document.getElementById('parent-panel-close');
@@ -66,6 +67,9 @@ function wireTabs(mascot) {
     const notifyPeekabooLifecycle = (state) => {
         peekabooRoot?.dispatchEvent(new CustomEvent(`peekaboo-${state}`));
     };
+    const notifySleepLifecycle = (state) => {
+        sleepRoot?.dispatchEvent(new CustomEvent(`sleep-${state}`));
+    };
     const resumeActiveChildModule = () => {
         const activeViewId = document.querySelector('.module-view.active')?.id;
         if (activeViewId === 'view-home') {
@@ -79,6 +83,9 @@ function wireTabs(mascot) {
         }
         if (activeViewId === 'view-peekaboo') {
             notifyPeekabooLifecycle('resume');
+        }
+        if (activeViewId === 'view-sleep') {
+            notifySleepLifecycle('resume');
         }
     };
     const syncParentPinStatus = (message) => {
@@ -154,6 +161,12 @@ function wireTabs(mascot) {
         else {
             notifyPeekabooLifecycle('pause');
         }
+        if (selectedView === 'sleep') {
+            notifySleepLifecycle('resume');
+        }
+        else {
+            notifySleepLifecycle('pause');
+        }
         if (selectedView === 'home') {
             mascot.setMessage('Bir mod seç.');
         }
@@ -185,6 +198,7 @@ function wireTabs(mascot) {
         notifySpeechGuidance('pause');
         notifySentenceLifecycle('pause');
         notifyPeekabooLifecycle('pause');
+        notifySleepLifecycle('pause');
         document.body.setAttribute('data-active-view', 'parent');
         views.forEach((view) => {
             view.classList.toggle('active', view.id === 'view-parent');
@@ -198,7 +212,9 @@ function wireTabs(mascot) {
             return;
         }
         notifySpeechGuidance('pause');
+        notifySentenceLifecycle('pause');
         notifyPeekabooLifecycle('pause');
+        notifySleepLifecycle('pause');
         authOverlay.classList.add('is-active');
         authOverlay.setAttribute('aria-hidden', 'false');
         authInput.value = '';
@@ -223,7 +239,7 @@ function wireTabs(mascot) {
             activatePrimaryView(selectedView);
         });
     });
-    homeModeButtons.forEach((button) => {
+    homeLauncherButtons.forEach((button) => {
         button.addEventListener('click', () => {
             const selectedView = button.dataset.view;
             if (!selectedView) {
@@ -242,6 +258,9 @@ function wireTabs(mascot) {
         requestParentPin();
     });
     sentenceRoot?.addEventListener('open-parent-panel', () => {
+        requestParentPin();
+    });
+    storiesRoot?.addEventListener('open-parent-panel', () => {
         requestParentPin();
     });
     peekabooRoot?.addEventListener('open-parent-panel', () => {
@@ -312,6 +331,7 @@ function wireTabs(mascot) {
     syncParentPinStatus();
     bindHiddenParentAccess(homeRoot, 'home-parent-trigger', 'home-parent-hotspot');
     bindHiddenParentAccess(sentenceRoot, 'sentence-parent-trigger', 'sentence-parent-hotspot');
+    bindHiddenParentAccess(storiesRoot, 'stories-parent-trigger', 'stories-parent-hotspot');
     bindHiddenParentAccess(sleepRoot, 'sleep-parent-trigger', 'sleep-parent-hotspot');
     if (parentRoot?.classList.contains('active')) {
         openParentPanel();
@@ -340,7 +360,11 @@ function installTestingHooks() {
             parent_auth_open: authOverlay?.classList.contains('is-active') ?? false,
             mascot_message: mascotMessage,
             home: {
-                mode_count: homeRoot?.querySelectorAll('.home-mode-card').length ?? 0
+                mode_count: homeRoot?.querySelectorAll('.home-mode-card').length ?? 0,
+                bonus_count: homeRoot?.querySelectorAll('.home-bonus-card').length ?? 0
+            },
+            navigation: {
+                primary_tab_count: document.querySelectorAll('.module-tabs .tab-btn').length
             },
             daily_word: dailyWordText,
             daily_word_audio: {

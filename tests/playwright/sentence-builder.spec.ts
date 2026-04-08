@@ -12,6 +12,10 @@ test('sentence builder combines two selections into a playable sentence', async 
   await expect(page.locator('#view-sentence')).toHaveAttribute('data-selected-actor', 'baba');
   await expect(page.locator('#view-sentence')).toHaveAttribute('data-selected-object', 'su');
   await expect(page.locator('#sentence-preview-text')).toContainText('Baba su içti.');
+  await page.screenshot({
+    path: '/Users/umitaydin/.codex/worktrees/f830/Konusu-Yorum/output/sentence-builder.png',
+    fullPage: true
+  });
 
   const result = await page.evaluate(() => {
     const runtime = window as Window & {

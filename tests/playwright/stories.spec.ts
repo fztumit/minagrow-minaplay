@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test';
-import { gotoStoriesView } from './helpers/navigation.js';
+import { openStoriesMode } from './helpers/navigation.js';
 import { unlockParentPanel } from './helpers/parent-access.js';
 
 test('stories easy level provides two-word starter sentences', async ({ page }) => {
   await page.goto('/');
-  await gotoStoriesView(page);
+  await openStoriesMode(page);
   await unlockParentPanel(page);
   await expect(page.locator('#story-level-select')).toHaveValue('easy');
   await expect(page.locator('#story-audio-record-start')).toBeVisible();
@@ -15,6 +15,10 @@ test('stories easy level provides two-word starter sentences', async ({ page }) 
   const firstSentence = (await page.locator('#story-sentence').innerText()).trim();
   expect(firstSentence).toBe('Su iç');
   expect(firstSentence.split(/\s+/).length).toBe(2);
+  await page.screenshot({
+    path: '/Users/umitaydin/.codex/worktrees/f830/Konusu-Yorum/output/stories-stage.png',
+    fullPage: true
+  });
 
   await page.click('#story-listen');
   await page.waitForTimeout(350);
