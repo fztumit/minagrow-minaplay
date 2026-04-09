@@ -204,15 +204,24 @@ test('daily activity card tracks words, story, and interaction', async ({ page }
   await openWordMode(page);
 
   const speechRoot = page.locator('#view-speech');
-  await speechRoot.locator('.word-card[data-word-id="su"]').click();
-  await page.waitForFunction(() => {
-    return document.getElementById('view-speech')?.getAttribute('data-current-target') === 'baba';
-  });
-  await speechRoot.locator('.word-card[data-word-id="baba"]').click();
-  await page.waitForFunction(() => {
-    return document.getElementById('view-speech')?.getAttribute('data-current-target') === 'top';
-  });
-  await speechRoot.locator('.word-card[data-word-id="top"]').click();
+  for (let step = 0; step < 3; step += 1) {
+    const targetWordId = await page.evaluate(() => {
+      return document.getElementById('view-speech')?.getAttribute('data-current-target') ?? '';
+    });
+
+    expect(targetWordId).toBeTruthy();
+    await speechRoot.locator(`.word-card[data-word-id="${targetWordId}"]`).click();
+
+    if (step < 2) {
+      await page.waitForFunction(
+        (previousTarget) => {
+          const nextTarget = document.getElementById('view-speech')?.getAttribute('data-current-target') ?? '';
+          return Boolean(nextTarget) && nextTarget !== previousTarget;
+        },
+        targetWordId
+      );
+    }
+  }
 
   await openStoriesMode(page);
   await page.click('#story-listen');

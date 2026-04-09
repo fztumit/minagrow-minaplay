@@ -1406,3 +1406,14 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
 - Extended `render_game_to_text` and Playwright coverage for `mirror.current_exercise`, camera state, reward state, and the new six-tab / six-card IA.
 - Tightened the `Mirror Mode` layout so the instruction card clears the fixed tab bar on shorter screens while keeping the calm, minimal composition intact.
 - Validation completed: `npm run build` ✅, `npm run test:e2e` ✅ (`35 passed`).
+
+## 2026-04-09 Multi-Surface Polish Pass
+- Refined `Dokun` so Pofi now anchors directly above the current target card instead of drifting between objects, and swapped the old fixed reminder cycle for a shuffled guidance loop with `rain`, `snow`, `hail`, `lightning`, `thunder`, and `rainbow` attention effects.
+- Updated classic `Dokun` target progression to feel less robotic by randomizing the next guided target while keeping the target, focused word, and guide prompt in sync through `render_game_to_text`.
+- Improved `Eşleme` guidance so Pofi now waits over the large focus card, uses the same expanded attention effect set, and scales its reminder energy as idle time grows.
+- Redesigned `Cümle` with a visible Pofi hero stack and guidance bubble so the surface no longer feels text-only while preserving the two-image sentence-building flow.
+- Expanded `Hikaye` into a more narrative reader with a `Pofi anlatıyor` narrator panel, short educational `lesson` copy per story, progress dots, and TTS fallback so Pofi can keep reading even without recorded audio.
+- Reworked `Ayna` into a true split screen: left-side Pofi demo, right-side mirror camera, stronger face/mouth/tongue styling, and spoken prompts for each exercise.
+- Restyled `Uyku` toward a calmer night-sky scene with moon, planets, comet/shooting stars, and a window-framed sleeping Pofi composition; note that the web-game canvas capture still only snapshots the stars canvas, so full-scene verification relied on CSS/DOM inspection plus the existing sleep Playwright flow.
+- Updated Playwright coverage to match the new randomized `Dokun` behavior and the slightly longer `Cümle` playback state window.
+- Validation completed: `npm run build` ✅, `npm run test:e2e` ✅ (`35 passed`).

@@ -293,6 +293,7 @@ export class MirrorModeModule {
     this.rootEl.setAttribute('data-cycle-state', 'guiding');
     this.rootEl.setAttribute('data-rewarding', 'false');
     this.cycleStartedAt = performance.now();
+    this.speakInstruction(this.getCurrentExercise().instruction);
 
     const updateProgress = (timestamp: number) => {
       if (!this.isActive || this.cycleState !== 'guiding') {
@@ -328,6 +329,9 @@ export class MirrorModeModule {
 
     this.rewardEl.classList.remove('is-active');
     this.progressFillEl.style.setProperty('--mirror-progress-ratio', '0');
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
   }
 
   private triggerReward(): void {
@@ -436,5 +440,28 @@ export class MirrorModeModule {
     oscillatorGain.connect(gain);
     oscillator.start(start);
     oscillator.stop(start + duration + 0.02);
+  }
+
+  private speakInstruction(message: string): void {
+    if (!('speechSynthesis' in window) || typeof window.SpeechSynthesisUtterance === 'undefined') {
+      return;
+    }
+
+    const runtime = window as Window & { __mirrorPromptLog?: string[] };
+    runtime.__mirrorPromptLog = runtime.__mirrorPromptLog ?? [];
+    runtime.__mirrorPromptLog.push(message);
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(message);
+    utterance.lang = 'tr-TR';
+    utterance.rate = 0.82;
+    utterance.pitch = 1.02;
+    utterance.volume = 0.82;
+
+    try {
+      window.speechSynthesis.speak(utterance);
+    } catch {
+      // Voice guidance is optional.
+    }
   }
 }

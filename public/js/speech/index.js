@@ -86,6 +86,7 @@ export class SpeechGameModule {
     sequenceTimeoutIds = [];
     sceneAudioContext = null;
     attentionEffectIndex = 0;
+    attentionEffectBag = [];
     idleReminderCount = 0;
     completedWordIds = new Set();
     settings = {
@@ -239,6 +240,7 @@ export class SpeechGameModule {
         this.rootEl.setAttribute('data-current-target', '');
         this.rootEl.setAttribute('data-guided-target', '');
         this.rootEl.setAttribute('data-focused-word', '');
+        this.rootEl.setAttribute('data-attention-strength', '1');
         this.syncSettingsToDom();
         this.renderRecordingLibrary();
         this.renderProgressPanel();
@@ -1513,6 +1515,7 @@ export class SpeechGameModule {
         this.guideLayerEl.classList.remove('is-sleepy');
         this.activeNextButton?.classList.remove('is-attention-target');
         delete this.guideLayerEl.dataset.attentionEffect;
+        this.rootEl.setAttribute('data-attention-strength', '1');
         if (this.attentionResetTimeoutId !== null) {
             window.clearTimeout(this.attentionResetTimeoutId);
             this.attentionResetTimeoutId = null;
@@ -1629,8 +1632,8 @@ export class SpeechGameModule {
         const buttonRect = button.getBoundingClientRect();
         const mascotSize = this.guideMascotEl.getBoundingClientRect().width || 84;
         if (button === this.focusCardBtn) {
-            const x = buttonRect.right - stageRect.left - mascotSize * 0.18;
-            const y = buttonRect.top - stageRect.top + buttonRect.height * 0.12;
+            const x = buttonRect.left - stageRect.left + buttonRect.width / 2 - mascotSize / 2;
+            const y = buttonRect.top - stageRect.top - mascotSize * 0.06;
             return {
                 x: Math.max(20, Math.min(x, Math.max(20, stageRect.width - mascotSize - 20))),
                 y: Math.max(20, Math.min(y, Math.max(20, stageRect.height - mascotSize - 20)))
@@ -1702,6 +1705,8 @@ export class SpeechGameModule {
         const prompt = this.buildGuideWaitPrompt(targetButton.dataset.wordId);
         const effect = this.getNextAttentionEffect();
         const sleepyLeadMs = sleepyFirst ? 880 : 0;
+        const attentionStrength = Math.min(3, Math.max(1, this.idleReminderCount));
+        const attentionScale = Math.min(1.28, 1.08 + attentionStrength * 0.05);
         this.clearAttentionState();
         this.guideLayerEl.classList.add('is-active');
         this.guideLayerEl.classList.remove('is-attention');
@@ -1711,6 +1716,7 @@ export class SpeechGameModule {
         this.setGuideTransform(target.x, target.y, sleepyFirst ? 0.98 : 1.12);
         this.rootEl.setAttribute('data-guide-active', 'true');
         this.rootEl.setAttribute('data-scene-phase', 'awaiting-tap');
+        this.rootEl.setAttribute('data-attention-strength', String(attentionStrength));
         if (sleepyFirst) {
             this.guideLayerEl.classList.add('is-sleepy');
             this.rootEl.setAttribute('data-guide-mode', 'sleepy');
@@ -1726,7 +1732,7 @@ export class SpeechGameModule {
             this.guideLayerEl.classList.add('is-attention');
             this.guideLayerEl.dataset.attentionEffect = effect;
             targetButton.classList.add('is-attention-target');
-            this.setGuideTransform(target.x, target.y, 1.16);
+            this.setGuideTransform(target.x, target.y, attentionScale);
             this.rootEl.setAttribute('data-guide-mode', 'attention');
             this.rootEl.setAttribute('data-guide-prompt', prompt);
             this.feedbackEl.textContent = prompt;
@@ -1739,16 +1745,34 @@ export class SpeechGameModule {
                 delete this.guideLayerEl.dataset.attentionEffect;
                 this.setGuideTransform(target.x, target.y, 1);
                 this.rootEl.setAttribute('data-guide-mode', 'idle');
+                this.rootEl.setAttribute('data-attention-strength', '1');
                 this.attentionResetTimeoutId = null;
             }, 1550);
         }, sleepyLeadMs);
         this.sequenceTimeoutIds.push(attentionTimeoutId);
     }
     getNextAttentionEffect() {
-        const effects = ['rain', 'snow', 'rainbow', 'storm'];
-        const effect = effects[this.attentionEffectIndex % effects.length] ?? 'rain';
+        if (this.attentionEffectBag.length === 0) {
+            this.attentionEffectBag = this.shuffleArray([
+                'rain',
+                'snow',
+                'hail',
+                'lightning',
+                'thunder',
+                'rainbow'
+            ]);
+        }
+        const effect = this.attentionEffectBag.shift() ?? 'rain';
         this.attentionEffectIndex += 1;
         return effect;
+    }
+    shuffleArray(values) {
+        const nextValues = [...values];
+        for (let index = nextValues.length - 1; index > 0; index -= 1) {
+            const swapIndex = Math.floor(Math.random() * (index + 1));
+            [nextValues[index], nextValues[swapIndex]] = [nextValues[swapIndex], nextValues[index]];
+        }
+        return nextValues;
     }
     isGuideTargetStillActive(targetButton) {
         const activeWordId = this.activeNextButton?.dataset.wordId ?? '';

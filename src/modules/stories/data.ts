@@ -5,6 +5,7 @@ export type StoryItem = {
   id: string;
   title: string;
   emoji: string;
+  lesson: string;
   sentences: string[];
 };
 
@@ -32,12 +33,14 @@ export const STORIES_BY_LEVEL_AND_PACK: Record<StoryLevel, Record<StoryPack, Sto
         id: 'ilk-cumleler-1',
         title: 'İlk Cümleler 1',
         emoji: '🌟',
+        lesson: 'Kısa yönergeleri dinleyip günlük kelimeleri tekrar ediyoruz.',
         sentences: ['Su iç', 'Top at', 'Anne gel', 'Abla al']
       },
       {
         id: 'ilk-cumleler-2',
         title: 'İlk Cümleler 2',
         emoji: '🧩',
+        lesson: 'Basit eylem cümleleri ile dinleme ve tekrar çalışıyoruz.',
         sentences: ['Süt iç', 'Kitap aç', 'Ekmek al', 'Baba gel']
       }
     ],
@@ -46,12 +49,14 @@ export const STORIES_BY_LEVEL_AND_PACK: Record<StoryLevel, Record<StoryPack, Sto
         id: 'hayvan-kolay-1',
         title: 'Hayvan Cümleleri 1',
         emoji: '🐶',
+        lesson: 'Hayvanları tanıyıp kısa hareketlerini dinliyoruz.',
         sentences: ['Kedi gel', 'Kopek bak', 'Kus uc', 'Balik yuz']
       },
       {
         id: 'hayvan-kolay-2',
         title: 'Hayvan Cümleleri 2',
         emoji: '🐥',
+        lesson: 'Hayvanların yaptığı şeyleri küçük adımlarla öğreniyoruz.',
         sentences: ['Kedi uyu', 'Kopek kos', 'Kus kon', 'Tavuk gez']
       }
     ],
@@ -60,12 +65,14 @@ export const STORIES_BY_LEVEL_AND_PACK: Record<StoryLevel, Record<StoryPack, Sto
         id: 'gunluk-kolay-1',
         title: 'Gunluk Yasam 1',
         emoji: '☀️',
+        lesson: 'Sabah rutinlerini kısa yönergelerle pekiştiriyoruz.',
         sentences: ['Yuz yika', 'Dis fircala', 'Masa kur', 'Oyuna basla']
       },
       {
         id: 'gunluk-kolay-2',
         title: 'Gunluk Yasam 2',
         emoji: '🏠',
+        lesson: 'Ev içi günlük işleri tanıyıp sırayla takip ediyoruz.',
         sentences: ['Ayakkabi giy', 'Kapi ac', 'Eve gel', 'Uyku saati']
       }
     ]
@@ -76,18 +83,21 @@ export const STORIES_BY_LEVEL_AND_PACK: Record<StoryLevel, Record<StoryPack, Sto
         id: 'top-oyunu',
         title: 'Top Oyunu',
         emoji: '⚽',
+        lesson: 'Sıra bekleme ve birlikte oynama fikrini destekliyoruz.',
         sentences: ['Baba topu aldı.', 'Top yuvarlandı.', 'Çocuk top dedi.']
       },
       {
         id: 'kitap-saati',
         title: 'Kitap Saati',
         emoji: '📘',
+        lesson: 'Kitapla dikkat toplama ve nesne adlandırma çalışıyoruz.',
         sentences: ['Anne kitabı açtı.', 'Kitapta elma resmi var.', 'Çocuk kitap dedi.']
       },
       {
         id: 'araba-yolu',
         title: 'Araba Yolu',
         emoji: '🚗',
+        lesson: 'Yol, araç ve hareket kavramlarını kısa hikayeyle anlatıyoruz.',
         sentences: ['Baba arabaya bindi.', 'Araba yolda gidiyor.', 'Çocuk araba dedi.']
       }
     ],
@@ -96,12 +106,14 @@ export const STORIES_BY_LEVEL_AND_PACK: Record<StoryLevel, Record<StoryPack, Sto
         id: 'hayvan-standart-1',
         title: 'Ormanda Gezi',
         emoji: '🌳',
+        lesson: 'Doğayı gözlemleyip hayvanları sakin bir hikayeyle takip ediyoruz.',
         sentences: ['Küçük çocuk ormanda yürüdü.', 'Kuş ağacın dalına kondu.', 'Kedi sessizce çocuğu izledi.']
       },
       {
         id: 'hayvan-standart-2',
         title: 'Bahce Hikayesi',
         emoji: '🌼',
+        lesson: 'Hayvanlara bakım ve paylaşma duygusunu destekliyoruz.',
         sentences: ['Köpek topu bahçeye getirdi.', 'Kedi çitin üstüne çıktı.', 'Çocuk hayvanlara su verdi.']
       }
     ],
@@ -110,12 +122,14 @@ export const STORIES_BY_LEVEL_AND_PACK: Record<StoryLevel, Record<StoryPack, Sto
         id: 'gunluk-standart-1',
         title: 'Sabah Rutini',
         emoji: '🪥',
+        lesson: 'Günün akışını ve sabah hazırlığını düzenli bir sırayla anlatıyoruz.',
         sentences: ['Çocuk sabah yüzünü yıkadı.', 'Anne kahvaltı masasını hazırladı.', 'Baba çocuğa süt verdi.']
       },
       {
         id: 'gunluk-standart-2',
         title: 'Aksam Zamani',
         emoji: '🌙',
+        lesson: 'Akşam sakinleşme, kitap ve sarılma rutinini güçlendiriyoruz.',
         sentences: ['Aile akşam yemeği yedi.', 'Çocuk hikaye kitabını seçti.', 'Uyumadan önce herkes sarıldı.']
       }
     ]

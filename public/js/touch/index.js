@@ -17,11 +17,11 @@ const GUIDE_WAIT_PROMPTS = {
     elma: 'Ben elmanın yanında bekliyorum.'
 };
 const GUIDE_WORD_ANCHORS = {
-    su: { xAlign: 'left', yAlign: 'top', xShift: -18, yShift: -18 },
-    baba: { xAlign: 'center', yAlign: 'top', xShift: 0, yShift: -22 },
-    top: { xAlign: 'right', yAlign: 'top', xShift: 18, yShift: -18 },
-    araba: { xAlign: 'left', yAlign: 'middle', xShift: -28, yShift: 4 },
-    elma: { xAlign: 'right', yAlign: 'middle', xShift: 28, yShift: 4 }
+    su: { xAlign: 'center', yAlign: 'top', xShift: 0, yShift: -6 },
+    baba: { xAlign: 'center', yAlign: 'top', xShift: 0, yShift: -8 },
+    top: { xAlign: 'center', yAlign: 'top', xShift: 0, yShift: -8 },
+    araba: { xAlign: 'center', yAlign: 'top', xShift: 0, yShift: -8 },
+    elma: { xAlign: 'center', yAlign: 'top', xShift: 0, yShift: -8 }
 };
 export class TouchGameModule {
     rootEl;
@@ -47,8 +47,11 @@ export class TouchGameModule {
     idleReminderTimeoutId = null;
     attentionResetTimeoutId = null;
     attentionEffectIndex = 0;
+    attentionEffectBag = [];
     idleReminderCount = 0;
     sceneAudioContext = null;
+    targetSequence = [];
+    targetSequenceIndex = 0;
     constructor(rootEl, mascot, controlsRootEl = rootEl) {
         const stageEl = rootEl.querySelector('#touch-stage');
         const gridEl = rootEl.querySelector('#touch-grid');
@@ -89,6 +92,7 @@ export class TouchGameModule {
         this.rootEl.setAttribute('data-current-target', '');
         this.rootEl.setAttribute('data-guided-target', '');
         this.rootEl.setAttribute('data-focused-word', '');
+        this.rootEl.setAttribute('data-attention-strength', '1');
         this.rootEl.setAttribute('data-active-level', 'classic');
         this.rootEl.setAttribute('data-active-set', 'featured-scene');
         this.rootEl.setAttribute('data-auto-progress', 'false');
@@ -156,6 +160,7 @@ export class TouchGameModule {
     handleWordProfilesUpdated() {
         const previousActiveWordId = this.activeNextButton?.dataset.wordId;
         this.renderCards(this.getSceneProfiles());
+        this.resetTargetSequence(previousActiveWordId);
         this.syncMetricsToDom();
         const restoredButton = (previousActiveWordId
             ? Array.from(this.gridEl.querySelectorAll('.word-card')).find((button) => button.dataset.wordId === previousActiveWordId)
@@ -283,7 +288,7 @@ export class TouchGameModule {
         this.sequenceTimeoutIds.push(resetTimeoutId);
     }
     startIntroSequence() {
-        const firstButton = this.gridEl.querySelector('.word-card');
+        const firstButton = this.getInitialTargetButton();
         if (!firstButton) {
             return;
         }
@@ -362,6 +367,8 @@ export class TouchGameModule {
         const prompt = this.buildGuideWaitPrompt(targetButton.dataset.wordId);
         const effect = this.getNextAttentionEffect();
         const sleepyLeadMs = sleepyFirst ? 880 : 0;
+        const attentionStrength = Math.min(3, Math.max(1, this.idleReminderCount));
+        const attentionScale = Math.min(1.28, 1.08 + attentionStrength * 0.05);
         this.clearAttentionState();
         this.guideLayerEl.classList.add('is-active');
         this.guideLayerEl.classList.remove('is-attention', 'is-sleepy');
@@ -370,6 +377,7 @@ export class TouchGameModule {
         this.setGuideTransform(target.x, target.y, sleepyFirst ? 0.98 : 1.12);
         this.rootEl.setAttribute('data-guide-active', 'true');
         this.rootEl.setAttribute('data-scene-phase', 'awaiting-tap');
+        this.rootEl.setAttribute('data-attention-strength', String(attentionStrength));
         if (sleepyFirst) {
             this.guideLayerEl.classList.add('is-sleepy');
             this.rootEl.setAttribute('data-guide-mode', 'sleepy');
@@ -385,7 +393,7 @@ export class TouchGameModule {
             this.guideLayerEl.classList.add('is-attention');
             this.guideLayerEl.dataset.attentionEffect = effect;
             targetButton.classList.add('is-attention-target');
-            this.setGuideTransform(target.x, target.y, 1.16);
+            this.setGuideTransform(target.x, target.y, attentionScale);
             this.rootEl.setAttribute('data-guide-mode', 'attention');
             this.rootEl.setAttribute('data-guide-prompt', prompt);
             this.feedbackEl.textContent = prompt;
@@ -398,6 +406,7 @@ export class TouchGameModule {
                 delete this.guideLayerEl.dataset.attentionEffect;
                 this.setGuideTransform(target.x, target.y, 1);
                 this.rootEl.setAttribute('data-guide-mode', 'idle');
+                this.rootEl.setAttribute('data-attention-strength', '1');
                 this.attentionResetTimeoutId = null;
             }, 1550);
         }, sleepyLeadMs);
@@ -535,6 +544,7 @@ export class TouchGameModule {
         this.guideLayerEl.classList.remove('is-attention', 'is-sleepy');
         this.activeNextButton?.classList.remove('is-attention-target');
         delete this.guideLayerEl.dataset.attentionEffect;
+        this.rootEl.setAttribute('data-attention-strength', '1');
         if (this.attentionResetTimeoutId !== null) {
             window.clearTimeout(this.attentionResetTimeoutId);
             this.attentionResetTimeoutId = null;
@@ -604,22 +614,8 @@ export class TouchGameModule {
             xShift: 0,
             yShift: 0
         };
-        let x = buttonRect.left - stageRect.left + buttonRect.width / 2 - mascotSize / 2;
-        if (anchor.xAlign === 'left') {
-            x = buttonRect.left - stageRect.left - mascotSize * 0.64;
-        }
-        else if (anchor.xAlign === 'right') {
-            x = buttonRect.right - stageRect.left - mascotSize * 0.36;
-        }
-        let y = buttonRect.top - stageRect.top - mascotSize * 0.82;
-        if (anchor.yAlign === 'middle') {
-            y = buttonRect.top - stageRect.top + buttonRect.height / 2 - mascotSize * 0.58;
-        }
-        else if (anchor.yAlign === 'bottom') {
-            y = buttonRect.bottom - stageRect.top - mascotSize * 0.22;
-        }
-        x += anchor.xShift ?? 0;
-        y += anchor.yShift ?? 0;
+        const x = buttonRect.left - stageRect.left + buttonRect.width / 2 - mascotSize / 2 + (anchor.xShift ?? 0);
+        const y = buttonRect.top - stageRect.top - mascotSize * 0.46 + (anchor.yShift ?? 0);
         const safeInsetX = 20;
         const safeInsetY = 18;
         return {
@@ -653,16 +649,28 @@ export class TouchGameModule {
             button.setAttribute('aria-disabled', String(!canChoose));
         });
     }
+    getInitialTargetButton() {
+        if (this.targetSequence.length === 0) {
+            this.resetTargetSequence();
+        }
+        const wordId = this.targetSequence[this.targetSequenceIndex];
+        return this.findButtonByWordId(wordId) ?? this.gridEl.querySelector('.word-card');
+    }
     getNextButton(currentWordId) {
-        const buttons = Array.from(this.gridEl.querySelectorAll('.word-card'));
-        const currentIndex = buttons.findIndex((button) => button.dataset.wordId === currentWordId);
-        if (buttons.length === 0) {
-            return null;
+        if (this.targetSequence.length === 0) {
+            this.resetTargetSequence(currentWordId);
         }
-        if (currentIndex < 0) {
-            return buttons[0] ?? null;
+        const currentIndex = this.targetSequence.indexOf(currentWordId);
+        if (currentIndex >= 0) {
+            this.targetSequenceIndex = currentIndex;
         }
-        return buttons[(currentIndex + 1) % buttons.length] ?? null;
+        let nextIndex = this.targetSequenceIndex + 1;
+        if (nextIndex >= this.targetSequence.length) {
+            this.resetTargetSequence(currentWordId);
+            nextIndex = 0;
+        }
+        this.targetSequenceIndex = nextIndex;
+        return this.findButtonByWordId(this.targetSequence[this.targetSequenceIndex]);
     }
     refreshCustomAudioMap() {
         this.customAudioMap = loadCustomAudioMap();
@@ -730,10 +738,45 @@ export class TouchGameModule {
         return GUIDE_WAIT_PROMPTS[word] ?? `${this.capitalize(promptLabel)} icin bekliyorum.`;
     }
     getNextAttentionEffect() {
-        const effects = ['rain', 'snow', 'rainbow', 'storm'];
-        const effect = effects[this.attentionEffectIndex % effects.length] ?? 'rain';
+        if (this.attentionEffectBag.length === 0) {
+            this.attentionEffectBag = this.shuffleArray([
+                'rain',
+                'snow',
+                'hail',
+                'lightning',
+                'thunder',
+                'rainbow'
+            ]);
+        }
+        const effect = this.attentionEffectBag.shift() ?? 'rain';
         this.attentionEffectIndex += 1;
         return effect;
+    }
+    resetTargetSequence(avoidWord) {
+        const wordIds = this.getSceneProfiles().map((item) => item.word);
+        const nextSequence = this.shuffleArray(wordIds);
+        if (avoidWord && nextSequence.length > 1 && nextSequence[0] === avoidWord) {
+            const swapIndex = nextSequence.findIndex((wordId) => wordId !== avoidWord);
+            if (swapIndex > 0) {
+                [nextSequence[0], nextSequence[swapIndex]] = [nextSequence[swapIndex], nextSequence[0]];
+            }
+        }
+        this.targetSequence = nextSequence;
+        this.targetSequenceIndex = 0;
+    }
+    findButtonByWordId(wordId) {
+        if (!wordId) {
+            return null;
+        }
+        return (Array.from(this.gridEl.querySelectorAll('.word-card')).find((button) => button.dataset.wordId === wordId) ?? null);
+    }
+    shuffleArray(values) {
+        const nextValues = [...values];
+        for (let index = nextValues.length - 1; index > 0; index -= 1) {
+            const swapIndex = Math.floor(Math.random() * (index + 1));
+            [nextValues[index], nextValues[swapIndex]] = [nextValues[swapIndex], nextValues[index]];
+        }
+        return nextValues;
     }
     primeSceneAudio() {
         if (!('AudioContext' in window)) {

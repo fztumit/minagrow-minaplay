@@ -198,8 +198,10 @@
                 <span class="speech-guide-sparkles" aria-hidden="true"></span>
                 <span class="speech-guide-weather speech-guide-weather-rain" aria-hidden="true"></span>
                 <span class="speech-guide-weather speech-guide-weather-snow" aria-hidden="true"></span>
+                <span class="speech-guide-weather speech-guide-weather-hail" aria-hidden="true"></span>
                 <span class="speech-guide-weather speech-guide-weather-rainbow" aria-hidden="true"></span>
                 <span class="speech-guide-weather speech-guide-weather-lightning" aria-hidden="true"></span>
+                <span class="speech-guide-weather speech-guide-weather-thunder" aria-hidden="true"></span>
                 <span class="pofi-stack speech-guide-stack" aria-hidden="true">
                   <img class="pofi-body-layer" src="/assets/pofi_Images/Pofi.svg" alt="" />
                   <img class="pofi-face-layer" src="/assets/pofi-pack/face-idle.svg" alt="" />
@@ -254,8 +256,10 @@
                 <span class="speech-guide-sparkles" aria-hidden="true"></span>
                 <span class="speech-guide-weather speech-guide-weather-rain" aria-hidden="true"></span>
                 <span class="speech-guide-weather speech-guide-weather-snow" aria-hidden="true"></span>
+                <span class="speech-guide-weather speech-guide-weather-hail" aria-hidden="true"></span>
                 <span class="speech-guide-weather speech-guide-weather-rainbow" aria-hidden="true"></span>
                 <span class="speech-guide-weather speech-guide-weather-lightning" aria-hidden="true"></span>
+                <span class="speech-guide-weather speech-guide-weather-thunder" aria-hidden="true"></span>
                 <span class="pofi-stack speech-guide-stack" aria-hidden="true">
                   <img class="pofi-body-layer" src="/assets/pofi_Images/Pofi.svg" alt="" />
                   <img class="pofi-face-layer" src="/assets/pofi-pack/face-idle.svg" alt="" />
@@ -318,10 +322,15 @@
 
             <div class="sentence-phoenix" aria-hidden="true">
               <span class="sentence-phoenix-glow"></span>
-              <img src="/assets/pofi-pack/mascot-idle.svg" alt="" />
+              <span class="sentence-phoenix-bubble">Pofi ile birleştir</span>
+              <span class="pofi-stack sentence-phoenix-stack">
+                <img class="pofi-body-layer" src="/assets/pofi_Images/Pofi.svg" alt="" />
+                <img class="pofi-face-layer" src="/assets/pofi-pack/face-happy.svg" alt="" />
+              </span>
             </div>
 
             <div class="sentence-preview" aria-live="polite">
+              <p class="sentence-preview-kicker">İki resmi seç, Pofi birlikte okusun.</p>
               <div class="sentence-preview-icons" aria-hidden="true">
                 <span class="sentence-preview-slot" id="sentence-preview-actor"><span class="sentence-preview-plus">?</span></span>
                 <span class="sentence-preview-link">+</span>
@@ -431,6 +440,19 @@
               </div>
 
               <article class="story-reader">
+                <div class="story-reader-head">
+                  <div class="story-narrator">
+                    <span class="pofi-stack story-narrator-pofi" aria-hidden="true">
+                      <img class="pofi-body-layer" src="/assets/pofi_Images/Pofi.svg" alt="" />
+                      <img class="pofi-face-layer" src="/assets/pofi-pack/face-happy.svg" alt="" />
+                    </span>
+                    <div class="story-narrator-copy">
+                      <span class="story-narrator-kicker">Pofi anlatıyor</span>
+                      <p class="story-lesson" id="story-lesson">Bugün kısa bir öğretici hikaye dinliyoruz.</p>
+                    </div>
+                  </div>
+                  <div class="story-progress-dots" id="story-progress-dots" aria-hidden="true"></div>
+                </div>
                 <h3 id="story-title">Hikaye</h3>
                 <p class="story-sentence" id="story-sentence">Hikaye seç.</p>
                 <p class="story-counter" id="story-counter"></p>
@@ -511,9 +533,26 @@
           <div class="sleep-stage">
             <button type="button" id="sleep-parent-trigger" class="visually-hidden">Ebeveyn panelini aç</button>
             <div class="parent-corner-hotspot" id="sleep-parent-hotspot" aria-hidden="true"></div>
+            <div class="sleep-sky-decor" aria-hidden="true">
+              <span class="sleep-moon"></span>
+              <span class="sleep-planet sleep-planet-a"></span>
+              <span class="sleep-planet sleep-planet-b"></span>
+              <span class="sleep-shooting-star sleep-shooting-star-a"></span>
+              <span class="sleep-shooting-star sleep-shooting-star-b"></span>
+              <span class="sleep-comet"></span>
+            </div>
             <canvas id="sleep-stars" width="640" height="260" aria-hidden="true"></canvas>
-            <div class="sleep-phoenix-shell" aria-hidden="true">
-              <img class="sleep-phoenix" id="sleep-phoenix" src="/assets/pofi-pack/mascot-sleep.svg" alt="Pofi" />
+            <div class="sleep-window" aria-hidden="true">
+              <span class="sleep-window-glow"></span>
+              <span class="sleep-window-frame sleep-window-frame-top"></span>
+              <span class="sleep-window-frame sleep-window-frame-bottom"></span>
+              <span class="sleep-window-frame sleep-window-frame-left"></span>
+              <span class="sleep-window-frame sleep-window-frame-right"></span>
+              <span class="sleep-window-divider sleep-window-divider-vertical"></span>
+              <span class="sleep-window-divider sleep-window-divider-horizontal"></span>
+              <div class="sleep-phoenix-shell" aria-hidden="true">
+                <img class="sleep-phoenix" id="sleep-phoenix" src="/assets/pofi-pack/mascot-sleep.svg" alt="Pofi" />
+              </div>
             </div>
             <p class="sleep-caption">Pofi dinleniyor... iyi uykular.</p>
           </div>

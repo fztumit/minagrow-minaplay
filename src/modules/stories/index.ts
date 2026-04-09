@@ -45,6 +45,8 @@ export class StoriesModule {
   private readonly easySentenceListEl: HTMLElement;
   private readonly listEl: HTMLElement;
   private readonly titleEl: HTMLElement;
+  private readonly lessonEl: HTMLElement;
+  private readonly progressDotsEl: HTMLElement;
   private readonly sentenceEl: HTMLElement;
   private readonly counterEl: HTMLElement;
   private readonly listenBtn: HTMLButtonElement;
@@ -84,6 +86,8 @@ export class StoriesModule {
     const easySentenceListEl = controlsRoot.querySelector<HTMLElement>('#easy-sentence-list');
     const listEl = rootEl.querySelector<HTMLElement>('#story-list');
     const titleEl = rootEl.querySelector<HTMLElement>('#story-title');
+    const lessonEl = rootEl.querySelector<HTMLElement>('#story-lesson');
+    const progressDotsEl = rootEl.querySelector<HTMLElement>('#story-progress-dots');
     const sentenceEl = rootEl.querySelector<HTMLElement>('#story-sentence');
     const counterEl = rootEl.querySelector<HTMLElement>('#story-counter');
     const listenBtn = rootEl.querySelector<HTMLButtonElement>('#story-listen');
@@ -110,6 +114,8 @@ export class StoriesModule {
       !easySentenceListEl ||
       !listEl ||
       !titleEl ||
+      !lessonEl ||
+      !progressDotsEl ||
       !sentenceEl ||
       !counterEl ||
       !listenBtn ||
@@ -139,6 +145,8 @@ export class StoriesModule {
     this.easySentenceListEl = easySentenceListEl;
     this.listEl = listEl;
     this.titleEl = titleEl;
+    this.lessonEl = lessonEl;
+    this.progressDotsEl = progressDotsEl;
     this.sentenceEl = sentenceEl;
     this.counterEl = counterEl;
     this.listenBtn = listenBtn;
@@ -411,6 +419,8 @@ export class StoriesModule {
     const story = this.currentStory();
     if (!story) {
       this.titleEl.textContent = 'Hikaye';
+      this.lessonEl.textContent = 'Bugün kısa bir öğretici hikaye dinliyoruz.';
+      this.progressDotsEl.innerHTML = '';
       this.sentenceEl.textContent = 'Hikaye yok.';
       this.counterEl.textContent = '';
       return;
@@ -418,6 +428,10 @@ export class StoriesModule {
 
     const sentence = story.sentences[this.sentenceIndex];
     this.titleEl.textContent = `${story.emoji} ${story.title}`;
+    this.lessonEl.textContent = story.lesson;
+    this.progressDotsEl.innerHTML = story.sentences
+      .map((_, index) => `<span class="story-progress-dot ${index === this.sentenceIndex ? 'is-active' : ''}"></span>`)
+      .join('');
     this.sentenceEl.textContent = sentence;
     this.counterEl.textContent = `Cümle ${this.sentenceIndex + 1} / ${story.sentences.length}`;
   }
@@ -458,6 +472,7 @@ export class StoriesModule {
       incrementPackSentenceListen(this.pack, sentence);
       this.incrementWordListensFromSentence(sentence);
       this.playAudioDataUrl(sentenceAudio);
+      this.mascot.setMessage('Pofi aile kaydını anlatıyor.');
       this.syncRootState();
       return;
     }
@@ -478,11 +493,16 @@ export class StoriesModule {
           }
         }, index * queueIntervalMs);
       });
+      this.mascot.setMessage('Pofi cümleyi parça parça anlatıyor.');
       this.syncRootState();
       return;
     }
 
-    this.mascot.setMessage('Kayıt yok.');
+    incrementSentenceListen(sentence);
+    incrementPackSentenceListen(this.pack, sentence);
+    this.incrementWordListensFromSentence(sentence);
+    this.speakSentenceWithTts(sentence);
+    this.mascot.setMessage('Pofi anlatıyor.');
     this.syncRootState();
   }
 
@@ -817,6 +837,7 @@ export class StoriesModule {
       id: CUSTOM_EASY_STORY_ID,
       title: 'Özel Cümleler',
       emoji: '✍️',
+      lesson: 'Ailenin eklediği kısa cümleleri birlikte tekrar ediyoruz.',
       sentences: [...this.customEasySentences]
     };
 
@@ -1039,6 +1060,25 @@ export class StoriesModule {
       'data-current-story-audio',
       String(Boolean(currentSentenceKey && this.customAudioMap[currentSentenceKey]))
     );
+  }
+
+  private speakSentenceWithTts(sentence: string): void {
+    if (!('speechSynthesis' in window) || typeof window.SpeechSynthesisUtterance === 'undefined') {
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(sentence);
+    utterance.lang = 'tr-TR';
+    utterance.rate = 0.82;
+    utterance.pitch = 1;
+    utterance.volume = 0.84;
+
+    try {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+    } catch {
+      // Keep the story flow running if TTS is unavailable.
+    }
   }
 
   private getPackLabel(pack: StoryPack): string {

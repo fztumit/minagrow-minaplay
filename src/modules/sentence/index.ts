@@ -281,9 +281,10 @@ export class SentenceBuilderModule {
       })
     );
 
+    const playbackDurationMs = Math.max(1800, Math.min(4200, sentence.length * 95));
     this.playbackTimeoutId = window.setTimeout(() => {
       this.rootEl.setAttribute('data-playing', 'false');
-    }, 1200);
+    }, playbackDurationMs);
   }
 
   pause(): void {

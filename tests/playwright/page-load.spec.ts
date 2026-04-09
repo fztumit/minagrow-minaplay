@@ -22,9 +22,18 @@ test('page loads with core module blocks', async ({ page }) => {
   await expect(page.locator('#view-speech')).toHaveAttribute('data-scene-phase', 'awaiting-tap');
   await expect(page.locator('#touch-grid .word-card')).toHaveCount(5);
   await expect(page.locator('#touch-grid .word-object-image')).toHaveCount(4);
-  await expect(page.locator('#view-speech')).toHaveAttribute('data-current-target', 'su');
   await expect(page.locator('#view-speech')).toHaveAttribute('data-active-set', 'featured-scene');
-  await expect(page.locator('#view-speech')).toHaveAttribute('data-guided-target', 'su');
+  const speechState = await page.evaluate(() => {
+    const speechRoot = document.getElementById('view-speech');
+    return {
+      currentTarget: speechRoot?.getAttribute('data-current-target') ?? '',
+      guidedTarget: speechRoot?.getAttribute('data-guided-target') ?? '',
+      focusedWord: speechRoot?.getAttribute('data-focused-word') ?? '',
+    };
+  });
+  expect(speechState.currentTarget).toBeTruthy();
+  expect(speechState.guidedTarget).toBe(speechState.currentTarget);
+  expect(speechState.focusedWord).toBe(speechState.currentTarget);
 
   await unlockParentPanel(page);
   await expect(page.locator('#daily-word-record-start')).toBeVisible();
