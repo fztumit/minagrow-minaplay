@@ -103,6 +103,7 @@ export class MirrorModeModule {
     videoEl;
     placeholderEl;
     demoEl;
+    baseFaceEl;
     labelEl;
     categoryEl;
     instructionEl;
@@ -122,6 +123,7 @@ export class MirrorModeModule {
         const videoEl = rootEl.querySelector('#mirror-video');
         const placeholderEl = rootEl.querySelector('#mirror-camera-placeholder');
         const demoEl = rootEl.querySelector('#mirror-pofi-demo');
+        const baseFaceEl = rootEl.querySelector('#mirror-pofi-base-face');
         const labelEl = rootEl.querySelector('#mirror-exercise-label');
         const categoryEl = rootEl.querySelector('#mirror-exercise-category');
         const instructionEl = rootEl.querySelector('#mirror-instruction');
@@ -132,6 +134,7 @@ export class MirrorModeModule {
         if (!videoEl ||
             !placeholderEl ||
             !demoEl ||
+            !baseFaceEl ||
             !labelEl ||
             !categoryEl ||
             !instructionEl ||
@@ -145,6 +148,7 @@ export class MirrorModeModule {
         this.videoEl = videoEl;
         this.placeholderEl = placeholderEl;
         this.demoEl = demoEl;
+        this.baseFaceEl = baseFaceEl;
         this.labelEl = labelEl;
         this.categoryEl = categoryEl;
         this.instructionEl = instructionEl;
@@ -323,6 +327,9 @@ export class MirrorModeModule {
     renderExercise() {
         const exercise = this.getCurrentExercise();
         this.demoEl.setAttribute('data-exercise', exercise.id);
+        this.demoEl.setAttribute('data-face-variant', this.getFaceVariant(exercise.id));
+        this.demoEl.setAttribute('data-oral-variant', this.getOralVariant(exercise.id));
+        this.baseFaceEl.src = this.getFaceAsset(exercise.id);
         this.rootEl.setAttribute('data-current-exercise', exercise.id);
         this.rootEl.setAttribute('data-current-category', exercise.category);
         this.labelEl.textContent = exercise.label;
@@ -330,6 +337,58 @@ export class MirrorModeModule {
         this.instructionEl.textContent = exercise.instruction;
         this.rewardTextEl.textContent = exercise.rewardText;
         this.rootEl.setAttribute('data-rewarding', 'false');
+    }
+    getFaceVariant(exerciseId) {
+        if (exerciseId === 'happy' || exerciseId === 'smile') {
+            return 'happy';
+        }
+        if (exerciseId === 'surprised' || exerciseId === 'kiss' || exerciseId === 'o-shape') {
+            return 'surprised';
+        }
+        if (exerciseId === 'sleepy') {
+            return 'sleep';
+        }
+        if (exerciseId === 'sad' || exerciseId === 'e-shape') {
+            return 'calm';
+        }
+        return 'idle';
+    }
+    getFaceAsset(exerciseId) {
+        switch (this.getFaceVariant(exerciseId)) {
+            case 'happy':
+                return '/assets/pofi-pack/face-happy.svg';
+            case 'surprised':
+                return '/assets/pofi-pack/face-surprised.svg';
+            case 'sleep':
+                return '/assets/pofi-pack/face-sleep.svg';
+            case 'calm':
+                return '/assets/pofi-pack/face-calm.svg';
+            case 'idle':
+            default:
+                return '/assets/pofi-pack/face-idle.svg';
+        }
+    }
+    getOralVariant(exerciseId) {
+        switch (exerciseId) {
+            case 'kiss':
+                return 'kiss';
+            case 'smile':
+                return 'smile';
+            case 'o-shape':
+                return 'o-shape';
+            case 'e-shape':
+                return 'e-shape';
+            case 'tongue-out':
+                return 'tongue-out';
+            case 'tongue-left':
+                return 'tongue-left';
+            case 'tongue-right':
+                return 'tongue-right';
+            case 'tongue-up':
+                return 'tongue-up';
+            default:
+                return 'none';
+        }
     }
     getCurrentExercise() {
         return MIRROR_EXERCISES[this.exerciseIndex] ?? MIRROR_EXERCISES[0];

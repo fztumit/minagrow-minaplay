@@ -485,12 +485,21 @@
                 <div class="mirror-example-card">
                   <div class="mirror-pofi-demo" id="mirror-pofi-demo" data-exercise="happy" aria-hidden="true">
                     <span class="mirror-pofi-glow"></span>
-                    <img class="mirror-pofi-body" src="/assets/pofi_Images/Pofi.svg" alt="" />
-                    <span class="mirror-pofi-face">
-                      <span class="mirror-pofi-eye is-left"></span>
-                      <span class="mirror-pofi-eye is-right"></span>
-                      <span class="mirror-pofi-mouth"></span>
-                      <span class="mirror-pofi-tongue"></span>
+                    <span class="pofi-stack mirror-pofi-stack">
+                      <img class="pofi-body-layer mirror-pofi-body" src="/assets/pofi_Images/Pofi.svg" alt="" />
+                      <img
+                        class="pofi-face-layer mirror-pofi-base-face"
+                        id="mirror-pofi-base-face"
+                        src="/assets/pofi-pack/face-happy.svg"
+                        alt=""
+                      />
+                    </span>
+                    <span class="mirror-pofi-orals">
+                      <span class="mirror-pofi-lips"></span>
+                      <span class="mirror-pofi-tongue">
+                        <span class="mirror-pofi-tongue-root"></span>
+                        <span class="mirror-pofi-tongue-tip"></span>
+                      </span>
                     </span>
                   </div>
                   <div class="mirror-example-copy">
@@ -557,12 +566,19 @@
               </div>
             </div>
             <p class="sleep-caption">Pofi dinleniyor... iyi uykular.</p>
-          </div>
-
-          <div class="sleep-controls sleep-controls-child">
-            <button type="button" id="sleep-toggle" class="primary-btn">Uyku Sesini Başlat</button>
-            <p class="sleep-status" id="sleep-status" aria-live="polite">Hazır.</p>
-            <p class="sleep-countdown" id="sleep-countdown" aria-live="polite"></p>
+            <div class="sleep-controls sleep-controls-child">
+              <button type="button" id="sleep-toggle" class="sleep-toggle-btn" aria-label="Uyku sesini başlat">
+                <span class="sleep-toggle-moon" aria-hidden="true"></span>
+                <span class="sleep-toggle-label">Başlat</span>
+                <span class="visually-hidden sleep-toggle-accessible-label" id="sleep-toggle-accessible-label">
+                  Uyku Sesini Başlat
+                </span>
+              </button>
+              <div class="sleep-status-stack">
+                <p class="sleep-status" id="sleep-status" aria-live="polite">Hazır.</p>
+                <p class="sleep-countdown" id="sleep-countdown" aria-live="polite"></p>
+              </div>
+            </div>
           </div>
         </section>
 

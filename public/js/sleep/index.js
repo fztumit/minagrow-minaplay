@@ -255,6 +255,8 @@ export class SleepModeModule {
     soundSelect;
     timerGroup;
     toggleBtn;
+    toggleLabelEl;
+    toggleAccessibleLabelEl;
     statusEl;
     countdownEl;
     starCanvas;
@@ -272,16 +274,27 @@ export class SleepModeModule {
         const soundSelect = controlsRoot.querySelector('#sleep-sound-select');
         const timerGroup = controlsRoot.querySelector('#sleep-timers');
         const toggleBtn = rootEl.querySelector('#sleep-toggle');
+        const toggleLabelEl = toggleBtn?.querySelector('.sleep-toggle-label');
+        const toggleAccessibleLabelEl = toggleBtn?.querySelector('#sleep-toggle-accessible-label');
         const statusEl = rootEl.querySelector('#sleep-status');
         const countdownEl = rootEl.querySelector('#sleep-countdown');
         const starCanvas = rootEl.querySelector('#sleep-stars');
-        if (!soundSelect || !timerGroup || !toggleBtn || !statusEl || !countdownEl || !starCanvas) {
+        if (!soundSelect ||
+            !timerGroup ||
+            !toggleBtn ||
+            !toggleLabelEl ||
+            !toggleAccessibleLabelEl ||
+            !statusEl ||
+            !countdownEl ||
+            !starCanvas) {
             throw new Error('Sleep module missing required elements.');
         }
         this.rootEl = rootEl;
         this.soundSelect = soundSelect;
         this.timerGroup = timerGroup;
         this.toggleBtn = toggleBtn;
+        this.toggleLabelEl = toggleLabelEl;
+        this.toggleAccessibleLabelEl = toggleAccessibleLabelEl;
         this.statusEl = statusEl;
         this.countdownEl = countdownEl;
         this.starCanvas = starCanvas;
@@ -332,7 +345,9 @@ export class SleepModeModule {
         await this.audio.start(selectedSound);
         this.running = true;
         this.rootEl.setAttribute('data-running', 'true');
-        this.toggleBtn.textContent = 'Uyku Sesini Durdur';
+        this.toggleLabelEl.textContent = 'Durdur';
+        this.toggleAccessibleLabelEl.textContent = 'Uyku Sesini Durdur';
+        this.toggleBtn.setAttribute('aria-label', 'Uyku sesini durdur');
         this.statusEl.textContent = `Çalıyor: ${this.soundSelect.selectedOptions[0].textContent ?? selectedSound}`;
         this.mascot.setMessage('Dinlenelim.');
         this.scheduleStop();
@@ -350,7 +365,9 @@ export class SleepModeModule {
             window.clearInterval(this.countdownInterval);
             this.countdownInterval = null;
         }
-        this.toggleBtn.textContent = 'Uyku Sesini Başlat';
+        this.toggleLabelEl.textContent = 'Başlat';
+        this.toggleAccessibleLabelEl.textContent = 'Uyku Sesini Başlat';
+        this.toggleBtn.setAttribute('aria-label', 'Uyku sesini başlat');
         this.countdownEl.textContent = '';
     }
     scheduleStop() {

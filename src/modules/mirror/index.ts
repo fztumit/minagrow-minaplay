@@ -126,6 +126,7 @@ export class MirrorModeModule {
   private readonly videoEl: HTMLVideoElement;
   private readonly placeholderEl: HTMLElement;
   private readonly demoEl: HTMLElement;
+  private readonly baseFaceEl: HTMLImageElement;
   private readonly labelEl: HTMLElement;
   private readonly categoryEl: HTMLElement;
   private readonly instructionEl: HTMLElement;
@@ -147,6 +148,7 @@ export class MirrorModeModule {
     const videoEl = rootEl.querySelector<HTMLVideoElement>('#mirror-video');
     const placeholderEl = rootEl.querySelector<HTMLElement>('#mirror-camera-placeholder');
     const demoEl = rootEl.querySelector<HTMLElement>('#mirror-pofi-demo');
+    const baseFaceEl = rootEl.querySelector<HTMLImageElement>('#mirror-pofi-base-face');
     const labelEl = rootEl.querySelector<HTMLElement>('#mirror-exercise-label');
     const categoryEl = rootEl.querySelector<HTMLElement>('#mirror-exercise-category');
     const instructionEl = rootEl.querySelector<HTMLElement>('#mirror-instruction');
@@ -159,6 +161,7 @@ export class MirrorModeModule {
       !videoEl ||
       !placeholderEl ||
       !demoEl ||
+      !baseFaceEl ||
       !labelEl ||
       !categoryEl ||
       !instructionEl ||
@@ -174,6 +177,7 @@ export class MirrorModeModule {
     this.videoEl = videoEl;
     this.placeholderEl = placeholderEl;
     this.demoEl = demoEl;
+    this.baseFaceEl = baseFaceEl;
     this.labelEl = labelEl;
     this.categoryEl = categoryEl;
     this.instructionEl = instructionEl;
@@ -380,6 +384,9 @@ export class MirrorModeModule {
   private renderExercise(): void {
     const exercise = this.getCurrentExercise();
     this.demoEl.setAttribute('data-exercise', exercise.id);
+    this.demoEl.setAttribute('data-face-variant', this.getFaceVariant(exercise.id));
+    this.demoEl.setAttribute('data-oral-variant', this.getOralVariant(exercise.id));
+    this.baseFaceEl.src = this.getFaceAsset(exercise.id);
     this.rootEl.setAttribute('data-current-exercise', exercise.id);
     this.rootEl.setAttribute('data-current-category', exercise.category);
     this.labelEl.textContent = exercise.label;
@@ -387,6 +394,61 @@ export class MirrorModeModule {
     this.instructionEl.textContent = exercise.instruction;
     this.rewardTextEl.textContent = exercise.rewardText;
     this.rootEl.setAttribute('data-rewarding', 'false');
+  }
+
+  private getFaceVariant(exerciseId: MirrorExercise['id']): 'happy' | 'calm' | 'surprised' | 'sleep' | 'idle' {
+    if (exerciseId === 'happy' || exerciseId === 'smile') {
+      return 'happy';
+    }
+    if (exerciseId === 'surprised' || exerciseId === 'kiss' || exerciseId === 'o-shape') {
+      return 'surprised';
+    }
+    if (exerciseId === 'sleepy') {
+      return 'sleep';
+    }
+    if (exerciseId === 'sad' || exerciseId === 'e-shape') {
+      return 'calm';
+    }
+    return 'idle';
+  }
+
+  private getFaceAsset(exerciseId: MirrorExercise['id']): string {
+    switch (this.getFaceVariant(exerciseId)) {
+      case 'happy':
+        return '/assets/pofi-pack/face-happy.svg';
+      case 'surprised':
+        return '/assets/pofi-pack/face-surprised.svg';
+      case 'sleep':
+        return '/assets/pofi-pack/face-sleep.svg';
+      case 'calm':
+        return '/assets/pofi-pack/face-calm.svg';
+      case 'idle':
+      default:
+        return '/assets/pofi-pack/face-idle.svg';
+    }
+  }
+
+  private getOralVariant(exerciseId: MirrorExercise['id']): string {
+    switch (exerciseId) {
+      case 'kiss':
+        return 'kiss';
+      case 'smile':
+        return 'smile';
+      case 'o-shape':
+        return 'o-shape';
+      case 'e-shape':
+        return 'e-shape';
+      case 'tongue-out':
+        return 'tongue-out';
+      case 'tongue-left':
+        return 'tongue-left';
+      case 'tongue-right':
+        return 'tongue-right';
+      case 'tongue-up':
+        return 'tongue-up';
+      default:
+        return 'none';
+    }
   }
 
   private getCurrentExercise(): MirrorExercise {

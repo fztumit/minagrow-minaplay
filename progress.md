@@ -1426,3 +1426,12 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
 - `Cümle` ust kahraman Pofi'sinde katman override cakismasini duzelttim; govde ve yuz yeniden hizalandi, kartin arkasina kayma sorunu kalkti.
 - Visual smoke: resmi `develop-web-game` istemcisi ile `output/web-game-touch-polish/shot-1.png` ve `output/web-game-sentence-polish-3/shot-1.png` kontrol edildi.
 - Validation completed: `npm run build` ✅, `npm run test:e2e` ✅ (`35 passed`).
+
+## 2026-04-09 Touch Alignment + Sleep Stage + Mirror Pofi Pass
+- `Dokun` ve `Eşleme` rehber hava efektlerini hedef kartin gercek merkezine bagladim. `updateGuideWeatherField` artik kart merkezi ve kart alt sinirini hesapliyor; boylece efektler rehberin sadece cevresinde degil, altinda duran kart kolonuna daha temiz oturuyor.
+- `snow`, `wind`, ve `rainbow` animasyonlarindaki yana kayma azaltildi. Ozellikle kar ve gokkusagi artik daha dar bir alanda, kartin alt eksenine daha yakin akiyor.
+- `Ayna` yuzeyindeki emoji-benzeri CSS yuz tamamen kaldirildi. `mirror-pofi-demo` artik gercek `Pofi.svg` govdesi ve `pofi-pack` yuz varliklariyla (`face-happy`, `face-calm`, `face-surprised`, `face-sleep`, `face-idle`) calisiyor; dudak ve dil egzersizleri yalnizca agiz bolgesinde daha dogal overlay ile animasyon aliyor.
+- `Uyku` sahnesi tek parca gece kompozisyonuna cekildi: ekran yuksekligini dolduran stage, daha parlak pencere cami, stage icine alinmis kucuk ay-butonlu baslat/durdur kontrolu ve yeni `public/assets/moon.png` moon varligi eklendi. `moon.svg` kaynak dosyasi da repoda birakildi.
+- `Uyku` butonunda kisa gorunen `Baslat/Durdur` etiketi korunurken Playwright beklentileri icin gizli tam metin (`Uyku Sesini Baslat/Durdur`) de eklendi.
+- Visual smoke: resmi `develop-web-game` istemcisi ile `output/web-game-touch-align/shot-0.png`, `output/web-game-touch-align/shot-1.png`, `output/web-game-matching-align/shot-0.png`, `output/web-game-mirror-pofi/shot-0.png`, ve `output/web-game-sleep-full/shot-0.png` kontrol edildi. Not: `Uyku` icin resmi istemci yine en buyuk canvas olan yildiz katmanini kirdigi icin tam stage yerine stars canvas goruluyor; buna ragmen CSS/DOM ve sleep E2E ile stage akisi dogrulandi.
+- Validation completed: `npm run build` ✅, `npm run test:e2e` ✅ (`35 passed`).

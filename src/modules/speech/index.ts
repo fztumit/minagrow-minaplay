@@ -1932,10 +1932,18 @@ export class SpeechGameModule {
       ? Math.min(stageRect.width - 32, Math.max(180, targetRect.width + 54))
       : Math.min(stageRect.width * 0.34, 220);
     const weatherStartTop = guideY + guideLift + mascotRect.height * 0.56;
-    const fallHeight = Math.max(200, stageRect.height - weatherStartTop - 12);
+    const targetBottom = targetRect
+      ? targetRect.bottom - stageRect.top + 14
+      : stageRect.height - 12;
+    const fallHeight = Math.max(132, targetBottom - weatherStartTop);
+    const targetCenterX = targetRect
+      ? targetRect.left - stageRect.left + targetRect.width / 2
+      : stageRect.width / 2;
+    const fieldCenterX = targetCenterX - (mascotRect.left - stageRect.left);
 
     this.guideMascotEl.style.setProperty('--guide-weather-width', `${fieldWidth}px`);
     this.guideMascotEl.style.setProperty('--guide-weather-height', `${fallHeight}px`);
+    this.guideMascotEl.style.setProperty('--guide-weather-center-x', `${fieldCenterX}px`);
   }
 
   private setCardsInteractive(activeButton: HTMLButtonElement | null): void {

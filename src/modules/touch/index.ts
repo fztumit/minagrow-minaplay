@@ -790,10 +790,18 @@ export class TouchGameModule {
       ? Math.min(stageRect.width - 24, Math.max(148, targetRect.width + 42))
       : Math.min(stageRect.width * 0.42, 196);
     const weatherStartTop = guideY + guideLift + mascotRect.height * 0.56;
-    const fallHeight = Math.max(180, stageRect.height - weatherStartTop - 12);
+    const targetBottom = targetRect
+      ? targetRect.bottom - stageRect.top + 12
+      : stageRect.height - 12;
+    const fallHeight = Math.max(120, targetBottom - weatherStartTop);
+    const targetCenterX = targetRect
+      ? targetRect.left - stageRect.left + targetRect.width / 2
+      : stageRect.width / 2;
+    const fieldCenterX = targetCenterX - (mascotRect.left - stageRect.left);
 
     this.guideMascotEl.style.setProperty('--guide-weather-width', `${fieldWidth}px`);
     this.guideMascotEl.style.setProperty('--guide-weather-height', `${fallHeight}px`);
+    this.guideMascotEl.style.setProperty('--guide-weather-center-x', `${fieldCenterX}px`);
   }
 
   private setCardsInteractive(activeButton: HTMLButtonElement | null): void {
