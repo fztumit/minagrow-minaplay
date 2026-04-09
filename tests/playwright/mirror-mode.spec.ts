@@ -20,5 +20,6 @@ test('mirror mode cycles an exercise and gives calm reward feedback', async ({ p
 
   expect(state?.mirror?.last_reward).toBe('happy');
   expect(state?.mirror?.current_exercise).not.toBe('');
+  expect(state?.mirror?.current_emotion).not.toBe('');
   expect(['requesting', 'ready', 'fallback']).toContain(state?.mirror?.camera_state);
 });

@@ -1435,3 +1435,14 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
 - `Uyku` butonunda kisa gorunen `Baslat/Durdur` etiketi korunurken Playwright beklentileri icin gizli tam metin (`Uyku Sesini Baslat/Durdur`) de eklendi.
 - Visual smoke: resmi `develop-web-game` istemcisi ile `output/web-game-touch-align/shot-0.png`, `output/web-game-touch-align/shot-1.png`, `output/web-game-matching-align/shot-0.png`, `output/web-game-mirror-pofi/shot-0.png`, ve `output/web-game-sleep-full/shot-0.png` kontrol edildi. Not: `Uyku` icin resmi istemci yine en buyuk canvas olan yildiz katmanini kirdigi icin tam stage yerine stars canvas goruluyor; buna ragmen CSS/DOM ve sleep E2E ile stage akisi dogrulandi.
 - Validation completed: `npm run build` ✅, `npm run test:e2e` ✅ (`35 passed`).
+
+## 2026-04-09 Pofi Emotion System Contract
+- Merkezi `src/modules/pofiEmotion/index.ts` modulu eklendi. Burada yeni emotion PNG sozlesmesi (`/assets/pofi/emotions/pofi_*.png`), davranis gruplari (`happy`, `very_happy`, `playful`, `fun`, `calm`, `sad`, `fear`, `nervous`, `special`, `sleep`) ve varsayilan gecis suresi (`240ms`) tanimlandi.
+- `MascotGuide` artik dogrudan eski SVG yuz isimleriyle degil, davranis seviyesinde emotion secerek calisiyor. `sayPraise`, `sayAttention`, `showSad`, `showSleepy`, vb. tepkiler bu merkezi emotion haritasina baglandi.
+- `Ayna` tarafinda procedural agiz/dil katmanlari devreden cikarildi. `MirrorModeModule` artik her egzersizi tek bir `PofiEmotion` secimine map ediyor ve `render_game_to_text` icinde `mirror.current_emotion` da donuyor.
+- `Peekaboo` da dogrudan `src` degistirmek yerine merkezi emotion sistemiyle yuz degistiriyor.
+- Tum `img.pofi-face-layer` ogeleri artik strict PNG contract ile hydrate/fade oluyor; legacy SVG fallback tamamen kaldirildi. Runtime baslangic `src` degerleri de `/assets/pofi/emotions/pofi_*.png` rotalarina cevildi.
+- `Uyku` penceresindeki Pofi da kompozit `mascot-sleep.svg` yerine govde + emotion-yuz stack’ine cevrildi, boylece yeni systemle ayni hattan beslenecek.
+- Not: Emotion PNG dosyalari repo icinde henuz bulunmuyor. Bu nedenle bir sonraki smoke/test turunda Pofi yuzleri ancak bu dosyalar eklendiginde dogru gorunecek; kod artik SVG yedegine donmeyecek.
+- Validation completed: `npm run build` ✅, `npm run test:e2e` ✅ (`35 passed`).
+- Follow-up: `public/assets/pofi_Images/pofi_Images` klasoru tam emotion PNG seti degil, parcali sprite export'lari (goz/kas/agiz) iceriyor. Kırık 404'leri engellemek icin gecici olarak `public/assets/pofi/emotions/` altina `public/assets/pofi-reference.png` kopyalanarak tum emotion dosya adlari olusturuldu ve aktif govde kaynagi PNG-only olacak sekilde `public/assets/pofi-body.png`'a tasindi. Bu sayede runtime artik SVG'ye donmeden gorunur kaliyor; ileride gercek emotion PNG'leri ayni dosya adlariyla uzerine yazilabilir.

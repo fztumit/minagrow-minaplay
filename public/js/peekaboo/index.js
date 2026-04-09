@@ -1,3 +1,4 @@
+import { applyPofiEmotion } from '../pofiEmotion/index.js';
 import { bindParentGesture } from '../shared/parentGesture.js';
 import { loadCustomAudioMap, saveCustomAudioMap } from '../speech/customAudio.js';
 const ROOM_ROUTE = ['window', 'toy', 'lamp', 'stage-left', 'sofa', 'stage-right', 'table'];
@@ -369,21 +370,21 @@ export class PeekabooModeModule {
         this.syncPhoenixAsset();
     }
     syncPhoenixAsset() {
-        let nextSrc = '/assets/pofi-pack/face-idle.svg';
+        let nextEmotion = 'smile';
         if (this.currentState === 'hide' || this.currentState === 'wait') {
-            nextSrc = '/assets/pofi-pack/face-idle.svg';
+            nextEmotion = 'smile';
         }
         else if (this.currentState === 'reveal') {
-            nextSrc = '/assets/pofi-pack/face-surprised.svg';
+            nextEmotion = 'surprised';
         }
         else if (this.currentState === 'react') {
-            nextSrc = '/assets/pofi-pack/face-happy.svg';
+            nextEmotion = 'happy_wide';
         }
         else if (this.currentScene === 'center') {
-            nextSrc = '/assets/pofi-pack/face-calm.svg';
+            nextEmotion = 'calm_happy';
         }
-        if (this.phoenixFaceEl && this.phoenixFaceEl.getAttribute('src') !== nextSrc) {
-            this.phoenixFaceEl.src = nextSrc;
+        if (this.phoenixFaceEl) {
+            applyPofiEmotion(this.phoenixFaceEl, nextEmotion);
         }
     }
     getCyclePlan(cycleIndex) {

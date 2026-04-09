@@ -1,3 +1,5 @@
+import { applyPofiEmotion, type PofiEmotion } from '../pofiEmotion/index.js';
+
 type MirrorExercise = {
   id:
     | 'happy'
@@ -383,12 +385,13 @@ export class MirrorModeModule {
 
   private renderExercise(): void {
     const exercise = this.getCurrentExercise();
+    const emotion = this.getExerciseEmotion(exercise.id);
     this.demoEl.setAttribute('data-exercise', exercise.id);
-    this.demoEl.setAttribute('data-face-variant', this.getFaceVariant(exercise.id));
-    this.demoEl.setAttribute('data-oral-variant', this.getOralVariant(exercise.id));
-    this.baseFaceEl.src = this.getFaceAsset(exercise.id);
+    this.demoEl.setAttribute('data-pofi-emotion', emotion);
+    applyPofiEmotion(this.baseFaceEl, emotion);
     this.rootEl.setAttribute('data-current-exercise', exercise.id);
     this.rootEl.setAttribute('data-current-category', exercise.category);
+    this.rootEl.setAttribute('data-current-emotion', emotion);
     this.labelEl.textContent = exercise.label;
     this.categoryEl.textContent = exercise.categoryLabel;
     this.instructionEl.textContent = exercise.instruction;
@@ -396,58 +399,31 @@ export class MirrorModeModule {
     this.rootEl.setAttribute('data-rewarding', 'false');
   }
 
-  private getFaceVariant(exerciseId: MirrorExercise['id']): 'happy' | 'calm' | 'surprised' | 'sleep' | 'idle' {
-    if (exerciseId === 'happy' || exerciseId === 'smile') {
-      return 'happy';
-    }
-    if (exerciseId === 'surprised' || exerciseId === 'kiss' || exerciseId === 'o-shape') {
-      return 'surprised';
-    }
-    if (exerciseId === 'sleepy') {
-      return 'sleep';
-    }
-    if (exerciseId === 'sad' || exerciseId === 'e-shape') {
-      return 'calm';
-    }
-    return 'idle';
-  }
-
-  private getFaceAsset(exerciseId: MirrorExercise['id']): string {
-    switch (this.getFaceVariant(exerciseId)) {
-      case 'happy':
-        return '/assets/pofi-pack/face-happy.svg';
-      case 'surprised':
-        return '/assets/pofi-pack/face-surprised.svg';
-      case 'sleep':
-        return '/assets/pofi-pack/face-sleep.svg';
-      case 'calm':
-        return '/assets/pofi-pack/face-calm.svg';
-      case 'idle':
-      default:
-        return '/assets/pofi-pack/face-idle.svg';
-    }
-  }
-
-  private getOralVariant(exerciseId: MirrorExercise['id']): string {
+  private getExerciseEmotion(exerciseId: MirrorExercise['id']): PofiEmotion {
     switch (exerciseId) {
+      case 'happy':
+        return 'happy';
+      case 'sad':
+        return 'sad';
+      case 'surprised':
+        return 'surprised';
+      case 'sleepy':
+        return 'sleep';
       case 'kiss':
-        return 'kiss';
+        return 'side_smile';
       case 'smile':
-        return 'smile';
+        return 'smile_open';
       case 'o-shape':
-        return 'o-shape';
+        return 'surprised';
       case 'e-shape':
-        return 'e-shape';
+        return 'grin_soft';
       case 'tongue-out':
-        return 'tongue-out';
       case 'tongue-left':
-        return 'tongue-left';
       case 'tongue-right':
-        return 'tongue-right';
       case 'tongue-up':
-        return 'tongue-up';
+        return 'tongue';
       default:
-        return 'none';
+        return 'smile';
     }
   }
 

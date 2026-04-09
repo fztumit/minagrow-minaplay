@@ -1,11 +1,12 @@
 import { getWordProfile } from '../data/wordProfiles.js';
 import { VOCABULARY } from '../data/vocabulary.js';
+import { hydratePofiEmotionImages } from '../pofiEmotion/index.js';
 import { getCustomAudioData } from '../speech/customAudio.js';
 const SENTENCE_ACTORS = [
     {
         id: 'anka',
         label: 'Pofi',
-        imageSrc: '/assets/pofi-pack/mascot-idle.svg',
+        imageSrc: '/assets/pofi/emotions/pofi_smile.png',
         accentClass: 'is-sunrise'
     },
     {
@@ -125,6 +126,7 @@ export class SentenceBuilderModule {
         </button>
       `;
         }).join('');
+        hydratePofiEmotionImages(this.actorListEl);
     }
     renderObjects() {
         this.objectListEl.innerHTML = SENTENCE_OBJECTS.map((entry) => {
@@ -160,6 +162,7 @@ export class SentenceBuilderModule {
         });
         this.previewActorEl.innerHTML = this.selectedActor ? this.renderActorPreview(this.selectedActor) : '<span class="sentence-preview-plus">?</span>';
         this.previewObjectEl.innerHTML = this.selectedObject ? this.renderObjectPreview(this.selectedObject) : '<span class="sentence-preview-plus">?</span>';
+        hydratePofiEmotionImages(this.previewActorEl);
         this.previewTextEl.textContent = currentSentence ?? 'İki resmi seç.';
         this.statusEl.textContent = currentSentence ?? 'Cümle için iki resim seç.';
     }
@@ -185,8 +188,8 @@ export class SentenceBuilderModule {
                 : 'pofi-stack sentence-preview-pofi-stack';
             return `
         <span class="${stackClass}">
-          <img class="pofi-body-layer" src="/assets/pofi_Images/Pofi.svg" alt="" />
-          <img class="pofi-face-layer" src="/assets/pofi-pack/face-idle.svg" alt="" />
+          <img class="pofi-body-layer" src="/assets/pofi-body.png" alt="" />
+          <img class="pofi-face-layer" src="/assets/pofi/emotions/pofi_smile.png" data-pofi-emotion="smile" alt="" />
         </span>
       `;
         }

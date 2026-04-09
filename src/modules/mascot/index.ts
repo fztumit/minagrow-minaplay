@@ -1,3 +1,9 @@
+import {
+  applyPofiEmotion,
+  pickPofiEmotionForBehavior,
+  type PofiEmotionBehavior
+} from '../pofiEmotion/index.js';
+
 const GUIDE_MESSAGES = {
   play: 'Hadi oynayalım.',
   hint: 'Hadi dokun.',
@@ -7,19 +13,10 @@ const GUIDE_MESSAGES = {
 } as const;
 
 type MascotVariant = 'normal' | 'sleep';
-type MascotFace = 'idle' | 'surprised' | 'calm' | 'happy' | 'sleep';
 type SpeechPromptOptions = {
   rate?: number;
   pitch?: number;
   volume?: number;
-};
-
-const FACE_SRC: Record<MascotFace, string> = {
-  idle: '/assets/pofi-pack/face-idle.svg',
-  surprised: '/assets/pofi-pack/face-surprised.svg',
-  calm: '/assets/pofi-pack/face-calm.svg',
-  happy: '/assets/pofi-pack/face-happy.svg',
-  sleep: '/assets/pofi-pack/face-sleep.svg'
 };
 
 export class MascotGuide {
@@ -27,6 +24,7 @@ export class MascotGuide {
   private readonly faceEl: HTMLImageElement | null;
   private readonly shellEl: HTMLElement | null;
   private praiseFlip = false;
+  private emotionVariantIndex = 0;
   private activeTimeoutId: number | null = null;
   private faceTimeoutId: number | null = null;
   private guideAudioContext: AudioContext | null = null;
@@ -40,13 +38,13 @@ export class MascotGuide {
 
   sayHint(): void {
     this.pulse();
-    this.setFace('idle');
+    this.setBehavior('calm');
     this.setMessage(GUIDE_MESSAGES.hint);
   }
 
   sayPlayStart(): void {
     this.pulse();
-    this.setTransientFace('surprised', 1200);
+    this.setTransientBehavior('happy', 1200);
     this.setMessage(GUIDE_MESSAGES.play);
     this.speakPrompt(GUIDE_MESSAGES.play, {
       rate: 0.9,
@@ -57,7 +55,7 @@ export class MascotGuide {
 
   sayPeekaboo(): void {
     this.pulse();
-    this.setTransientFace('surprised', 1200);
+    this.setTransientBehavior('playful', 1200);
     this.setMessage(GUIDE_MESSAGES.peek);
     this.playGuideChime();
     this.speakPrompt(GUIDE_MESSAGES.peek, {
@@ -69,7 +67,7 @@ export class MascotGuide {
 
   sayPraise(): void {
     this.pulse();
-    this.setTransientFace('happy', 1300);
+    this.setTransientBehavior('very_happy', 1300);
     const message = this.praiseFlip ? 'Harika.' : 'Aferin.';
     this.setMessage(message);
     this.speakPrompt(message, {
@@ -83,30 +81,30 @@ export class MascotGuide {
 
   sayRepeat(): void {
     this.pulse();
-    this.setFace('calm');
+    this.setBehavior('calm');
     this.setMessage(GUIDE_MESSAGES.repeat);
   }
 
   showCalm(message: string = GUIDE_MESSAGES.repeat, durationMs = 1100): void {
     this.pulse();
-    this.setTransientFace('calm', durationMs);
+    this.setTransientBehavior('calm', durationMs);
     this.setMessage(message);
   }
 
   showSad(message = 'Aaa... bu değil. Bir daha deneyelim.', durationMs = 980): void {
     this.pulse();
-    this.setTransientFace('calm', durationMs);
+    this.setTransientBehavior('sad', durationMs);
     this.setMessage(message);
     this.playGuideOops();
   }
 
   showSleepy(message = 'Pofi uyukluyor.', durationMs = 1200): void {
-    this.setTransientFace('sleep', durationMs);
+    this.setTransientBehavior('sleep', durationMs);
     this.setMessage(message);
   }
 
   showIdle(message?: string): void {
-    this.setFace(this.variant === 'sleep' ? 'sleep' : 'idle');
+    this.setBehavior(this.variant === 'sleep' ? 'sleep' : 'default');
     if (message) {
       this.setMessage(message);
     }
@@ -114,7 +112,7 @@ export class MascotGuide {
 
   sayNextPrompt(): void {
     this.pulse();
-    this.setTransientFace('surprised', 1100);
+    this.setTransientBehavior('happy', 1100);
     this.setMessage(GUIDE_MESSAGES.next);
     this.playGuideChime();
     this.speakPrompt(GUIDE_MESSAGES.next);
@@ -122,7 +120,7 @@ export class MascotGuide {
 
   sayAttention(message: string): void {
     this.pulse();
-    this.setTransientFace('surprised', 1400);
+    this.setTransientBehavior('surprised', 1400);
     this.setMessage(message);
     this.playAttentionChirp();
     this.speakPrompt(message, {
@@ -134,7 +132,7 @@ export class MascotGuide {
 
   setSleepMode(enabled: boolean): void {
     this.variant = enabled ? 'sleep' : 'normal';
-    this.setFace(enabled ? 'sleep' : 'idle');
+    this.setBehavior(enabled ? 'sleep' : 'default');
 
     if (this.shellEl) {
       this.shellEl.dataset.mascotVariant = this.variant;
@@ -164,30 +162,31 @@ export class MascotGuide {
     }, 1200);
   }
 
-  private setTransientFace(face: MascotFace, durationMs: number): void {
-    this.setFace(face);
+  private setTransientBehavior(behavior: PofiEmotionBehavior, durationMs: number): void {
+    this.setBehavior(behavior);
 
     if (this.faceTimeoutId !== null) {
       window.clearTimeout(this.faceTimeoutId);
     }
 
     this.faceTimeoutId = window.setTimeout(() => {
-      this.setFace(this.variant === 'sleep' ? 'sleep' : 'idle');
+      this.setBehavior(this.variant === 'sleep' ? 'sleep' : 'default');
       this.faceTimeoutId = null;
     }, durationMs);
   }
 
-  private setFace(face: MascotFace): void {
-    if (!this.faceEl) {
-      return;
+  private setBehavior(behavior: PofiEmotionBehavior): void {
+    const emotion = pickPofiEmotionForBehavior(behavior, this.emotionVariantIndex);
+    this.emotionVariantIndex += 1;
+    applyPofiEmotion(this.faceEl, emotion);
+
+    if (this.faceEl) {
+      this.faceEl.dataset.faceBehavior = behavior;
     }
 
-    const nextSrc = FACE_SRC[face];
-    if (this.faceEl.getAttribute('src') !== nextSrc) {
-      this.faceEl.src = nextSrc;
+    if (this.shellEl) {
+      this.shellEl.dataset.mascotEmotion = emotion;
     }
-
-    this.faceEl.dataset.face = face;
   }
 
   private speakPrompt(message: string, options: SpeechPromptOptions = {}): void {

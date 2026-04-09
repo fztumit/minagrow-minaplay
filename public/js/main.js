@@ -6,6 +6,7 @@ import { MascotGuide } from './mascot/index.js';
 import { MatchingGameModule } from './matching/index.js';
 import { MirrorModeModule } from './mirror/index.js';
 import { PeekabooModeModule } from './peekaboo/index.js';
+import { hydratePofiEmotionImages } from './pofiEmotion/index.js';
 import { SentenceBuilderModule } from './sentence/index.js';
 import { SleepModeModule } from './sleep/index.js';
 import { StoriesModule } from './stories/index.js';
@@ -465,6 +466,7 @@ function installTestingHooks() {
             mirror: {
                 current_exercise: mirrorRoot?.getAttribute('data-current-exercise') ?? '',
                 current_category: mirrorRoot?.getAttribute('data-current-category') ?? '',
+                current_emotion: mirrorRoot?.getAttribute('data-current-emotion') ?? '',
                 camera_state: mirrorRoot?.getAttribute('data-camera-state') ?? 'idle',
                 cycle_state: mirrorRoot?.getAttribute('data-cycle-state') ?? 'idle',
                 rewarding: mirrorRoot?.getAttribute('data-rewarding') === 'true',
@@ -559,6 +561,7 @@ function bootstrap() {
         throw new Error('Required app roots not found.');
     }
     const mascot = new MascotGuide(mascotOutput, speechMascotFace, speechMascotShell);
+    hydratePofiEmotionImages(document);
     const dailyWordModule = new DailyWordModule(dailyWordCard, dailyWordOutput, VOCABULARY);
     dailyWordModule.init();
     const dailyActivityModule = new DailyActivityModule(dailyActivityCard);
