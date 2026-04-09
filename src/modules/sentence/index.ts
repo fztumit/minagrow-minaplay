@@ -146,7 +146,6 @@ export class SentenceBuilderModule {
 
   private renderActors(): void {
     this.actorListEl.innerHTML = SENTENCE_ACTORS.map((actor) => {
-      const profileImage = actor.id === 'baba' ? getWordProfile('baba', VOCABULARY).imageSrc : actor.imageSrc;
       return `
         <button
           type="button"
@@ -154,8 +153,8 @@ export class SentenceBuilderModule {
           data-actor-id="${actor.id}"
           aria-label="${this.escapeHtml(actor.label)}"
         >
-          <span class="sentence-choice-figure" aria-hidden="true">
-            <img src="${this.escapeHtml(profileImage)}" alt="" />
+          <span class="sentence-choice-figure ${actor.id === 'anka' ? 'is-pofi' : ''}" aria-hidden="true">
+            ${this.renderActorVisual(actor, 'choice')}
           </span>
           <span class="sentence-choice-label">${this.escapeHtml(actor.label)}</span>
         </button>
@@ -212,8 +211,7 @@ export class SentenceBuilderModule {
       return '<span class="sentence-preview-plus">?</span>';
     }
 
-    const imageSrc = actor.id === 'baba' ? getWordProfile('baba', VOCABULARY).imageSrc : actor.imageSrc;
-    return `<img src="${this.escapeHtml(imageSrc)}" alt="" />`;
+    return this.renderActorVisual(actor, 'preview');
   }
 
   private renderObjectPreview(objectId: SentenceObjectId): string {
@@ -224,6 +222,24 @@ export class SentenceBuilderModule {
 
     const profile = getWordProfile(item.wordId, VOCABULARY);
     return `<img src="${this.escapeHtml(profile.imageSrc)}" alt="" />`;
+  }
+
+  private renderActorVisual(actor: SentenceActor, mode: 'choice' | 'preview'): string {
+    if (actor.id === 'anka') {
+      const stackClass =
+        mode === 'choice'
+          ? 'pofi-stack sentence-choice-pofi-stack'
+          : 'pofi-stack sentence-preview-pofi-stack';
+      return `
+        <span class="${stackClass}">
+          <img class="pofi-body-layer" src="/assets/pofi_Images/Pofi.svg" alt="" />
+          <img class="pofi-face-layer" src="/assets/pofi-pack/face-idle.svg" alt="" />
+        </span>
+      `;
+    }
+
+    const profileImage = getWordProfile('baba', VOCABULARY).imageSrc;
+    return `<img src="${this.escapeHtml(profileImage)}" alt="" />`;
   }
 
   private handleSentenceReady(): void {

@@ -15,7 +15,7 @@ type TouchSettings = {
   repeatMode: RepeatMode;
 };
 
-type AttentionEffect = 'rain' | 'snow' | 'hail' | 'rainbow' | 'lightning' | 'thunder';
+type AttentionEffect = 'rain' | 'snow' | 'wind' | 'hail' | 'rainbow' | 'lightning' | 'thunder';
 type GuideAnchor = {
   xAlign: 'left' | 'center' | 'right';
   yAlign: 'top' | 'middle' | 'bottom';
@@ -25,10 +25,11 @@ type GuideAnchor = {
 
 const SETTINGS_STORAGE_KEY = 'konusu_yorum_speech_settings_v1';
 const SHARED_SPEECH_DATA_EVENT = 'speech-shared-data-updated';
-const GUIDE_REMINDER_DELAY_MS = navigator.webdriver ? 4800 : 9400;
+const GUIDE_REMINDER_DELAY_MS = navigator.webdriver ? 4600 : 8200;
 const GUIDE_REMINDER_VARIANCE_MS = navigator.webdriver ? 0 : 2400;
-const GUIDE_REMINDER_RETRY_MS = navigator.webdriver ? 300 : 1800;
-const GUIDE_TRAVEL_MS = 720;
+const GUIDE_REMINDER_RETRY_MS = navigator.webdriver ? 300 : 1400;
+const GUIDE_TRAVEL_MS = 620;
+const ATTENTION_EFFECT_DURATION_MS = 1240;
 const TOUCH_SCENE_VOCABULARY = VOCABULARY.filter((item) => item.featuredOnScene);
 const GUIDE_WAIT_PROMPTS: Partial<Record<VocabularyWord, string>> = {
   su: 'Ben suyun yanında bekliyorum.',
@@ -336,13 +337,17 @@ export class TouchGameModule {
     const speechDuration = this.triggerSpeech({ word: wordLabel, repeats });
     const resetDelay = Math.max(visualDuration, soundEffectDuration, speechDuration);
 
-    this.feedbackEl.textContent = 'Pofi doğru resmi tekrar gösteriyor.';
-    this.rootEl.setAttribute('data-guide-mode', 'calm');
-    this.rootEl.setAttribute('data-guide-prompt', 'Bir daha deneyelim');
-    this.mascot.showCalm('Bir daha deneyelim.');
+    this.guideLayerEl.classList.remove('is-sad');
+    void this.guideLayerEl.offsetWidth;
+    this.guideLayerEl.classList.add('is-sad');
+    this.feedbackEl.textContent = 'Aaa... bu değil. Pofi tekrar gösteriyor.';
+    this.rootEl.setAttribute('data-guide-mode', 'sad');
+    this.rootEl.setAttribute('data-guide-prompt', 'Aaa... bu değil. Bir daha deneyelim.');
+    this.mascot.showSad('Aaa... bu değil. Bir daha deneyelim.');
 
     const resetTimeoutId = window.setTimeout(() => {
       button.classList.remove('is-wrong');
+      this.guideLayerEl.classList.remove('is-sad');
       if (!this.activeNextButton) {
         return;
       }
@@ -457,7 +462,7 @@ export class TouchGameModule {
 
     this.clearAttentionState();
     this.guideLayerEl.classList.add('is-active');
-    this.guideLayerEl.classList.remove('is-attention', 'is-sleepy');
+    this.guideLayerEl.classList.remove('is-attention', 'is-sleepy', 'is-sad');
     targetButton.classList.remove('is-attention-target');
     void this.guideLayerEl.offsetWidth;
 
@@ -499,7 +504,7 @@ export class TouchGameModule {
         this.rootEl.setAttribute('data-guide-mode', 'idle');
         this.rootEl.setAttribute('data-attention-strength', '1');
         this.attentionResetTimeoutId = null;
-      }, 1550);
+      }, ATTENTION_EFFECT_DURATION_MS);
     }, sleepyLeadMs);
 
     this.sequenceTimeoutIds.push(attentionTimeoutId);
@@ -702,10 +707,12 @@ export class TouchGameModule {
     this.clearAttentionState();
     this.guideLayerEl.classList.add('is-active');
     this.setGuideTransform(from.x, from.y, 0.84);
+    this.updateGuideWeatherField(currentButton, from.y);
     this.rootEl.setAttribute('data-guide-mode', 'travel');
     void this.guideMascotEl.offsetWidth;
     window.requestAnimationFrame(() => {
       this.setGuideTransform(to.x, to.y, 1);
+      this.updateGuideWeatherField(nextButton, to.y);
     });
 
     this.guideMotionResetTimeoutId = window.setTimeout(() => {
@@ -718,6 +725,7 @@ export class TouchGameModule {
     const target = this.resolveGuidePosition(button);
     this.guideLayerEl.classList.add('is-active');
     this.setGuideTransform(target.x, target.y, 1);
+    this.updateGuideWeatherField(button, target.y);
     this.rootEl.setAttribute('data-guide-mode', 'idle');
   }
 
@@ -728,6 +736,7 @@ export class TouchGameModule {
     const y = Math.max(18, stageRect.height * 0.08);
     this.guideLayerEl.classList.add('is-active');
     this.setGuideTransform(x, y, 1);
+    this.updateGuideWeatherField(null, y);
   }
 
   private resolveGuidePosition(button: HTMLButtonElement): { x: number; y: number } {
@@ -770,6 +779,21 @@ export class TouchGameModule {
     this.guideMascotEl.style.setProperty('--guide-x', `${clampedX}px`);
     this.guideMascotEl.style.setProperty('--guide-y', `${clampedY}px`);
     this.guideMascotEl.style.setProperty('--guide-scale', String(scale));
+  }
+
+  private updateGuideWeatherField(targetButton: HTMLElement | null, guideY: number): void {
+    const stageRect = this.stageEl.getBoundingClientRect();
+    const mascotRect = this.guideMascotEl.getBoundingClientRect();
+    const guideLift = Number.parseFloat(getComputedStyle(this.guideMascotEl).getPropertyValue('--guide-y-lift')) || 0;
+    const targetRect = targetButton?.getBoundingClientRect();
+    const fieldWidth = targetRect
+      ? Math.min(stageRect.width - 24, Math.max(148, targetRect.width + 42))
+      : Math.min(stageRect.width * 0.42, 196);
+    const weatherStartTop = guideY + guideLift + mascotRect.height * 0.56;
+    const fallHeight = Math.max(180, stageRect.height - weatherStartTop - 12);
+
+    this.guideMascotEl.style.setProperty('--guide-weather-width', `${fieldWidth}px`);
+    this.guideMascotEl.style.setProperty('--guide-weather-height', `${fallHeight}px`);
   }
 
   private setCardsInteractive(activeButton: HTMLButtonElement | null): void {
@@ -899,6 +923,7 @@ export class TouchGameModule {
       this.attentionEffectBag = this.shuffleArray<AttentionEffect>([
         'rain',
         'snow',
+        'wind',
         'hail',
         'lightning',
         'thunder',

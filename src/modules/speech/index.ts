@@ -60,7 +60,8 @@ const GUIDE_REMINDER_DELAY_MS = navigator.webdriver ? 4800 : 9400;
 const GUIDE_REMINDER_VARIANCE_MS = navigator.webdriver ? 0 : 2400;
 const GUIDE_REMINDER_RETRY_MS = navigator.webdriver ? 300 : 1800;
 const GUIDE_TRAVEL_MS = 720;
-type AttentionEffect = 'rain' | 'snow' | 'hail' | 'rainbow' | 'lightning' | 'thunder';
+const ATTENTION_EFFECT_DURATION_MS = 1240;
+type AttentionEffect = 'rain' | 'snow' | 'wind' | 'hail' | 'rainbow' | 'lightning' | 'thunder';
 type GuideAnchor = {
   xAlign: 'left' | 'center' | 'right';
   yAlign: 'top' | 'middle' | 'bottom';
@@ -1547,6 +1548,7 @@ export class SpeechGameModule {
     const y = Math.max(18, stageRect.height * 0.08);
     this.guideLayerEl.classList.add('is-active');
     this.setGuideTransform(x, y, 1);
+    this.updateGuideWeatherField(null, y);
   }
 
   private resolveRepeats(defaultRepeats: number): number {
@@ -1865,10 +1867,12 @@ export class SpeechGameModule {
     this.clearAttentionState();
     this.guideLayerEl.classList.add('is-active');
     this.setGuideTransform(from.x, from.y, 0.84);
+    this.updateGuideWeatherField(this.getGuideTargetButton(currentButton), from.y);
     this.rootEl.setAttribute('data-guide-mode', 'travel');
     void this.guideMascotEl.offsetWidth;
     window.requestAnimationFrame(() => {
       this.setGuideTransform(to.x, to.y, 1);
+      this.updateGuideWeatherField(this.getGuideTargetButton(nextButton), to.y);
     });
 
     this.guideMotionResetTimeoutId = window.setTimeout(() => {
@@ -1881,6 +1885,7 @@ export class SpeechGameModule {
     const target = this.resolveGuidePosition(button);
     this.guideLayerEl.classList.add('is-active');
     this.setGuideTransform(target.x, target.y, 1);
+    this.updateGuideWeatherField(button, target.y);
     this.rootEl.setAttribute('data-guide-mode', 'idle');
   }
 
@@ -1916,6 +1921,21 @@ export class SpeechGameModule {
     this.guideMascotEl.style.setProperty('--guide-x', `${clampedX}px`);
     this.guideMascotEl.style.setProperty('--guide-y', `${clampedY}px`);
     this.guideMascotEl.style.setProperty('--guide-scale', String(scale));
+  }
+
+  private updateGuideWeatherField(targetButton: HTMLElement | null, guideY: number): void {
+    const stageRect = this.stageEl.getBoundingClientRect();
+    const mascotRect = this.guideMascotEl.getBoundingClientRect();
+    const guideLift = Number.parseFloat(getComputedStyle(this.guideMascotEl).getPropertyValue('--guide-y-lift')) || 0;
+    const targetRect = targetButton?.getBoundingClientRect();
+    const fieldWidth = targetRect
+      ? Math.min(stageRect.width - 32, Math.max(180, targetRect.width + 54))
+      : Math.min(stageRect.width * 0.34, 220);
+    const weatherStartTop = guideY + guideLift + mascotRect.height * 0.56;
+    const fallHeight = Math.max(200, stageRect.height - weatherStartTop - 12);
+
+    this.guideMascotEl.style.setProperty('--guide-weather-width', `${fieldWidth}px`);
+    this.guideMascotEl.style.setProperty('--guide-weather-height', `${fallHeight}px`);
   }
 
   private setCardsInteractive(activeButton: HTMLButtonElement | null): void {
@@ -2075,7 +2095,7 @@ export class SpeechGameModule {
         this.rootEl.setAttribute('data-guide-mode', 'idle');
         this.rootEl.setAttribute('data-attention-strength', '1');
         this.attentionResetTimeoutId = null;
-      }, 1550);
+      }, ATTENTION_EFFECT_DURATION_MS);
     }, sleepyLeadMs);
 
     this.sequenceTimeoutIds.push(attentionTimeoutId);
@@ -2086,6 +2106,7 @@ export class SpeechGameModule {
       this.attentionEffectBag = this.shuffleArray<AttentionEffect>([
         'rain',
         'snow',
+        'wind',
         'hail',
         'lightning',
         'thunder',

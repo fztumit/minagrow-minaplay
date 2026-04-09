@@ -93,6 +93,13 @@ export class MascotGuide {
     this.setMessage(message);
   }
 
+  showSad(message = 'Aaa... bu değil. Bir daha deneyelim.', durationMs = 980): void {
+    this.pulse();
+    this.setTransientFace('calm', durationMs);
+    this.setMessage(message);
+    this.playGuideOops();
+  }
+
   showSleepy(message = 'Pofi uyukluyor.', durationMs = 1200): void {
     this.setTransientFace('sleep', durationMs);
     this.setMessage(message);
@@ -274,6 +281,32 @@ export class MascotGuide {
     this.playGuideTone(context, master, start, 622, 0.14, 'triangle');
     this.playGuideTone(context, master, start + 0.09, 784, 0.14, 'sine');
     this.playGuideTone(context, master, start + 0.18, 932, 0.18, 'triangle');
+  }
+
+  private playGuideOops(): void {
+    const runtime = window as Window & { __mascotSoundLog?: string[] };
+    runtime.__mascotSoundLog = runtime.__mascotSoundLog ?? [];
+    runtime.__mascotSoundLog.push('guide-oops');
+
+    if (this.variant === 'sleep') {
+      return;
+    }
+
+    this.primeGuideAudio();
+    const context = this.guideAudioContext;
+    if (!context || context.state !== 'running') {
+      return;
+    }
+
+    const start = context.currentTime + 0.01;
+    const master = context.createGain();
+    master.connect(context.destination);
+    master.gain.setValueAtTime(0.0001, start);
+    master.gain.exponentialRampToValueAtTime(0.18, start + 0.03);
+    master.gain.exponentialRampToValueAtTime(0.0001, start + 0.48);
+
+    this.playGuideTone(context, master, start, 482, 0.22, 'triangle');
+    this.playGuideTone(context, master, start + 0.14, 344, 0.26, 'sine');
   }
 
   private playGuideTone(

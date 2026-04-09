@@ -1417,3 +1417,12 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
 - Restyled `Uyku` toward a calmer night-sky scene with moon, planets, comet/shooting stars, and a window-framed sleeping Pofi composition; note that the web-game canvas capture still only snapshots the stars canvas, so full-scene verification relied on CSS/DOM inspection plus the existing sleep Playwright flow.
 - Updated Playwright coverage to match the new randomized `Dokun` behavior and the slightly longer `Cümle` playback state window.
 - Validation completed: `npm run build` ✅, `npm run test:e2e` ✅ (`35 passed`).
+
+## 2026-04-09 Dokun + Cümle Micro Polish
+- `Dokun` yanlis dokunus akisini daha duygulu hale getirdim: sahnedeki rehber Pofi artik `is-sad` animasyonu ile kisa bir dusus/wobble tepkisi veriyor ve yumusak bir `oops` tonu caliyor; cocuk yine dokundugu nesnenin sesini duymaya devam ediyor.
+- `Dokun` rehber Pofi boyutunu yaklasik `%30` buyuttum ve idle/dikkat suresini bir miktar hizlandirdim; hedef gecis ve dikkat patlamalari daha kisa ve daha net hissettiriyor.
+- Rehber hava efektlerini `rain`, `snow`, `wind`, `hail`, `lightning`, `thunder`, `rainbow` setine genislettim. `rain/snow/wind/hail` artik yalnizca Pofi etrafinda parlamiyor; kart kolonuna dogru uzayip asagi dusen bir alan olarak akiyor.
+- `Cümle` ekraninda Pofi secim kartini `Baba` kartiyla ayni mantikta merkezli gorsel kart haline getirdim; artik yalnizca isim degil, gercek katmanli Pofi gorseli gorunuyor.
+- `Cümle` ust kahraman Pofi'sinde katman override cakismasini duzelttim; govde ve yuz yeniden hizalandi, kartin arkasina kayma sorunu kalkti.
+- Visual smoke: resmi `develop-web-game` istemcisi ile `output/web-game-touch-polish/shot-1.png` ve `output/web-game-sentence-polish-3/shot-1.png` kontrol edildi.
+- Validation completed: `npm run build` ✅, `npm run test:e2e` ✅ (`35 passed`).
