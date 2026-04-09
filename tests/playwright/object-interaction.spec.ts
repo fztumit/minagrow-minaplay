@@ -5,10 +5,11 @@ test('water object interaction triggers spill animation', async ({ page }) => {
   await page.goto('/');
   await openWordMode(page);
 
-  const waterCard = page.locator('.word-card[data-word-id="su"]');
+  const speechRoot = page.locator('#view-speech');
+  const waterCard = speechRoot.locator('.word-card[data-word-id="su"]');
   await waterCard.click();
 
-  const waterOverlay = page.locator('#water-focus-overlay');
+  const waterOverlay = page.locator('#touch-water-focus-overlay');
   await expect(waterOverlay).toHaveClass(/is-active/);
   await expect(waterOverlay).toHaveClass(/is-spilling/);
   await page.screenshot({
@@ -16,7 +17,7 @@ test('water object interaction triggers spill animation', async ({ page }) => {
     fullPage: true
   });
   const focusStageMetrics = await page.evaluate(() => {
-    const stage = document.querySelector<HTMLElement>('#water-focus-overlay .water-focus-stage');
+    const stage = document.querySelector<HTMLElement>('#touch-water-focus-overlay .water-focus-stage');
     if (!stage) {
       return null;
     }

@@ -50,8 +50,12 @@ type SpeechSettings = {
   autoProgress: boolean;
   pinnedSet: boolean;
 };
+type SpeechGameModuleOptions = {
+  activeViewName?: string;
+};
 
 const SETTINGS_STORAGE_KEY = 'konusu_yorum_speech_settings_v1';
+const SHARED_SPEECH_DATA_EVENT = 'speech-shared-data-updated';
 const GUIDE_REMINDER_DELAY_MS = navigator.webdriver ? 4800 : 9400;
 const GUIDE_REMINDER_VARIANCE_MS = navigator.webdriver ? 0 : 2400;
 const GUIDE_REMINDER_RETRY_MS = navigator.webdriver ? 300 : 1800;
@@ -126,6 +130,7 @@ export class SpeechGameModule {
   private readonly progressSentenceListEl: HTMLElement;
   private readonly waterFocusOverlayEl: HTMLElement;
   private readonly mascot: MascotGuide;
+  private readonly activeViewName: string;
 
   private timeoutIds: number[] = [];
   private waterFocusTimeoutId: number | null = null;
@@ -152,7 +157,12 @@ export class SpeechGameModule {
     pinnedSet: false
   };
 
-  constructor(rootEl: HTMLElement, mascot: MascotGuide, controlsRootEl: ParentNode = rootEl) {
+  constructor(
+    rootEl: HTMLElement,
+    mascot: MascotGuide,
+    controlsRootEl: ParentNode = rootEl,
+    options: SpeechGameModuleOptions = {}
+  ) {
     const stageEl = rootEl.querySelector<HTMLElement>('#speech-stage');
     const gridEl = rootEl.querySelector<HTMLElement>('#speech-grid');
     const focusCardBtn = rootEl.querySelector<HTMLButtonElement>('#speech-focus-card');
@@ -275,6 +285,7 @@ export class SpeechGameModule {
     this.progressSentenceListEl = progressSentenceListEl;
     this.waterFocusOverlayEl = waterFocusOverlayEl;
     this.mascot = mascot;
+    this.activeViewName = options.activeViewName ?? 'speech';
   }
 
   init(): void {
@@ -308,8 +319,11 @@ export class SpeechGameModule {
     window.addEventListener('word-profiles-updated', () => {
       this.handleWordProfilesUpdated();
     });
+    window.addEventListener(SHARED_SPEECH_DATA_EVENT, () => {
+      this.syncSharedSpeechState();
+    });
     window.requestAnimationFrame(() => {
-      if (document.body.getAttribute('data-active-view') === 'speech') {
+      if (document.body.getAttribute('data-active-view') === this.activeViewName) {
         this.startIntroSequence();
       } else {
         this.rootEl.setAttribute('data-scene-phase', 'awaiting-tap');
@@ -369,7 +383,7 @@ export class SpeechGameModule {
     this.syncSettingsToDom();
 
     const activeViewId = document.body.getAttribute('data-active-view');
-    if (activeViewId === 'speech') {
+    if (activeViewId === this.activeViewName) {
       this.resetPlayfield(true);
       return;
     }
@@ -380,6 +394,10 @@ export class SpeechGameModule {
 
   private notifyWordProfilesUpdated(): void {
     window.dispatchEvent(new CustomEvent('word-profiles-updated'));
+  }
+
+  private notifySharedSpeechDataUpdated(): void {
+    window.dispatchEvent(new CustomEvent(SHARED_SPEECH_DATA_EVENT));
   }
 
   private applyWordLabelUpdate(wordId: VocabularyWord, nextLabel: string): void {
@@ -642,6 +660,7 @@ export class SpeechGameModule {
           this.syncSettingsToDom();
           this.renderRecordingLibrary();
           this.renderProgressPanel();
+          this.notifySharedSpeechDataUpdated();
           this.recordingBackupStatusEl.textContent = `"${key}" kaydi silindi.`;
         }
         return;
@@ -721,6 +740,7 @@ export class SpeechGameModule {
         this.syncSettingsToDom();
         this.renderRecordingLibrary();
         this.renderProgressPanel();
+        this.notifySharedSpeechDataUpdated();
         this.customAudioStatusEl.textContent = `"${activeProfile.label}" kaydi silindi.`;
       }
     });
@@ -861,7 +881,7 @@ export class SpeechGameModule {
     this.renderProgressPanel();
     this.feedbackEl.textContent = statusMessage;
 
-    if (document.body.getAttribute('data-active-view') === 'speech') {
+    if (document.body.getAttribute('data-active-view') === this.activeViewName) {
       this.resetPlayfield(true);
     }
   }
@@ -886,7 +906,7 @@ export class SpeechGameModule {
     this.renderFocusCard(this.getActiveSetProfiles()[0] ?? null);
     this.syncSettingsToDom();
 
-    if (playIntroIfActive && document.body.getAttribute('data-active-view') === 'speech') {
+    if (playIntroIfActive && document.body.getAttribute('data-active-view') === this.activeViewName) {
       this.startIntroSequence();
     }
   }
@@ -936,7 +956,7 @@ export class SpeechGameModule {
       this.feedbackEl.textContent = 'Ayni set yeniden basliyor.';
     }
 
-    this.resetPlayfield(document.body.getAttribute('data-active-view') === 'speech');
+    this.resetPlayfield(document.body.getAttribute('data-active-view') === this.activeViewName);
   }
 
   private bindParentPanelAccess(): void {
@@ -1046,6 +1066,7 @@ export class SpeechGameModule {
       this.syncSettingsToDom();
       this.renderRecordingLibrary();
       this.renderProgressPanel();
+      this.notifySharedSpeechDataUpdated();
       this.customAudioStatusEl.textContent = `"${displayLabel}" kaydedildi.`;
       this.feedbackEl.textContent = `Kendi ses kaydi aktif: ${displayLabel}`;
     } finally {
@@ -1091,6 +1112,7 @@ export class SpeechGameModule {
     this.syncSettingsToDom();
     this.renderRecordingLibrary();
     this.renderProgressPanel();
+    this.notifySharedSpeechDataUpdated();
     this.customAudioStatusEl.textContent = `"${displayLabel}" kaydi silindi.`;
   }
 
@@ -1132,6 +1154,7 @@ export class SpeechGameModule {
       this.syncSettingsToDom();
       this.renderRecordingLibrary();
       this.renderProgressPanel();
+      this.notifySharedSpeechDataUpdated();
 
       this.recordingBackupStatusEl.textContent =
         `Yukleme tamamlandi. Yeni: ${result.added}, Guncellenen: ${result.replaced}`;
@@ -1344,9 +1367,17 @@ export class SpeechGameModule {
   private resetProgressCounters(): void {
     resetListenProgress();
     this.renderProgressPanel();
+    this.notifySharedSpeechDataUpdated();
     this.progressResetStatusEl.textContent = 'İlerleme sayaçları sıfırlandı. Kayıtlar korunuyor.';
     this.feedbackEl.textContent = 'Dinleme ilerlemesi sıfırlandı.';
     this.mascot.setMessage('Sıfırlandı.');
+  }
+
+  private syncSharedSpeechState(): void {
+    this.refreshCustomAudioMap();
+    this.syncSettingsToDom();
+    this.renderRecordingLibrary();
+    this.renderProgressPanel();
   }
 
   private playAudioDataUrl(dataUrl: string): void {
@@ -1616,6 +1647,7 @@ export class SpeechGameModule {
       incrementWordListen(word);
       this.playAudioDataUrl(customAudioData);
       this.renderProgressPanel();
+      this.notifySharedSpeechDataUpdated();
       return;
     }
 

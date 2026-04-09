@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { gotoStoriesView, openStoriesMode, openWordMode } from './helpers/navigation.js';
+import { gotoStoriesView, openMatchingMode, openStoriesMode, openWordMode } from './helpers/navigation.js';
 import { unlockParentPanel } from './helpers/parent-access.js';
 
 function getState() {
@@ -203,15 +203,16 @@ test('daily activity card tracks words, story, and interaction', async ({ page }
   await page.goto('/');
   await openWordMode(page);
 
-  await page.click('.word-card[data-word-id="su"]');
+  const speechRoot = page.locator('#view-speech');
+  await speechRoot.locator('.word-card[data-word-id="su"]').click();
   await page.waitForFunction(() => {
     return document.getElementById('view-speech')?.getAttribute('data-current-target') === 'baba';
   });
-  await page.click('.word-card[data-word-id="baba"]');
+  await speechRoot.locator('.word-card[data-word-id="baba"]').click();
   await page.waitForFunction(() => {
     return document.getElementById('view-speech')?.getAttribute('data-current-target') === 'top';
   });
-  await page.click('.word-card[data-word-id="top"]');
+  await speechRoot.locator('.word-card[data-word-id="top"]').click();
 
   await openStoriesMode(page);
   await page.click('#story-listen');
@@ -301,7 +302,7 @@ test('progress metrics increase when recorded word is played', async ({ page }) 
   await openParentPanel(page);
   await closeParentPanel(page, 'home');
   await openWordMode(page);
-  await page.click('.word-card[data-word-id="su"]');
+  await page.locator('#view-speech .word-card[data-word-id="su"]').click();
   await page.waitForTimeout(2500);
 
   const state = await page.evaluate(getState);
@@ -408,8 +409,12 @@ test('parent can rename a word and add a matching image from the progress list',
 
   await page.selectOption('#speech-set-select', 'starter-play-set');
   await closeParentPanel(page, 'home');
-  await openWordMode(page);
+  await openMatchingMode(page);
 
-  await expect(page.locator('.word-card[data-word-id="elma"]')).toHaveAttribute('aria-label', 'Meyve');
-  await expect(page.locator('.word-card[data-word-id="elma"] .word-object-image')).toHaveAttribute('src', /data:image/);
+  const matchingRoot = page.locator('#view-matching');
+  await expect(matchingRoot.locator('.word-card[data-word-id="elma"]')).toHaveAttribute('aria-label', 'Meyve');
+  await expect(matchingRoot.locator('.word-card[data-word-id="elma"] .word-object-image')).toHaveAttribute(
+    'src',
+    /data:image/
+  );
 });

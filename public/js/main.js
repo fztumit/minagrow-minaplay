@@ -3,11 +3,13 @@ import { DailyWordModule } from './dailyword/index.js';
 import { VOCABULARY } from './data/vocabulary.js';
 import { FamilyAvatarModule } from './family/index.js';
 import { MascotGuide } from './mascot/index.js';
+import { MatchingGameModule } from './matching/index.js';
+import { MirrorModeModule } from './mirror/index.js';
 import { PeekabooModeModule } from './peekaboo/index.js';
 import { SentenceBuilderModule } from './sentence/index.js';
 import { SleepModeModule } from './sleep/index.js';
-import { SpeechGameModule } from './speech/index.js';
 import { StoriesModule } from './stories/index.js';
+import { TouchGameModule } from './touch/index.js';
 import { bindParentGesture } from './shared/parentGesture.js';
 const DEFAULT_PARENT_PIN = '1234';
 const PARENT_PIN_STORAGE_KEY = 'minaplay_parent_pin_v1';
@@ -42,8 +44,10 @@ function wireTabs(mascot) {
     const views = Array.from(document.querySelectorAll('.module-view'));
     const homeRoot = document.getElementById('view-home');
     const speechRoot = document.getElementById('view-speech');
+    const matchingRoot = document.getElementById('view-matching');
     const sentenceRoot = document.getElementById('view-sentence');
     const peekabooRoot = document.getElementById('view-peekaboo');
+    const mirrorRoot = document.getElementById('view-mirror');
     const storiesRoot = document.getElementById('view-stories');
     const sleepRoot = document.getElementById('view-sleep');
     const parentRoot = document.getElementById('view-parent');
@@ -61,11 +65,17 @@ function wireTabs(mascot) {
     const notifySpeechGuidance = (state) => {
         speechRoot?.dispatchEvent(new CustomEvent(`speech-guidance-${state}`));
     };
+    const notifyMatchingGuidance = (state) => {
+        matchingRoot?.dispatchEvent(new CustomEvent(`speech-guidance-${state}`));
+    };
     const notifySentenceLifecycle = (state) => {
         sentenceRoot?.dispatchEvent(new CustomEvent(`sentence-${state}`));
     };
     const notifyPeekabooLifecycle = (state) => {
         peekabooRoot?.dispatchEvent(new CustomEvent(`peekaboo-${state}`));
+    };
+    const notifyMirrorLifecycle = (state) => {
+        mirrorRoot?.dispatchEvent(new CustomEvent(`mirror-${state}`));
     };
     const notifySleepLifecycle = (state) => {
         sleepRoot?.dispatchEvent(new CustomEvent(`sleep-${state}`));
@@ -78,11 +88,17 @@ function wireTabs(mascot) {
         if (activeViewId === 'view-speech') {
             notifySpeechGuidance('resume');
         }
+        if (activeViewId === 'view-matching') {
+            notifyMatchingGuidance('resume');
+        }
         if (activeViewId === 'view-sentence') {
             notifySentenceLifecycle('resume');
         }
         if (activeViewId === 'view-peekaboo') {
             notifyPeekabooLifecycle('resume');
+        }
+        if (activeViewId === 'view-mirror') {
+            notifyMirrorLifecycle('resume');
         }
         if (activeViewId === 'view-sleep') {
             notifySleepLifecycle('resume');
@@ -149,6 +165,12 @@ function wireTabs(mascot) {
         else {
             notifySpeechGuidance('pause');
         }
+        if (selectedView === 'matching') {
+            notifyMatchingGuidance('resume');
+        }
+        else {
+            notifyMatchingGuidance('pause');
+        }
         if (selectedView === 'sentence') {
             notifySentenceLifecycle('resume');
         }
@@ -160,6 +182,12 @@ function wireTabs(mascot) {
         }
         else {
             notifyPeekabooLifecycle('pause');
+        }
+        if (selectedView === 'mirror') {
+            notifyMirrorLifecycle('resume');
+        }
+        else {
+            notifyMirrorLifecycle('pause');
         }
         if (selectedView === 'sleep') {
             notifySleepLifecycle('resume');
@@ -173,11 +201,17 @@ function wireTabs(mascot) {
         else if (selectedView === 'speech') {
             mascot.sayHint();
         }
+        else if (selectedView === 'matching') {
+            mascot.setMessage('Eşleme zamanı.');
+        }
         else if (selectedView === 'sentence') {
             mascot.setMessage('Cümle kuralım.');
         }
         else if (selectedView === 'peekaboo') {
             mascot.setMessage('Cee zamanı.');
+        }
+        else if (selectedView === 'mirror') {
+            mascot.setMessage('Pofi ile aynaya bakalım.');
         }
         else if (selectedView === 'stories') {
             mascot.setMessage('Hikaye zamanı.');
@@ -196,8 +230,10 @@ function wireTabs(mascot) {
     const openParentPanel = () => {
         closeParentAuth();
         notifySpeechGuidance('pause');
+        notifyMatchingGuidance('pause');
         notifySentenceLifecycle('pause');
         notifyPeekabooLifecycle('pause');
+        notifyMirrorLifecycle('pause');
         notifySleepLifecycle('pause');
         document.body.setAttribute('data-active-view', 'parent');
         views.forEach((view) => {
@@ -212,6 +248,7 @@ function wireTabs(mascot) {
             return;
         }
         notifySpeechGuidance('pause');
+        notifyMatchingGuidance('pause');
         notifySentenceLifecycle('pause');
         notifyPeekabooLifecycle('pause');
         notifySleepLifecycle('pause');
@@ -255,6 +292,9 @@ function wireTabs(mascot) {
         requestParentPin();
     });
     speechRoot?.addEventListener('open-parent-panel', () => {
+        requestParentPin();
+    });
+    matchingRoot?.addEventListener('open-parent-panel', () => {
         requestParentPin();
     });
     sentenceRoot?.addEventListener('open-parent-panel', () => {
@@ -330,8 +370,10 @@ function wireTabs(mascot) {
     });
     syncParentPinStatus();
     bindHiddenParentAccess(homeRoot, 'home-parent-trigger', 'home-parent-hotspot');
+    bindHiddenParentAccess(speechRoot, 'speech-parent-trigger', 'speech-parent-hotspot');
     bindHiddenParentAccess(sentenceRoot, 'sentence-parent-trigger', 'sentence-parent-hotspot');
     bindHiddenParentAccess(storiesRoot, 'stories-parent-trigger', 'stories-parent-hotspot');
+    bindHiddenParentAccess(mirrorRoot, 'mirror-parent-trigger', 'mirror-parent-hotspot');
     bindHiddenParentAccess(sleepRoot, 'sleep-parent-trigger', 'sleep-parent-hotspot');
     if (parentRoot?.classList.contains('active')) {
         openParentPanel();
@@ -343,8 +385,10 @@ function installTestingHooks() {
         const activeViewId = document.querySelector('.module-view.active')?.id ?? null;
         const homeRoot = document.getElementById('view-home');
         const speechRoot = document.getElementById('view-speech');
+        const matchingRoot = document.getElementById('view-matching');
         const sentenceRoot = document.getElementById('view-sentence');
         const peekabooRoot = document.getElementById('view-peekaboo');
+        const mirrorRoot = document.getElementById('view-mirror');
         const sleepRoot = document.getElementById('view-sleep');
         const familyRoot = document.getElementById('family-panel');
         const storiesRoot = document.getElementById('view-stories');
@@ -378,8 +422,8 @@ function installTestingHooks() {
                 date: dailyActivityRoot?.getAttribute('data-daily-task-date') ?? ''
             },
             speech: {
-                active_level: speechRoot?.getAttribute('data-active-level') ?? 'starter',
-                active_set: speechRoot?.getAttribute('data-active-set') ?? 'starter-first-words',
+                active_level: speechRoot?.getAttribute('data-active-level') ?? 'classic',
+                active_set: speechRoot?.getAttribute('data-active-set') ?? 'featured-scene',
                 last_word: speechRoot?.getAttribute('data-last-word') ?? null,
                 next_word: speechRoot?.getAttribute('data-next-word') ?? null,
                 current_target: speechRoot?.getAttribute('data-current-target') ?? null,
@@ -400,6 +444,32 @@ function installTestingHooks() {
                 total_word_listens: Number(speechRoot?.getAttribute('data-total-word-listens') ?? 0),
                 top_sentence: speechRoot?.getAttribute('data-top-sentence') ?? '',
                 top_sentence_count: Number(speechRoot?.getAttribute('data-top-sentence-count') ?? 0)
+            },
+            matching: {
+                active_level: matchingRoot?.getAttribute('data-active-level') ?? 'starter',
+                active_set: matchingRoot?.getAttribute('data-active-set') ?? 'starter-first-words',
+                last_word: matchingRoot?.getAttribute('data-last-word') ?? null,
+                next_word: matchingRoot?.getAttribute('data-next-word') ?? null,
+                current_target: matchingRoot?.getAttribute('data-current-target') ?? null,
+                guided_target: matchingRoot?.getAttribute('data-guided-target') ?? null,
+                focused_word: matchingRoot?.getAttribute('data-focused-word') ?? null,
+                guide_prompt: matchingRoot?.getAttribute('data-guide-prompt') ?? '',
+                guide_active: matchingRoot?.getAttribute('data-guide-active') === 'true',
+                guide_mode: matchingRoot?.getAttribute('data-guide-mode') ?? 'idle',
+                scene_phase: matchingRoot?.getAttribute('data-scene-phase') ?? 'idle',
+                water_spilled: matchingRoot?.getAttribute('data-water-spilled') === 'true',
+                water_expanded: matchingRoot?.getAttribute('data-water-expanded') === 'true',
+                auto_progress: matchingRoot?.getAttribute('data-auto-progress') === 'true',
+                set_completion: matchingRoot?.getAttribute('data-set-completion') ?? '0/0'
+            },
+            mirror: {
+                current_exercise: mirrorRoot?.getAttribute('data-current-exercise') ?? '',
+                current_category: mirrorRoot?.getAttribute('data-current-category') ?? '',
+                camera_state: mirrorRoot?.getAttribute('data-camera-state') ?? 'idle',
+                cycle_state: mirrorRoot?.getAttribute('data-cycle-state') ?? 'idle',
+                rewarding: mirrorRoot?.getAttribute('data-rewarding') === 'true',
+                progress: Number(mirrorRoot?.getAttribute('data-progress') ?? 0),
+                last_reward: mirrorRoot?.getAttribute('data-last-reward') ?? ''
             },
             sentence: {
                 selected_actor: sentenceRoot?.getAttribute('data-selected-actor') ?? '',
@@ -462,8 +532,10 @@ function bootstrap() {
     const dailyActivityCard = document.getElementById('daily-activity-card');
     const homeRoot = document.getElementById('view-home');
     const speechRoot = document.getElementById('view-speech');
+    const matchingRoot = document.getElementById('view-matching');
     const sentenceRoot = document.getElementById('view-sentence');
     const peekabooRoot = document.getElementById('view-peekaboo');
+    const mirrorRoot = document.getElementById('view-mirror');
     const storiesRoot = document.getElementById('view-stories');
     const sleepRoot = document.getElementById('view-sleep');
     const parentRoot = document.getElementById('view-parent');
@@ -475,8 +547,10 @@ function bootstrap() {
         !dailyActivityCard ||
         !homeRoot ||
         !speechRoot ||
+        !matchingRoot ||
         !sentenceRoot ||
         !peekabooRoot ||
+        !mirrorRoot ||
         !storiesRoot ||
         !sleepRoot ||
         !parentRoot ||
@@ -489,8 +563,14 @@ function bootstrap() {
     dailyWordModule.init();
     const dailyActivityModule = new DailyActivityModule(dailyActivityCard);
     dailyActivityModule.init();
-    const speechModule = new SpeechGameModule(speechRoot, mascot, parentRoot);
+    const speechModule = new TouchGameModule(speechRoot, mascot, parentRoot);
     speechModule.init();
+    const matchingModule = new MatchingGameModule(matchingRoot, mascot, parentRoot, {
+        activeViewName: 'matching'
+    });
+    matchingModule.init();
+    const mirrorModule = new MirrorModeModule(mirrorRoot);
+    mirrorModule.init();
     const sentenceModule = new SentenceBuilderModule(sentenceRoot, mascot);
     sentenceModule.init();
     const peekabooModule = new PeekabooModeModule(peekabooRoot, mascot);
@@ -508,6 +588,16 @@ function bootstrap() {
         }
         dailyActivityModule.trackInteraction();
     });
+    matchingRoot.addEventListener('speech-trigger', (event) => {
+        const detail = event.detail;
+        if (detail?.word) {
+            dailyActivityModule.trackWord(detail.word);
+        }
+        dailyActivityModule.trackInteraction();
+    });
+    mirrorRoot.addEventListener('mirror-activity', () => {
+        dailyActivityModule.trackInteraction();
+    });
     storiesRoot.addEventListener('story-activity', (event) => {
         const detail = event.detail;
         if (detail?.sentence) {
@@ -523,6 +613,8 @@ function bootstrap() {
         dailyWord: dailyWordModule,
         dailyActivity: dailyActivityModule,
         speech: speechModule,
+        matching: matchingModule,
+        mirror: mirrorModule,
         sentence: sentenceModule,
         peekaboo: peekabooModule,
         sleep: sleepModule,
@@ -531,7 +623,7 @@ function bootstrap() {
     };
     wireTabs(mascot);
     const requestedView = new URLSearchParams(window.location.search).get('view');
-    const allowedViews = new Set(['home', 'speech', 'sentence', 'peekaboo', 'stories', 'sleep']);
+    const allowedViews = new Set(['home', 'speech', 'matching', 'sentence', 'peekaboo', 'stories', 'mirror', 'sleep']);
     if (requestedView && allowedViews.has(requestedView)) {
         document.dispatchEvent(new CustomEvent('activate-primary-view', { detail: requestedView }));
     }

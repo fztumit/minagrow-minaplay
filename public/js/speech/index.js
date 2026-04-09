@@ -4,6 +4,7 @@ import { getTopSentenceListens, getWordListenCount, incrementWordListen, renameW
 import { bindParentGesture } from '../shared/parentGesture.js';
 import { buildCustomAudioBackup, listCustomAudioEntries, loadCustomAudioMap, mergeCustomAudioMaps, normalizeSpeechKey, renameCustomAudioKey, parseCustomAudioBackup, saveCustomAudioMap } from './customAudio.js';
 const SETTINGS_STORAGE_KEY = 'konusu_yorum_speech_settings_v1';
+const SHARED_SPEECH_DATA_EVENT = 'speech-shared-data-updated';
 const GUIDE_REMINDER_DELAY_MS = navigator.webdriver ? 4800 : 9400;
 const GUIDE_REMINDER_VARIANCE_MS = navigator.webdriver ? 0 : 2400;
 const GUIDE_REMINDER_RETRY_MS = navigator.webdriver ? 300 : 1800;
@@ -69,6 +70,7 @@ export class SpeechGameModule {
     progressSentenceListEl;
     waterFocusOverlayEl;
     mascot;
+    activeViewName;
     timeoutIds = [];
     waterFocusTimeoutId = null;
     guideTimeoutId = null;
@@ -93,7 +95,7 @@ export class SpeechGameModule {
         autoProgress: true,
         pinnedSet: false
     };
-    constructor(rootEl, mascot, controlsRootEl = rootEl) {
+    constructor(rootEl, mascot, controlsRootEl = rootEl, options = {}) {
         const stageEl = rootEl.querySelector('#speech-stage');
         const gridEl = rootEl.querySelector('#speech-grid');
         const focusCardBtn = rootEl.querySelector('#speech-focus-card');
@@ -212,6 +214,7 @@ export class SpeechGameModule {
         this.progressSentenceListEl = progressSentenceListEl;
         this.waterFocusOverlayEl = waterFocusOverlayEl;
         this.mascot = mascot;
+        this.activeViewName = options.activeViewName ?? 'speech';
     }
     init() {
         this.loadSettings();
@@ -243,8 +246,11 @@ export class SpeechGameModule {
         window.addEventListener('word-profiles-updated', () => {
             this.handleWordProfilesUpdated();
         });
+        window.addEventListener(SHARED_SPEECH_DATA_EVENT, () => {
+            this.syncSharedSpeechState();
+        });
         window.requestAnimationFrame(() => {
-            if (document.body.getAttribute('data-active-view') === 'speech') {
+            if (document.body.getAttribute('data-active-view') === this.activeViewName) {
                 this.startIntroSequence();
             }
             else {
@@ -297,7 +303,7 @@ export class SpeechGameModule {
         this.renderRecordingLibrary();
         this.syncSettingsToDom();
         const activeViewId = document.body.getAttribute('data-active-view');
-        if (activeViewId === 'speech') {
+        if (activeViewId === this.activeViewName) {
             this.resetPlayfield(true);
             return;
         }
@@ -306,6 +312,9 @@ export class SpeechGameModule {
     }
     notifyWordProfilesUpdated() {
         window.dispatchEvent(new CustomEvent('word-profiles-updated'));
+    }
+    notifySharedSpeechDataUpdated() {
+        window.dispatchEvent(new CustomEvent(SHARED_SPEECH_DATA_EVENT));
     }
     applyWordLabelUpdate(wordId, nextLabel) {
         const currentProfile = this.getResolvedWordProfile(wordId);
@@ -523,6 +532,7 @@ export class SpeechGameModule {
                     this.syncSettingsToDom();
                     this.renderRecordingLibrary();
                     this.renderProgressPanel();
+                    this.notifySharedSpeechDataUpdated();
                     this.recordingBackupStatusEl.textContent = `"${key}" kaydi silindi.`;
                 }
                 return;
@@ -590,6 +600,7 @@ export class SpeechGameModule {
                 this.syncSettingsToDom();
                 this.renderRecordingLibrary();
                 this.renderProgressPanel();
+                this.notifySharedSpeechDataUpdated();
                 this.customAudioStatusEl.textContent = `"${activeProfile.label}" kaydi silindi.`;
             }
         });
@@ -706,7 +717,7 @@ export class SpeechGameModule {
         this.syncSettingsToDom();
         this.renderProgressPanel();
         this.feedbackEl.textContent = statusMessage;
-        if (document.body.getAttribute('data-active-view') === 'speech') {
+        if (document.body.getAttribute('data-active-view') === this.activeViewName) {
             this.resetPlayfield(true);
         }
     }
@@ -728,7 +739,7 @@ export class SpeechGameModule {
         this.renderCards(this.getActiveSetProfiles());
         this.renderFocusCard(this.getActiveSetProfiles()[0] ?? null);
         this.syncSettingsToDom();
-        if (playIntroIfActive && document.body.getAttribute('data-active-view') === 'speech') {
+        if (playIntroIfActive && document.body.getAttribute('data-active-view') === this.activeViewName) {
             this.startIntroSequence();
         }
     }
@@ -773,7 +784,7 @@ export class SpeechGameModule {
         else {
             this.feedbackEl.textContent = 'Ayni set yeniden basliyor.';
         }
-        this.resetPlayfield(document.body.getAttribute('data-active-view') === 'speech');
+        this.resetPlayfield(document.body.getAttribute('data-active-view') === this.activeViewName);
     }
     bindParentPanelAccess() {
         this.parentPanelTriggerBtn.addEventListener('click', () => {
@@ -864,6 +875,7 @@ export class SpeechGameModule {
             this.syncSettingsToDom();
             this.renderRecordingLibrary();
             this.renderProgressPanel();
+            this.notifySharedSpeechDataUpdated();
             this.customAudioStatusEl.textContent = `"${displayLabel}" kaydedildi.`;
             this.feedbackEl.textContent = `Kendi ses kaydi aktif: ${displayLabel}`;
         }
@@ -904,6 +916,7 @@ export class SpeechGameModule {
         this.syncSettingsToDom();
         this.renderRecordingLibrary();
         this.renderProgressPanel();
+        this.notifySharedSpeechDataUpdated();
         this.customAudioStatusEl.textContent = `"${displayLabel}" kaydi silindi.`;
     }
     exportCustomAudioBackup() {
@@ -939,6 +952,7 @@ export class SpeechGameModule {
             this.syncSettingsToDom();
             this.renderRecordingLibrary();
             this.renderProgressPanel();
+            this.notifySharedSpeechDataUpdated();
             this.recordingBackupStatusEl.textContent =
                 `Yukleme tamamlandi. Yeni: ${result.added}, Guncellenen: ${result.replaced}`;
         }
@@ -1133,9 +1147,16 @@ export class SpeechGameModule {
     resetProgressCounters() {
         resetListenProgress();
         this.renderProgressPanel();
+        this.notifySharedSpeechDataUpdated();
         this.progressResetStatusEl.textContent = 'İlerleme sayaçları sıfırlandı. Kayıtlar korunuyor.';
         this.feedbackEl.textContent = 'Dinleme ilerlemesi sıfırlandı.';
         this.mascot.setMessage('Sıfırlandı.');
+    }
+    syncSharedSpeechState() {
+        this.refreshCustomAudioMap();
+        this.syncSettingsToDom();
+        this.renderRecordingLibrary();
+        this.renderProgressPanel();
     }
     playAudioDataUrl(dataUrl) {
         const audio = new Audio(dataUrl);
@@ -1363,6 +1384,7 @@ export class SpeechGameModule {
             incrementWordListen(word);
             this.playAudioDataUrl(customAudioData);
             this.renderProgressPanel();
+            this.notifySharedSpeechDataUpdated();
             return;
         }
         this.speakWithTts(word);

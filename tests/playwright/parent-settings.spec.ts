@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openWordMode } from './helpers/navigation.js';
+import { openMatchingMode, openWordMode } from './helpers/navigation.js';
 import { unlockParentPanel } from './helpers/parent-access.js';
 
 test('parent settings repeat mode overrides default repeat count', async ({ page }) => {
@@ -9,7 +9,7 @@ test('parent settings repeat mode overrides default repeat count', async ({ page
   await page.selectOption('#speech-repeat-mode', '2');
   await page.click('#parent-panel-close');
   await openWordMode(page);
-  await page.click('.word-card[data-word-id="su"]');
+  await page.locator('#view-speech .word-card[data-word-id="su"]').click();
   await page.waitForTimeout(1700);
 
   const state = await page.evaluate(() => {
@@ -38,25 +38,26 @@ test('parent settings can switch set and pin active dokun collection', async ({ 
   await page.check('#speech-pin-set');
   await page.click('#parent-panel-close');
 
-  await openWordMode(page);
-  await expect(page.locator('#speech-grid .word-card')).toHaveCount(3);
-  await expect(page.locator('.word-card[data-word-id="araba"]')).toBeVisible();
-  await expect(page.locator('.word-card[data-word-id="elma"]')).toBeVisible();
-  await expect(page.locator('.word-card[data-word-id="kitap"]')).toBeVisible();
-  await expect(page.locator('#view-speech')).toHaveAttribute('data-active-set', 'starter-play-set');
-  await expect(page.locator('#view-speech')).toHaveAttribute('data-auto-progress', 'false');
+  await openMatchingMode(page);
+  const matchingRoot = page.locator('#view-matching');
+  await expect(matchingRoot.locator('#speech-grid .word-card')).toHaveCount(3);
+  await expect(matchingRoot.locator('.word-card[data-word-id="araba"]')).toBeVisible();
+  await expect(matchingRoot.locator('.word-card[data-word-id="elma"]')).toBeVisible();
+  await expect(matchingRoot.locator('.word-card[data-word-id="kitap"]')).toBeVisible();
+  await expect(matchingRoot).toHaveAttribute('data-active-set', 'starter-play-set');
+  await expect(matchingRoot).toHaveAttribute('data-auto-progress', 'false');
 
-  await page.click('.word-card[data-word-id="araba"]');
+  await matchingRoot.locator('.word-card[data-word-id="araba"]').click();
   await page.waitForFunction(() => {
-    return document.getElementById('view-speech')?.getAttribute('data-current-target') === 'elma';
+    return document.getElementById('view-matching')?.getAttribute('data-current-target') === 'elma';
   });
-  await page.click('.word-card[data-word-id="elma"]');
+  await matchingRoot.locator('.word-card[data-word-id="elma"]').click();
   await page.waitForFunction(() => {
-    return document.getElementById('view-speech')?.getAttribute('data-current-target') === 'kitap';
+    return document.getElementById('view-matching')?.getAttribute('data-current-target') === 'kitap';
   });
-  await page.click('.word-card[data-word-id="kitap"]');
+  await matchingRoot.locator('.word-card[data-word-id="kitap"]').click();
   await page.waitForFunction(() => {
-    const speechRoot = document.getElementById('view-speech');
+    const speechRoot = document.getElementById('view-matching');
     return (
       speechRoot?.getAttribute('data-scene-phase') === 'awaiting-tap' &&
       speechRoot.getAttribute('data-current-target') === 'araba'
@@ -68,7 +69,7 @@ test('parent settings can switch set and pin active dokun collection', async ({ 
     return typeof runtime.render_game_to_text === 'function' ? JSON.parse(runtime.render_game_to_text()) : null;
   });
 
-  expect(state?.speech?.active_set).toBe('starter-play-set');
-  expect(state?.speech?.guided_target).toBe('araba');
-  expect(state?.speech?.auto_progress).toBe(false);
+  expect(state?.matching?.active_set).toBe('starter-play-set');
+  expect(state?.matching?.guided_target).toBe('araba');
+  expect(state?.matching?.auto_progress).toBe(false);
 });

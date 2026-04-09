@@ -6,6 +6,12 @@ export async function openWordMode(page: Page): Promise<void> {
   await expect(page.locator('#view-speech')).toHaveAttribute('data-scene-phase', 'awaiting-tap');
 }
 
+export async function openMatchingMode(page: Page): Promise<void> {
+  await page.click('.tab-btn[data-view="matching"]');
+  await expect(page.locator('#view-matching')).toHaveClass(/active/);
+  await expect(page.locator('#view-matching')).toHaveAttribute('data-scene-phase', 'awaiting-tap');
+}
+
 export async function openSentenceMode(page: Page): Promise<void> {
   await page.click('.tab-btn[data-view="sentence"]');
   await expect(page.locator('#view-sentence')).toHaveClass(/active/);
@@ -23,6 +29,11 @@ export async function openPeekabooMode(page: Page): Promise<void> {
 export async function openStoriesMode(page: Page): Promise<void> {
   await page.click('.tab-btn[data-view="stories"]');
   await expect(page.locator('#view-stories')).toHaveClass(/active/);
+}
+
+export async function openMirrorMode(page: Page): Promise<void> {
+  await page.click('.tab-btn[data-view="mirror"]');
+  await expect(page.locator('#view-mirror')).toHaveClass(/active/);
 }
 
 export async function gotoStoriesView(page: Page): Promise<void> {

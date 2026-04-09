@@ -5,7 +5,7 @@ test('speech trigger repeats "su" three times', async ({ page }) => {
   await page.goto('/');
   await openWordMode(page);
 
-  await page.click('.word-card[data-word-id="su"]');
+  await page.locator('#view-speech .word-card[data-word-id="su"]').click();
   await page.waitForTimeout(2200);
 
   const speechLog = await page.evaluate(() => {

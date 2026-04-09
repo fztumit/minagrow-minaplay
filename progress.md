@@ -1366,3 +1366,43 @@ Dikkat dağıtmayacak bir arka fonda bekirgib göz alıcı, dikkat çekici karak
 ## 2026-04-04
 - Kept the home screen silent by preventing the speech module intro prompts from starting unless the speech view is active and by cancelling pending speech when guidance is paused.
 - Verified with a temporary Playwright test that home does not call speech synthesis while the home view is active.
+
+## 2026-04-08
+- Recut the child IA around four primary surfaces: `Dokun`, `Cümle`, `Hikaye`, `Uyku`.
+- Moved `Hikayeler` into the primary home grid and bottom tab bar; kept `Ceee` available as a separate bonus launcher on home plus direct `?view=peekaboo`.
+- Added a new story-stage hero, calmer home/Stories/Sleep visual system, and updated premium-style tab/home/parent panel styling while keeping `Pofi` naming and `pofi-*` runtime assets intact.
+- Re-grouped the parent panel into overview + speech + stories + sleep + bonus peekaboo + family + security flow and added hidden parent access support for the stories surface.
+- Extended testing hooks with `home.bonus_count` and `navigation.primary_tab_count`.
+- Updated Playwright helpers/specs to match the new IA:
+  - `stories` now opens from the primary tab helper.
+  - `peekaboo` helper now uses the home bonus CTA.
+  - Added coverage for the home story card, bonus launcher, and sleep mode.
+  - Added screenshots for speech water focus, sentence builder, stories, and sleep.
+- TODO: run full `build/lint/test/e2e` validation after the recut styling and fix any regression surfaced by the new stories/sleep/home layout.
+
+## 2026-04-08 Dokun Refresh
+- Reorganized the `Dokun` module around a guided `odak + raf` flow: one large focus card, a 3-item tray for the active set, and Pofi guidance that points to the active target while still allowing free exploration taps.
+- Added speech level/set structure to the vocabulary model with `level`, `setId`, `order`, `mediaType`, `guidedGifSrc`, and `promptLabel`, plus parent settings for active level, active set, auto progress, and pinning the current set.
+- Updated the speech module so non-target taps still play the tapped word audio, only target taps advance completion, set completion can auto-advance or restart the pinned set, and `render_game_to_text` now exposes active level/set, guided target, focused word, auto progress, and set completion.
+- Expanded the parent progress panel with set summary info and per-word guided GIF upload/clear actions while preserving rename, photo upload, custom audio record/play/delete, and listen progress metrics.
+- Added Playwright coverage for the new Dokun flow:
+  - primary speech surface now asserts 3 active tray cards plus the large focus card
+  - off-target tap keeps the guided target
+  - parent can switch/pin the active set
+  - guided GIF uploads are covered through the progress panel flow
+- Validation completed: `npm run build` ✅, `npm test` ✅, `npm run test:e2e` ✅ (`32 passed`).
+
+## 2026-04-08 Dokun + Eşleme Split
+- Restored `Dokun` as the classic touch-first scene in `view-speech`, with the original featured objects, free tapping, water spill feedback, and Pofi guiding the next target inside the stage.
+- Moved the newer guided `odak + raf` / level-set flow into a separate bonus mode called `Eşleme` in `view-matching`, keeping the four primary child tabs unchanged.
+- Added shared speech-data syncing so custom recordings, listen progress, and renamed word assets stay in sync between classic `Dokun`, bonus `Eşleme`, and the parent panel.
+- Updated home bonus actions plus Playwright coverage to scope assertions to the correct surface now that both games coexist in the DOM.
+- Validation completed: `npm run build` ✅, `npm run lint` ✅, `npm test` ✅, `npm run test:e2e` ✅ (`33 passed`).
+
+## 2026-04-09 Mirror Mode
+- Added a new primary `Ayna` surface in `view-mirror` and promoted `Eşleme` into the primary home grid/tab bar so the child navigation now exposes six calm core modes plus bonus `Ceee`.
+- Built a gentle imitation flow for mirror work: Pofi demonstrates face, lip, and tongue exercises at the top, the child sees a mirrored front-camera view in the center, and the bottom panel gives one short instruction plus an optional `Başka hareket` action.
+- Implemented a no-pressure reward cycle in `src/modules/mirror/index.ts` that advances exercises on a timed loop, shows positive star feedback, plays a soft tone, and never produces failure messaging. Camera access falls back gracefully to reassuring text when unavailable.
+- Extended `render_game_to_text` and Playwright coverage for `mirror.current_exercise`, camera state, reward state, and the new six-tab / six-card IA.
+- Tightened the `Mirror Mode` layout so the instruction card clears the fixed tab bar on shorter screens while keeping the calm, minimal composition intact.
+- Validation completed: `npm run build` ✅, `npm run test:e2e` ✅ (`35 passed`).

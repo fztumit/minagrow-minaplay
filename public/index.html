@@ -60,6 +60,24 @@
                 </span>
               </button>
 
+              <button type="button" class="home-mode-card is-matching" data-view="matching" aria-label="Eşleme">
+                <span class="home-mode-title">Eşleme</span>
+                <span class="home-mode-subtitle">Pofi'nin seçtiği nesneyi bul ve eşleştir</span>
+                <span class="home-mode-art" aria-hidden="true">
+                  <span class="home-bonus-match-card is-left">
+                    <img class="home-bonus-match-icon" src="/assets/object-ball.svg" alt="" />
+                  </span>
+                  <span class="home-bonus-match-card is-right">
+                    <img class="home-bonus-match-icon" src="/assets/object-ball.svg" alt="" />
+                  </span>
+                  <span class="home-mode-link-ribbon"></span>
+                  <span class="pofi-stack home-mode-main home-card-pofi is-match-guide">
+                    <img class="pofi-body-layer" src="/assets/pofi_Images/Pofi.svg" alt="" />
+                    <img class="pofi-face-layer" src="/assets/pofi-pack/face-happy.svg" alt="" />
+                  </span>
+                </span>
+              </button>
+
               <button type="button" class="home-mode-card is-sentence" data-view="sentence" aria-label="Cümle Kur">
                 <span class="home-mode-title">Cümle</span>
                 <span class="home-mode-subtitle">İki resmi seç ve birlikte dinle</span>
@@ -87,6 +105,26 @@
                 </span>
               </button>
 
+              <button type="button" class="home-mode-card is-mirror" data-view="mirror" aria-label="Ayna Modu">
+                <span class="home-mode-title">Ayna</span>
+                <span class="home-mode-subtitle">Pofi'yi izle, aynada sen de yap</span>
+                <span class="home-mode-art" aria-hidden="true">
+                  <span class="home-mode-mirror-frame">
+                    <span class="home-mode-mirror-face">
+                      <span class="home-mode-mirror-eye is-left"></span>
+                      <span class="home-mode-mirror-eye is-right"></span>
+                      <span class="home-mode-mirror-mouth"></span>
+                    </span>
+                  </span>
+                  <span class="pofi-stack home-mode-main home-card-pofi is-mirror-guide">
+                    <img class="pofi-body-layer" src="/assets/pofi_Images/Pofi.svg" alt="" />
+                    <img class="pofi-face-layer" src="/assets/pofi-pack/face-idle.svg" alt="" />
+                  </span>
+                  <span class="home-mode-mirror-star home-mode-mirror-star-a"></span>
+                  <span class="home-mode-mirror-star home-mode-mirror-star-b"></span>
+                </span>
+              </button>
+
               <button type="button" class="home-mode-card is-sleep" data-view="sleep" aria-label="Uyku Modu">
                 <span class="home-mode-title">Uyku</span>
                 <span class="home-mode-subtitle">Sakinleş, sesi başlat ve dinlen</span>
@@ -104,21 +142,23 @@
             <section class="home-bonus-strip" aria-label="Bonus oyun">
               <div class="home-bonus-copy">
                 <span class="home-bonus-kicker">Bonus Oyun</span>
-                <strong>Ceee zamanı</strong>
-                <p>Pofi bazen saklanır. Hazırsan sürpriz oyununu aç.</p>
+                <strong>Ceee</strong>
+                <p>İstersen Pofi ile bonus Ceee oyununu da ayrı aç.</p>
               </div>
-              <button type="button" class="home-bonus-card" data-view="peekaboo" aria-label="Ceee bonus oyunu">
-                <span class="home-bonus-art" aria-hidden="true">
-                  <span class="home-mode-curtain"></span>
-                  <span class="pofi-stack home-card-pofi is-hide">
-                    <img class="pofi-body-layer" src="/assets/pofi_Images/Pofi.svg" alt="" />
-                    <img class="pofi-face-layer" src="/assets/pofi-pack/face-idle.svg" alt="" />
-                    <img class="pofi-hands-layer" src="/assets/pofi-pack/hands-hide.svg" alt="" />
+              <div class="home-bonus-actions">
+                <button type="button" class="home-bonus-card" data-view="peekaboo" aria-label="Ceee bonus oyunu">
+                  <span class="home-bonus-art" aria-hidden="true">
+                    <span class="home-mode-curtain"></span>
+                    <span class="pofi-stack home-card-pofi is-hide">
+                      <img class="pofi-body-layer" src="/assets/pofi_Images/Pofi.svg" alt="" />
+                      <img class="pofi-face-layer" src="/assets/pofi-pack/face-idle.svg" alt="" />
+                      <img class="pofi-hands-layer" src="/assets/pofi-pack/hands-hide.svg" alt="" />
+                    </span>
+                    <span class="home-mode-curtain is-right"></span>
                   </span>
-                  <span class="home-mode-curtain is-right"></span>
-                </span>
-                <span class="home-bonus-label">Ceee'yi Aç</span>
-              </button>
+                  <span class="home-bonus-label">Ceee</span>
+                </button>
+              </div>
             </section>
           </div>
         </section>
@@ -129,7 +169,63 @@
             <p>Nesnelere dokununca kelime sesli tekrar edilir. Su nesnesi 3 kez söylenir.</p>
           </div>
 
-          <div class="speech-stage" id="speech-stage" aria-label="Oyun sahnesi">
+          <div class="speech-stage touch-stage" id="touch-stage" aria-label="Dokun sahnesi">
+            <button type="button" id="speech-parent-trigger" class="visually-hidden">Ebeveyn panelini aç</button>
+            <div class="parent-corner-hotspot" id="speech-parent-hotspot" aria-hidden="true"></div>
+            <div class="speech-scene-backdrop" aria-hidden="true">
+              <div class="scene-sun-halo"></div>
+              <div class="scene-window">
+                <div class="scene-window-sun"></div>
+                <div class="scene-window-cloud scene-window-cloud-a"></div>
+                <div class="scene-window-cloud scene-window-cloud-b"></div>
+              </div>
+              <div class="scene-curtain scene-curtain-left"></div>
+              <div class="scene-curtain scene-curtain-right"></div>
+              <div class="scene-shelf"></div>
+              <div class="scene-picture scene-picture-left"></div>
+              <div class="scene-picture scene-picture-right"></div>
+              <div class="scene-sofa">
+                <span class="scene-sofa-seat"></span>
+                <span class="scene-sofa-cushion scene-sofa-cushion-left"></span>
+                <span class="scene-sofa-cushion scene-sofa-cushion-right"></span>
+              </div>
+              <div class="scene-rug"></div>
+              <div class="scene-basket"></div>
+            </div>
+            <div class="speech-guide-layer touch-guide-layer" id="touch-guide-layer" aria-hidden="true">
+              <div class="speech-guide-mascot touch-guide-mascot" id="touch-guide-mascot" aria-label="Pofi">
+                <span class="speech-guide-glow" aria-hidden="true"></span>
+                <span class="speech-guide-sparkles" aria-hidden="true"></span>
+                <span class="speech-guide-weather speech-guide-weather-rain" aria-hidden="true"></span>
+                <span class="speech-guide-weather speech-guide-weather-snow" aria-hidden="true"></span>
+                <span class="speech-guide-weather speech-guide-weather-rainbow" aria-hidden="true"></span>
+                <span class="speech-guide-weather speech-guide-weather-lightning" aria-hidden="true"></span>
+                <span class="pofi-stack speech-guide-stack" aria-hidden="true">
+                  <img class="pofi-body-layer" src="/assets/pofi_Images/Pofi.svg" alt="" />
+                  <img class="pofi-face-layer" src="/assets/pofi-pack/face-idle.svg" alt="" />
+                  <img class="pofi-hands-layer speech-guide-hands" src="/assets/pofi-pack/hands-hide.svg" alt="" />
+                </span>
+              </div>
+            </div>
+            <div class="speech-grid touch-grid" id="touch-grid" aria-label="Sesli nesneler"></div>
+          </div>
+          <p class="speech-feedback visually-hidden" id="touch-feedback" aria-live="polite">Bir nesneye dokun.</p>
+          <div class="water-focus-overlay" id="touch-water-focus-overlay" aria-hidden="true">
+            <div class="water-focus-stage">
+              <img class="water-focus-glass" src="/assets/water-glass.svg" alt="" />
+              <div class="water-focus-stream"></div>
+              <div class="water-focus-splash"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="module-view" id="view-matching" data-module="matching">
+          <div class="module-header visually-hidden">
+            <h2>Eşleme</h2>
+            <p>Pofi bir hedef seçer, aynı nesneyi bulur ve sete göre ilerlersin.</p>
+          </div>
+
+          <div class="speech-stage matching-stage" id="speech-stage" aria-label="Eşleme sahnesi">
             <button type="button" id="parent-panel-trigger" class="visually-hidden">Ebeveyn panelini aç</button>
             <div class="parent-corner-hotspot" id="parent-corner-hotspot" aria-hidden="true"></div>
             <div class="speech-scene-backdrop" aria-hidden="true">
@@ -168,27 +264,27 @@
               </div>
             </div>
 
-            <div class="speech-play-shell">
-              <section class="speech-focus-panel" aria-label="Pofi'nin hedefi">
-                <div class="speech-focus-copy">
-                  <span class="speech-focus-kicker" id="speech-focus-kicker">Pofi'nin hedefi</span>
-                  <h3 class="speech-focus-label" id="speech-focus-label">Hazır mısın?</h3>
-                  <p class="speech-focus-prompt" id="speech-focus-prompt">Pofi birazdan bir nesne gösterecek.</p>
+            <div class="matching-play-shell">
+              <section class="matching-focus-panel" aria-label="Pofi'nin hedefi">
+                <div class="matching-focus-copy">
+                  <span class="matching-focus-kicker" id="speech-focus-kicker">Pofi'nin hedefi</span>
+                  <h3 class="matching-focus-label" id="speech-focus-label">Hazır mısın?</h3>
+                  <p class="matching-focus-prompt" id="speech-focus-prompt">Pofi birazdan bir nesne gösterecek.</p>
                 </div>
 
-                <button type="button" class="speech-focus-card" id="speech-focus-card" aria-live="polite">
-                  <span class="speech-focus-badge" id="speech-focus-badge">Hedef</span>
-                  <span class="speech-focus-illustration" id="speech-focus-illustration" aria-hidden="true"></span>
-                  <span class="speech-focus-caption" id="speech-focus-caption">Bir nesne seçilecek.</span>
+                <button type="button" class="matching-focus-card" id="speech-focus-card" aria-live="polite">
+                  <span class="matching-focus-badge" id="speech-focus-badge">Hedef</span>
+                  <span class="matching-focus-illustration" id="speech-focus-illustration" aria-hidden="true"></span>
+                  <span class="matching-focus-caption" id="speech-focus-caption">Bir nesne seçilecek.</span>
                 </button>
               </section>
 
-              <section class="speech-tray-panel" aria-label="Dokunulabilir nesneler">
-                <div class="speech-tray-heading">
-                  <span class="speech-tray-kicker">Nesneler</span>
-                  <p class="speech-tray-status" id="speech-tray-status">Pofi'nin seçtiği nesneye dokun.</p>
+              <section class="matching-tray-panel" aria-label="Dokunulabilir nesneler">
+                <div class="matching-tray-heading">
+                  <span class="matching-tray-kicker">Nesneler</span>
+                  <p class="matching-tray-status" id="speech-tray-status">Pofi'nin seçtiği nesneye dokun.</p>
                 </div>
-                <div class="speech-grid" id="speech-grid" aria-label="Sesli nesneler"></div>
+                <div class="matching-grid" id="speech-grid" aria-label="Sesli nesneler"></div>
               </section>
             </div>
           </div>
@@ -345,6 +441,63 @@
                   <button type="button" id="story-next" class="secondary-btn">Sonraki Cümle</button>
                 </div>
               </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="module-view" id="view-mirror" data-module="mirror">
+          <div class="module-header visually-hidden">
+            <h2>Ayna Modu</h2>
+            <p>Pofi'nin yüz ve ağız hareketlerini izleyip aynada sen de denersin.</p>
+          </div>
+
+          <div class="mirror-stage" id="mirror-stage" aria-label="Ayna modu">
+            <button type="button" id="mirror-parent-trigger" class="visually-hidden">Ebeveyn panelini aç</button>
+            <div class="parent-corner-hotspot" id="mirror-parent-hotspot" aria-hidden="true"></div>
+
+            <div class="mirror-layout">
+              <section class="mirror-example-panel" aria-label="Pofi örneği">
+                <span class="mirror-kicker">Pofi gösteriyor</span>
+                <div class="mirror-example-card">
+                  <div class="mirror-pofi-demo" id="mirror-pofi-demo" data-exercise="happy" aria-hidden="true">
+                    <span class="mirror-pofi-glow"></span>
+                    <img class="mirror-pofi-body" src="/assets/pofi_Images/Pofi.svg" alt="" />
+                    <span class="mirror-pofi-face">
+                      <span class="mirror-pofi-eye is-left"></span>
+                      <span class="mirror-pofi-eye is-right"></span>
+                      <span class="mirror-pofi-mouth"></span>
+                      <span class="mirror-pofi-tongue"></span>
+                    </span>
+                  </div>
+                  <div class="mirror-example-copy">
+                    <span class="mirror-category" id="mirror-exercise-category">Yüz çalışması</span>
+                    <h3 id="mirror-exercise-label">Mutlu yüz</h3>
+                  </div>
+                </div>
+              </section>
+
+              <section class="mirror-camera-panel" aria-label="Ayna görüntüsü">
+                <div class="mirror-camera-shell">
+                  <video id="mirror-video" playsinline autoplay muted aria-label="Ayna görüntüsü"></video>
+                  <div class="mirror-camera-placeholder" id="mirror-camera-placeholder" aria-live="polite">
+                    Ayna açılıyor...
+                  </div>
+                  <div class="mirror-reward" id="mirror-reward" aria-hidden="true">
+                    <span class="mirror-reward-star is-left"></span>
+                    <span class="mirror-reward-star is-center"></span>
+                    <span class="mirror-reward-star is-right"></span>
+                    <span class="mirror-reward-text" id="mirror-reward-text">Yıldız zamanı</span>
+                  </div>
+                </div>
+                <div class="mirror-progress" aria-hidden="true">
+                  <span class="mirror-progress-fill" id="mirror-progress-fill"></span>
+                </div>
+              </section>
+
+              <section class="mirror-instruction-panel" aria-label="Talimat">
+                <p class="mirror-instruction" id="mirror-instruction">Pofi gibi mutlu bir yüz yap.</p>
+                <button type="button" class="secondary-btn mirror-next-btn" id="mirror-next-btn">Başka hareket</button>
+              </section>
             </div>
           </div>
         </section>
@@ -679,6 +832,15 @@
           </span>
           <span class="tab-btn-label">Dokun</span>
         </button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-view="matching" aria-label="Eşleme">
+          <span class="tab-btn-icon pofi-tab-icon" aria-hidden="true">
+            <span class="pofi-stack pofi-tab-stack is-happy">
+              <img class="pofi-body-layer" src="/assets/pofi_Images/Pofi.svg" alt="" />
+              <img class="pofi-face-layer" src="/assets/pofi-pack/face-happy.svg" alt="" />
+            </span>
+          </span>
+          <span class="tab-btn-label">Eşleme</span>
+        </button>
         <button class="tab-btn" role="tab" aria-selected="false" data-view="sentence" aria-label="Cümle Kur">
           <span class="tab-btn-icon pofi-tab-icon" aria-hidden="true">
             <span class="pofi-stack pofi-tab-stack is-happy">
@@ -696,6 +858,15 @@
             </span>
           </span>
           <span class="tab-btn-label">Hikaye</span>
+        </button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-view="mirror" aria-label="Ayna Modu">
+          <span class="tab-btn-icon pofi-tab-icon" aria-hidden="true">
+            <span class="pofi-stack pofi-tab-stack is-idle">
+              <img class="pofi-body-layer" src="/assets/pofi_Images/Pofi.svg" alt="" />
+              <img class="pofi-face-layer" src="/assets/pofi-pack/face-idle.svg" alt="" />
+            </span>
+          </span>
+          <span class="tab-btn-label">Ayna</span>
         </button>
         <button class="tab-btn" role="tab" aria-selected="false" data-view="sleep" aria-label="Uyku Modu">
           <span class="tab-btn-icon pofi-tab-icon" aria-hidden="true">
