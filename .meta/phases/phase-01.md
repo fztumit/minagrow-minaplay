@@ -9,13 +9,13 @@ updated: 2026-04-18
 
 ## Amaç
 
-Bu fazın amacı, başka projeden hazır gelen `.meta`, `.agent` ve agent giriş protokolünü `MinaGrow / MinaPlay` projesine uygun hale getirmektir.
+Bu fazın amacı, başka projeden hazır gelen `.meta`, `.agent` ve agent giriş protokolünü `MinaGrow` üst bağlamındaki `MinaPlay` projesine uygun hale getirmektir.
 
 ## Kapsam
 
 Dahil:
 
-- proje kimliğini `MinaGrow / MinaPlay` olarak yazmak
+- proje kimliğini `MinaPlay` olarak, `MinaGrow`u üst bağlam olarak yazmak
 - `Konusu-Yorum` referans reposunu görünür kılmak
 - Ümit + Codex çalışma modelini tanımlamak
 - PWA mimarisini ve veri modelini belgelemek
@@ -45,7 +45,7 @@ Kapanış ölçütü:
 
 Amaç:
 
-- `.meta` dosyalarını `MinaGrow / MinaPlay` bağlamına çekmek
+- `.meta` dosyalarını `MinaPlay` ürün bağlamına çekmek
 
 Kapanış ölçütü:
 

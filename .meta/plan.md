@@ -1,6 +1,6 @@
 ---
 name: plan
-description: MinaGrow/MinaPlay projesinin bugünkü yürütme yönünü, aktif odağını ve yakın çalışma sırasını tanımlar.
+description: MinaPlay projesinin bugünkü yürütme yönünü, aktif odağını ve yakın çalışma sırasını tanımlar.
 created: 2026-04-17
 updated: 2026-04-18
 ---
@@ -11,21 +11,94 @@ updated: 2026-04-18
 
 Bugünkü aktif odak:
 
-`MinaGrow` içindeki `.meta`, `.agent` ve agent giriş protokolünü `Konusu-Yorum` referansına göre temizlemek.
+`MinaPlay` ürün hafızasını Pofi davranış sistemi, 0-5 başlangıç odağı, 0-18 uzun vadeli vizyonu ve yeni bilgi mimarisiyle hizalamak.
 
-Bu odak, eski hazır bağlamdan kalan yanlış yönleri kaldırır ve yeni sohbetlerde ajanın Ümit + MinaGrow/MinaPlay bağlamıyla başlamasını sağlar.
+Bu odak, eski hazır bağlamdan ve eski karakter/ürün adlarından kalan belirsizlikleri kaldırır. Çalışan `Konusu-Yorum` referansı korunur, ama kanonik ürün yönü `MinaPlay + Pofi` olarak netleşir.
 
 ## Bugünkü Kapanış Hedefi
 
-- `.meta` dosyaları MinaGrow/MinaPlay ürün yönüne çekilecek
-- `.agent` dosyaları Ümit + Codex çalışma modeline çekilecek
-- kök `AGENTS.md` gelecekte yanlış açılış üretmeyecek şekilde güncellenecek
-- Konusu-Yorum referansı açık ve doğru yerde tutulacak
-- eski hazır bağlam izleri doğrulama taramasıyla temizlenecek
+- ürün adı `MinaPlay` olarak netleşecek
+- başlangıç ürün odağı 0-5 konuşma, taklit, duygu ve etkileşim desteği olarak yazılacak
+- uzun vadeli vizyon 0-18 yaş, okul öncesi, örgün öğretim, gönüllü eğitimci ağı ve engelli bireylerin okul süreci desteği olarak ayrılacak
+- Pofi süs karakteri değil davranışsal etkileşim sistemi olarak tanımlanacak
+- 6 ana mod + Ceee bonus mimarisi meta dosyalarına işlenecek
+- Parent panel analiz, kontrol ve izleme rolüyle netleşecek
+- gelecek terapist/eğitimci ve raporlama vizyonu bugünkü çekirdekten ayrılacak
+
+## Kanonik Ürün Yönü
+
+Başlangıç çekirdeği:
+
+- 0-5 yaş
+- konuşma desteği
+- taklit
+- duygu ve etkileşim
+- sakin, yumuşak, düşük uyarımlı PWA deneyimi
+
+İlerleyen seviyeler:
+
+- 0-18 yaş aralığına genişleme
+- okul öncesi destek
+- örgün öğretim desteği
+- engelli bireylerin okul sürecinde desteklenmesi
+- gönüllü eğitimci ağı
+- ebeveyn, terapist, eğitimci ve okul destek aktörleri arasında kontrollü ağ
+
+## Bilgi Mimarisi
+
+Ana modlar:
+
+- Dokun: `view-touch`
+- Eşleme: `view-match`
+- Cümle: `view-sentence`
+- Hikaye: `view-story`
+- Ayna: `view-mirror`
+- Uyku: `view-sleep`
+
+Bonus:
+
+- Ceee: `view-peekaboo`
+
+Destek katmanı:
+
+- Parent panel: `view-parent`
+
+## Parent Panel Yönü
+
+Parent panel çocuk yüzeyinden ayrı katmandır.
+
+Roller:
+
+- kontrol
+- izleme
+- içerik ve kayıt yönetimi
+- kullanım analizi
+
+Analiz adayları:
+
+- hangi bölümde ne oynandı
+- neler yapıldı
+- doğru denemeler
+- yanlış veya hedef dışı denemeler
+- tamamlanan egzersizler
+- tekrar sayısı
+- oturum sıklığı
+
+Kontrol adayları:
+
+- kullanım limitleri
+- modül kontrolü
+- screen lock
+
+Çocuk şunları yapamamalıdır:
+
+- modülden kontrolsüz çıkış
+- dış uygulama açma
+- ayar değiştirme
 
 ## Yakın Sıra
 
-### 1. Meta ve Agent Hizalaması
+### 1. Meta Kanon Hizalaması
 
 Durum:
 
@@ -33,9 +106,11 @@ Durum:
 
 Kapanış ölçütü:
 
-- `.meta` ve `.agent` içinde eski hazır bağlam kalıntısı kalmaması
-- `MinaGrow`, `MinaPlay`, `Konusu-Yorum` ayrımının açık olması
-- Ümit'in kullanıcı/owner bağlamının doğru yazılması
+- `.meta` içinde eski yaş aralığı ifadesinin kalmaması
+- Pofi'nin yalnız süs karakteri gibi tanımlanmaması
+- 6 ana mod + Ceee ayrımının netleşmesi
+- 0-5 çekirdek ile 0-18 gelecek vizyonunun karışmaması
+- Parent panel analiz ve kontrol rolünün görünür olması
 
 ### 2. Kod Taşıma Planı
 
@@ -49,32 +124,27 @@ Karar gerektirenler:
 - mevcut `node_modules`, `dist`, `output`, `test-results` taşınacak mı
 - Railway deploy yeni klasör yapısına göre nasıl güncellenecek
 - storage key adları korunacak mı
+- Pofi asset ve state sistemi nasıl taşınacak
 
-### 3. PWA Ürün Temizliği
-
-Amaç:
-
-- görünen metinlerde Türkçe karakterleri düzeltmek
-- MinaGrow/MinaPlay adlandırmasını tutarlı yapmak
-- legacy CRM parçalarını ayırmak
-- asset adlarını sadeleştirmek
-
-### 4. Ürün Sertleştirme
+### 3. Ürün Sertleştirme
 
 Amaç:
 
 - mobil/tablet Playwright görsel kontrolleri
 - service worker offline fallback
-- mikrofon ve TTS fallback metinleri
+- mikrofon, kamera ve TTS fallback metinleri
 - localStorage ses kaydı kapasite stratejisi
-- ebeveyn panellerinin mobil sıkışma kontrolü
+- Parent panel analizlerinin local-first sınırları
+- Pofi state çakışması kontrolleri
 
 ## Şimdilik Açılmayacaklar
 
 - kullanıcı hesabı
 - cloud sync
 - ödeme/abonelik
-- admin panel
+- gerçek terapist dashboard'u
+- gönüllü eğitimci ağı uygulaması
+- okul/kurum yönetim paneli
 - çok dilli içerik sistemi
 - büyük backend veri modeli
 

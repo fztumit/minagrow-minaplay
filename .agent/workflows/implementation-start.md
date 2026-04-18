@@ -1,13 +1,13 @@
 ---
 name: implementation-start
-description: MinaGrow/MinaPlay içinde gerçek dosya veya kod üretimine geçmeden önce hangi bağlamın okunacağını, neyin netleştirileceğini ve implementasyona hangi eşiği geçince başlanacağını tanımlar.
+description: MinaPlay içinde gerçek dosya veya kod üretimine geçmeden önce hangi bağlamın okunacağını, neyin netleştirileceğini ve implementasyona hangi eşiği geçince başlanacağını tanımlar.
 created: 2026-04-17
 updated: 2026-04-18
 ---
 
 # Implementation Start
 
-Bu workflow, `MinaGrow / MinaPlay` içinde aktif uygulama veya doküman düzenleme işine başlamadan önce ajanın nasıl hizalanacağını tanımlar.
+Bu workflow, `MinaGrow` üst bağlamındaki `MinaPlay` içinde aktif uygulama veya doküman düzenleme işine başlamadan önce ajanın nasıl hizalanacağını tanımlar.
 
 ## Ne Zaman Kullanılır?
 
@@ -16,6 +16,7 @@ Bu workflow, `MinaGrow / MinaPlay` içinde aktif uygulama veya doküman düzenle
 - `Konusu-Yorum` referansından bir davranış taşınacaksa
 - MinaPlay klasörüne uygulama kurulacaksa
 - PWA modülü geliştirilecekse
+- Pofi davranış sistemi, Parent panel analizi veya yeni modül mimarisi etkileniyorsa
 - test/doğrulama çalışması yapılacaksa
 
 ## İlk Ayrım
@@ -26,6 +27,8 @@ Bu workflow, `MinaGrow / MinaPlay` içinde aktif uygulama veya doküman düzenle
 - agent güncelleme
 - uygulama kodu
 - ürün/UX düzenlemesi
+- Pofi davranış/state düzenlemesi
+- Parent panel analiz/kontrol düzenlemesi
 - taşıma veya temizlik
 - test/doğrulama
 
@@ -38,9 +41,11 @@ Genel başlangıç:
 1. `.meta/project.md`
 2. `.meta/architecture.md`
 3. `.meta/data-model.md`
-4. `.meta/plan.md`
-5. `.agent/context/profile.md`
-6. `.agent/context/collaboration.md`
+4. `.meta/web.md`
+5. `.meta/plan.md`
+6. `.agent/context/profile.md`
+7. `.agent/context/business.md`
+8. `.agent/context/collaboration.md`
 
 Kod veya davranış gerekiyorsa:
 

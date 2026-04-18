@@ -7,8 +7,9 @@ updated: 2026-04-18
 
 # Worklog
 
-Bu dosya, `MinaGrow / MinaPlay` içindeki aktif meta omurgasının yürütme günlüğüdür. Amaç; kapanmış anlamlı işleri görünür tutmak ve kısa ama okunabilir bir ilerleme izi oluşturmaktır.
+Bu dosya, `MinaGrow` üst bağlamındaki `MinaPlay` meta omurgasının yürütme günlüğüdür. Amaç; kapanmış anlamlı işleri görünür tutmak ve kısa ama okunabilir bir ilerleme izi oluşturmaktır.
 
 ## Kayıtlar
 
 - 2026-04-18 | Meta/Agent | Eski hazır bağlamdan MinaGrow/MinaPlay bağlamına geçiş | `/Users/umitaydin/Documents/Konusu-Yorum` referans alınarak `.meta`, `.agent` ve kök `AGENTS.md` dosyaları Ümit + MinaGrow/MinaPlay çalışma yönüne çekildi | Yeni sohbetlerde ajanın eski varsayımlarla başlamaması ve ürün hafızasının Konusu-Yorum referansındaki gerçek PWA davranışına yaslanması sağlandı
+- 2026-04-18 | Meta | MinaPlay/Pofi kanonunun meta omurgasına işlenmesi | `.meta` dosyaları MinaPlay ürün adı, Pofi davranış sistemi, 0-5 başlangıç odağı, 0-18 gelecek vizyonu, Parent panel analiz yönü ve eğitim/terapi destek platformu adaylarıyla hizalandı | Ürün hafızası çocuk yüzeyini sade tutarken ebeveyn, terapist, gönüllü eğitimci ve okul süreci destek vizyonunu bugünkü çekirdekten ayrı taşıyacak hale geldi

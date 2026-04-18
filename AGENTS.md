@@ -1,6 +1,6 @@
 ---
 name: minagrow-agents
-description: MinaGrow/MinaPlay içinde çalışan ajanın projeyi nasıl yorumlayacağını, hangi sırayla okuyacağını ve hangi workflow'a yaslanacağını tanımlar.
+description: MinaGrow üst bağlamında MinaPlay için çalışan ajanın projeyi nasıl yorumlayacağını, hangi sırayla okuyacağını ve hangi workflow'a yaslanacağını tanımlar.
 created: 2026-04-17
 updated: 2026-04-18
 ---
@@ -9,7 +9,7 @@ updated: 2026-04-18
 
 Bu dosya, `MinaGrow` repo kökünde çalışan Codex ajanının davranış protokolünü tanımlar.
 
-Amaç, bu repo'yu boş veya bağlamsız bir klasör gibi yorumlamak değildir. Amaç; `MinaGrow` markası altındaki `MinaPlay` uygulamasını, `Konusu-Yorum` referans reposundan gelen gerçek ürün bağlamıyla birlikte okumak ve yeni sohbet açıldığında ajanın doğru yerden başlamasını sağlamaktır.
+Amaç, bu repo'yu boş veya bağlamsız bir klasör gibi yorumlamak değildir. Amaç; `MinaGrow` üst bağlamındaki `MinaPlay` uygulamasını, `Konusu-Yorum` referans reposundan gelen gerçek ürün bağlamıyla birlikte okumak ve yeni sohbet açıldığında ajanın doğru yerden başlamasını sağlamaktır.
 
 ## Bu Dosyanın Rolü
 
@@ -33,10 +33,11 @@ Eğer çalışma `MinaGrow` repo kökünden başlıyorsa ajan bunu sıradan bir 
 Varsayılan kabul şudur:
 
 - şu an `MinaGrow` içindeyiz
-- ana ürün `MinaPlay` adlı çocuk odaklı konuşma pratiği PWA'sıdır
+- ana ürün `MinaPlay` adlı çocuk odaklı konuşma, taklit, duygu ve etkileşim PWA'sıdır
 - uygulamanın somut referansı `/Users/umitaydin/Documents/Konusu-Yorum` reposudur
 - `.meta` proje hafızasının kanonik yüzeyidir
 - `.agent` ajanın bu projede nasıl çalışacağını taşıyan iç çalışma alanıdır
+- `Pofi` dekoratif bir karakter değil, davranışsal etkileşim sistemidir
 - kullanıcı Ümit'tir; başka repo veya hazır profil bağlamı bu repo için varsayım değildir
 
 Bu nedenle kullanıcı kısa veya dar bir mesaj yazsa bile ajan önce bulunduğu alanı doğru sınıflandırır.
@@ -60,7 +61,7 @@ Ek kural:
 - `server`, `client`, `packages`, `infra` gibi büyük monorepo kökleri varsayılmaz
 - bugünkü referans teknoloji `Konusu-Yorum`daki sade Node/Express + modüler TypeScript PWA yapısıdır
 - erken ortak paket veya platform mimarisi üretilmez
-- ürün küçük, dokunmatik, mobil/tablet odaklı ve çocuk güvenliği hassasiyetiyle okunur
+- ürün tablet/telefon odaklı, çocuk yüzeyi sade ve güvenlik hassasiyeti yüksek bir PWA olarak okunur
 
 ## Meta Ayrımı
 
@@ -141,7 +142,7 @@ Genel bağlam gerektiğinde öncelikli dosyalar şunlardır:
 Bu dosyalar şunlar için kullanılır:
 
 - Ümit'in bu projedeki rolünü anlamak
-- MinaGrow / MinaPlay iş ve ürün bağlamını anlamak
+- MinaGrow üst bağlamını ve MinaPlay iş/ürün bağlamını anlamak
 - Ümit + Codex iş birliği çizgisini korumak
 
 Bu bağlam dosyaları proje yönünün yerine geçmez; proje yönünü doğru yorumlamaya yardım eder.
@@ -152,11 +153,15 @@ Bu repo içinde ajan şu ana kararları varsayılan kabul eder:
 
 - ürün `MinaGrow` markası altında `MinaPlay` olarak okunur
 - referans uygulama `/Users/umitaydin/Documents/Konusu-Yorum` içindedir
-- ürün 2-6 yaş çocuklar için konuşma pratiği ve ebeveyn destek PWA'sıdır
+- ürünün başlangıç odağı 0-5 yaş çocuklar için konuşma, taklit, duygu ve etkileşim desteğidir
+- uzun vadeli vizyon 0-18 yaş aralığında okul öncesi, örgün öğretim ve engelli bireylerin okul süreci desteğine genişleyebilir
 - ana yüzey mobil/tablet tarayıcı ve PWA deneyimidir
 - backend şimdilik sade Express statik servis ve health yüzeyidir
 - verinin ana kalıcılığı şimdilik `localStorage` ve tarayıcı API'leridir
-- konuşma, hikaye, günlük kelime, günlük aktivite, uyku modu, aile avatarı ve maskot modülleri ürünün ana parçalarıdır
+- Dokun, Eşleme, Cümle, Hikaye, Ayna, Uyku, Ceee bonus modu ve Parent panel ürünün ana yüzeyleridir
+- Parent panel analiz, kontrol ve izleme katmanı olarak okunur
+- Pofi davranış/state/render sistemi ürünün modüller arası rehberliğini taşır
+- ileride gönüllü eğitimci ağı ve terapist/eğitimci planlama/takip katmanı ayrı gelecek vizyonudur
 - legacy CRM/webhook/Zoho parçaları ürün çekirdeği değildir; temizlenmesi veya ayrılması gereken teknik borç olarak yorumlanır
 
 Bu kararlar kullanıcı tarafından değiştirilmedikçe mevcut kanonik yön olarak yorumlanır.
@@ -170,7 +175,7 @@ Kullanıcı sohbeti kısa ve belirsiz bir mesajla açarsa ajan rastgele yorum ü
 Bu menü mümkün olduğunca şu tip başlıklarla sunulur:
 
 1. proje yönünü netleştirme
-2. Konusu-Yorum referansını MinaGrow/MinaPlay içine taşıma
+2. Konusu-Yorum referansını MinaPlay içine taşıma
 3. PWA modüllerini geliştirme
 4. ebeveyn araçları ve içerik setlerini güçlendirme
 5. `.meta` omurgasını güncelleme
@@ -273,7 +278,7 @@ Dosya seçimi kuralı:
 - PWA yüzeyi, akışlar ve modül deneyimi -> `web.md`
 - görsel dil ve tema -> `themes.md`
 - fikir kökeni ve ürün evrimi -> `origins.md`
-- Konusu-Yorum'dan MinaGrow/MinaPlay'e geçiş -> `transition.md`
+- Konusu-Yorum'dan MinaPlay'e geçiş -> `transition.md`
 - aktif yürütme görünümü -> `plan.md`
 - faz içi yürütme görünümü -> `phases/phase-xx.md`
 - kapanan iş izi -> `worklog.md`
@@ -330,7 +335,7 @@ Bu protokolün amacı, `MinaGrow` içinde çalışan Codex davranışını bilin
 Hedef şudur:
 
 - yeni sohbet açıldığında eski hazır bağlamı yanlış taşımayan
-- Ümit ve MinaGrow/MinaPlay gerçekliğini doğru okuyan
+- Ümit, MinaGrow üst bağlamı ve MinaPlay gerçekliğini doğru okuyan
 - önce doğru yüzeyleri okuyan
 - Konusu-Yorum referansını doğru kullanan
 - açık kararı uygulama işiyle karıştırmayan

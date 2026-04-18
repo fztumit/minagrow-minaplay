@@ -1,6 +1,6 @@
 ---
 name: meta-update
-description: MinaGrow/MinaPlay içindeki proje meta omurgasının nasıl değerlendirileceğini, nasıl güçlendirileceğini ve ne zaman güncelleneceğini tanımlar.
+description: MinaPlay içindeki proje meta omurgasının nasıl değerlendirileceğini, nasıl güçlendirileceğini ve ne zaman güncelleneceğini tanımlar.
 created: 2026-04-17
 updated: 2026-04-18
 ---
@@ -23,7 +23,7 @@ Bu workflow, `.meta` omurgası güncelleneceği zaman kullanılır.
 - `architecture.md`: teknik yapı, modül sınırı, deploy ve test
 - `data-model.md`: localStorage, varlıklar, storage key'ler
 - `web.md`: PWA akışı, modüller, çocuk ve ebeveyn deneyimi
-- `themes.md`: görsel dil, renk, hareket, maskot
+- `themes.md`: görsel dil, renk, hareket, Pofi davranış/görsel sistem
 - `origins.md`: fikir çıkışı ve Konusu-Yorum evrimi
 - `transition.md`: Konusu-Yorum'dan MinaPlay'e geçiş
 - `plan.md`: aktif hedef ve yakın sıra
@@ -38,6 +38,9 @@ Bu workflow, `.meta` omurgası güncelleneceği zaman kullanılır.
 - frontmatter korunur
 - Türkçe karakter kaybı kabul edilmez
 - Konusu-Yorum referansı ile MinaPlay kanonik yönü ayrılır
+- MinaGrow üst bağlam, MinaPlay ürün adı olarak ayrılır
+- Pofi dekoratif karakter değil davranış sistemi olarak korunur
+- 0-5 başlangıç odağı ile 0-18 gelecek vizyonu karıştırılmaz
 - karar ve açık soru birbirine karıştırılmaz
 
 ## Uygulama Eşiği

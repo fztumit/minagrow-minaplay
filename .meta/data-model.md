@@ -1,6 +1,6 @@
 ---
 name: data-model
-description: MinaGrow/MinaPlay projesinin temel veri yapısını, localStorage alanlarını, ana varlıklarını ve ilişki mantığını tanımlar.
+description: MinaPlay projesinin temel veri yapısını, localStorage alanlarını, Pofi state modelini ve ilişki mantığını tanımlar.
 created: 2026-04-17
 updated: 2026-04-18
 ---
@@ -17,40 +17,25 @@ Ana karar:
 - hesap veya bulut senkronizasyonu yoktur
 - kalıcılık ağırlıklı olarak `localStorage` üstündedir
 - ses kayıtları data URL olarak yerelde tutulur
+- Pofi state modeli runtime davranış sistemidir
 - test edilebilir state DOM attribute'ları ve `render_game_to_text` çıktısıyla görünür yapılır
 
 ## Ana Varlıklar
 
 ### VocabularyItem
 
-Konuşma oyunundaki kelime kartını temsil eder.
+Dokun modundaki kelime veya nesne kartını temsil eder.
 
 Alanlar:
 
 - `word`
 - `label`
-- `emoji`
+- `emoji` veya görsel referans
 - `repeats`
-
-Bugünkü kelime seti:
-
-- `su`
-- `anne`
-- `baba`
-- `top`
-- `araba`
-- `kitap`
-- `elma`
-- `süt`
-- `ekmek`
-
-Özel kural:
-
-- `su` varsayılan olarak 3 tekrar taşır
 
 ### SpeechSettings
 
-Ebeveynin tekrar davranışını belirleyen ayardır.
+Ebeveynin tekrar ve dinleme davranışını belirleyen ayardır.
 
 Alanlar:
 
@@ -60,6 +45,11 @@ Storage key:
 
 - `konusu_yorum_speech_settings_v1`
 
+Not:
+
+- storage key adları ürünleşme sırasında korunacaksa geriye uyumluluk sağlanır
+- `minaplay_*` ailesine geçiş yapılacaksa migration gerekir
+
 ### CustomAudioMap
 
 Kelime veya cümle için ebeveyn ses kaydını tutan haritadır.
@@ -68,16 +58,16 @@ Mantık:
 
 - key normalize edilmiş kelime veya cümledir
 - value ses kaydının data URL değeridir
-- konuşma oyunu, günlük kelime ve hikaye modülü bu haritayı ortak kullanır
+- Dokun, Günlük Kelime, Cümle ve Hikaye modları bu haritayı ortak kullanabilir
 
 Kritik not:
 
 - bu yapı localStorage kapasitesine duyarlıdır
-- ileride export/import veya daha sağlam storage kararı gerekebilir
+- ileride export/import, IndexedDB veya daha sağlam storage kararı gerekebilir
 
 ### ListenProgress
 
-Kelime ve cümle dinleme ilerlemesini tutar.
+Kelime, cümle, hikaye ve paket dinleme ilerlemesini tutar.
 
 Alanlar:
 
@@ -89,13 +79,6 @@ Alanlar:
 Storage key:
 
 - `konusu_yorum_listen_progress_v1`
-
-Kullanıldığı yerler:
-
-- konuşma oyunu kelime dinlemeleri
-- hikaye cümle dinlemeleri
-- paket ilerleme özeti
-- haftalık paket momentumu
 
 ### DailyActivityState
 
@@ -112,13 +95,28 @@ Storage key:
 
 - `konusu_yorum_daily_activity_v1`
 
-Hedef mantığı:
-
-- 3 farklı kelime
-- 1 hikaye/cümle
-- 1 etkileşim
-
 Gün değiştiğinde state sıfırlanır.
+
+### ParentAnalysisSnapshot
+
+Ebeveyn panelinde gösterilecek analiz görünümünü temsil eder.
+
+Bugünkü yorum:
+
+- analitik verinin kalıcı backend modeli henüz yoktur
+- localStorage ve test state üzerinden özet çıkarılabilir
+- çocuk yüzeyinde görünmez, Parent panelde okunur
+
+İzlenebilecek alanlar:
+
+- hangi modda ne oynandı
+- yapılan görevler
+- doğru denemeler
+- yanlış veya hedef dışı denemeler
+- tamamlanan egzersizler
+- tekrar sayısı
+- oturum sıklığı
+- son kullanım zamanı
 
 ### StoryLevel
 
@@ -129,7 +127,7 @@ Değerler:
 - `easy`
 - `standard`
 
-`easy` seviyesi iki kelimelik cümleler için kullanılır.
+`easy` seviyesi iki kelimelik veya kolay algılanır cümleler için kullanılır.
 
 ### StoryPack
 
@@ -149,7 +147,7 @@ Alanlar:
 
 - `id`
 - `title`
-- `emoji`
+- `emoji` veya görsel referans
 - `sentences`
 
 İlişki:
@@ -158,7 +156,7 @@ Alanlar:
 
 ### CustomEasySentence
 
-Ebeveynin kolay seviyeye eklediği iki kelimelik cümledir.
+Ebeveynin kolay seviyeye eklediği iki kelimelik veya basit cümledir.
 
 Storage key:
 
@@ -166,9 +164,8 @@ Storage key:
 
 Kurallar:
 
-- yalnız iki kelime kabul edilir
 - duplicate girişler engellenir
-- özel cümle varsa `Özel Cümleler` hikayesi dinamik olarak görünür
+- özel cümle varsa ilgili özel içerik grubu dinamik olarak görünür
 
 ### FamilyMember
 
@@ -186,20 +183,6 @@ Storage key:
 
 - `konusu_yorum_family_members_v1`
 
-Not:
-
-- fotoğraf seçilmezse SVG tabanlı fallback avatar üretilir
-
-### DailyWord
-
-Günün kelimesidir.
-
-Mantık:
-
-- mevcut tarihten deterministik index hesaplanır
-- vocabulary listesi içinde gün bazlı döner
-- ebeveyn sesi varsa özel kayıt oynatılabilir
-
 ### SleepSound
 
 Uyku modu ses türünü temsil eder.
@@ -216,31 +199,86 @@ Değerler:
 
 Kalıcı veri olmaktan çok runtime state olarak yorumlanır.
 
-### MascotState
+## Pofi State Modeli
 
-Maskotun mesaj ve varyant durumunu temsil eder.
+Pofi bir davranışsal etkileşim sistemidir. Pofi state modeli çocuğa gösterilen ifade, egzersiz, rehberlik ve global durumları yönetir.
 
-Bugünkü kullanım:
+State kategorileri:
 
-- çocuk için kısa yönlendirme mesajı
-- uyku modunda görsel varyant
-- başarı veya tekrar mesajları
+- `emotion`: duygu ifadeleri
+- `exercise`: ağız, dil ve yüz egzersizi ifadeleri
+- `guide`: oyun içi rehberlik, başarı ve yumuşak yönlendirme
+- `state`: global uygulama durumları
 
-Kalıcı veri değildir.
+Örnek state akışı:
+
+- App start -> `pofi_state_default`
+- Bekleme -> `pofi_emotion_neutral`
+- Dikkat -> `pofi_emotion_surprised` veya anticipation
+- Doğru cevap -> `pofi_guide_success`
+- Yumuşak uyarı -> `pofi_emotion_nervous_soft`
+- Ayna egzersizi -> `pofi_exercise_teeth_show` veya `pofi_exercise_tongue_out`
+- Uyku girişi -> `pofi_emotion_sleepy`
+- Uyku aktif -> `pofi_state_sleep`
+
+Kurallar:
+
+- aynı anda tek aktif Pofi state olur
+- aynı container içinde Pofi üst üste binmez
+- eski gövde katmanları kullanılmaz
+- PNG emoji sistemi ana kaynaktır
+- Pofi görselleri `/assets/pofi_emoji` altında tutulur
+- emotion geçişleri fade/scale ile yumuşak olur
+- Touch ve Matching gibi modlarda hızlı duygu değişimi engellenir
+- Sleep modunda yalnız sleepy ve sleep durumları kullanılır
+- Mirror modunda egzersiz sırasında guide/reward yüzü gösterilmez
+
+## Egzersiz Sistemi
+
+Ayna modunda Pofi egzersiz gösterir, çocuk taklit eder. Katı algılama yoktur; tekrar ve zaman bazlı ödül vardır.
+
+Ağız:
+
+- A açık
+- O yuvarlak
+- E geniş
+
+Dudak:
+
+- öpücük
+- gülümseme
+- germe
+
+Dil:
+
+- dışarı
+- sol
+- sağ
+- yukarı
+
+Kurallar:
+
+- Pofi gösterir
+- çocuk taklit eder
+- tekrar bazlı ilerler
+- negatif geri bildirim verilmez
 
 ## Test State Modeli
 
 `render_game_to_text` aşağıdaki state alanlarını JSON olarak dışarı verir:
 
 - `active_view`
-- `mascot_message`
-- `daily_word`
-- `daily_word_audio`
+- `pofi_state`
 - `daily_activity`
-- `speech`
+- `touch`
+- `match`
+- `sentence`
+- `story`
+- `mirror`
 - `sleep`
-- `family`
-- `stories`
+- `peekaboo`
+- `parent`
+- `parent_analysis`
 
 Bu model ürünün gerçek veri modeli değildir; test ve gözlem yüzeyidir.
 
@@ -248,11 +286,31 @@ Bu model ürünün gerçek veri modeli değildir; test ve gözlem yüzeyidir.
 
 Bugünkü owner ayrımı:
 
-- vocabulary ve story seed içeriği kod içindedir
+- seed içerikler kod içinde veya statik data dosyalarında yaşar
 - kullanıcı/ebeveyn tarafından üretilen veriler localStorage içindedir
+- Pofi state runtime davranış sistemidir
 - server kalıcı veri owner'ı değildir
 - Railway deploy yalnız servis yüzeyidir
 - export/import akışları yerel veriyi taşımak için yardımcıdır
+
+## Gelecek Veri Adayları
+
+MinaPlay ileride 0-18 yaş aralığına, okul öncesi ve örgün öğretim desteğine büyürse şu varlıklar gerekebilir:
+
+- öğrenci/çocuk profili
+- ebeveyn profili
+- gönüllü eğitimci rolü
+- terapist/eğitimci rolü
+- okul süreci takip kaydı
+- kişiselleştirilmiş plan
+- günlük görev
+- haftalık hedef
+- tekrar ve oturum geçmişi
+- doğru/yanlış deneme geçmişi
+- tamamlanan egzersizler
+- raporlama çıktısı
+
+Bu adaylar bugünkü local-first çekirdeğin kapsamına alınmaz.
 
 ## Veri Modeli Riskleri
 
@@ -260,6 +318,7 @@ Bugünkü owner ayrımı:
 - aynı cihazda farklı çocuk profili ayrımı henüz net değildir
 - kayıtların yedeği kullanıcı alışkanlığına bağlıdır
 - normalize edilen Türkçe metinlerde karakter ve telaffuz hassasiyeti dikkat ister
+- Pofi state çakışmaları üst üste render veya yanlış mod tepkisi üretebilir
 - ileride hesap veya cloud sync gelirse mevcut storage key'lerin migration planı gerekir
 
 ## Yakın Model Kararları
@@ -267,9 +326,9 @@ Bugünkü owner ayrımı:
 Açık adaylar:
 
 - çocuk profili kavramı eklenecek mi
-- aile üyesi ile çocuk profili ayrılacak mı
 - ses kayıtları localStorage yerine IndexedDB'ye taşınacak mı
 - story pack içeriği koddan ayrı JSON veya admin yüzeyine alınacak mı
+- Pofi state geçişleri merkezi bir state manager ile mi yönetilecek
 - ilerleme verisi ileride backend'e senkronize edilecek mi
 
 Bugünkü karar:

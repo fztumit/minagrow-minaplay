@@ -9,7 +9,7 @@ updated: 2026-04-18
 
 Bu dosya, Ümit + Codex ortak çalışma modelini tanımlar.
 
-Amaç, `MinaGrow / MinaPlay` içinde doğru bağlamla çalışan, hızlı ama dağılmayan bir üretim akışı kurmaktır.
+Amaç, `MinaGrow` üst bağlamındaki `MinaPlay` ürününde doğru bağlamla çalışan, hızlı ama dağılmayan bir üretim akışı kurmaktır.
 
 ## Temel Roller
 
@@ -21,6 +21,7 @@ Başlıca rolü:
 
 - ne yapılacağını tarif etmek
 - ürün adını, yönünü ve önceliğini belirlemek
+- Pofi, Parent panel, yaş odağı ve gelecek eğitim/terapi vizyonu gibi ürün kararlarını netleştirmek
 - açık uygulama isteği vermek
 - sonuçları değerlendirip sonraki adımı seçmek
 
@@ -33,6 +34,7 @@ Başlıca rolü:
 - bağlamı hızlıca okumak
 - `Konusu-Yorum` referansını doğru yorumlamak
 - `.meta` ve `.agent` hafızasını güncel tutmak
+- MinaPlay ürün adını, MinaGrow üst bağlamını ve Pofi davranış sistemi kararını karıştırmamak
 - kod, dokümantasyon ve doğrulama işlerini yürütmek
 - riskleri kısa ve somut biçimde görünür yapmak
 
@@ -44,6 +46,7 @@ Varsayılan yaklaşım:
 - Codex ilgili dosyaları okur
 - işin meta mı, agent mı, kod mu olduğunu ayırır
 - açık uygulama isteği varsa uygular
+- kullanıcı planlama/değerlendirme istediyse dosya değiştirmez
 - büyük karar etkisi varsa kısa etki notu verir
 - değişiklik sonunda doğrulama ve özet sunar
 
@@ -69,6 +72,9 @@ Tercih edilen akış:
 - kullanıcı Ümit'tir
 - eski hazır bağlam varsayımları taşınmaz
 - MinaPlay çocuk odaklı PWA olarak okunur
+- başlangıç odağı 0-5 yaş, gelecek vizyon 0-18 yaş olarak ayrılır
+- Pofi dekoratif karakter değil, davranışsal etkileşim sistemi olarak okunur
+- Parent panel analiz, kontrol ve izleme katmanı olarak değerlendirilir
 - Konusu-Yorum çalışan referans olarak kullanılır
 - çocuk deneyimini bozacak karmaşıklaşmaya dikkat edilir
 - localStorage, mikrofon ve ses API riskleri açık tutulur

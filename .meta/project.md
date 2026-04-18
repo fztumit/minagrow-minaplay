@@ -1,6 +1,6 @@
 ---
 name: project
-description: MinaGrow/MinaPlay projesinin problemi, amacı, kapsamı, başarı ölçütleri ve temel bağlamını tanımlar.
+description: MinaPlay projesinin problemi, amacı, kapsamı, başarı ölçütleri ve temel bağlamını tanımlar.
 created: 2026-04-17
 updated: 2026-04-18
 ---
@@ -9,17 +9,22 @@ updated: 2026-04-18
 
 ## Özet
 
-- Proje adı: `MinaGrow / MinaPlay`
+- Proje adı: `MinaPlay`
+- Üst bağlam: `MinaGrow`
 - Referans adı: `Konusu-Yorum`
-- Kısa tanım: 2-6 yaş çocuklar için dokunma, dinleme, tekrar, hikaye, ebeveyn sesi ve günlük aktivite akışlarını bir araya getiren konuşma pratiği PWA'sı
+- Kısa tanım: 0-5 yaş çocuklar için konuşma, taklit, duygu ve etkileşim desteğini sakin, görsel olarak yumuşak ve premium hissiyatlı bir PWA yüzeyinde birleştiren gelişim destek uygulaması
+- Uzun vadeli vizyon: MinaPlay ilerleyen seviyelerde 0-18 yaş aralığında okul öncesi, örgün öğretim ve engelli bireylerin okul süreci desteğine genişleyebilen bir eğitim ve gelişim destek platformuna dönüşebilir
+- Ana karakter ve davranış sistemi: `Pofi`
+- Dil: Türkçe
+- Hedef cihaz: tablet ve telefon
 - Referans repo: `/Users/umitaydin/Documents/Konusu-Yorum`
 - Hedef ürün alanı: `/Users/umitaydin/Documents/MinaGrow/MinaPlay`
 
 ## Problem
 
-Çocuklarda konuşma pratiği yalnız kelime listesiyle ilerlemez. Dikkat dağıtmayan, dokunmatik, tekrar edilebilir, ebeveynin sesiyle desteklenebilen ve çocuğun günlük ritmine uyum sağlayan bir deneyim gerekir.
+Konuşma ve gelişim desteği alan çocuklar için dijital deneyim yalnız kelime listesi veya oyun ekranı değildir. Çocuğun sakin kalabildiği, tekrar yapabildiği, taklit edebildiği, duygu tepkilerini güvenli biçimde gördüğü ve ebeveynin süreci ayrı bir katmandan destekleyebildiği kontrollü bir sistem gerekir.
 
-Mevcut referans uygulama `Konusu-Yorum`, bu ihtiyacı hızlı bir PWA prototipi olarak büyük ölçüde somutlaştırmıştır. Ancak ürün artık `MinaGrow` markası altında `MinaPlay` adıyla daha temiz bir proje omurgasına, doğru meta hafızasına ve sürdürülebilir geliştirme çizgisine ihtiyaç duyar.
+Mevcut referans uygulama `Konusu-Yorum`, bu ihtiyacı hızlı bir PWA prototipi olarak somutlaştırmıştır. Ancak ürün artık `MinaPlay` adıyla daha net bir kimliğe, Pofi merkezli davranış sistemine, sade çocuk yüzeyine ve ileride eğitim/terapi destek ağına büyüyebilecek sürdürülebilir bir proje hafızasına ihtiyaç duyar.
 
 ## İhtiyaç
 
@@ -27,79 +32,84 @@ Mevcut referans uygulama `Konusu-Yorum`, bu ihtiyacı hızlı bir PWA prototipi 
 
 İhtiyaç şudur:
 
-- `Konusu-Yorum`da çalışan çekirdeği kaybetmeden `MinaGrow / MinaPlay` kimliğine taşımak
-- çocuk için sade, neşeli ve dikkat dağıtmayan bir konuşma pratiği deneyimi kurmak
-- ebeveynin kelime ve cümleleri kendi sesiyle kaydedebilmesini sağlamak
-- günlük aktivite, hikaye ve ilerleme takibini tek PWA yüzeyinde toplamak
-- tarayıcı ve cihaz izinlerine bağlı alanlarda güvenli, anlaşılır ve geri düşebilen davranışlar üretmek
-- legacy CRM/webhook parçalarını ürün çekirdeğinden ayırmak
+- `Konusu-Yorum`da çalışan çekirdeği kaybetmeden `MinaPlay` kimliğine taşımak
+- 0-5 yaş başlangıç odağında konuşma, taklit, duygu ve etkileşim pratiklerini desteklemek
+- çocuğun yüzeyini sade, sakin, düşük uyarımlı ve dokunmatik tutmak
+- ebeveyn ayarlarını çocuk yüzeyinden ayrı bir katmanda yönetmek
+- Pofi'yi süs karakteri değil, yönlendiren, tepki veren, egzersiz gösteren ve sakinleştiren davranışsal etkileşim sistemi olarak kurmak
+- okul öncesi ve ileride örgün öğretim desteğine genişleyebilecek bir ürün yönü bırakmak
+- gönüllü eğitimciler, ebeveynler, terapistler ve okul sürecindeki destek aktörleri arasında ileride kontrollü bir ağ kurulabilecek zemini korumak
+- legacy CRM/webhook ve eski karakter/asset parçalarını ürün çekirdeğinden ayırmak
 
 ## Amaç
 
-`MinaPlay`in amacı, konuşmayı öğrenme sürecindeki çocuğa kısa, sevecen ve tekrar edilebilir mikro etkileşimlerle destek olmaktır.
+`MinaPlay`in amacı, konuşma ve gelişim desteği alan çocuğa kısa, sakin, tekrar edilebilir ve güven veren mikro etkileşimlerle destek olmaktır.
 
 Ürün şu ilkelere yaslanır:
 
-- çocuk önce dokunur, duyar ve tekrar eder
-- ebeveyn gerektiğinde sesiyle sürece dahil olur
-- günlük küçük hedefler büyük karmaşa üretmeden görünür olur
+- çocuk dokunur, dinler, taklit eder ve tekrar eder
+- yanlış cevap veya hedef dışı dokunuş cezalandırıcı olmaz
+- Pofi yumuşak biçimde yönlendirir, tepki verir ve bağlama göre görsel ifade değiştirir
+- ebeveyn gerektiğinde ayrı katmandan içerik, ses, sınır ve destek ayarlarını yönetir
 - uygulama telefonda ve tablette rahat çalışır
 - offline/PWA davranışı temel kullanım için güven verir
-- ürün dili Türkçe, sade ve aile dostu kalır
+- ürün dili Türkçe, sade, aile dostu ve düşük baskılı kalır
 
-## Neden Şimdi?
+## Uzun Vadeli Vizyon
 
-`Konusu-Yorum` tarafında ilk çalışan ürün hattı oluşmuştur:
+MinaPlay bugünkü çekirdekte 0-5 yaş konuşma, taklit, duygu ve etkileşim desteğine odaklanır.
 
-- konuşma oyunu çalışır
-- hikaye modülü çalışır
-- kolay cümle ekleme/silme vardır
-- ebeveyn ses kaydı vardır
-- günlük kelime ve günlük aktivite kartı vardır
-- uyku modu ve aile avatarları vardır
-- build, lint, unit test ve Playwright e2e hattı kurulmuştur
+İlerleyen seviyelerde ürün şu yöne büyüyebilir:
 
-Bu noktada ihtiyaç, prototipi büyütmeden önce doğru proje hafızasını kurmak ve `MinaGrow / MinaPlay` yönünü netleştirmektir.
+- 0-18 yaş aralığında gelişim ve eğitim desteği
+- okul öncesi hazırlık ve örgün öğretim süreci desteği
+- engelli bireylerin okul sürecinde günlük, haftalık ve dönemsel desteklenmesi
+- ebeveyn, gönüllü eğitimci, terapist ve okul destek aktörleri arasında kontrollü bir ağ
+- kişiselleştirilmiş planlar, kısa ev egzersizleri, tekrar takibi ve raporlama
+
+Bu vizyon bugünkü PWA çekirdeğine erken yüklenmez; ürün hafızasında gelecek yön olarak tutulur.
 
 ## Çekirdek İlkeler
 
 - mobile-first ve tablet-friendly düşünülür
 - PWA yüzeyi ana ürün deneyimidir
-- çocuk ekranı sade, dokunmatik ve görsel olarak sıcak kalır
-- ebeveyn araçları çocuk deneyimini boğmadan destekleyici kalır
+- çocuk ekranı sade, dokunmatik, sakin ve düşük uyarımlı kalır
+- ebeveyn araçları ayrı katmanda destekleyici kalır
+- Pofi davranış sistemi her modda tek aktif state ile çalışır
 - veri şimdilik local-first ilerler
 - server tarafı şimdilik ince servis ve deploy yüzeyidir
-- karmaşık backend, hesap sistemi veya bulut senkronizasyonu erken açılmaz
+- karmaşık hesap, bulut senkronizasyonu, terapist paneli veya okul ağı erken açılmaz
 - çalışan `Konusu-Yorum` davranışı korunarak temizlenir
 
 ## Başarı Ölçütleri
 
-- çocuk kelime kartına dokunduğunda kelime doğru ve anlaşılır biçimde tekrar edilir
-- `su` gibi özel nesneler beklenen tekrar ve animasyon davranışını korur
-- ebeveyn kelime veya cümle için kendi ses kaydını ekleyebilir, oynatabilir, silebilir ve yedekleyebilir
-- hikaye modülü kolay ve standart seviyeleri güvenilir biçimde ayırır
-- günlük aktivite kartı günlük hedefleri karışıklık üretmeden takip eder
+- çocuk ana mod kartlarını tablette ve telefonda kolayca ayırt eder
+- çocuk nesneye dokunduğunda kelime veya ses doğru ve anlaşılır biçimde duyulur
+- hedef dışı dokunuş çocuğa başarısızlık hissi vermez; Pofi yumuşak yönlendirmeye devam eder
+- Eşleme, Cümle, Hikaye, Ayna, Uyku ve Ceee akışları çekirdek navigasyonda doğru ayrışır
+- Ayna modunda egzersiz yüzü egzersiz sırasında, ödül yüzü egzersiz tamamlandıktan sonra görünür
+- Uyku modunda yalnız sleepy/sleep Pofi durumları kullanılır ve rastgele duygu/guide state çalışmaz
+- ebeveyn ayarları çocuk yüzeyini boğmadan ayrı katmanda yönetilir
 - PWA mobil/tablet kullanımında okunur, dokunulur ve akıcıdır
 - build, lint, unit test ve e2e testleri ürün güvenini korur
-- legacy CRM parçaları ürün çekirdeğiyle karıştırılmaz
+- legacy CRM ve eski karakter/asset parçaları ürün çekirdeğiyle karıştırılmaz
 
 ## Kapsam
 
 ### Dahil
 
-- konuşma oyunu
-- kelime kartları ve tekrar davranışı
-- ebeveyn tekrar ayarları
+- Dokun modu
+- Eşleme modu
+- Cümle modu
+- Hikaye modu
+- Ayna modu
+- Uyku modu
+- Ceee bonus modu
+- Parent panel
+- Pofi davranış/state/render sistemi
 - özel ses kaydı ve kayıt kütüphanesi
-- günlük kelime
-- günlük aktivite kartı
-- hikaye modülü
-- kolay cümle editörü
-- hikaye ses kaydı
-- paket ilerleme ve karşılaştırma göstergeleri
-- uyku modu
-- aile avatarları
-- maskot rehberliği
+- hikaye ve kolay cümle yönetimi
+- ilerleme ve tekrar takibi
 - PWA manifest ve service worker
 - Railway deploy uyumu
 - test ve doğrulama hattı
@@ -109,9 +119,11 @@ Bu noktada ihtiyaç, prototipi büyütmeden önce doğru proje hafızasını kur
 - ilk aşamada kullanıcı hesabı ve bulut senkronizasyonu
 - ödeme, abonelik veya mağaza kurgusu
 - klinik tanı veya tıbbi yönlendirme iddiası
-- çok dilli ürünleşme
+- terapist dashboard'u
+- gönüllü eğitimci ağı
+- okul/kurum yönetim paneli
 - gerçek zamanlı backend veri modeli
-- karmaşık admin paneli
+- çok dilli içerik sistemi
 
 ## Kullanıcılar / Paydaşlar
 
@@ -119,15 +131,18 @@ Bu noktada ihtiyaç, prototipi büyütmeden önce doğru proje hafızasını kur
 - çocuk kullanıcı
 - ebeveyn veya bakım veren
 - Codex ve geliştirme agentları
+- ileride gönüllü eğitimciler
+- ileride terapistler ve okul süreci destek aktörleri
 - ileride ürünü deneyen aileler
 
 ## Kısıtlar
 
-- ürün çocuk odaklı olduğu için dikkat dağıtıcı karmaşa artırılmaz
-- ses kaydı, mikrofon izni ve tarayıcı desteği açıkça düşünülür
-- `localStorage` verisi cihaz bazlıdır; kalıcı hesap/senkronizasyon gibi sunulmamalıdır
-- legacy CRM/webhook kodları ürün modülleriyle karıştırılmamalıdır
-- referans repo ile yeni ürün alanı ayrımı görünür tutulmalıdır
+- ürün çocuk ve engelli birey desteği bağlamında dikkat dağıtıcı karmaşa artırmaz
+- eğitim ve terapi destek dili tıbbi tanı iddiası gibi yazılmaz
+- ses kaydı, mikrofon izni, kamera izni ve tarayıcı desteği açıkça düşünülür
+- `localStorage` verisi cihaz bazlıdır; kalıcı hesap/senkronizasyon gibi sunulmaz
+- legacy CRM/webhook kodları ürün modülleriyle karıştırılmaz
+- referans repo ile yeni ürün alanı ayrımı görünür tutulur
 - Türkçe karakter ve konuşma telaffuzu ürün kalitesi açısından önemlidir
 
 ## Başvuru Yüzeyleri
@@ -140,7 +155,7 @@ Bu noktada ihtiyaç, prototipi büyütmeden önce doğru proje hafızasını kur
 - `web.md`: PWA yüzeyi, modüller ve kullanım akışı
 - `themes.md`: görsel dil, renkler, hareket ve çocuk ekranı ilkeleri
 - `origins.md`: fikrin çıkışı, Konusu-Yorum evrimi ve MinaPlay yönü
-- `transition.md`: Konusu-Yorum'dan MinaGrow/MinaPlay'e geçiş mantığı
+- `transition.md`: Konusu-Yorum'dan MinaPlay'e geçiş mantığı
 - `plan.md`: aktif yürütme yönü ve yakın çalışma sırası
 - `notes.md`: açık sorular, teknik riskler ve ileri adaylar
 - `phases/phase-xx.md`: faz içi yürütme ve kapanış görünümü

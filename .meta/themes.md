@@ -1,6 +1,6 @@
 ---
 name: themes
-description: MinaPlay PWA yüzeyindeki görsel dil, tema, renk, hareket ve çocuk ekranı ilkelerini tanımlar.
+description: MinaPlay PWA yüzeyindeki görsel dil, tema, renk, hareket, Pofi ve çocuk ekranı ilkelerini tanımlar.
 created: 2026-04-17
 updated: 2026-04-18
 ---
@@ -9,14 +9,31 @@ updated: 2026-04-18
 
 ## Özet
 
-`MinaPlay`in tema dili sıcak, yumuşak ve çocuk dostudur.
+`MinaPlay`in tema dili sakin, yumuşak, düşük uyarımlı ve premium hissiyatlıdır.
 
 Amaç:
 
-- çocuk için davetkar bir ekran üretmek
-- ebeveyn için güven veren ve okunur bir düzen sağlamak
+- çocuk için güvenli ve davetkar bir ekran üretmek
+- ebeveyn için okunur ve kontrollü bir düzen sağlamak
 - dikkat çekici ama yorucu olmayan bir görsel ritim kurmak
-- MinaGrow markası altında sevecen, temiz ve mobil PWA karakterini korumak
+- Pofi'yi davranışsal rehber olarak konumlandırmak
+- tablet ve telefonda sade, temiz ve erişilebilir bir PWA karakteri korumak
+
+## Görsel İlkeler
+
+- minimal UI
+- soft pastel renkler
+- düşük duyusal yük
+- ferah boşluk kullanımı
+- yavaş ve anlamlı hareket
+- çocuk yüzeyinde az seçenek
+- ebeveyn/terapist/eğitimci araçlarında daha analitik ama yine sakin düzen
+
+Görsel hiyerarşi:
+
+`Content > Icons > Pofi`
+
+İçerik ve ana ikon her zaman Pofi'den daha baskın olmalıdır. Pofi rehberdir; ana içerik değildir.
 
 ## Mevcut Renk Dili
 
@@ -34,70 +51,62 @@ Referans `public/style.css` içinde şu ana değişkenler kullanılır:
 
 Ana karakter:
 
-- sıcak şeftali ve krem zemin
+- sıcak açık zemin
 - yumuşak mint destek rengi
-- çocuk ekranlarında canlı ama kontrollü vurgu
+- kontrollü canlı vurgu
 - metin için koyu mavi-gri ton
 
-## Görsel Roller
+## Kartlar
 
-### Zemin
+Ana ekran 6 ana kartı 3x2 düzende gösterir.
 
-Zemin sıcak, açık ve düşük gerilimli kalır.
+Kart ilkeleri:
 
-İlke:
-
-- aşırı koyu, yoğun ve tek renkli bir evren kurulmaz
-- çocuk ekranı nefes alır
-- modül ayrımları yumuşak bloklarla görünür olur
-
-### Kartlar
-
-Kartlar çocuk için dokunulabilir alanları belirginleştirir.
-
-Kullanım:
-
-- kelime kartları
-- günlük kelime
-- günlük aktivite
-- aile avatarları
-- ebeveyn ayar panelleri
-
-İlke:
-
+- her kartın ana ikon/görseli baskın olur
+- Pofi standart olarak sağ-alt köşede rehber olarak durur
+- Ceee ayrı bonus kart/strip olarak gösterilir
 - kartlar gereksiz iç içe yığılmaz
-- her kartın rolü net olur
 - mobilde taşma üretmez
 
-### Maskot
+## Pofi Görsel Sistemi
 
-Maskot `Dost Anka` karakteri olarak okunur.
+Pofi bir davranışsal etkileşim sistemidir.
 
-Roller:
+Asset kararları:
 
-- karşılama
-- yönlendirme
-- başarı hissi
-- uyku modunda sakinleşme
+- Pofi için PNG emoji sistemi esas alınır
+- Pofi görselleri `/assets/pofi_emoji` altında tutulur
+- UI ikonları için SVG kullanılabilir
+- background görselleri için PNG kullanılabilir
+- eski gövde katmanı sistemleri kullanılmaz
 
-Maskot ürünün kişiliğini taşır; fakat bütün ekranı ele geçirmez.
+State ve geçiş ilkeleri:
+
+- aynı anda tek aktif Pofi state olur
+- aynı container içinde üst üste render olmaz
+- emotion geçişleri fade/scale ile yumuşak olur
+- hızlı duygu değişimi engellenir
+- Uyku modunda yalnız sleepy ve sleep kullanılır
+- Ayna egzersizi sırasında yalnız egzersiz yüzü görünür; ödül yüzü tamamlanınca gelir
 
 ## Hareket ve Animasyon
 
-Animasyonlar ürünün öğrenme amacını destekler.
+Animasyonlar ürünün öğrenme ve sakinleşme amacını destekler.
 
 Kanonik hareketler:
 
-- su bardağı ve dökülme odağı
-- maskot varyantları
+- düşük uyarımlı hava/ortam efektleri
+- Pofi emotion/state geçişleri
 - uyku modunda yıldızlı sakin sahne
 - dokunma sonrası hafif geri bildirimler
+- Ayna modunda egzersiz -> bekleme -> ödül akışı
 
 İlke:
 
 - hareket kısa ve anlamlı olur
 - dikkat dağıtan sürekli hareket azaltılır
-- uyku modunda kontrast ve hareket daha sakinleşir
+- uyku modunda kontrast ve hareket sakinleşir
+- yanlış cevap veya hedef dışı dokunuşta cezalandırıcı görsel kullanılmaz
 
 ## Tipografi
 
@@ -114,32 +123,41 @@ Yorum:
 - okunurluk oyun hissinden daha önemlidir
 - uzun metinler yerine kısa ürün cümleleri tercih edilir
 
+## Yaşa Göre Genişleme
+
+Bugünkü yüzey 0-5 başlangıç odağına göre sade kalır.
+
+MinaPlay ileride 0-18 yaş aralığına genişlerse görsel ton ve arayüz yoğunluğu yaşa göre farklılaşabilir. Bu farklılaşma bugünkü çocuk yüzeyine erken taşınmaz; okul öncesi, örgün öğretim, gönüllü eğitimci ağı ve terapist/eğitimci araçları ayrı katmanlarda ele alınır.
+
 ## Tema Kararları
 
 Bugünkü kararlar:
 
 - tek ana tema yeterlidir
 - dark mode veya çoklu tema sistemi erken açılmaz
-- uyku modu kendi koyu sahnesini modül içinde taşır
-- marka dili `MinaGrow` ve ürün dili `MinaPlay` üzerinden okunur
-- `Konusu-Yorum` adı tarihsel referans olarak kalır; görünen ürün adında `MinaPlay` öne çıkar
+- uyku modu kendi koyu/sakin sahnesini modül içinde taşır
+- ürün adı görünür yüzeyde `MinaPlay` olarak öne çıkar
+- Pofi adı ve kimliği korunur
+- eski karakter isimleri görünür ürün kopyasında kullanılmaz
 
 ## Görsel Riskler
 
 - ebeveyn panelleri artarsa çocuk ekranı fazla yoğunlaşabilir
-- şeftali/krem palet fazla baskın hale gelirse görsel tekdüzelik oluşabilir
+- Pofi ana içerikten baskın hale gelirse hiyerarşi bozulabilir
+- açık pastel palet fazla tekdüze hale gelebilir
 - uyku modu ile ana oyun modu arasında geçiş çok sert olmamalıdır
 - bazı emoji karakterleri platformdan platforma farklı görünebilir
-- SVG ve PNG assetlerin boyutu PWA performansını etkilememelidir
+- SVG ve PNG assetlerin boyutu PWA performansını etkileyebilir
 
 ## Yakın İyileştirme Adayları
 
-- MinaGrow/MinaPlay logo ve ikon ailesini netleştirmek
-- Pofi/Anka asset adlarını ürün kararına göre sadeleştirmek
+- MinaPlay logo ve ikon ailesini netleştirmek
+- Pofi PNG emoji setini üretim kalitesine çekmek
+- eski karakter ve gövde assetlerini legacy olarak ayırmak
 - Türkçe karakterleri eksik metinleri düzeltmek
-- mobilde ebeveyn panellerini daha kompakt hale getirmek
+- mobilde ebeveyn panelini daha kompakt ve analitik hale getirmek
 - PWA splash/icon setini üretim kalitesine çekmek
 
 ## Kısa Kural
 
-Tema çocuğu çağırmalı, ebeveyne güven vermeli, ürünü yormamalıdır.
+Tema çocuğu sakin biçimde çağırmalı, ebeveyne güven vermeli ve Pofi'yi rehber olarak tutmalıdır.

@@ -14,13 +14,13 @@ updated: 2026-04-18
 İlk niyet:
 
 - çocuk konuşmayı öğrenirken dokunacağı nesnelerle kelimeyi duysun
-- herkes kendine özel karakterler oluşturabilsin
 - telefon ve tablette çalışsın
 - `baba`, `anne`, `su` gibi temel kelimeler tekrarla pekişsin
 - arka plan dikkat dağıtmasın
 - karakter ve nesneler çocukla iletişim kursun
+- ebeveyn gerektiğinde kendi sesiyle destek verebilsin
 
-Bu fikir hızlıca çalışan bir PWA prototipine dönüştü.
+Bu fikir hızlıca çalışan bir PWA prototipine dönüştü. Bugünkü kanonik ürün yönü ise MinaPlay adı altında Pofi davranış sistemi, 0-5 başlangıç odağı ve ileride 0-18 yaşa genişleyebilen eğitim/gelişim destek vizyonudur.
 
 ## İlk Ürün Fikri
 
@@ -39,7 +39,9 @@ Bu cümle, ürünün iki yönünü birlikte taşıyordu:
 - anne karakteri ile `anne`
 - dökülen su bardağı ile `su`
 - dokununca kelimeyi tekrar eden nesneler
-- çocukla göz teması kuran sevimli karakterler
+- çocukla göz teması kuran sıcak karakterler
+
+Bu ilk çizgi, bugünkü MinaPlay yönünde daha yapılandırılmış bir gelişim destek sistemine dönüştü.
 
 ## Konusu-Yorum Prototipi
 
@@ -62,22 +64,37 @@ Bu repo ilk aşamada Express TypeScript backend yapısından evrilmiş, sonra PW
 - günlük aktivite kartı
 - uyku modu
 - aile avatarları
-- maskot rehberliği
+- Pofi benzeri rehberlik ihtiyacı
 - Playwright ve Vitest doğrulama hattı
 
 ## Ürün Dönüşümü
 
 `Konusu-Yorum` adı fikir ve prototip kökenini taşır.
 
-`MinaGrow / MinaPlay` ise ürünleşme yönünü taşır.
+`MinaGrow` üst marka/repo bağlamını, `MinaPlay` ise ürünleşme yönünü taşır.
 
 Bugünkü yorum:
 
-- marka ailesi `MinaGrow`
-- uygulama adı `MinaPlay`
-- prototip referansı `Konusu-Yorum`
+- marka ve üst bağlam: `MinaGrow`
+- uygulama adı: `MinaPlay`
+- prototip referansı: `Konusu-Yorum`
+- ana davranış sistemi: `Pofi`
 
 Bu ayrım önemlidir; çünkü prototip adını ürün kimliğiyle karıştırmak ileride belge, deploy, repo ve kullanıcı dili üzerinde dağınıklık üretir.
+
+## Pofi'nin Köken Rolü
+
+İlk fikirde karakterler çocukla iletişim kuran sevimli görsel varlıklar olarak düşünülüyordu.
+
+Bugünkü MinaPlay yönünde Pofi yalnız dekoratif bir karakter değildir. Pofi:
+
+- çocuğu yönlendirir
+- doğru ve hedef dışı etkileşimlere tepki verir
+- ağız, dil ve yüz egzersizlerini gösterir
+- uyku modunda sakinleşir
+- her modda rolüne göre görsel ifade değiştirir
+
+Bu yüzden Pofi, MinaPlay içinde davranışsal etkileşim sistemi olarak ele alınır.
 
 ## Öğrenilen Dersler
 
@@ -90,32 +107,43 @@ Bu ayrım önemlidir; çünkü prototip adını ürün kimliğiyle karıştırma
 - kolay seviye iki kelimeyle başlamak için iyi bir eştir
 - ebeveyn sesi TTS'e göre daha sıcak ve kişisel bir deneyim verebilir
 - günlük aktivite kartı küçük hedefleri görünür kılar
+- Parent panel analizleri ebeveyne hangi bölümde ne yapıldığını anlatmak için değerli olabilir
 
 ### Dikkat Gerektiren Şeyler
 
 - ebeveyn araçları artınca ekran kalabalıklaşabilir
 - ses kayıtları localStorage içinde büyüyebilir
-- browser ses ve mikrofon API'leri cihazlara göre değişebilir
+- browser ses, kamera ve mikrofon API'leri cihazlara göre değişebilir
 - Türkçe telaffuz TTS motoruna bağlı olarak farklılaşabilir
 - PWA offline davranışı daha açık hale gelmelidir
+- Pofi state sistemi merkezi tutulmazsa üst üste render veya hızlı duygu değişimi oluşabilir
 - legacy CRM parçaları ürün çekirdeğinden ayrılmalıdır
 
 ## MinaPlay'in Ürün Karakteri
 
-MinaPlay bir eğitim paneli gibi değil, çocuğun kısa temaslarla kullanacağı sıcak bir PWA gibi düşünülür.
+MinaPlay bir eğitim paneli gibi başlamaz; çocuğun kısa temaslarla kullanacağı sakin, yumuşak ve premium hissiyatlı bir PWA olarak başlar.
 
-Ana karakter:
+Başlangıç karakteri:
 
+- 0-5 yaş odağı
 - az metin
 - büyük dokunma alanları
 - kısa ses tekrarları
-- sevimli maskot
+- Pofi davranış rehberliği
 - küçük günlük hedefler
 - ebeveyn sesi desteği
-- aile ve uyku gibi günlük yaşam bağları
+- uyku, taklit ve duygu etkileşimi
+
+İlerleyen vizyon:
+
+- 0-18 yaş aralığına genişleme
+- okul öncesi ve örgün öğretim desteği
+- engelli bireylerin okul sürecinde desteklenmesi
+- ebeveyn, terapist, gönüllü eğitimci ve okul destek aktörleri arasında kontrollü ağ
+- kişiselleştirilmiş planlar, ev egzersizleri, tekrar takibi ve raporlama
 
 ## Kısa Kural
 
-Köken `Konusu-Yorum`, ürün yönü `MinaGrow / MinaPlay`dir.
+Köken `Konusu-Yorum`, ürün yönü `MinaPlay`, üst bağlam `MinaGrow`dur.
 
-Prototipin çalışan değeri korunur; ürün hafızası MinaPlay adıyla temizlenir.
+Prototipin çalışan değeri korunur; ürün hafızası MinaPlay ve Pofi kanonuyla temizlenir.

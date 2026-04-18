@@ -1,6 +1,6 @@
 ---
 name: agent-update
-description: MinaGrow/MinaPlay içindeki agent omurgasının nasıl değerlendirileceğini, nasıl güçlendirileceğini ve ne zaman güncelleneceğini tanımlar.
+description: MinaPlay içindeki agent omurgasının nasıl değerlendirileceğini, nasıl güçlendirileceğini ve ne zaman güncelleneceğini tanımlar.
 created: 2026-04-17
 updated: 2026-04-18
 ---
@@ -21,7 +21,7 @@ Bu workflow, `.agent` omurgası güncelleneceği zaman kullanılır.
 
 - `README.md`: agent alanının amacı
 - `context/profile.md`: Ümit ve proje içi rol bağlamı
-- `context/business.md`: MinaGrow/MinaPlay ürün ve iş bağlamı
+- `context/business.md`: MinaPlay ürün ve iş bağlamı, MinaGrow üst bağlamı
 - `context/collaboration.md`: Ümit + Codex çalışma modeli
 - `workflows/implementation-start.md`: aktif işe başlama akışı
 - `workflows/phase-design.md`: faz ve paket tasarım akışı
@@ -36,6 +36,9 @@ Bu workflow, `.agent` omurgası güncelleneceği zaman kullanılır.
 - kullanıcı Ümit olarak korunur
 - eski hazır bağlam varsayımları taşınmaz
 - Konusu-Yorum referansı çalışma kaynağı olarak görünür kalır
+- MinaPlay ürün adı, MinaGrow üst bağlamı olarak korunur
+- Pofi davranışsal etkileşim sistemi olarak okunur
+- Parent panel analiz/kontrol katmanı olarak görünür kalır
 - workflow dosyaları kullanıcıya ham dosya adı gibi dayatılmaz
 - `.agent` proje yönünün yerine geçmez; `.meta` ile birlikte çalışır
 

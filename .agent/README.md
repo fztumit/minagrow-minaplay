@@ -7,14 +7,14 @@ updated: 2026-04-18
 
 # Agent Alanı
 
-Bu alan, `MinaGrow` içinde ajanın nasıl çalışacağını taşıyan iç omurgadır.
+Bu alan, `MinaGrow` üst bağlamında `MinaPlay` için ajanın nasıl çalışacağını taşıyan iç omurgadır.
 
-Amaç, her yeni çalışmada ajanın sıfırdan tahmin yürütmesini engellemek ve `MinaPlay` ürün bağlamına hızlıca hizalanmasını sağlamaktır.
+Amaç, her yeni çalışmada ajanın sıfırdan tahmin yürütmesini engellemek ve `MinaPlay` ürün bağlamına hızlıca hizalanmasını sağlamaktır. Bu bağlamda `Pofi` dekoratif karakter gibi değil, davranışsal etkileşim sistemi olarak okunur.
 
 ## Alt Yüzeyler
 
 - `context/`
-  Ümit, MinaGrow/MinaPlay ürün bağlamı ve iş birliği yaklaşımını taşır.
+  Ümit, MinaPlay ürün bağlamı, MinaGrow üst bağlamı ve iş birliği yaklaşımını taşır.
 
 - `workflows/`
   Uygulama, faz tasarımı, sağlık kontrolü, meta güncelleme ve agent güncelleme akışlarını tanımlar.

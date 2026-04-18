@@ -1,19 +1,20 @@
 ---
 name: phase-design
-description: MinaGrow/MinaPlay içinde faz tasarımı gerektiğinde hangi yüzeylerin okunacağını, faz ile paket ayrımının nasıl kurulacağını ve bunun meta yüzeyine nasıl yansıtılacağını tanımlar.
+description: MinaPlay içinde faz tasarımı gerektiğinde hangi yüzeylerin okunacağını, faz ile paket ayrımının nasıl kurulacağını ve bunun meta yüzeyine nasıl yansıtılacağını tanımlar.
 created: 2026-04-17
 updated: 2026-04-18
 ---
 
 # Phase Design
 
-Bu workflow, `MinaGrow / MinaPlay` içinde faz veya paket tasarımı gerektiğinde kullanılır.
+Bu workflow, `MinaGrow` üst bağlamındaki `MinaPlay` içinde faz veya paket tasarımı gerektiğinde kullanılır.
 
 ## Ne Zaman Kullanılır?
 
 - kullanıcı "sıradaki faz", "plan", "paket", "yol haritası" derse
 - Konusu-Yorum'dan MinaPlay'e taşıma sırası konuşulursa
 - PWA ürün sertleştirme aşamaları tasarlanırsa
+- Pofi davranış sistemi veya Parent panel analiz katmanı fazlanırsa
 - meta, kod ve deploy işleri aynı anda görünmeye başlarsa
 
 ## Temel Ayrım
@@ -46,6 +47,8 @@ Bugünkü ana faz adayları:
 - ürün kimliği temizliği
 - PWA sertleştirme
 - ebeveyn araçları iyileştirme
+- Parent panel analiz ve kontrol katmanı
+- Pofi davranış/state sistemi
 - içerik paketi genişletme
 - deploy ve release düzeni
 

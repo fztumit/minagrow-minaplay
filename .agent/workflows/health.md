@@ -1,13 +1,13 @@
 ---
 name: health
-description: MinaGrow/MinaPlay içindeki proje omurgasının, meta hafızasının, agent davranışının ve repo yönünün sağlıklı kalıp kalmadığını değerlendirme akışını tanımlar.
+description: MinaPlay içindeki proje omurgasının, meta hafızasının, agent davranışının ve repo yönünün sağlıklı kalıp kalmadığını değerlendirme akışını tanımlar.
 created: 2026-04-17
 updated: 2026-04-18
 ---
 
 # Health
 
-Bu workflow, `MinaGrow / MinaPlay` içinde sağlık kontrolü gerektiğinde kullanılır.
+Bu workflow, `MinaGrow` üst bağlamındaki `MinaPlay` içinde sağlık kontrolü gerektiğinde kullanılır.
 
 ## Ne Zaman Kullanılır?
 
@@ -25,7 +25,9 @@ Kontrol:
 
 - proje adı ve ürün yönü net mi
 - `MinaGrow`, `MinaPlay`, `Konusu-Yorum` ayrımı korunuyor mu
-- çocuk odaklı PWA amacı görünür mü
+- başlangıç odağı 0-5, gelecek vizyon 0-18 olarak ayrılıyor mu
+- çocuk odaklı konuşma, taklit, duygu ve etkileşim PWA amacı görünür mü
+- Pofi davranış sistemi doğru konumlanıyor mu
 
 ### Mimari Sağlığı
 
@@ -52,6 +54,7 @@ Kontrol:
 - çocuk ekranı sade kalıyor mu
 - ebeveyn araçları ana deneyimi boğuyor mu
 - mobil/tablet hedefi korunuyor mu
+- Parent panel analiz/kontrol katmanı olarak okunuyor mu
 - Türkçe ürün dili temiz mi
 
 ### Agent Sağlığı
@@ -61,6 +64,7 @@ Kontrol:
 - ajan kullanıcıyı Ümit olarak okuyor mu
 - eski hazır bağlam kalıntısı var mı
 - workflow'lar MinaPlay'e göre davranıyor mu
+- Pofi ve Parent panel kanonu agent davranışına yansıyor mu
 - açık uygulama isteği doğru yorumlanıyor mu
 
 ## Sağlık Çıktısı
