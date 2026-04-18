@@ -1,0 +1,14 @@
+---
+name: worklog
+description: MinaGrow/MinaPlay için iş kayıtlarını, karar izlerini ve kapanan çalışma adımlarını kronolojik akışta tutar.
+created: 2026-04-17
+updated: 2026-04-18
+---
+
+# Worklog
+
+Bu dosya, `MinaGrow / MinaPlay` içindeki aktif meta omurgasının yürütme günlüğüdür. Amaç; kapanmış anlamlı işleri görünür tutmak ve kısa ama okunabilir bir ilerleme izi oluşturmaktır.
+
+## Kayıtlar
+
+- 2026-04-18 | Meta/Agent | Eski hazır bağlamdan MinaGrow/MinaPlay bağlamına geçiş | `/Users/umitaydin/Documents/Konusu-Yorum` referans alınarak `.meta`, `.agent` ve kök `AGENTS.md` dosyaları Ümit + MinaGrow/MinaPlay çalışma yönüne çekildi | Yeni sohbetlerde ajanın eski varsayımlarla başlamaması ve ürün hafızasının Konusu-Yorum referansındaki gerçek PWA davranışına yaslanması sağlandı
