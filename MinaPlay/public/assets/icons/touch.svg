@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" role="img" aria-label="Dokun">
+  <rect x="64" y="18" width="48" height="70" rx="6" fill="#e6f6fb" stroke="#8ec9d8" stroke-width="4"/>
+  <path d="M92 30v48" stroke="#b6dfe9" stroke-width="4"/>
+  <path d="M44 70c14-2 23 4 31 12 5 5 10 8 18 7" fill="none" stroke="#f3a48d" stroke-width="16" stroke-linecap="round"/>
+  <circle cx="106" cy="82" r="8" fill="#85c8a4"/>
+</svg>

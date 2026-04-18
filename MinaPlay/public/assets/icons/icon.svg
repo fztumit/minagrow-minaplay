@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-label="MinaPlay">
+  <rect width="192" height="192" rx="36" fill="#eef7f4"/>
+  <circle cx="72" cy="95" r="34" fill="#ffffff"/>
+  <circle cx="112" cy="92" r="40" fill="#ffffff"/>
+  <circle cx="133" cy="111" r="27" fill="#ffffff"/>
+  <circle cx="58" cy="117" r="25" fill="#ffffff"/>
+  <circle cx="80" cy="94" r="5" fill="#4d4b56"/>
+  <circle cx="121" cy="94" r="5" fill="#4d4b56"/>
+  <path d="M88 116c12 10 26 10 38 0" fill="none" stroke="#4d4b56" stroke-width="6" stroke-linecap="round"/>
+  <path d="M49 83c-12-5-23 1-25 11" stroke="#f39a88" stroke-width="7" stroke-linecap="round"/>
+  <path d="M150 82c12-5 23 1 25 11" stroke="#7bbcb5" stroke-width="7" stroke-linecap="round"/>
+</svg>
