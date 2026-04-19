@@ -55,13 +55,13 @@ Aktif MVP modları:
 - Eşleme: `view-match`
 - Ayna: `view-mirror`
 - Uyku: `view-sleep`
+- Ceee: `view-peekaboo`
 - Parent panel: `view-parent`
 
 MVP dışı veya pasif modlar:
 
 - Cümle: `view-sentence`
 - Hikaye: `view-story`
-- Ceee: `view-peekaboo`
 - gelişmiş ebeveyn analizleri
 
 MVP sürecinde yeni mod eklemek, mevcut modları büyütmek veya kapsamı genişletmek yerine stabilite, tutarlılık ve kullanıcı hissi öncelenir.
@@ -77,7 +77,7 @@ Ana modlar:
 - Ayna: `view-mirror`
 - Uyku: `view-sleep`
 
-Bonus:
+Kısa dikkat oyunu:
 
 - Ceee: `view-peekaboo`
 
@@ -174,6 +174,40 @@ Amaç:
 - localStorage ses kaydı kapasite stratejisi
 - Parent panel analizlerinin local-first sınırları
 - Pofi state çakışması kontrolleri
+
+### 4. MVP Ekran Akışları
+
+Amaç:
+
+- Ana ekran, Dokun, Eşleme, Ayna, Uyku ve Ceee için çocuk akışını, Pofi davranışını ve Parent panel kayıtlarını uygulamaya hazır hale getirmek
+
+Alınan kararlar:
+
+- ana ekranda aktif alanlar Dokun, Eşleme, Ayna, Uyku ve Ceee'dir
+- Cümle ve Hikaye MVP'de gizli veya "yakında" durumunda kalır
+- Dokun modunda hedefler dengeli dağıtılır; 30 saniye tepkisizlik Pofi dikkat akışını tetikler
+- Eşleme modunda sol hedef ve sağda 3 seçenek kullanılır
+- bir nesne için üst üste 10 doğru cevap öğrenildi kabul edilir
+- Ayna modunda duygu/mimik, dil, dudak ve yüz egzersizleri Parent panel sırasına göre ilerler
+- kamera varsa ölçüm yapılabilir, kamera yoksa görsel anlatım ve süre/tekrar akışı çalışır
+- Uyku modunda ses, süre ve kayıt ebeveyn tarafından belirlenir; touch lock ve özel çıkış gesture'ı kullanılır
+- Parent panel kelime, cümle, hikaye, ses, resim, egzersiz sırası ve uyku tercihlerini planlama alanı olarak ele alır
+
+### 5. Pofi Presence Matrisi
+
+Amaç:
+
+- Pofi'nin sabit karakter gibi değil, duruma göre sahneye giren ve sonra geri çekilen canlı ama sakin rehber gibi davranmasını sağlamak
+
+Alınan kararlar:
+
+- tüm MVP modlarında presence sistemi kullanılır: gizli, hafif, normal, odak, sahne
+- Dokun: başlangıç hafif -> normal, hedefte odak, doğru cevapta kısa sahne, yanlışta normal, beklemede odak
+- Eşleme: başlangıç hafif, hedefte odak, doğru eşlemede kısa sahne, yanlışta normal, beklemede odak
+- Ayna: başlangıç normal, egzersiz/taklit sırasında odak, yapamazsa normal, tamamlanınca kısa sahne
+- Uyku: başlangıç hafif, uyku aktifken gizli veya yok gibi, etkileşimlere tepki yok
+- sahne seviyesi yalnız kısa ödül anlarında 300-500 ms kullanılır
+- tüm geçişler yumuşaktır; aynı anda tek duygu ve tek yüz görünür
 
 ## Şimdilik Açılmayacaklar
 

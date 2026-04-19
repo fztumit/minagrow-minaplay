@@ -33,7 +33,7 @@ Ana parçalar:
 - Parent panel
 - PWA manifest ve service worker davranışı
 
-V2 ana ekranı MVP sürecinde yalnız aktif çekirdek modlara odaklanır. Tablet düzeni aktif MVP kartları için 2x2 grid olarak akar. Mobil düzen kartları küçültmez; tek kolon listeye dönüştürür. MVP'de aktif modlar Ana Ekran, Dokun, Eşleme, Ayna ve Uyku ile sınırlıdır. Cümle, Hikaye ve Ceee hazır olsa bile pasif veya "yakında" durumunda tutulabilir. Pofi kartlarda ve sahnede rehberdir; gerektiğinde büyüyebilir, dikkat çekebilir ve sonra geri çekilir.
+V2 ana ekranı MVP sürecinde yalnız aktif çekirdek alanlara odaklanır. Tablet düzeni aktif MVP kartları için 2x2 grid olarak akar; beşinci aktif alan Ceee ayrı bir kart veya uygun bir kart alanı olarak yer alabilir. Mobil düzen kartları küçültmez; tek kolon listeye dönüştürür. MVP'de aktif alanlar Ana Ekran, Dokun, Eşleme, Ayna, Uyku ve Ceee'dir. Cümle ve Hikaye hazır olsa bile gizli veya "yakında" durumunda tutulabilir. Pofi kartlarda ve sahnede rehberdir; gerektiğinde büyüyebilir, dikkat çekebilir ve sonra geri çekilir.
 
 ## Bilgi Mimarisi
 
@@ -55,19 +55,19 @@ MVP aktif view'leri:
 - `view-match`
 - `view-mirror`
 - `view-sleep`
+- `view-peekaboo`
 - `view-parent`
 
 MVP dışı veya pasif view'ler:
 
 - `view-sentence`
 - `view-story`
-- `view-peekaboo`
 - gelişmiş ebeveyn analizleri
 
 ## Ana Kullanım Akışı
 
 1. Çocuk veya ebeveyn uygulamayı açar.
-2. Ana ekranda MVP aktif modları görünür; MVP dışı modlar akışı bölmeyecek şekilde pasif tutulur.
+2. Ana ekranda MVP aktif alanları görünür; Cümle ve Hikaye akışı bölmeyecek şekilde pasif veya gizli tutulur.
 3. Pofi mevcut bağlama uygun tek aktif state ile rehberlik eder.
 4. Çocuk seçtiği modda dokunur, eşler, cümle kurar, hikaye dinler, taklit eder veya sakinleşir.
 5. Yanlış veya hedef dışı etkileşim cezalandırılmaz; Pofi yumuşak yönlendirme yapar.
@@ -88,6 +88,11 @@ Rol:
 - hedef dışı dokunuş başarısızlık hissi yaratmaz
 - ses çalabilir, Pofi yumuşak yönlendirmeye devam eder
 - yağmur, kar, rüzgar, dolu, şimşek/yıldırım, pus ve gökkuşağı gibi efektler düşük uyarımlı kalır
+- Pofi hedefleri karışık sırayla yönlendirebilir
+- yönlendirme dağılımı dengeli olmalıdır; bir kart aşırı fazla, başka kart çok az çalıştırılmaz
+- doğru dokunuşta Pofi güler veya olumlu emojiyle onay verir ve sesli geri bildirim verir
+- hedef dışı dokunuşta Pofi üzülebilir, düşünebilir veya yumuşak bir tavırla "tekrar dene" çizgisinde yönlendirebilir
+- çocuk 30 saniye tepki vermezse Pofi önce düşünür/yardım eder gibi emojilere geçebilir; gerekirse dikkat toplamak için büyür ve sesli uyaran verir
 
 ### Eşleme
 
@@ -95,11 +100,18 @@ Rol:
 
 - Dokun'dan ayrı bir ana oyun olarak hedef seçme ve eşleme pratiği sağlamak
 - Pofi'nin bir hedef seçmesi ve çocuğun aynı nesneyi bulması
-- odak + raf/set mantığını taşımak
+- sol hedef + sağ seçenekler mantığını taşımak
 
 Not:
 
-- mevcut guided set-temelli oyun bu modda yaşar
+- solda 1 hedef nesne bulunur
+- sağda 3 seçenek bulunur ve seçeneklerden biri hedef nesnedir
+- Pofi solda bekler
+- Pofi ara sıra doğruyu gösterip nesnenin adını söyleyebilir
+- emoji ve sesli tepkiler çocuğa yönlendirme verir
+- doğru/yanlış denemeler istatistik olarak kaydedilir
+- bir nesne için üst üste 10 doğru cevap o nesnenin öğrenildiğini gösterir
+- öğrenilen nesne için Parent panel ebeveyne yeni kart/nesne ekleme uyarısı verebilir
 
 ### Cümle
 
@@ -158,6 +170,20 @@ Akış:
 - bekle
 - tamamlanınca ödül ver
 
+Çalışma grupları:
+
+- duygu durumu, mimik ve emoji taklidi
+- dil egzersizleri
+- dudak egzersizleri
+- yüz egzersizleri
+
+Kural:
+
+- egzersiz sıralaması Parent panelden belirlenir
+- kamera varsa çocuğun tepkisi ölçülebilir
+- kamera yoksa ölçüm yapılmaz; Pofi egzersizi detaylı görsel anlatımla gösterir
+- kamera yokluğu modu pasif yapmaz
+
 ### Uyku
 
 Rol:
@@ -168,21 +194,40 @@ Rol:
 İlke:
 
 - çocuk yüzeyinde minimum kontrol olmalı
-- ekran kilitleme / Screen Lock ileride değerlendirilebilir
+- çocuk kazara dokunsa bile ekran değişmemelidir
+- ekran kilitleme / touch lock davranışı temel güvenlik kararıdır
 - akış sleepy -> sleep olarak korunur
 - rastgele duygu veya guide state çalışmaz
+- ana ekranda Pofi uykulu görünür
+- ses açılınca Pofi uyur
+- ses, süre ve kayıt tercihi ebeveyn tarafından belirlenir
+- Parent panel geçişi sol üst köşeye 3 tık ve aşağı çekme benzeri kontrollü gesture ile yapılır
+- uyku ekranından çıkış, müzik başladıktan sonra da aynı özel gesture ile olur
+
+Ses adayları:
+
+- okyanus ve doğa sesleri
+- hafif elektrikli süpürge benzeri beyaz gürültü
+- pış pış veya ninni
+- anne veya baba ses kaydı
+
+Amaç:
+
+- internetsiz, sakin bir uyku arkadaşı olmak
 
 ### Ceee
 
 Rol:
 
-- bonus mini oyun olarak Pofi'nin peekaboo/ce-ee halini kullanmak
-- ana 6 karttan ayrı kalmak
+- kısa dikkat ve neşe oyunu olarak Pofi'nin peekaboo/ce-ee halini kullanmak
+- MVP'de aktif 5. alan olarak yer alabilir
 
 İlke:
 
 - silinmez
-- çekirdek navigasyon içinde ana mod gibi davranmaz
+- illa gizli veya bonus strip olmak zorunda değildir
+- kartlar arasında veya ayrı bir aktif alan olarak konumlanabilir
+- çocuğu neşelendiren ve dikkat artıran kısa oyun olarak kalır
 
 ### Parent Panel
 
@@ -193,6 +238,7 @@ Rol:
 - uygulamanın kullanım analizini göstermek
 - hangi bölümde neler oynandığını, neler yapıldığını, doğru/yanlış denemeleri, tamamlanan egzersizleri, tekrar sayısını ve oturum sıklığını görünür yapmak
 - veriyi yalnız sayı olarak değil, kısa yorum ve yönlendirme ile anlamlandırmak
+- eğitim planlama, kelime/cümle/hikaye yönetimi ve içerik kayıt alanı olarak çalışmak
 
 İlke:
 
@@ -201,6 +247,9 @@ Rol:
 - ebeveyn 5 saniyede ilerleme, tekrar ihtiyacı ve kayıt durumunu anlayabilmelidir
 - panel destekleyici ve yönlendirici dil kullanır; başarısız, yetersiz, eksik gibi yargılayıcı ifadeler kullanılmaz
 - panel çocuk ekranından daha sade, daha ciddi ve daha az renkli ayrılır; teknik veya korkutucu görünmez
+- sesler, resimler ve ileride GIF/görsel destekleri ebeveyn tarafından yönetilebilir
+- kelimeler, cümleler ve hikayeler ebeveyn tarafından planlanabilir veya kaydedilebilir
+- egzersiz sırası ve uyku ses/süre/kayıt tercihleri ebeveyn tarafından belirlenebilir
 
 Kontrol adayları:
 
@@ -266,6 +315,67 @@ Kurallar:
 - çocuk her modda "neredeyim ve ne yapacağım" sorusunu hızlıca anlayabilmelidir
 - Pofi rehberlik eder, görev alanını ele geçirmez
 - geri bildirim kısa, yumuşak ve yargısız olur
+
+## Pofi Davranış Matrisi
+
+Bu matris Pofi'nin MVP modlarında nasıl tepki vereceğini tanımlar. Pofi asla bağırmaz, hızlı değişmez, cezalandırmaz veya çocuğun hatasını büyütmez. Pofi her zaman sabırlı, yumuşak ve öngörülebilir davranır.
+
+Presence tüm modlarda zorunlu sistemdir. Pofi sabit görünmez; bulunduğu duruma göre görünürlüğünü ve etkisini değiştirir. Genel kural: Pofi ana odak değil, rehberdir; `stage` yalnız kısa ödül anlarında 300-500 ms kullanılır ve sonra geri çekilir.
+
+Mod bazlı presence özeti:
+
+- Dokun: başlangıç `hafif -> normal`, hedefte `odak`, doğru cevapta kısa `sahne`, yanlışta `normal`, beklemede `odak`
+- Eşleme: başlangıç `hafif`, hedefte `odak`, doğru eşlemede kısa `sahne`, yanlışta `normal`, beklemede `odak`
+- Ayna: başlangıç `normal`, egzersiz ve taklit sırasında `odak`, yapamazsa `normal`, tamamlanınca kısa `sahne`
+- Uyku: başlangıç `hafif`, uyku aktifken `gizli` veya yok gibi; hiçbir durumda dikkat çekmez ve etkileşimlere tepki vermez
+
+### Dokun Pofi Davranışı
+
+- giriş: `subtle -> normal`, calm_happy, yavaş nefes, opsiyonel "hazır mıyız?"
+- hedef kelime seçildiğinde: `normal -> focus`, attentive, çok hafif 1.05 büyüme, kelime okunur
+- doğru nesneye dokunulduğunda: kısa `stage`, happy, 1.15-1.2 büyüme, çok hafif parıltı, 300-500 ms sonra `normal`, ses "Aferin"
+- yanlış/başka nesneye dokunulduğunda: `normal`, soft_warn veya confused, hafif kafa eğme, ses "Bir daha deneyelim"
+- 10 saniye tepki yoksa: `focus`, attentive, hedefe doğru mini bakış/işaret hissi, kelime tekrar edilir
+- 30 saniye tepki yoksa: `focus -> kısa stage`, belirgin dikkat, hedefe yönelme, ses "Buraya dokun" veya "Gel birlikte yapalım"
+- aynı kelime 3 kez bilinmezse: `normal`, sabırlı/sakin yüz, doğru nesne kısa süre highlight edilir, ses "Bu ..."
+- aynı kelime üst üste doğru yapılırsa: kısa `stage`, happy_strong, küçük abartısız kutlama, seviye artırılabilir
+
+Kısa ilke: doğru -> kısa ödül, yanlış -> yumuşak yönlendirme, bekleme -> yardım, zorlanma -> öğretme.
+
+### Eşleme Pofi Davranışı
+
+- konum: solda, sabit, rehber
+- hedef gösterildiğinde: `normal -> focus`, dikkat/hafif gülümseme, 1.05 büyüme, ses "Bunu bulalım" veya "Aynısını seç"
+- doğru eşleştirme: kısa `stage`, happy, 1.15 büyüme, çok hafif glow, 300-400 ms sonra `normal`, ses "Aferin"
+- yanlış eşleştirme: Pofi üzülmez ve dramatik tepki vermez; `normal`, confused/soft_warn, hafif kafa eğme, ses "Bir daha deneyelim"
+- çocuk beklerse: 10 saniye sonra hedefe bakar ve kelimeyi tekrar eder; "Hangisi?" çizgisinde yumuşak hatırlatma verir
+- hatırlatma ritmi: ilk tekrar 10 sn, ikinci tekrar 20 sn, üçüncü tekrar 30 sn
+- 30 saniye sonrası: `focus`, dikkat yüzü, hedefe doğru yönelme hissi, ses "Buraya bak"; çözümü doğrudan vermez
+- üst üste 10 doğru: kısa `stage`, happy_strong, küçük kutlama, ses "Harika gidiyorsun"; sonra zorlaştırma veya yeni set önerisi
+
+Kısa ilke: Pofi göstermez, hatırlatır. Hata büyütülmez, tekrar desteklenir.
+
+### Ayna Pofi Davranışı
+
+- egzersiz başlarken: `normal`, calm_happy, yavaş nefes ve hafif odak, ses "Benim gibi yapalım" veya "Ağzına bak"
+- çocuk taklit ederken: `focus`, tek egzersiz yüzü, sabit model, çok hafif nefes
+- kamera çocuğu algılarsa: kısa focus artışı, soft_happy, 1.05 büyüme, ses "Gördüm" veya "Evet, böyle"
+- kamera yoksa: `focus`, egzersiz yüzü, daha belirgin model gösterimi, ses "Benim gibi yap" veya "Ağzını böyle aç"
+- çocuk yapamazsa: `normal`, sabırlı/calm, tekrar gösterim, ses "Bir daha deneyelim" veya "Yavaşça yapalım"
+- egzersiz tamamlanınca: kısa `stage`, happy_soft, 1.15 büyüme, hafif glow, 400 ms sonra `normal`, ses "Aferin" veya "Harika"
+
+Kritik kural: Pofi burada eğlendiren karakter değil, gösteren ve bekleyen rehberdir. Egzersiz sırasında aynı anda tek duygu ve tek yüz görünür.
+
+### Uyku Pofi Davranışı
+
+- uyku ekranına girince: Pofi sleepy çizgisinde görünür, hareket minimumdur
+- ses başlatılınca: Pofi sleep durumuna geçer
+- çocuk ekrana dokunursa: Pofi tepki yarışına girmez; ekran değişmez
+- çıkış: özel gesture dışında hiçbir ana ekran/nav davranışı çalışmaz
+- anne/baba sesi açılınca: Pofi daha kişisel veya daha hareketli davranmaz; güvenli ve sakin sleep çizgisi korunur
+- uyku aktifken presence `gizli` veya yok gibidir; Pofi dikkat çekmez
+
+Kritik kural: Uyku modunda Pofi ve ortam mekanik animasyon gibi değil, doğal gece gökyüzü gibi hissedilmelidir.
 
 ## Çocuk Ekranı Anayasası
 
@@ -350,7 +460,7 @@ Bu kancalar geliştirici doğrulaması içindir. Kullanıcı deneyimini açıkla
 ## Yakın Web Riskleri
 
 - ebeveyn ayarları çocuk yüzeyini kalabalıklaştırabilir
-- Ceee bonus konumu ana modlarla karışabilir
+- Ceee'nin aktif 5. alan mı yoksa kısa oyun alanı mı olduğu görsel olarak net anlatılmazsa ana modlarla karışabilir
 - Ayna modunda ödül yüzü egzersiz sırasında erken görünürse akış bozulabilir
 - Uyku modunda rastgele duygu state'leri sakinliği bozabilir
 - Türkçe karakterleri olmayan metinler ürün kalitesini düşürebilir

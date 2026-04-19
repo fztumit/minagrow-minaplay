@@ -20,6 +20,8 @@ updated: 2026-04-19
 - Parent panel analizleri başlangıçta localStorage özetinden mi üretilecek?
 - doğru/yanlış denemeler nasıl tanımlanacak: hedef dışı dokunuş, yanlış eşleme, tamamlanmayan egzersiz?
 - Railway deploy yeni repo yerleşimine göre nasıl güncellenecek?
+- uyku çıkış gesture'ı sol üst 3 tık + aşağı çekme olarak teknik açıdan nasıl güvenilir uygulanacak?
+- kamera ile yüz/egzersiz ölçümü hangi hassasiyet ve gizlilik sınırlarıyla yapılacak?
 
 ## Teknik Riskler
 
@@ -42,6 +44,9 @@ updated: 2026-04-19
 - uyku modu görsel ve ses olarak sakin kalmalıdır.
 - 0-18 vizyonu bugünkü 0-5 başlangıç odağını bulanıklaştırmamalıdır.
 - Pofi sahne seviyesine çıktığında aktiviteyi kalıcı olarak gölgelememelidir.
+- 30 saniye tepkisizlik sonrası Pofi'nin büyüme/sesli dikkat davranışı çocuğu ürkütmemelidir.
+- üst üste 10 doğru cevapla "öğrenildi" kabulü ebeveyne baskı veya performans yarışı gibi sunulmamalıdır.
+- uyku modunda çıkış gesture'ı ebeveyn için erişilebilir, çocuk için kazara tetiklenmesi zor olmalıdır.
 
 ## İleri Adaylar
 
@@ -63,6 +68,13 @@ updated: 2026-04-19
 - içerik paketlerini JSON'a ayırma
 - mobil/tablet screenshot doğrulama seti
 - legacy CRM temizliği
+- MVP aktif 5 alan: Dokun, Eşleme, Ayna, Uyku, Ceee
+- Cümle ve Hikaye için gizli/yakında durumu
+- eşleme sol hedef + sağ 3 seçenek düzeni
+- 30 saniye tepkisizlik Pofi dikkat akışı
+- üst üste 10 doğru cevapla öğrenildi kabulü
+- uyku touch lock ve özel çıkış gesture'ı
+- anne/baba ses kaydı ve uyku sesi tercihleri
 
 ## Bilimsel Dayanak Notu
 

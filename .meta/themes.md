@@ -143,6 +143,9 @@ Kurallar:
 - `odak` seviyesi yaklaşık 1.3x-1.6x aralığında düşünülebilir
 - `sahne` seviyesi en fazla 3x büyür
 - sahne seviyesi dikkat toplamak için kullanılır, kalıcı ekran düzeni değildir
+- `sahne` seviyesi ödül anlarında 300-500 ms kullanılır
+- aynı anda tek duygu ve tek yüz görünür
+- Uyku aktifken Pofi `gizli` veya yok gibi davranır ve dikkat çekmez
 
 Örnek:
 

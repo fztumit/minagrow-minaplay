@@ -118,6 +118,133 @@ Bugünkü yorum:
 - tekrar sayısı
 - oturum sıklığı
 - son kullanım zamanı
+- kelime/nesne bazlı ardışık doğru sayısı
+- öğrenildi kabul edilen kartlar
+- yeni kart/nesne önerisi gerektiren alanlar
+- 30 saniye tepkisizlik gibi dikkat toplama olayları
+
+### LearningCardProgress
+
+Dokun ve Eşleme modlarında kelime veya nesne bazlı öğrenme durumunu temsil eder.
+
+Alanlar:
+
+- `itemId`
+- `correctCount`
+- `wrongOrOffTargetCount`
+- `consecutiveCorrectCount`
+- `lastPracticedAt`
+- `learned`
+
+Kurallar:
+
+- bir nesne için üst üste 10 doğru cevap `learned` durumunu tetikleyebilir
+- öğrenildi kabul edilen nesne Parent panelde yeni kart/nesne ekleme önerisine dönüşebilir
+- yanlış veya hedef dışı denemeler başarısızlık olarak değil, tekrar ve yönlendirme ihtiyacı olarak yorumlanır
+
+### AttentionEvent
+
+Çocuğun belirli süre tepki vermediği veya Pofi'nin dikkat toplama davranışı ürettiği anı temsil eder.
+
+Alanlar:
+
+- `mode`
+- `itemId`
+- `elapsedMs`
+- `pofiState`
+- `pofiPresence`
+- `soundCue`
+
+Kural:
+
+- 10 saniye tepkisizlik hafif yardım ve kelime tekrarını tetikler
+- 20 saniye tepkisizlik ikinci hatırlatma olarak yorumlanır
+- 30 saniye tepkisizlik Pofi'nin düşünme, yardım etme, odak veya sahne presence davranışını tetikleyebilir
+- bu kayıt çocuğa başarısızlık olarak gösterilmez; Parent panelde dikkat ve tekrar ihtiyacı olarak yorumlanabilir
+
+### PofiBehaviorRule
+
+Pofi'nin mod, olay, state, presence, ses ve animasyon kararını temsil eder.
+
+Alanlar:
+
+- `mode`
+- `event`
+- `stateId`
+- `presence`
+- `animation`
+- `durationMs`
+- `soundCue`
+- `nextPresence`
+
+MVP olayları:
+
+- `enter_mode`
+- `target_selected`
+- `correct`
+- `wrong_or_offtarget`
+- `idle_10s`
+- `idle_20s`
+- `idle_30s`
+- `three_misses`
+- `consecutive_success`
+- `exercise_start`
+- `exercise_detected`
+- `exercise_no_camera`
+- `exercise_complete`
+- `sleep_sound_started`
+
+Kurallar:
+
+- doğru cevap kısa ödül üretir, abartılı kutlama üretmez
+- yanlış veya hedef dışı deneme yargısız yönlendirme üretir
+- 3 kez bilememe öğretme/highlight akışını tetikleyebilir
+- üst üste başarı ilerleme hissi verir
+- sesli uyaranlar kısa, yumuşak ve bağırmayan tondadır
+
+### ExercisePlan
+
+Ayna modundaki egzersiz sırasını ve çalışma grubunu temsil eder.
+
+Gruplar:
+
+- `emotion`: duygu durumu, mimik ve emoji taklidi
+- `tongue`: dil egzersizleri
+- `lip`: dudak egzersizleri
+- `face`: yüz egzersizleri
+
+Kurallar:
+
+- egzersiz sıralaması Parent panelden belirlenebilir
+- kamera varsa ölçüm desteklenebilir
+- kamera yoksa egzersiz görsel anlatım ve süre/tekrar akışıyla devam eder
+
+### SleepPlan
+
+Uyku modundaki ses, süre ve kayıt tercihlerini temsil eder.
+
+Alanlar:
+
+- `soundType`
+- `durationMinutes`
+- `customRecordingId`
+- `touchLockEnabled`
+- `exitGesture`
+
+Ses adayları:
+
+- `ocean`
+- `nature`
+- `vacuum`
+- `whiteNoise`
+- `lullaby`
+- `parentRecording`
+
+Kurallar:
+
+- uyku modunda çocuk kazara dokunsa bile ekran değişmez
+- çıkış kontrollü gesture ile yapılır
+- ses açıldığında Pofi sleepy durumundan sleep durumuna geçer
 
 ### StoryLevel
 
@@ -197,6 +324,7 @@ Değerler:
 - `vacuum`
 - `heartbeat`
 - `pispis`
+- `parentRecording`
 
 Kalıcı veri olmaktan çok runtime state olarak yorumlanır.
 
@@ -253,7 +381,29 @@ Temel kurallar:
 - `stage` seviyesi kısa sürelidir ve sonra `normal` veya `subtle` seviyesine döner
 - Pofi'nin büyümesi aktiviteyi kalıcı olarak gölgelemez
 - Pofi nefes hareketi gibi düşük frekanslı bir presence animasyonu taşıyabilir
-- uyku modunda presence sakinleşir; rastgele odak veya sahne davranışı çalışmaz
+- uyku modunda presence `subtle` veya `hidden` çizgisine çekilir; rastgele odak veya sahne davranışı çalışmaz
+- aynı anda tek duygu, tek yüz ve tek presence seviyesi olur
+
+Mod bazlı presence matrisi:
+
+- Dokun başlangıç: `subtle -> normal`
+- Dokun hedef verildiğinde: `focus`
+- Dokun doğru cevap: kısa `stage`, sonra `normal`
+- Dokun yanlış cevap: `normal`
+- Dokun bekleme: `focus`
+- Eşleme başlangıç: `subtle`
+- Eşleme hedef gösterildiğinde: `focus`
+- Eşleme doğru eşleme: kısa `stage`
+- Eşleme yanlış: `normal`
+- Eşleme bekleme: `focus`
+- Ayna başlangıç: `normal`
+- Ayna egzersiz sırasında: `focus`
+- Ayna taklit sırasında: `focus`, tek yüz ve sabit model
+- Ayna yapamazsa: `normal`
+- Ayna tamamlanınca: kısa `stage`
+- Uyku başlangıç: `subtle`
+- Uyku aktif: `hidden` veya yok gibi
+- Uyku etkileşimleri: tepki yok, dikkat çekme yok
 
 Örnek davranış:
 
@@ -262,7 +412,12 @@ Temel kurallar:
 - dikkat toplanmadı: kısa süreli `attention` + `stage`
 - doğru aksiyon: `softHappy` + `normal`
 - yumuşak yönlendirme: `softPrompt` + `focus`
-- uyku: `sleepy` veya `sleep` + `subtle`
+- uyku başlangıç: `sleepy` + `subtle`
+- uyku aktif: `sleep` + `hidden`
+- 30 saniye tepkisizlik: önce düşünme/yardım ifadesi, sonra gerekirse `stage`
+- doğru cevap ödülü: kısa `stage`, 300-500 ms, sonra `normal`
+- Eşleme hatırlatma ritmi: 10 sn, 20 sn, 30 sn
+- Ayna egzersiz modeli: egzersiz sırasında tek state ve tek yüz
 
 ## Egzersiz Sistemi
 
