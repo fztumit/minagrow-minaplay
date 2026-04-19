@@ -119,6 +119,7 @@ Bugünkü yorum:
 - oturum sıklığı
 - son kullanım zamanı
 - kelime/nesne bazlı ardışık doğru sayısı
+- kelime/nesne bazlı son 5 deneme sonucu
 - öğrenildi kabul edilen kartlar
 - yeni kart/nesne önerisi gerektiren alanlar
 - 30 saniye tepkisizlik gibi dikkat toplama olayları
@@ -133,12 +134,13 @@ Alanlar:
 - `correctCount`
 - `wrongOrOffTargetCount`
 - `consecutiveCorrectCount`
+- `recentResults`
 - `lastPracticedAt`
 - `learned`
 
 Kurallar:
 
-- bir nesne için üst üste 10 doğru cevap `learned` durumunu tetikleyebilir
+- öğrenildi durumu için MVP kuralı: son 5 denemede en az 4 doğru ve ardışık doğru sayısı en az 3 olmalıdır
 - öğrenildi kabul edilen nesne Parent panelde yeni kart/nesne ekleme önerisine dönüşebilir
 - yanlış veya hedef dışı denemeler başarısızlık olarak değil, tekrar ve yönlendirme ihtiyacı olarak yorumlanır
 
@@ -366,6 +368,17 @@ Kurallar:
 
 Pofi state modeli tek başına yeterli değildir. V2'de Pofi'nin bir de `presence` seviyesi vardır. Presence; Pofi'nin ekranda ne kadar görünür olduğunu, ne kadar büyük olduğunu ve ne kadar dikkat çektiğini yönetir.
 
+Merkezi state şekli:
+
+```ts
+{
+  emotion: string;
+  presence: "hidden" | "subtle" | "normal" | "focus" | "stage";
+}
+```
+
+Modüller bu state'i doğrudan yönetmez; yalnız olay gönderir. Merkezi Pofi sistemi olayları yorumlar ve tek global state üretir.
+
 Presence seviyeleri:
 
 - `hidden`: gizli, görünmez
@@ -381,7 +394,7 @@ Temel kurallar:
 - `stage` seviyesi kısa sürelidir ve sonra `normal` veya `subtle` seviyesine döner
 - Pofi'nin büyümesi aktiviteyi kalıcı olarak gölgelemez
 - Pofi nefes hareketi gibi düşük frekanslı bir presence animasyonu taşıyabilir
-- uyku modunda presence `subtle` veya `hidden` çizgisine çekilir; rastgele odak veya sahne davranışı çalışmaz
+- uyku modunda presence `subtle` çizgisine çekilir; Pofi bulut gibi görünür ama rastgele odak veya sahne davranışı çalışmaz
 - aynı anda tek duygu, tek yüz ve tek presence seviyesi olur
 
 Mod bazlı presence matrisi:
@@ -402,8 +415,8 @@ Mod bazlı presence matrisi:
 - Ayna yapamazsa: `normal`
 - Ayna tamamlanınca: kısa `stage`
 - Uyku başlangıç: `subtle`
-- Uyku aktif: `hidden` veya yok gibi
-- Uyku etkileşimleri: tepki yok, dikkat çekme yok
+- Uyku aktif: `subtle`, bulut gibi görünür ama dikkat çekmez
+- Uyku etkileşimleri: tepki yok, dikkat toplama yok
 
 Örnek davranış:
 
@@ -413,11 +426,36 @@ Mod bazlı presence matrisi:
 - doğru aksiyon: `softHappy` + `normal`
 - yumuşak yönlendirme: `softPrompt` + `focus`
 - uyku başlangıç: `sleepy` + `subtle`
-- uyku aktif: `sleep` + `hidden`
-- 30 saniye tepkisizlik: önce düşünme/yardım ifadesi, sonra gerekirse `stage`
+- uyku aktif: `sleep` + `subtle`
+- 30 saniye tepkisizlik: önce düşünme/yardım ifadesi, sonra gerekirse mod izin veriyorsa `stage`
 - doğru cevap ödülü: kısa `stage`, 300-500 ms, sonra `normal`
 - Eşleme hatırlatma ritmi: 10 sn, 20 sn, 30 sn
 - Ayna egzersiz modeli: egzersiz sırasında tek state ve tek yüz
+
+## Parent Panel MVP Modeli
+
+Parent Panel MVP karmaşık analiz üretmez; basit ve anlamlı özet verir.
+
+MVP alanları:
+
+- kelime/nesne bazlı deneme sayısı
+- doğru sayısı
+- ardışık doğru sayısı
+- son 5 deneme özeti
+- öğrenildi durumu
+- günlük kısa özet
+- temel set seçimi
+
+Öğrenildi kuralı:
+
+- son 5 denemede en az 4 doğru
+- ardışık doğru sayısı en az 3
+
+Panel dili:
+
+- ham veri tek başına gösterilmez
+- her metrik kısa yorum veya öneriyle sunulur
+- karmaşık grafik ve ileri analiz MVP dışında kalır
 
 ## Egzersiz Sistemi
 

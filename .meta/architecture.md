@@ -40,6 +40,40 @@ Bugünkü yön şudur:
 - Ana yüzeyler: `public`, `src/modules`, `src/app.ts`, `server.ts`
 - Çalışma modeli: TypeScript modülleri build ile `public/js` içine çıkar, Express bunları statik olarak servis eder
 
+V2 uygulama kök yapısı:
+
+```html
+<div id="app">
+  <div id="view-root"></div>
+  <div id="pofi-root"></div>
+  <div id="tab-bar"></div>
+</div>
+```
+
+Kök yapı kuralları:
+
+- Pofi her zaman `pofi-root` içinde render edilir
+- uygulamada yalnız tek global Pofi instance bulunur
+- modüller Pofi görselini doğrudan render etmez
+- modüller yalnız olay gönderir; Pofi state/presence kararını merkezi sistem verir
+- Pofi PNG assetleri kullanılır; SVG parça/gövde sistemi kullanılmaz
+
+V2 MVP aktif modülleri:
+
+- `home`
+- `touch`
+- `matching`
+- `mirror`
+- `sleep`
+- `ceee`
+
+Gelecek modüller:
+
+- `sentence`
+- `stories`
+
+Gelecek modüller kod/rota düzeyinde var olabilir, ancak MVP çocuk UI içinde görünmez veya yalnız "yakında" durumunda pasif gösterilir.
+
 ### Yüzey Rolleri
 
 - `public/index.html`: ana DOM ve view yapısı
@@ -109,20 +143,21 @@ Bugünkü yön şudur:
 - View: `view-sleep`
 - Rol: sakin gece sahnesi, yavaş hareket eden gökyüzü öğeleri, sleepy -> sleep akışı ve düşük uyarımlı sesler sağlamak
 - Veri temasları: runtime state
-- Kural: Uyku modunda rastgele emotion/guide state çalışmaz
+- Kural: Uyku modunda rastgele emotion/guide state çalışmaz; Pofi ve ay görünür kalır ama dikkat çekmez
 
 ### Ceee
 
 - Dosya: `src/modules/peekaboo/index.ts`
 - View: `view-peekaboo`
-- Rol: Pofi'nin ce-ee/peekaboo haliyle bonus mini oyun sağlamak
-- Kural: ana 6 mod içinde sayılmaz
+- Rol: Pofi'nin ce-ee/peekaboo haliyle kısa, neşeli ve dikkat destekleyici oyun sağlamak
+- Kural: MVP'de 5. aktif oyun alanı olabilir; temiz PNG tarzı görsel dil kullanır ve ham/kötü SVG görünümüne yaslanmaz
 
 ### Parent Panel
 
 - View: `view-parent`
 - Rol: ebeveyn ayarlarını, içerik yönetimini, kayıtları, analizleri ve destek araçlarını çocuk yüzeyinden ayrı tutmak
 - Analiz yüzeyi: hangi bölümde ne oynandı, hangi görevler tamamlandı, doğru/yanlış denemeler, tekrar sayısı, tamamlanan egzersizler ve oturum sıklığı
+- MVP analiz yüzeyi: kelime/nesne bazlı deneme, doğru, streak, son 5 deneme, öğrenildi durumu, günlük kısa özet ve temel set seçimi
 - Gelecek adayları: kullanım limiti, modül kontrolü, screen lock, eğitimci/terapist görünümü, raporlama
 
 ### Pofi Davranış Sistemi
@@ -139,10 +174,35 @@ Kritik kurallar:
 - aynı container içinde üst üste render olmamalıdır
 - eski gövde katmanları kullanılmamalıdır
 - geçişler fade/scale ile yumuşak olmalıdır
+- modüller Pofi'yi doğrudan yönetmez; yalnız olay gönderir
 - Touch ve Matching gibi modlarda hızlı duygu değişimi engellenmelidir
 - Mirror egzersizi sırasında ödül/guide yüzü gösterilmemelidir
 - Sleep modunda yalnız sleepy ve sleep durumları kullanılmalıdır
 - `stage` presence kısa süreli olmalı ve aktiviteyi kalıcı olarak gölgelememelidir
+
+Global idle sistemi:
+
+- 10 saniye: yumuşak ipucu
+- 20 saniye: ipucu tekrarı
+- 30 saniye: daha belirgin yönlendirme
+
+Idle kuralları:
+
+- her idle seviyesi döngü başına yalnız bir kez tetiklenir
+- kullanıcı etkileşimi idle döngüsünü sıfırlar
+- idle davranışı modun izin verdiği presence seviyeleriyle sınırlıdır
+
+V2 kurulum sırası:
+
+1. Pofi core sistemi: state, presence ve idle timer
+2. Ana ekran
+3. Dokun modülü
+4. Eşleme modülü
+5. Ayna modülü
+6. Uyku modülü
+7. Ceee modülü
+
+Kural: Her modül stabil olmadan sonraki modül büyütülmez. V2 her şeyi aynı anda kurmaya çalışmaz.
 
 ## Veri Akışı
 
@@ -211,6 +271,10 @@ Ek doğrulama:
 - console/page error takibi
 - mobil/tablet viewport kontrolü
 - Pofi state çakışması ve Sleep/Mirror mod kısıtları
+- routing bütün modlarda çalışır
+- yalnız tek Pofi instance vardır
+- Pofi renderları üst üste binmez
+- modüller birbirinden bağımsız davranır
 
 ## Mimari Riskler
 

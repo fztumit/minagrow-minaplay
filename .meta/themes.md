@@ -88,7 +88,7 @@ Kart ilkeleri:
 
 - her kartın ana ikon/görseli baskın olur
 - Pofi standart olarak sağ-alt köşede rehber olarak durur
-- Ceee ayrı bonus kart/strip olarak gösterilir
+- Ceee MVP'de aktif 5. alan olarak geniş alt kart şeklinde gösterilebilir
 - kartlar gereksiz iç içe yığılmaz
 - mobilde taşma üretmez
 
@@ -110,6 +110,7 @@ Asset kararları:
 - UI ikonları için SVG kullanılabilir
 - background görselleri için PNG kullanılabilir
 - eski gövde katmanı sistemleri kullanılmaz
+- Pofi için SVG parça/gövde sistemi kurulmaz; Pofi tek PNG görsel instance olarak ele alınır
 
 State ve geçiş ilkeleri:
 
@@ -145,7 +146,7 @@ Kurallar:
 - sahne seviyesi dikkat toplamak için kullanılır, kalıcı ekran düzeni değildir
 - `sahne` seviyesi ödül anlarında 300-500 ms kullanılır
 - aynı anda tek duygu ve tek yüz görünür
-- Uyku aktifken Pofi `gizli` veya yok gibi davranır ve dikkat çekmez
+- Uyku aktifken Pofi `hafif` presence çizgisinde bulut gibi görünür; dikkat çekmez, kaybolmaz ve sahneye çıkmaz
 
 Örnek:
 
@@ -170,6 +171,16 @@ Kanonik hareketler:
 - uyku modunda kontrast ve hareket sakinleşir
 - yanlış cevap veya hedef dışı dokunuşta cezalandırıcı görsel kullanılmaz
 - hover veya geçiş hareketleri çok yumuşak olmalıdır; hızlı tepki hissi verilmez
+
+## Mod Bazlı Görsel Yerleşim
+
+V2'de Pofi tek görsel instance olarak davranır ama her modun sahne içindeki konumu farklıdır.
+
+- Dokun: Pofi aktif kartın üst alanına bağlanır; yalnız aktif kart animasyon taşır, diğer kartlar statik kalır
+- Eşleme: Pofi solda sakin rehber olarak bekler; sürekli animasyon yapmaz, 5-10 saniye bekleme sonrası doğru kartı yumuşak hatırlatır
+- Ayna: solda büyük Pofi, sağda ayna alanı bulunur; Pofi erişilebilirlik için büyük ve net görünür
+- Uyku: ay ve Pofi her zaman görünür; Pofi bulut gibi drift eder, ay çok yavaş ve doğal bir hat üzerinde hareket eder
+- Ceee: çocuk odası hissinde temiz PNG tarzı görseller kullanılır; Pofi bazen yüzünü, bazen kendini nesnelerin arkasında saklar
 
 ## Renk ve Hareket Güvenlik Anayasası
 

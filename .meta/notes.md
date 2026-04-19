@@ -9,10 +9,9 @@ updated: 2026-04-19
 
 ## Açık Sorular
 
-- `MinaPlay V2` temiz ürün omurgası hangi sırayla kurulacak?
+- Pofi PNG emoji seti hangi dosya adlandırma standardına bağlanacak?
 - Git geçmişi korunmalı mı?
 - `konusu_yorum_*` localStorage key'leri ürünleşme sırasında korunacak mı, yoksa migration ile `minaplay_*` ailesine mi taşınacak?
-- Pofi PNG emoji seti hangi dosya adlandırma standardına bağlanacak?
 - Pofi presence seviyelerinin piksel/ölçek üst sınırları nasıl belirlenecek?
 - eski karakter ve gövde assetleri tamamen silinecek mi, yoksa legacy klasöre mi alınacak?
 - çocuk profili ayrı bir kavram olacak mı?
@@ -33,6 +32,10 @@ updated: 2026-04-19
 - Legacy CRM/webhook kodu ürün çekirdeğinde kaldıkça mimariyi bulanıklaştırabilir.
 - Pofi state sistemi merkezi tutulmazsa üst üste render veya hızlı duygu değişimi oluşabilir.
 - Parent panel analizleri erken karmaşıklaşırsa bugünkü çocuk yüzeyi ve local-first model zorlanabilir.
+- Pofi merkezi `pofi-root` dışında render edilirse tek instance kuralı bozulabilir.
+- Global idle timer mod sınırlarını dikkate almazsa Uyku veya Ayna gibi hassas akışlarda gereksiz yönlendirme üretebilir.
+- Ceee ortamı ham veya düşük kaliteli SVG hissine dönerse V2'nin premium/sakin görsel dili zayıflar.
+- Uyku modunda ay ve Pofi hareketi mekanik loop gibi hissedilirse sakin ortam etkisi bozulabilir.
 
 ## Ürün Riskleri
 
@@ -45,7 +48,7 @@ updated: 2026-04-19
 - 0-18 vizyonu bugünkü 0-5 başlangıç odağını bulanıklaştırmamalıdır.
 - Pofi sahne seviyesine çıktığında aktiviteyi kalıcı olarak gölgelememelidir.
 - 30 saniye tepkisizlik sonrası Pofi'nin büyüme/sesli dikkat davranışı çocuğu ürkütmemelidir.
-- üst üste 10 doğru cevapla "öğrenildi" kabulü ebeveyne baskı veya performans yarışı gibi sunulmamalıdır.
+- öğrenildi kuralı ebeveyne baskı veya performans yarışı gibi sunulmamalıdır.
 - uyku modunda çıkış gesture'ı ebeveyn için erişilebilir, çocuk için kazara tetiklenmesi zor olmalıdır.
 
 ## İleri Adaylar
@@ -72,9 +75,15 @@ updated: 2026-04-19
 - Cümle ve Hikaye için gizli/yakında durumu
 - eşleme sol hedef + sağ 3 seçenek düzeni
 - 30 saniye tepkisizlik Pofi dikkat akışı
-- üst üste 10 doğru cevapla öğrenildi kabulü
+- öğrenildi kuralı: son 5 denemede en az 4 doğru ve streak en az 3
 - uyku touch lock ve özel çıkış gesture'ı
 - anne/baba ses kaydı ve uyku sesi tercihleri
+- Pofi core sistemi: state, presence ve idle timer
+- merkezi `pofi-root` ve tek Pofi instance kuralı
+- modüllerin Pofi'yi doğrudan yönetmemesi, yalnız olay göndermesi
+- Parent Panel MVP: kelime/nesne deneme, doğru, streak, son 5 deneme, öğrenildi durumu, günlük özet ve set seçimi
+- Ceee temiz PNG tarzı çocuk odası ortamı
+- Uyku Pofi bulut davranışı ve ayın yaklaşık 30 dakikalık doğal hareketi
 
 ## Bilimsel Dayanak Notu
 

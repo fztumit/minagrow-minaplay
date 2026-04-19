@@ -11,7 +11,7 @@ updated: 2026-04-19
 
 Bugünkü aktif odak:
 
-`MinaPlay V2` ürün anayasasını yazılı hafızaya geçirmek ve MVP kapsamını netleştirmek.
+`MinaPlay V2` ürün anayasasını, teknik kurulum sırasını ve MVP kapsamını yazılı hafızaya geçirmek.
 
 Bu odak, V1'i uygulama temeli olarak taşımayı bırakır. V1 yalnız fikir, davranış ve örnekleme referansı olarak kalır. V2 tamamen yeni bir ürün versiyonu olarak kurulacaktır.
 
@@ -22,7 +22,9 @@ Bu odak, V1'i uygulama temeli olarak taşımayı bırakır. V1 yalnız fikir, da
 - ürün iddiası klinik tedavi yerine geçmeyen ev pratiği/dijital oyun arkadaşı çizgisinde netleşecek
 - pasif ekran kullanımı problemi özel marka adı kullanılmadan yazılacak
 - Pofi state sistemi yanında presence sistemiyle tanımlanacak
+- Pofi'nin tek global instance, merkezi `pofi-root`, event temelli modül iletişimi ve idle timer kuralı görünür olacak
 - çocuk ekranı, Parent panel, renk/hareket güvenliği ve MVP kapsam anayasaları görünür olacak
+- Parent Panel MVP kelime/nesne istatistikleri, günlük özet, öğrenildi kuralı ve set seçimiyle sınırlandırılacak
 - başarı ölçütleri teknik çıktılardan çok davranışsal ve duygusal başarıya bağlanacak
 
 ## Kanonik Ürün Yönü
@@ -111,6 +113,21 @@ Analiz adayları:
 - tekrar ihtiyacı
 - kısa öneri
 
+Parent Panel MVP sınırı:
+
+- kelime/nesne bazlı deneme sayısı
+- doğru sayısı
+- ardışık doğru sayısı
+- son 5 deneme özeti
+- öğrenildi durumu
+- günlük kısa özet
+- temel set seçimi
+
+MVP öğrenildi kuralı:
+
+- son 5 denemede en az 4 doğru
+- ardışık doğru sayısı en az 3
+
 Kontrol adayları:
 
 - kullanım limitleri
@@ -161,6 +178,8 @@ Alınan kararlar:
 - kart içinde ikon sol tarafta belirgin, metin orta/ana alanda sade, Pofi sağ altta küçük yardımcıdır
 - Pofi `odak` seviyesinde yaklaşık 1.3x-1.6x, `sahne` seviyesinde en fazla 3x büyüyebilir
 - tablet ana ekran aktif MVP kartlarında 2x2 grid, mobilde tek kolon liste kullanır
+- tablet ana ekranda ilk 4 aktif kart 2x2, Ceee geniş alt kart olarak tasarlanır
+- mobil yatayda alan genişliğine göre 2-3 kolon kullanılabilir
 - mod ekranları üst yönlendirme, orta görev alanı, sağ alt Pofi ve alt kısa geri bildirim kalıbını paylaşır
 - Parent panel nötr renkli, az animasyonlu, düzenli ve yorum odaklı olmalıdır
 
@@ -186,11 +205,16 @@ Alınan kararlar:
 - ana ekranda aktif alanlar Dokun, Eşleme, Ayna, Uyku ve Ceee'dir
 - Cümle ve Hikaye MVP'de gizli veya "yakında" durumunda kalır
 - Dokun modunda hedefler dengeli dağıtılır; 30 saniye tepkisizlik Pofi dikkat akışını tetikler
+- Dokun modunda Pofi aktif kartın üst alanına bağlanır; yalnız aktif kart animasyon taşır
 - Eşleme modunda sol hedef ve sağda 3 seçenek kullanılır
-- bir nesne için üst üste 10 doğru cevap öğrenildi kabul edilir
+- Eşleme modunda Pofi solda bekler; 5-10 saniye sonra doğru kartı yumuşak biçimde hatırlatır
+- bir nesne için öğrenildi kuralı son 5 denemede en az 4 doğru ve ardışık doğru sayısının en az 3 olmasıdır
 - Ayna modunda duygu/mimik, dil, dudak ve yüz egzersizleri Parent panel sırasına göre ilerler
+- Ayna modunda Pofi solda büyük ve erişilebilir görünür; sağda ayna alanı bulunur
 - kamera varsa ölçüm yapılabilir, kamera yoksa görsel anlatım ve süre/tekrar akışı çalışır
 - Uyku modunda ses, süre ve kayıt ebeveyn tarafından belirlenir; touch lock ve özel çıkış gesture'ı kullanılır
+- Uyku modunda Pofi kaybolmaz; bulut gibi sakin görünür, ay ve Pofi doğal ve çok yavaş hareket eder
+- Ceee temiz PNG tarzı çocuk odası ortamında Pofi'nin saklanma, merkeze gelme, yeniden konumlanma ve otomatik devam etme davranışını taşır
 - Parent panel kelime, cümle, hikaye, ses, resim, egzersiz sırası ve uyku tercihlerini planlama alanı olarak ele alır
 
 ### 5. Pofi Presence Matrisi
@@ -205,9 +229,32 @@ Alınan kararlar:
 - Dokun: başlangıç hafif -> normal, hedefte odak, doğru cevapta kısa sahne, yanlışta normal, beklemede odak
 - Eşleme: başlangıç hafif, hedefte odak, doğru eşlemede kısa sahne, yanlışta normal, beklemede odak
 - Ayna: başlangıç normal, egzersiz/taklit sırasında odak, yapamazsa normal, tamamlanınca kısa sahne
-- Uyku: başlangıç hafif, uyku aktifken gizli veya yok gibi, etkileşimlere tepki yok
+- Uyku: başlangıç hafif, uyku aktifken bulut gibi hafif, etkileşimlere tepki yok
 - sahne seviyesi yalnız kısa ödül anlarında 300-500 ms kullanılır
 - tüm geçişler yumuşaktır; aynı anda tek duygu ve tek yüz görünür
+
+### 6. V2 Teknik Kurulum Sırası
+
+Amaç:
+
+- V2'yi baştan kurarken her parçayı stabil hale getirip sonra bir sonrakine geçmek
+
+Sıra:
+
+1. Pofi core sistemi: state, presence ve idle timer
+2. Ana ekran
+3. Dokun modülü
+4. Eşleme modülü
+5. Ayna modülü
+6. Uyku modülü
+7. Ceee modülü
+
+Kurallar:
+
+- her modül stabil olmadan sonraki modül büyütülmez
+- modüller Pofi'yi doğrudan yönetmez; yalnız olay gönderir
+- Pofi merkezi `pofi-root` içinde tek instance olarak render edilir
+- stage davranışı 400 ms sabit kabul edilir ve otomatik normale döner
 
 ## Şimdilik Açılmayacaklar
 
