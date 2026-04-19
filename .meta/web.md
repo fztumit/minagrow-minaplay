@@ -33,7 +33,7 @@ Ana parçalar:
 - Parent panel
 - PWA manifest ve service worker davranışı
 
-V2 ana ekranı MVP sürecinde yalnız aktif çekirdek modlara odaklanır. Tablet düzeni 3x2, telefon düzeni 2x3 prensibini korur; ancak MVP'de aktif modlar Ana Ekran, Dokun, Eşleme, Ayna ve Uyku ile sınırlıdır. Cümle, Hikaye ve Ceee hazır olsa bile pasif veya "yakında" durumunda tutulabilir. Pofi kartlarda ve sahnede rehberdir; gerektiğinde büyüyebilir, dikkat çekebilir ve sonra geri çekilir.
+V2 ana ekranı MVP sürecinde yalnız aktif çekirdek modlara odaklanır. Tablet düzeni aktif MVP kartları için 2x2 grid olarak akar. Mobil düzen kartları küçültmez; tek kolon listeye dönüştürür. MVP'de aktif modlar Ana Ekran, Dokun, Eşleme, Ayna ve Uyku ile sınırlıdır. Cümle, Hikaye ve Ceee hazır olsa bile pasif veya "yakında" durumunda tutulabilir. Pofi kartlarda ve sahnede rehberdir; gerektiğinde büyüyebilir, dikkat çekebilir ve sonra geri çekilir.
 
 ## Bilgi Mimarisi
 
@@ -225,6 +225,47 @@ Kontrol adayları:
 - kamera, mikrofon, ses ve tarayıcı desteği durumları açıkça ifade edilir
 - olumsuz geri bildirim verilmez
 - tekrar ve yumuşak yönlendirme ana yöntemdir
+
+## V2 Ana Ekran Layout Kararı
+
+Mevcut ana ekran hiyerarşisi doğru kabul edilir; V2 tasarım sisteminde bu hiyerarşi değiştirilmez, yalnız görsel sakinlik ve tutarlılık güçlendirilir.
+
+Kurallar:
+
+- arka plan sakin ve yumuşaktır
+- kartlar beyaz veya beyaza yakın yüzey üzerine çok hafif pastel ton taşır
+- her kartta tek ana ikon sol tarafta belirgin durur
+- başlık ve kısa açıklama sade, okunabilir ve orta/ana metin alanında kalır
+- Pofi her kartta yalnız 1 kez görünür
+- Pofi sabit biçimde sağ alt köşede küçük yardımcı olarak durur
+- kartlar kalabalık hissettirmez
+- gölgeler çok hafif ve yumuşaktır
+- çocuk ekranında modern kalite hissi korunur ama uyarım artırılmaz
+
+Responsive karar:
+
+- tablet: 2x2 grid
+- mobil: tek kolon liste
+- layout sıkıştırılmaz; reflow yapılır
+- aynı hiyerarşi, aynı boşluk hissi ve aynı Pofi konumu korunur
+
+## Ortak Mod Ekranı Kalıbı
+
+Tüm mod ekranları benzer bir düzen mantığı kullanır.
+
+Kalıp:
+
+- üstte kısa yönlendirme
+- ortada tek görev alanı
+- sağ altta küçük Pofi
+- altta kısa geri bildirim
+
+Kurallar:
+
+- her mod kendi oyunsal davranışını taşıyabilir ama ekran ritmi tutarlı kalır
+- çocuk her modda "neredeyim ve ne yapacağım" sorusunu hızlıca anlayabilmelidir
+- Pofi rehberlik eder, görev alanını ele geçirmez
+- geri bildirim kısa, yumuşak ve yargısız olur
 
 ## Çocuk Ekranı Anayasası
 

@@ -35,7 +35,31 @@ Görsel hiyerarşi:
 
 Pofi küçük bir ikon değildir; gerektiğinde sahne alabilir. Ancak Pofi'nin sahne alması kalıcı biçimde aktivitenin önüne geçmez. Pofi çocuğun dikkatini göreve geri taşır ve sonra rehber seviyesine döner.
 
-## Mevcut Renk Dili
+## V2 Renk Sistemi Kararı
+
+MinaPlay V2 ana ekranı sakin, minimal ve çocuk güvenli bir renk sistemi kullanır.
+
+Temel kararlar:
+
+- ana arka plan: `#F7F9FB`
+- kart zeminleri: beyaz veya beyaza çok yakın yüzey
+- her karta çok hafif pastel ton verilir; ton farkı belirgin değil, sakin destekleyici olur
+- pastel aksanlar kart kimliğini taşır; turkuaz, açık yeşil, pembe, mor/lilac, açık gök mavisi ve yumuşak sarı ailesi kullanılabilir
+- renkler modları ayırır ama çocuğun dikkatini karttan koparacak yoğunlukta kullanılmaz
+- gölge yumuşak ve düşük opaklı olur; premium his verir ama kartları ağırlaştırmaz
+- genel his: ferah, dengeli, modern, düşük uyarımlı ve güvenli
+
+Kart görsel sistemi:
+
+- kartlar nefes alan, sade ve düzenli görünür
+- ikon sol tarafta belirgin durur
+- başlık ve kısa açıklama orta/ana metin alanında okunur
+- Pofi her kartta yalnız 1 kez görünür
+- Pofi sağ alt köşede küçük yardımcı olarak durur
+- Pofi kart içinde dikkat dağıtmaz; kartın ana görseli veya görevi Pofi'den baskın kalır
+- kartlar iç içe kart hissi üretmez
+
+## V1 Referans Renk Dili
 
 Referans `public/style.css` içinde şu ana değişkenler kullanılır:
 
@@ -67,6 +91,13 @@ Kart ilkeleri:
 - Ceee ayrı bonus kart/strip olarak gösterilir
 - kartlar gereksiz iç içe yığılmaz
 - mobilde taşma üretmez
+
+V2 responsive karar:
+
+- tablet: aktif MVP kartları 2x2 grid düzeninde akar
+- mobil: kartlar küçültülmez; tek kolon listeye dönüşür
+- layout sıkıştırılmaz; reflow yapılır
+- hiyerarşi, boşluk hissi ve Pofi'nin sağ alt konumu korunur
 
 ## Pofi Görsel Sistemi
 
@@ -109,6 +140,9 @@ Kurallar:
 - gereksiz yere dikkat çekmez
 - çocuğun yaptığı aktivitenin önüne geçmez
 - sahne seviyesi kısa sürelidir ve ardından rehber moduna dönülür
+- `odak` seviyesi yaklaşık 1.3x-1.6x aralığında düşünülebilir
+- `sahne` seviyesi en fazla 3x büyür
+- sahne seviyesi dikkat toplamak için kullanılır, kalıcı ekran düzeni değildir
 
 Örnek:
 
@@ -132,6 +166,7 @@ Kanonik hareketler:
 - dikkat dağıtan sürekli hareket azaltılır
 - uyku modunda kontrast ve hareket sakinleşir
 - yanlış cevap veya hedef dışı dokunuşta cezalandırıcı görsel kullanılmaz
+- hover veya geçiş hareketleri çok yumuşak olmalıdır; hızlı tepki hissi verilmez
 
 ## Renk ve Hareket Güvenlik Anayasası
 
@@ -164,6 +199,21 @@ Yorum:
 - yuvarlak ve çocuk dostu bir karakter hedeflenir
 - okunurluk oyun hissinden daha önemlidir
 - uzun metinler yerine kısa ürün cümleleri tercih edilir
+- font boyutu viewport genişliğiyle agresif ölçeklenmez
+- metin taşması yerine satır kırımı veya layout reflow tercih edilir
+
+## Parent Panel Görsel Dili
+
+Parent panel çocuk ekranından daha sakin, daha nötr ve daha yapılandırılmış hissettirmelidir.
+
+Kurallar:
+
+- nötr renkler kullanılır
+- animasyon azaltılır
+- layout sadeleştirilir
+- karmaşık grafikler kullanılmaz
+- ham veri yerine anlamlı kısa yorumlar ve yönlendirme gösterilir
+- ebeveyn panelden kontrol ve güven hissiyle çıkmalıdır
 
 ## Yaşa Göre Genişleme
 

@@ -153,6 +153,17 @@ Karar gerektirenler:
 - Parent panel görsel ayrımı
 - mobil/tablet kırılımları
 
+Alınan kararlar:
+
+- ana arka plan `#F7F9FB` çizgisinde yumuşak açık zemin olmalıdır
+- kartlar beyaz veya beyaza yakın yüzey üzerinde çok hafif pastel ton taşır
+- kart aksanları turkuaz, açık yeşil, pembe, mor/lilac, açık gök mavisi ve yumuşak sarı ailesinde kalır
+- kart içinde ikon sol tarafta belirgin, metin orta/ana alanda sade, Pofi sağ altta küçük yardımcıdır
+- Pofi `odak` seviyesinde yaklaşık 1.3x-1.6x, `sahne` seviyesinde en fazla 3x büyüyebilir
+- tablet ana ekran aktif MVP kartlarında 2x2 grid, mobilde tek kolon liste kullanır
+- mod ekranları üst yönlendirme, orta görev alanı, sağ alt Pofi ve alt kısa geri bildirim kalıbını paylaşır
+- Parent panel nötr renkli, az animasyonlu, düzenli ve yorum odaklı olmalıdır
+
 ### 3. Ürün Sertleştirme
 
 Amaç:
