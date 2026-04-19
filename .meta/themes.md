@@ -2,7 +2,7 @@
 name: themes
 description: MinaPlay PWA yüzeyindeki görsel dil, tema, renk, hareket, Pofi ve çocuk ekranı ilkelerini tanımlar.
 created: 2026-04-17
-updated: 2026-04-18
+updated: 2026-04-19
 ---
 
 # Tema
@@ -31,9 +31,9 @@ Amaç:
 
 Görsel hiyerarşi:
 
-`Content > Icons > Pofi`
+`Aktivite odağı > Pofi rehberliği > UI destek elemanları`
 
-İçerik ve ana ikon her zaman Pofi'den daha baskın olmalıdır. Pofi rehberdir; ana içerik değildir.
+Pofi küçük bir ikon değildir; gerektiğinde sahne alabilir. Ancak Pofi'nin sahne alması kalıcı biçimde aktivitenin önüne geçmez. Pofi çocuğun dikkatini göreve geri taşır ve sonra rehber seviyesine döner.
 
 ## Mevcut Renk Dili
 
@@ -58,7 +58,7 @@ Ana karakter:
 
 ## Kartlar
 
-Ana ekran 6 ana kartı 3x2 düzende gösterir.
+Ana ekran tam ürün vizyonunda 6 ana kartı 3x2 düzende gösterebilir. MVP sürecinde yalnız aktif çekirdek modlar görünür veya önceliklenir.
 
 Kart ilkeleri:
 
@@ -89,6 +89,31 @@ State ve geçiş ilkeleri:
 - Uyku modunda yalnız sleepy ve sleep kullanılır
 - Ayna egzersizi sırasında yalnız egzersiz yüzü görünür; ödül yüzü tamamlanınca gelir
 
+## Pofi Presence Sistemi
+
+Pofi yalnız state değiştiren bir karakter değildir. Pofi'nin varlık seviyesi, yani `presence` değeri vardır. Her ekranda Pofi'nin ne kadar görünür olduğu, ne kadar büyük olduğu ve ne kadar dikkat çektiği bağlama göre kontrol edilir.
+
+Presence seviyeleri:
+
+- `gizli`: görünmez
+- `hafif`: küçük ve arka planda
+- `normal`: rehber seviyesinde
+- `odak`: biraz büyür ve dikkat çeker
+- `sahne`: kısa süreli büyük ve baskın görünür
+
+Kurallar:
+
+- Pofi her zaman aynı boyutta ve aynı güçte görünmez
+- Pofi nefes alır gibi hafif büyür ve standart büyüklüğe dönebilir
+- ekranın amacına göre geri çekilir veya öne çıkar
+- gereksiz yere dikkat çekmez
+- çocuğun yaptığı aktivitenin önüne geçmez
+- sahne seviyesi kısa sürelidir ve ardından rehber moduna dönülür
+
+Örnek:
+
+Çocuk bir kelimeye yönlendirildiği halde ilgisi dağılmışsa Pofi önce `odak` seviyesine çıkar. Sesli uyaran yeterli olmazsa kısa süreli `sahne` seviyesine geçebilir, görüntü ve sesle dikkati toplar, sonra `normal` rehber seviyesine döner.
+
 ## Hareket ve Animasyon
 
 Animasyonlar ürünün öğrenme ve sakinleşme amacını destekler.
@@ -107,6 +132,23 @@ Kanonik hareketler:
 - dikkat dağıtan sürekli hareket azaltılır
 - uyku modunda kontrast ve hareket sakinleşir
 - yanlış cevap veya hedef dışı dokunuşta cezalandırıcı görsel kullanılmaz
+
+## Renk ve Hareket Güvenlik Anayasası
+
+Bu kurallar tüm ekranlar için zorunludur.
+
+- aynı ekranda en fazla 3-4 ana renk kullanılır
+- pastel ve muted tonlar temel alınır
+- neon, aşırı doygun renkler ve göz yoran yüksek kontrast kombinasyonları kullanılmaz
+- saniyede 3'ten fazla yanıp sönme, ekranı kaplayan hızlı parlama ve titreşim animasyonları kullanılmaz
+- aynı anda yalnız 1 hareketli öğe bulunur
+- patlamalı geçiş, ani sıçrama ve sert giriş/çıkış animasyonları kullanılmaz
+- tüm animasyonlar 300-500 ms aralığında, ease-in-out hissinde ve tercihen fade/soft scale ile çalışır
+- sürekli animasyonlar düşük frekanslıdır; Pofi nefes döngüsü 3-5 saniye aralığında düşünülür
+- aynı anda hem renk değişimi hem hareket verilmez
+- minimum dokunma alanı 44 x 44 px olur
+- arka plan sakin kalır; hareketli/video arka plan kullanılmaz
+- görsel hareket içeriğin ve aktivitenin önüne geçemez
 
 ## Tipografi
 

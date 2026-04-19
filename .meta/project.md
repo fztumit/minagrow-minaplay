@@ -2,7 +2,7 @@
 name: project
 description: MinaPlay projesinin problemi, amacı, kapsamı, başarı ölçütleri ve temel bağlamını tanımlar.
 created: 2026-04-17
-updated: 2026-04-18
+updated: 2026-04-19
 ---
 
 # Proje
@@ -12,7 +12,8 @@ updated: 2026-04-18
 - Proje adı: `MinaPlay`
 - Üst bağlam: `MinaGrow`
 - Referans adı: `Konusu-Yorum`
-- Kısa tanım: 0-5 yaş çocuklar için konuşma, taklit, duygu ve etkileşim desteğini sakin, görsel olarak yumuşak ve premium hissiyatlı bir PWA yüzeyinde birleştiren gelişim destek uygulaması
+- Kısa tanım: 0-5 yaş çocuklar için konuşma, taklit, duygu, dikkat ve etkileşim pratiğini sakin, görsel olarak yumuşak ve güven veren bir PWA yüzeyinde birleştiren dijital oyun/terapi destek arkadaşı
+- Ürün versiyonu: `MinaPlay V2`, tamamen yeni bir ürün versiyonudur; V1 yalnız fikir, davranış ve örnekleme referansı olarak kullanılır
 - Uzun vadeli vizyon: MinaPlay ilerleyen seviyelerde 0-18 yaş aralığında okul öncesi, örgün öğretim ve engelli bireylerin okul süreci desteğine genişleyebilen bir eğitim ve gelişim destek platformuna dönüşebilir
 - Ana karakter ve davranış sistemi: `Pofi`
 - Dil: Türkçe
@@ -24,7 +25,7 @@ updated: 2026-04-18
 
 Konuşma ve gelişim desteği alan çocuklar için dijital deneyim yalnız kelime listesi veya oyun ekranı değildir. Çocuğun sakin kalabildiği, tekrar yapabildiği, taklit edebildiği, duygu tepkilerini güvenli biçimde gördüğü ve ebeveynin süreci ayrı bir katmandan destekleyebildiği kontrollü bir sistem gerekir.
 
-Mevcut referans uygulama `Konusu-Yorum`, bu ihtiyacı hızlı bir PWA prototipi olarak somutlaştırmıştır. Ancak ürün artık `MinaPlay` adıyla daha net bir kimliğe, Pofi merkezli davranış sistemine, sade çocuk yüzeyine ve ileride eğitim/terapi destek ağına büyüyebilecek sürdürülebilir bir proje hafızasına ihtiyaç duyar.
+Mevcut referans uygulama `Konusu-Yorum`, bu ihtiyacı hızlı bir PWA prototipi olarak somutlaştırmıştır. Ancak `MinaPlay V2` eski arayüzü veya kod kalıbını yamalayarak ilerlemez. V1; fikir, davranış, modül ve ebeveyn aracı örnekleri için referanstır. V2 ise Pofi merkezli, sade çocuk yüzeyli, düşük uyarımlı ve ileride eğitim/terapi destek ağına büyüyebilecek yeni bir ürün omurgasıdır.
 
 ## İhtiyaç
 
@@ -32,8 +33,9 @@ Mevcut referans uygulama `Konusu-Yorum`, bu ihtiyacı hızlı bir PWA prototipi 
 
 İhtiyaç şudur:
 
-- `Konusu-Yorum`da çalışan çekirdeği kaybetmeden `MinaPlay` kimliğine taşımak
+- V1'deki fikir ve davranış değerini kaybetmeden `MinaPlay V2`yi temiz bir ürün olarak yeniden kurmak
 - 0-5 yaş başlangıç odağında konuşma, taklit, duygu ve etkileşim pratiklerini desteklemek
+- pasif ekran kullanımını gelişim destekli, oyun temelli ve aktif etkileşime çevirmek
 - çocuğun yüzeyini sade, sakin, düşük uyarımlı ve dokunmatik tutmak
 - ebeveyn ayarlarını çocuk yüzeyinden ayrı bir katmanda yönetmek
 - Pofi'yi süs karakteri değil, yönlendiren, tepki veren, egzersiz gösteren ve sakinleştiren davranışsal etkileşim sistemi olarak kurmak
@@ -45,11 +47,14 @@ Mevcut referans uygulama `Konusu-Yorum`, bu ihtiyacı hızlı bir PWA prototipi 
 
 `MinaPlay`in amacı, konuşma ve gelişim desteği alan çocuğa kısa, sakin, tekrar edilebilir ve güven veren mikro etkileşimlerle destek olmaktır.
 
+Ürün klinik tedavi yerine geçmez. MinaPlay, çocuğun evde tekrar, taklit, konuşma, duygu ve dikkat pratiği yapmasına yardımcı olan dijital oyun/terapi destek arkadaşıdır. Çocuk için oyun ve güvenli rehberlik, aile için zaman kazanma ve vicdan rahatlığı, terapist/eğitimci için ev egzersizlerinin planlı ve takip edilebilir devamı hedeflenir.
+
 Ürün şu ilkelere yaslanır:
 
 - çocuk dokunur, dinler, taklit eder ve tekrar eder
 - yanlış cevap veya hedef dışı dokunuş cezalandırıcı olmaz
 - Pofi yumuşak biçimde yönlendirir, tepki verir ve bağlama göre görsel ifade değiştirir
+- Pofi yalnız duygu değiştiren karakter değil, bağlama göre görünürlüğü, büyüklüğü ve dikkat çekme gücü yönetilen canlı bir presence sistemidir
 - ebeveyn gerektiğinde ayrı katmandan içerik, ses, sınır ve destek ayarlarını yönetir
 - uygulama telefonda ve tablette rahat çalışır
 - offline/PWA davranışı temel kullanım için güven verir
@@ -79,43 +84,46 @@ Bu vizyon bugünkü PWA çekirdeğine erken yüklenmez; ürün hafızasında gel
 - veri şimdilik local-first ilerler
 - server tarafı şimdilik ince servis ve deploy yüzeyidir
 - karmaşık hesap, bulut senkronizasyonu, terapist paneli veya okul ağı erken açılmaz
-- çalışan `Konusu-Yorum` davranışı korunarak temizlenir
+- V1 davranışı ürün hafızası olarak korunur; V2 uygulama temeli yeni kurulur
+- çocuk yüzeyinde tek görev, tek mesaj ve tek görsel odak korunur
+- MVP sürecinde yeni mod eklemek veya kapsam büyütmek yerine stabilite, tutarlılık ve kullanıcı hissi öncelenir
 
 ## Başarı Ölçütleri
 
-- çocuk ana mod kartlarını tablette ve telefonda kolayca ayırt eder
-- çocuk nesneye dokunduğunda kelime veya ses doğru ve anlaşılır biçimde duyulur
-- hedef dışı dokunuş çocuğa başarısızlık hissi vermez; Pofi yumuşak yönlendirmeye devam eder
-- Eşleme, Cümle, Hikaye, Ayna, Uyku ve Ceee akışları çekirdek navigasyonda doğru ayrışır
-- Ayna modunda egzersiz yüzü egzersiz sırasında, ödül yüzü egzersiz tamamlandıktan sonra görünür
-- Uyku modunda yalnız sleepy/sleep Pofi durumları kullanılır ve rastgele duygu/guide state çalışmaz
-- ebeveyn ayarları çocuk yüzeyini boğmadan ayrı katmanda yönetilir
-- PWA mobil/tablet kullanımında okunur, dokunulur ve akıcıdır
+- çocuk aktiviteyi anlayıp yönlendirme sonrası doğru aksiyona yaklaşır
+- çocuk Pofi'ye bakıp tekrar, taklit veya dikkat davranışı gösterir
+- çocuk başarısız hissetmeden yeniden dener ve akışta kalır
+- Pofi dikkat çeker ama aktiviteyi bölmez
+- ebeveyn uygulamaya güven duyar, temel ilerleme ve tekrar ihtiyacını hızlıca anlar
+- Parent panel yalnız sayı göstermez; kısa yorum ve yönlendirme üretir
+- PWA mobil/tablet kullanımında okunur, dokunulur ve düşük uyarımlı kalır
 - build, lint, unit test ve e2e testleri ürün güvenini korur
-- legacy CRM ve eski karakter/asset parçaları ürün çekirdeğiyle karıştırılmaz
 
 ## Kapsam
 
-### Dahil
+### MVP Dahil
 
+- Ana ekran
 - Dokun modu
 - Eşleme modu
-- Cümle modu
-- Hikaye modu
 - Ayna modu
 - Uyku modu
-- Ceee bonus modu
 - Parent panel
 - Pofi davranış/state/render sistemi
-- özel ses kaydı ve kayıt kütüphanesi
-- hikaye ve kolay cümle yönetimi
-- ilerleme ve tekrar takibi
+- temel ilerleme ve tekrar takibi
+- temel kayıt durumu
 - PWA manifest ve service worker
 - Railway deploy uyumu
 - test ve doğrulama hattı
 
-### Hariç
+### MVP Dışı / Sonra
 
+- Cümle modu
+- Hikaye modu
+- Ceee bonus modu
+- gelişmiş ebeveyn analizleri
+- özel ses kaydı ve kayıt kütüphanesinin gelişmiş hali
+- hikaye ve kolay cümle yönetimi
 - ilk aşamada kullanıcı hesabı ve bulut senkronizasyonu
 - ödeme, abonelik veya mağaza kurgusu
 - klinik tanı veya tıbbi yönlendirme iddiası

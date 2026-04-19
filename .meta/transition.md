@@ -1,19 +1,21 @@
 ---
 name: transition
-description: Konusu-Yorum referans uygulamasından MinaPlay ürün omurgasına geçiş yönünü ve temel karar eksenlerini taşır.
+description: Konusu-Yorum/V1 referansından MinaPlay V2 ürün omurgasına geçiş yönünü ve temel karar eksenlerini taşır.
 created: 2026-04-17
-updated: 2026-04-18
+updated: 2026-04-19
 ---
 
 # Geçiş
 
 ## Özet
 
-Bu belge, çalışan `Konusu-Yorum` uygulamasından `MinaPlay` ürün omurgasına geçişi tanımlar.
+Bu belge, `Konusu-Yorum` ve V1 prototipinden `MinaPlay V2` ürün omurgasına geçişi tanımlar.
 
 Ana karar:
 
 - `Konusu-Yorum` referans ve prototip kaynaktır
+- V1 yalnız fikir, davranış ve örnekleme referansıdır
+- `MinaPlay V2` tamamen yeni ürün versiyonudur
 - `MinaGrow` repo kökü ürün hafızasını ve hedef yerleşimi taşır
 - `MinaPlay` uygulama adı ve hedef ürün kimliğidir
 - `Pofi` davranışsal etkileşim sistemidir
@@ -36,19 +38,20 @@ Ana karar:
 - Railway deploy uyumu
 - build/lint/test/e2e hattı
 
-`/Users/umitaydin/Documents/MinaGrow` içinde ise meta ve agent omurgası bulunur. `MinaPlay` klasörü hedef uygulama alanı olarak açılmıştır fakat ürün kodu henüz bu alana taşınmamıştır.
+`/Users/umitaydin/Documents/MinaGrow` içinde meta ve agent omurgası bulunur. `MinaPlay` klasörü hedef uygulama alanıdır; ancak V2 kararına göre bu alan eski uygulamayı doğrudan taşıyan bir kopya değil, yeni ürün omurgasının kurulacağı alandır.
 
 ## Geçişin Amacı
 
-Geçişin amacı çalışan ürünü sıfırdan yazmak değildir.
+Geçişin amacı V1'i doğrudan ürün temeli olarak taşımak değildir.
 
 Amaç:
 
-- referans davranışı korumak
+- referans davranışı ve ürün derslerini korumak
 - ürün adını ve hafızasını `MinaPlay`e çekmek
+- `MinaPlay V2`nin temiz ve yeni bir ürün versiyonu olduğunu netleştirmek
 - Pofi'yi merkezi davranış sistemi olarak netleştirmek
 - repo içindeki meta ve agent yüzeylerini doğru bağlama taşımak
-- uygulama kodunu ileride temiz bir hedef alana almak
+- V1'den yalnız gerekli davranış, veri ve özellik kararlarını V2'ye referans almak
 - legacy CRM parçalarını ürün çekirdeğinden ayırmak
 - eski karakter ve gövde assetlerini görünür ürün dilinden çıkarmak
 
@@ -82,22 +85,22 @@ Hedef:
 - MinaPlay, Pofi ve Konusu-Yorum ayrımını kanonik hale getirmek
 - 0-5 başlangıç odağı ve 0-18 uzun vadeli vizyonu doğru ayırmak
 
-### 2. Kod Taşıma Kararı
+### 2. V2 Kurulum Kararı
 
 Hedef:
 
-- `Konusu-Yorum` içindeki çalışan uygulamanın `MinaGrow/MinaPlay` içine nasıl taşınacağına karar vermek
+- V1 referansından hangi davranış ve özelliklerin V2'ye alınacağını, hangi UI/kod/asset parçalarının dışarıda kalacağını netleştirmek
 
 Seçenekler:
 
-- doğrudan kopyalama ve repo temizliği
-- Git geçmişiyle taşıma
-- önce referans repo üzerinde temizlik, sonra taşıma
+- V1 davranışlarını dokümante edip V2'yi temiz kurmak
+- belirli mod mantıklarını referans alıp UI/DOM/CSS'i yeniden yazmak
+- eski kopyayı yalnız regresyon ve karşılaştırma kaynağı olarak tutmak
 
 Bugünkü öneri:
 
-- önce temiz taşıma planı çıkarılır
-- sonra tek kapanış hedefiyle uygulama kodu `MinaPlay` içine alınır
+- önce V2 tasarım sistemi ve MVP çekirdeği kurulur
+- sonra V1'de işe yarayan davranışlar seçici biçimde yeni omurgaya uyarlanır
 
 ### 3. Ürün Kimliği Temizliği
 
@@ -143,13 +146,13 @@ Seçenekler:
 
 Hedef:
 
-- 0-18 yaş genişleme vizyonunu bugünkü taşıma işinden ayrı tutmak
+- 0-18 yaş genişleme vizyonunu bugünkü V2 MVP işinden ayrı tutmak
 - okul öncesi, örgün öğretim, gönüllü eğitimci ağı ve engelli bireylerin okul süreci desteğini gelecek ürün yönü olarak korumak
 - terapist/eğitimci dashboard'u, planlama, raporlama ve ev egzersizi sistemini bugünkü çekirdeğe karıştırmamak
 
 ## Geçiş Riskleri
 
-- çalışan prototipi taşırken davranış kırılabilir
+- V1 davranışları yeniden kurulurken ürün değeri eksik aktarılabilir
 - storage key adları değişirse yerel kayıtlar kaybolabilir
 - asset yolları ve service worker cache listesi taşıma sırasında bozulabilir
 - package scriptleri hedef klasörde yanlış çalışabilir
@@ -161,4 +164,4 @@ Hedef:
 
 Önce hafıza doğru MinaPlay/Pofi bağlamına çekilir.
 
-Sonra çalışan uygulama davranışı korunarak hedef ürün alanına taşınır.
+Sonra V1'den öğrenilen davranışlar V2 hedef ürün alanına seçici ve temiz biçimde yeniden kurulur.

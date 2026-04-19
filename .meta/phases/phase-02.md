@@ -1,25 +1,25 @@
 ---
 name: phase-02
-description: MinaGrow/MinaPlay için Konusu-Yorum referans uygulamasını hedef ürün alanına taşıma fazını tanımlar.
+description: MinaGrow/MinaPlay için V1 referansından MinaPlay V2 temiz ürün omurgasına geçiş fazını tanımlar.
 created: 2026-04-17
-updated: 2026-04-18
+updated: 2026-04-19
 ---
 
-# Phase 02 - Kod Taşıma ve Ürün Temizliği
+# Phase 02 - V2 Temiz Ürün Omurgası
 
 ## Amaç
 
-Bu fazın amacı, `/Users/umitaydin/Documents/Konusu-Yorum` içindeki çalışan PWA uygulamasını kontrollü şekilde `/Users/umitaydin/Documents/MinaGrow/MinaPlay` alanına taşımak ve ürün kimliğini temizlemektir.
+Bu fazın amacı, V1 referansındaki işe yarayan davranış ve ürün derslerini kaybetmeden `/Users/umitaydin/Documents/MinaGrow/MinaPlay` alanında yeni `MinaPlay V2` ürün omurgasını kurmaktır. V1 doğrudan taşınacak uygulama temeli değil; fikir, davranış ve örnekleme referansıdır.
 
 ## Kapsam
 
 Dahil:
 
-- taşıma yöntemini belirlemek
-- gerekli dosyaları seçmek
-- gereksiz build çıktıları ve geçici dosyaları ayırmak
+- V2 tasarım sistemi ve MVP çekirdeğini kurmak
+- V1'den alınacak davranışları belirlemek
+- eski UI, CSS, asset ve legacy parçaları dışarıda bırakmak
 - MinaPlay ürün adlandırmasını tutarlı hale getirmek
-- build/lint/test/e2e hattını yeni hedefte çalıştırmak
+- build/lint/test/e2e hattını V2 hedefte çalıştırmak
 - Railway deploy etkisini değerlendirmek
 
 Hariç:
@@ -27,37 +27,38 @@ Hariç:
 - büyük backend mimarisi kurmak
 - kullanıcı hesabı veya cloud sync açmak
 - içerik yönetim paneli yapmak
-- ürün davranışını baştan tasarlamak
+- V1'i birebir kopyalamak
+- tüm modları aynı anda üretime almak
 
-## Taşıma İlkeleri
+## V2 İlkeleri
 
-- çalışan davranış korunur
-- `node_modules`, `dist`, `output`, `test-results` gibi üretilebilir çıktılar taşınmaz
-- asset yolları ve service worker cache davranışı kontrol edilir
-- package scriptleri yeni klasörde doğrulanır
+- ürün davranışı korunur, UI ve uygulama omurgası temiz kurulur
+- `node_modules`, `dist`, `output`, `test-results` gibi üretilebilir çıktılar V2 kaynağı sayılmaz
+- asset yolları ve service worker cache davranışı V2'ye göre yeniden belirlenir
+- package scriptleri V2 klasöründe doğrulanır
 - legacy CRM dosyalarının ürün çekirdeğiyle ilişkisi ayrı karar olarak görünür tutulur
 
 ## İş Paketleri
 
-### Paket 01 - Taşıma Planı
+### Paket 01 - V1 Referans Haritası
 
 Amaç:
 
-- hangi dosyaların taşınacağını ve hangi dosyaların dışarıda kalacağını netleştirmek
+- V1'den alınacak davranış, modül fikri, Parent panel değeri ve Pofi kararlarını netleştirmek
 
 Kapanış ölçütü:
 
-- uygulanabilir dosya taşıma planı çıkar
+- V2'ye alınacak referans davranış listesi çıkar
 
-### Paket 02 - Uygulama Kopyası
+### Paket 02 - V2 Uygulama Omurgası
 
 Amaç:
 
-- seçilen kaynak dosyaları `MinaPlay` alanına almak
+- `MinaPlay` alanında yeni ana ekran, Dokun, Eşleme, Ayna, Uyku ve temel Parent panel omurgasını kurmak
 
 Kapanış ölçütü:
 
-- hedef klasörde uygulama install/build çalışabilecek duruma gelir
+- hedef klasörde V2 install/build çalışabilecek duruma gelir
 
 ### Paket 03 - Kimlik Temizliği
 
@@ -81,4 +82,4 @@ Kapanış ölçütü:
 
 ## Faz Kapanışı
 
-Bu faz, MinaPlay klasörü çalışan uygulama kodunu taşıdığında ve doğrulama hattı yeni yerde anlamlı şekilde çalıştığında kapanır.
+Bu faz, MinaPlay klasörü V2 MVP omurgasını çalıştırdığında ve doğrulama hattı yeni yerde anlamlı şekilde çalıştığında kapanır.

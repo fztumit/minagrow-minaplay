@@ -2,7 +2,7 @@
 name: web
 description: MinaPlay PWA yüzeyinin rolünü, ana kullanım akışını, modüllerini ve bugünkü yapı yönünü tanımlar.
 created: 2026-04-17
-updated: 2026-04-18
+updated: 2026-04-19
 ---
 
 # Web
@@ -28,11 +28,12 @@ Ana parçalar:
 
 - ana ekran kartları
 - Pofi davranış ve görsel ifade alanları
+- Pofi presence katmanı
 - modül view'leri
 - Parent panel
 - PWA manifest ve service worker davranışı
 
-Ana ekran 6 ana kart gösterir. Kartlar 3x2 düzendedir. Pofi kartlarda rehberdir, ana içerik değildir. İkon veya ana görsel her zaman Pofi'den daha baskın olmalıdır. Pofi standart olarak kartların sağ-alt köşesinde durur. Ceee bonus kart/strip olarak ayrı tutulur ve 6 ana kart sayısına dahil edilmez.
+V2 ana ekranı MVP sürecinde yalnız aktif çekirdek modlara odaklanır. Tablet düzeni 3x2, telefon düzeni 2x3 prensibini korur; ancak MVP'de aktif modlar Ana Ekran, Dokun, Eşleme, Ayna ve Uyku ile sınırlıdır. Cümle, Hikaye ve Ceee hazır olsa bile pasif veya "yakında" durumunda tutulabilir. Pofi kartlarda ve sahnede rehberdir; gerektiğinde büyüyebilir, dikkat çekebilir ve sonra geri çekilir.
 
 ## Bilgi Mimarisi
 
@@ -47,10 +48,26 @@ Ana view eşleşmeleri:
 - Ceee / Peekaboo: `view-peekaboo`
 - Parent panel: `view-parent`
 
+MVP aktif view'leri:
+
+- Ana ekran
+- `view-touch`
+- `view-match`
+- `view-mirror`
+- `view-sleep`
+- `view-parent`
+
+MVP dışı veya pasif view'ler:
+
+- `view-sentence`
+- `view-story`
+- `view-peekaboo`
+- gelişmiş ebeveyn analizleri
+
 ## Ana Kullanım Akışı
 
 1. Çocuk veya ebeveyn uygulamayı açar.
-2. Ana ekranda 6 temel mod ve ayrı bonus Ceee alanı görünür.
+2. Ana ekranda MVP aktif modları görünür; MVP dışı modlar akışı bölmeyecek şekilde pasif tutulur.
 3. Pofi mevcut bağlama uygun tek aktif state ile rehberlik eder.
 4. Çocuk seçtiği modda dokunur, eşler, cümle kurar, hikaye dinler, taklit eder veya sakinleşir.
 5. Yanlış veya hedef dışı etkileşim cezalandırılmaz; Pofi yumuşak yönlendirme yapar.
@@ -175,11 +192,15 @@ Rol:
 - içerik, kayıt, kullanım sınırı ve ilerleme gibi destek araçlarını yönetmek
 - uygulamanın kullanım analizini göstermek
 - hangi bölümde neler oynandığını, neler yapıldığını, doğru/yanlış denemeleri, tamamlanan egzersizleri, tekrar sayısını ve oturum sıklığını görünür yapmak
+- veriyi yalnız sayı olarak değil, kısa yorum ve yönlendirme ile anlamlandırmak
 
 İlke:
 
 - güçlü olabilir ama çocuk yüzeyini boğmaz
 - ileride terapist/eğitimci araçları ayrı katmanlarda büyüyebilir
+- ebeveyn 5 saniyede ilerleme, tekrar ihtiyacı ve kayıt durumunu anlayabilmelidir
+- panel destekleyici ve yönlendirici dil kullanır; başarısız, yetersiz, eksik gibi yargılayıcı ifadeler kullanılmaz
+- panel çocuk ekranından daha sade, daha ciddi ve daha az renkli ayrılır; teknik veya korkutucu görünmez
 
 Kontrol adayları:
 
@@ -204,6 +225,36 @@ Kontrol adayları:
 - kamera, mikrofon, ses ve tarayıcı desteği durumları açıkça ifade edilir
 - olumsuz geri bildirim verilmez
 - tekrar ve yumuşak yönlendirme ana yöntemdir
+
+## Çocuk Ekranı Anayasası
+
+Bu kurallar opsiyonel değildir.
+
+- her ekranda yalnız 1 görev, 1 mesaj ve 1 görsel odak bulunur
+- aynı anda birden fazla görev veya ikinci dikkat odağı sunulmaz
+- "yanlış yaptın" gibi başarısızlık dili kullanılmaz
+- Pofi üzülebilir, şaşırabilir veya esprili tepki verebilir; ancak negatif geri bildirim vermez
+- tercih edilen dil "bir daha deneyelim" ve "hadi birlikte yapalım" çizgisindedir
+- metinler mümkün olduğunca 3-4 kelimeyi aşmaz
+- sesli yönlendirme ve tek komutlu ifade tercih edilir
+- küçük buton kullanılmaz; yanlış dokunma riski azaltılır
+- aynı anda yalnız 1 hareketli öğe bulunur
+- ani hareket, hızlı blink ve sürpriz UI değişimi kullanılmaz
+- aynı aksiyon aynı sonucu, aynı durum aynı tepkiyi üretir
+- her akış mümkün olduğunca 2-3 adımda tamamlanır
+- ekran "burada güvendeyim, birlikte yapıyoruz" hissi vermelidir
+
+## Ebeveyn Paneli Anayasası
+
+Parent panel yalnız ayar ekranı değildir; ebeveyne güven, kontrol ve anlam sunan rehber alanıdır.
+
+- panelin temel hissi "çocuğum ilerliyor ve doğru yerdeyim" olmalıdır
+- veri yorumla birlikte sunulur; yalnız sayı gösterilmez
+- her önemli veri kısa öneri üretir
+- ebeveyn içerik ekleyebilir, ses kaydı yapabilir ve ilerlemeyi görebilir
+- ebeveyn kontrol hisseder ama çocuğun akışını bozacak müdahaleye zorlanmaz
+- ilerleme, tekrar ihtiyacı ve kayıt durumu tek bakışta görünür
+- gizlilik ve saygı korunur; gereksiz detaydan kaçınılır
 
 ## Gelecek Eğitim Katmanları
 

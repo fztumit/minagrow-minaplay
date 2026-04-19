@@ -2,7 +2,7 @@
 name: architecture
 description: MinaPlay projesinin teknik omurgasını, ana bileşenlerini, veri akışını ve mimari yaklaşımını tanımlar.
 created: 2026-04-17
-updated: 2026-04-18
+updated: 2026-04-19
 ---
 
 # Mimari
@@ -26,8 +26,8 @@ Bugünkü yön şudur:
 - uygulama önce mobil/tablet PWA deneyimi olarak düşünülür
 - çocuk etkileşimi server round-trip'e bağımlı olmadan hızlı çalışır
 - çocuk yüzeyi sade, ebeveyn araçları ayrı katmanda kalır
-- Pofi süs karakteri değil, modüller arası davranış/state/render sistemidir
-- Pofi için aynı anda tek aktif state korunur
+- Pofi süs karakteri değil, modüller arası davranış/state/presence/render sistemidir
+- Pofi için aynı anda tek aktif state ve tek aktif presence seviyesi korunur
 - ebeveyn ses kayıtları ve ilerleme verileri local-first tutulur
 - server tarafı gereksiz ürün kuralı üretmez
 - modüller küçük ve bağımsız kalır
@@ -128,19 +128,21 @@ Bugünkü yön şudur:
 ### Pofi Davranış Sistemi
 
 - Dosya alanı: `src/modules/pofiEmotion/`
-- Rol: Pofi state seçimi, render, geçiş ve mod bağlamını yönetmek
+- Rol: Pofi state seçimi, presence seviyesi, render, geçiş ve mod bağlamını yönetmek
 - State kategorileri: `emotion`, `exercise`, `guide`, `state`
+- Presence seviyeleri: `hidden`, `subtle`, `normal`, `focus`, `stage`
 - Asset kökü: `/assets/pofi_emoji`
 
 Kritik kurallar:
 
-- aynı anda tek aktif Pofi state olmalıdır
+- aynı anda tek aktif Pofi state ve tek aktif Pofi presence seviyesi olmalıdır
 - aynı container içinde üst üste render olmamalıdır
 - eski gövde katmanları kullanılmamalıdır
 - geçişler fade/scale ile yumuşak olmalıdır
 - Touch ve Matching gibi modlarda hızlı duygu değişimi engellenmelidir
 - Mirror egzersizi sırasında ödül/guide yüzü gösterilmemelidir
 - Sleep modunda yalnız sleepy ve sleep durumları kullanılmalıdır
+- `stage` presence kısa süreli olmalı ve aktiviteyi kalıcı olarak gölgelememelidir
 
 ## Veri Akışı
 
@@ -149,7 +151,7 @@ Kritik kurallar:
 3. `src/modules/main.ts` modülleri bootstrap eder, tab/view routing'i yönetir ve testing hook'ları bağlar.
 4. Her modül kendi DOM kökünü bulur ve olaylarını bağlar.
 5. Etkileşimler localStorage, tarayıcı ses/kamera API'leri ve DOM state attribute'ları üzerinden işlenir.
-6. Pofi davranış sistemi aktif mod ve etkileşim sonucuna göre tek state render eder.
+6. Pofi davranış sistemi aktif mod ve etkileşim sonucuna göre tek state ve tek presence seviyesi render eder.
 7. Test ve doğrulama `render_game_to_text` kancasıyla okunabilir state üretir.
 
 ## Server Yorumu

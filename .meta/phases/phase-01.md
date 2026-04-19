@@ -2,7 +2,7 @@
 name: phase-01
 description: MinaGrow/MinaPlay için meta ve agent hizalama fazını, kapsamını ve iş paketlerini tanımlar.
 created: 2026-04-17
-updated: 2026-04-18
+updated: 2026-04-19
 ---
 
 # Phase 01 - Meta ve Agent Hizalaması
@@ -75,4 +75,4 @@ Kapanış ölçütü:
 
 Bu faz, doküman ve agent hafızası doğru bağlama çekildiğinde kapanır.
 
-Sonraki faz, çalışan `Konusu-Yorum` uygulamasının `MinaPlay` alanına nasıl taşınacağını netleştirmelidir.
+Sonraki faz, V1 referansındaki davranış ve ürün derslerinden yararlanarak `MinaPlay` alanında V2 temiz ürün omurgasının nasıl kurulacağını netleştirmelidir.

@@ -2,7 +2,7 @@
 name: data-model
 description: MinaPlay projesinin temel veri yapısını, localStorage alanlarını, Pofi state modelini ve ilişki mantığını tanımlar.
 created: 2026-04-17
-updated: 2026-04-18
+updated: 2026-04-19
 ---
 
 # Veri Modeli
@@ -18,6 +18,7 @@ Ana karar:
 - kalıcılık ağırlıklı olarak `localStorage` üstündedir
 - ses kayıtları data URL olarak yerelde tutulur
 - Pofi state modeli runtime davranış sistemidir
+- Pofi presence modeli görünürlük, büyüklük ve dikkat çekme gücünü yönetir
 - test edilebilir state DOM attribute'ları ve `render_game_to_text` çıktısıyla görünür yapılır
 
 ## Ana Varlıklar
@@ -233,6 +234,36 @@ Kurallar:
 - Sleep modunda yalnız sleepy ve sleep durumları kullanılır
 - Mirror modunda egzersiz sırasında guide/reward yüzü gösterilmez
 
+## Pofi Presence Modeli
+
+Pofi state modeli tek başına yeterli değildir. V2'de Pofi'nin bir de `presence` seviyesi vardır. Presence; Pofi'nin ekranda ne kadar görünür olduğunu, ne kadar büyük olduğunu ve ne kadar dikkat çektiğini yönetir.
+
+Presence seviyeleri:
+
+- `hidden`: gizli, görünmez
+- `subtle`: hafif, küçük ve arka planda
+- `normal`: rehber seviyesinde
+- `focus`: odak, biraz büyür ve dikkat çeker
+- `stage`: sahne, kısa süreli büyük ve baskın görünür
+
+Temel kurallar:
+
+- aynı anda tek aktif Pofi state ve tek aktif presence seviyesi olur
+- presence seviyesi mod, dikkat ihtiyacı ve çocuğun beklenen aksiyonu ile ilişkilidir
+- `stage` seviyesi kısa sürelidir ve sonra `normal` veya `subtle` seviyesine döner
+- Pofi'nin büyümesi aktiviteyi kalıcı olarak gölgelemez
+- Pofi nefes hareketi gibi düşük frekanslı bir presence animasyonu taşıyabilir
+- uyku modunda presence sakinleşir; rastgele odak veya sahne davranışı çalışmaz
+
+Örnek davranış:
+
+- idle: `neutral` + `normal`
+- çocukdan aksiyon bekleniyor: `attention` + `focus`
+- dikkat toplanmadı: kısa süreli `attention` + `stage`
+- doğru aksiyon: `softHappy` + `normal`
+- yumuşak yönlendirme: `softPrompt` + `focus`
+- uyku: `sleepy` veya `sleep` + `subtle`
+
 ## Egzersiz Sistemi
 
 Ayna modunda Pofi egzersiz gösterir, çocuk taklit eder. Katı algılama yoktur; tekrar ve zaman bazlı ödül vardır.
@@ -289,6 +320,7 @@ Bugünkü owner ayrımı:
 - seed içerikler kod içinde veya statik data dosyalarında yaşar
 - kullanıcı/ebeveyn tarafından üretilen veriler localStorage içindedir
 - Pofi state runtime davranış sistemidir
+- Pofi presence runtime sahne/görünürlük sistemidir
 - server kalıcı veri owner'ı değildir
 - Railway deploy yalnız servis yüzeyidir
 - export/import akışları yerel veriyi taşımak için yardımcıdır

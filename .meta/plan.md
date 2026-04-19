@@ -2,7 +2,7 @@
 name: plan
 description: MinaPlay projesinin bugünkü yürütme yönünü, aktif odağını ve yakın çalışma sırasını tanımlar.
 created: 2026-04-17
-updated: 2026-04-18
+updated: 2026-04-19
 ---
 
 # Plan
@@ -11,19 +11,19 @@ updated: 2026-04-18
 
 Bugünkü aktif odak:
 
-`MinaPlay` ürün hafızasını Pofi davranış sistemi, 0-5 başlangıç odağı, 0-18 uzun vadeli vizyonu ve yeni bilgi mimarisiyle hizalamak.
+`MinaPlay V2` ürün anayasasını yazılı hafızaya geçirmek ve MVP kapsamını netleştirmek.
 
-Bu odak, eski hazır bağlamdan ve eski karakter/ürün adlarından kalan belirsizlikleri kaldırır. Çalışan `Konusu-Yorum` referansı korunur, ama kanonik ürün yönü `MinaPlay + Pofi` olarak netleşir.
+Bu odak, V1'i uygulama temeli olarak taşımayı bırakır. V1 yalnız fikir, davranış ve örnekleme referansı olarak kalır. V2 tamamen yeni bir ürün versiyonu olarak kurulacaktır.
 
 ## Bugünkü Kapanış Hedefi
 
-- ürün adı `MinaPlay` olarak netleşecek
-- başlangıç ürün odağı 0-5 konuşma, taklit, duygu ve etkileşim desteği olarak yazılacak
-- uzun vadeli vizyon 0-18 yaş, okul öncesi, örgün öğretim, gönüllü eğitimci ağı ve engelli bireylerin okul süreci desteği olarak ayrılacak
-- Pofi süs karakteri değil davranışsal etkileşim sistemi olarak tanımlanacak
-- 6 ana mod + Ceee bonus mimarisi meta dosyalarına işlenecek
-- Parent panel analiz, kontrol ve izleme rolüyle netleşecek
-- gelecek terapist/eğitimci ve raporlama vizyonu bugünkü çekirdekten ayrılacak
+- MinaPlay V2'nin tamamen yeni ürün versiyonu olduğu yazılı hafızaya işlenecek
+- V1 yalnız fikir, davranış ve örnekleme referansı olarak konumlanacak
+- ürün iddiası klinik tedavi yerine geçmeyen ev pratiği/dijital oyun arkadaşı çizgisinde netleşecek
+- pasif ekran kullanımı problemi özel marka adı kullanılmadan yazılacak
+- Pofi state sistemi yanında presence sistemiyle tanımlanacak
+- çocuk ekranı, Parent panel, renk/hareket güvenliği ve MVP kapsam anayasaları görünür olacak
+- başarı ölçütleri teknik çıktılardan çok davranışsal ve duygusal başarıya bağlanacak
 
 ## Kanonik Ürün Yönü
 
@@ -33,6 +33,8 @@ Başlangıç çekirdeği:
 - konuşma desteği
 - taklit
 - duygu ve etkileşim
+- dikkat pratiği
+- pasif ekran kullanımına alternatif aktif oyun/öğrenme deneyimi
 - sakin, yumuşak, düşük uyarımlı PWA deneyimi
 
 İlerleyen seviyeler:
@@ -44,7 +46,27 @@ Başlangıç çekirdeği:
 - gönüllü eğitimci ağı
 - ebeveyn, terapist, eğitimci ve okul destek aktörleri arasında kontrollü ağ
 
-## Bilgi Mimarisi
+## MVP Bilgi Mimarisi
+
+Aktif MVP modları:
+
+- Ana ekran
+- Dokun: `view-touch`
+- Eşleme: `view-match`
+- Ayna: `view-mirror`
+- Uyku: `view-sleep`
+- Parent panel: `view-parent`
+
+MVP dışı veya pasif modlar:
+
+- Cümle: `view-sentence`
+- Hikaye: `view-story`
+- Ceee: `view-peekaboo`
+- gelişmiş ebeveyn analizleri
+
+MVP sürecinde yeni mod eklemek, mevcut modları büyütmek veya kapsamı genişletmek yerine stabilite, tutarlılık ve kullanıcı hissi öncelenir.
+
+## Tam Ürün Bilgi Mimarisi
 
 Ana modlar:
 
@@ -73,6 +95,8 @@ Roller:
 - izleme
 - içerik ve kayıt yönetimi
 - kullanım analizi
+- yorumlanmış rehberlik
+- ebeveynin yeni kelime, cümle veya tekrar ihtiyacını anlamasını sağlama
 
 Analiz adayları:
 
@@ -83,6 +107,9 @@ Analiz adayları:
 - tamamlanan egzersizler
 - tekrar sayısı
 - oturum sıklığı
+- kayıt durumu
+- tekrar ihtiyacı
+- kısa öneri
 
 Kontrol adayları:
 
@@ -98,7 +125,7 @@ Kontrol adayları:
 
 ## Yakın Sıra
 
-### 1. Meta Kanon Hizalaması
+### 1. V2 Ürün Anayasası
 
 Durum:
 
@@ -106,25 +133,25 @@ Durum:
 
 Kapanış ölçütü:
 
-- `.meta` içinde eski yaş aralığı ifadesinin kalmaması
-- Pofi'nin yalnız süs karakteri gibi tanımlanmaması
-- 6 ana mod + Ceee ayrımının netleşmesi
-- 0-5 çekirdek ile 0-18 gelecek vizyonunun karışmaması
-- Parent panel analiz ve kontrol rolünün görünür olması
+- `.meta` içinde V2'nin tamamen yeni versiyon olduğu görünür
+- V1'in yalnız fikir/davranış referansı olduğu görünür
+- Pofi presence seviyeleri yazılıdır
+- çocuk ekranı ve Parent panel anayasaları görünürdür
+- MVP aktif/pasif mod ayrımı nettir
 
-### 2. Kod Taşıma Planı
+### 2. V2 Tasarım Sistemi
 
 Amaç:
 
-- `/Users/umitaydin/Documents/Konusu-Yorum` içindeki çalışan uygulamayı `/Users/umitaydin/Documents/MinaGrow/MinaPlay` alanına taşıma yöntemini netleştirmek
+- Pofi Sahnesi yaklaşımını, renk/hareket güvenlik kurallarını, ana ekran gridini ve mod ekran kalıplarını uygulamaya hazır hale getirmek
 
 Karar gerektirenler:
 
-- Git geçmişi korunacak mı
-- mevcut `node_modules`, `dist`, `output`, `test-results` taşınacak mı
-- Railway deploy yeni klasör yapısına göre nasıl güncellenecek
-- storage key adları korunacak mı
-- Pofi asset ve state sistemi nasıl taşınacak
+- token adları
+- Pofi presence ölçüleri ve üst sınırları
+- aktif/pasif kart davranışı
+- Parent panel görsel ayrımı
+- mobil/tablet kırılımları
 
 ### 3. Ürün Sertleştirme
 
