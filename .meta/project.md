@@ -2,7 +2,7 @@
 name: project
 description: MinaPlay projesinin problemi, amacı, kapsamı, başarı ölçütleri ve temel bağlamını tanımlar.
 created: 2026-04-17
-updated: 2026-04-19
+updated: 2026-04-22
 ---
 
 # Proje
@@ -19,7 +19,7 @@ updated: 2026-04-19
 - Dil: Türkçe
 - Hedef cihaz: tablet ve telefon
 - Referans repo: `/Users/umitaydin/Documents/Konusu-Yorum`
-- Hedef ürün alanı: `/Users/umitaydin/Documents/MinaGrow/MinaPlay`
+- Hedef ürün alanı: `/Users/umitaydin/Documents/Studio-workspace-Project`
 
 ## Problem
 
@@ -39,6 +39,9 @@ Mevcut referans uygulama `Konusu-Yorum`, bu ihtiyacı hızlı bir PWA prototipi 
 - çocuğun yüzeyini sade, sakin, düşük uyarımlı ve dokunmatik tutmak
 - ebeveyn ayarlarını çocuk yüzeyinden ayrı bir katmanda yönetmek
 - Pofi'yi süs karakteri değil, yönlendiren, tepki veren, egzersiz gösteren ve sakinleştiren davranışsal etkileşim sistemi olarak kurmak
+- auth, parent, therapist ve çocuk ilişkilerini gelecekte üyelik sistemine bağlanabilecek biçimde düşünmek
+- online/offline birlikte yaşayabilecek storage ve sync yönü bırakmak
+- terapistler için ileride görüntülü görüşme, planlama ve takip yüzeylerine bağlanabilecek sistem temeli kurmak
 - okul öncesi ve ileride örgün öğretim desteğine genişleyebilecek bir ürün yönü bırakmak
 - gönüllü eğitimciler, ebeveynler, terapistler ve okul sürecindeki destek aktörleri arasında ileride kontrollü bir ağ kurulabilecek zemini korumak
 - legacy CRM/webhook ve eski karakter/asset parçalarını ürün çekirdeğinden ayırmak
@@ -71,6 +74,8 @@ MinaPlay bugünkü çekirdekte 0-5 yaş konuşma, taklit, duygu ve etkileşim de
 - engelli bireylerin okul sürecinde günlük, haftalık ve dönemsel desteklenmesi
 - ebeveyn, gönüllü eğitimci, terapist ve okul destek aktörleri arasında kontrollü bir ağ
 - kişiselleştirilmiş planlar, kısa ev egzersizleri, tekrar takibi ve raporlama
+- terapist ile aile/çocuk arasında görüntülü görüşme ve plan aktarımı
+- yeni eğitsel oyunlar, zaman geçirmeye uygun ama gelişim odaklı aktiviteler
 
 Bu vizyon bugünkü PWA çekirdeğine erken yüklenmez; ürün hafızasında gelecek yön olarak tutulur.
 
@@ -82,6 +87,7 @@ Bu vizyon bugünkü PWA çekirdeğine erken yüklenmez; ürün hafızasında gel
 - ebeveyn araçları ayrı katmanda destekleyici kalır
 - Pofi davranış sistemi her modda tek aktif state ile çalışır
 - veri şimdilik local-first ilerler
+- veri ve servis katmanı ileride online/offline birlikte çalışabilecek adapter mantığına açık tutulur
 - server tarafı şimdilik ince servis ve deploy yüzeyidir
 - karmaşık hesap, bulut senkronizasyonu, terapist paneli veya okul ağı erken açılmaz
 - V1 davranışı ürün hafızası olarak korunur; V2 uygulama temeli yeni kurulur
@@ -125,6 +131,9 @@ Bu vizyon bugünkü PWA çekirdeğine erken yüklenmez; ürün hafızasında gel
 - özel ses kaydı ve kayıt kütüphanesinin gelişmiş hali
 - hikaye ve kolay cümle yönetimi
 - ilk aşamada kullanıcı hesabı ve bulut senkronizasyonu
+- gerçek üyelik ve rol yönetimi
+- terapist paneli ve görüntülü görüşme
+- çevrimiçi senkronizasyon ve çok cihazlı veri akışı
 - ödeme, abonelik veya mağaza kurgusu
 - klinik tanı veya tıbbi yönlendirme iddiası
 - terapist dashboard'u
@@ -173,6 +182,6 @@ Bu vizyon bugünkü PWA çekirdeğine erken yüklenmez; ürün hafızasında gel
 
 - mevcut çalışan repo: `/Users/umitaydin/Documents/Konusu-Yorum`
 - hedef repo kökü: `/Users/umitaydin/Documents/MinaGrow`
-- hedef uygulama alanı: `/Users/umitaydin/Documents/MinaGrow/MinaPlay`
+- hedef uygulama alanı: `/Users/umitaydin/Documents/Studio-workspace-Project`
 - canlı sürüm: `https://minagrow-minaplay-production.up.railway.app/`
 - GitHub repo adı: `fztumit/minagrow-minaplay`

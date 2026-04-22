@@ -2,7 +2,7 @@
 name: architecture
 description: MinaPlay projesinin teknik omurgasını, ana bileşenlerini, veri akışını ve mimari yaklaşımını tanımlar.
 created: 2026-04-17
-updated: 2026-04-19
+updated: 2026-04-22
 ---
 
 # Mimari
@@ -20,6 +20,7 @@ Bugünkü yön şudur:
 - veri kalıcılığı ağırlıklı olarak tarayıcı `localStorage` içindedir
 - ses, kamera ve medya davranışı tarayıcı API'lerine yaslanır
 - deploy Railway üzerinde Dockerfile ile yapılır
+- V2 uygulama workspace'i `/Users/umitaydin/Documents/Studio-workspace-Project` içinde kurulacaktır
 
 ## Mimari İlkeler
 
@@ -37,7 +38,7 @@ Bugünkü yön şudur:
 ## Sistem Yapısı
 
 - Sistem tipi: tek uygulama repo yapısında PWA + ince Express servis
-- Ana yüzeyler: `public`, `src/modules`, `src/app.ts`, `server.ts`
+- Ana yüzeyler: `public`, `src/core`, `src/pofi`, `src/features`, `src/entities`, `src/services`, `src/server`, `server.ts`
 - Çalışma modeli: TypeScript modülleri build ile `public/js` içine çıkar, Express bunları statik olarak servis eder
 
 V2 uygulama kök yapısı:
@@ -74,14 +75,35 @@ Gelecek modüller:
 
 Gelecek modüller kod/rota düzeyinde var olabilir, ancak MVP çocuk UI içinde görünmez veya yalnız "yakında" durumunda pasif gösterilir.
 
+V2 klasör ağacı kararı:
+
+```text
+src/
+  core/
+  pofi/
+  entities/
+  features/
+  services/
+  shared/
+  server/
+```
+
+Bu yapı feature-first + core-first yaklaşımıyla seçilmiştir. Amaç, bugünkü çocuk yüzeyini sade tutarken auth, therapist, çağrı, senkronizasyon ve yeni terapi/oyun alanlarını ileride kırmadan ekleyebilmektir.
+
 ### Yüzey Rolleri
 
 - `public/index.html`: ana DOM ve view yapısı
 - `public/style.css`: ana görsel sistem
 - `public/manifest.webmanifest`: PWA kimliği
 - `public/sw.js`: service worker
-- `src/modules`: ürün modüllerinin TypeScript kaynakları
-- `src/app.ts`: Express uygulama kurulumu
+- `src/core`: uygulama bootstrap, router, shell ve root layout
+- `src/pofi`: Pofi Engine V2, event bus, idle timer, renderer ve asset çözümü
+- `src/entities`: ürün varlıkları ve veri şekilleri
+- `src/features`: çocuk modülleri, parent panel, therapist panel, auth, calls ve ileride aktiviteler
+- `src/services`: auth, storage, sync, media, speech, camera, analytics, calls servis katmanı
+- `src/shared`: küçük ortak util, type, dom ve sabitler
+- `src/server`: Express tarafı route, auth, signaling ve storage adaptörleri
+- `src/app.ts`: Express uygulama kurulumu veya `src/core` ile bağlanan server shell
 - `server.ts`: runtime giriş noktası
 - `tests`: unit ve Playwright doğrulama yüzeyi
 - `output`: Playwright/skill doğrulama çıktıları
@@ -99,7 +121,41 @@ Gelecek modüller kod/rota düzeyinde var olabilir, ancak MVP çocuk UI içinde 
 - Deploy: Dockerfile + Railway
 - Yardımcı bağımlılıklar: `zod`, `dotenv`, `morgan`, `lowdb`, `axios`
 
+## Katman Kararı
+
+MinaPlay V2 ağır bir enterprise katmanlı yapı ile başlamaz. Ancak büyüme yönü açık olduğu için şu ayrımlar erken kabul edilir:
+
+- `core` uygulama kabuğudur
+- `pofi` merkezi davranış motorudur
+- `features` kullanıcıya görünen ekran ve akışlardır
+- `entities` veri varlıklarıdır
+- `services` online/offline ve cihaz/sunucu servislerini soyutlar
+- `shared` yalnız küçük ortak yardımcılar taşır
+- `server` ince backend ve gelecekte signaling/auth uyum katmanıdır
+
+Kural:
+
+- storage, auth, calls veya sync mantığı doğrudan feature içine gömülmez
+- doğrudan `localStorage` veya doğrudan uzak servis erişimi her yere dağılmaz
+- adapter-first servis mantığı korunur; bugün local implementasyon, yarın sync/remote implementasyon eklenebilir
+
 ## Uygulama Modülleri
+
+V2'de modüller `src/features` altında yaşar. Bugünkü dosya örnekleri V1 referansından gelir; V2 implementasyonunda aşağıdaki feature alanları esas alınır:
+
+- `home`
+- `touch`
+- `matching`
+- `mirror`
+- `sleep`
+- `ceee`
+- `sentence`
+- `stories`
+- `parent-panel`
+- `therapist-panel`
+- `auth`
+- `calls`
+- `activities`
 
 ### Dokun
 
@@ -271,11 +327,12 @@ Kural: Her modül stabil olmadan sonraki modül büyütülmez. V2 her şeyi ayn�
 
 1. Kullanıcı PWA yüzeyini açar.
 2. `public/index.html` ana DOM iskeletini sağlar.
-3. `src/modules/main.ts` modülleri bootstrap eder, tab/view routing'i yönetir ve testing hook'ları bağlar.
-4. Her modül kendi DOM kökünü bulur ve olaylarını bağlar.
-5. Etkileşimler localStorage, tarayıcı ses/kamera API'leri ve DOM state attribute'ları üzerinden işlenir.
-6. Pofi davranış sistemi aktif mod ve etkileşim sonucuna göre tek state ve tek presence seviyesi render eder.
-7. Test ve doğrulama `render_game_to_text` kancasıyla okunabilir state üretir.
+3. `src/core/main.ts` veya eşdeğeri bootstrap katmanı shell, router ve Pofi motorunu başlatır.
+4. Her feature kendi view DOM kökünü bulur ve olaylarını bağlar.
+5. Etkileşimler önce feature event'ine, oradan gerekli entity/service adaptörlerine gider.
+6. Storage ve sync erişimi servis adaptörleri üzerinden çözülür; feature katmanına dağılmaz.
+7. Pofi davranış sistemi aktif mod ve etkileşim sonucuna göre tek state ve tek presence seviyesi render eder.
+8. Test ve doğrulama `render_game_to_text` kancasıyla okunabilir state üretir.
 
 ## Server Yorumu
 

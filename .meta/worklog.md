@@ -2,7 +2,7 @@
 name: worklog
 description: MinaGrow/MinaPlay için iş kayıtlarını, karar izlerini ve kapanan çalışma adımlarını kronolojik akışta tutar.
 created: 2026-04-17
-updated: 2026-04-19
+updated: 2026-04-22
 ---
 
 # Worklog
@@ -19,3 +19,4 @@ Bu dosya, `MinaGrow` üst bağlamındaki `MinaPlay` meta omurgasının yürütme
 - 2026-04-19 | Meta | Pofi presence matrisinin netleşmesi | Dokun, Eşleme, Ayna ve Uyku için gizli/hafif/normal/odak/sahne presence seviyeleri, stage süresi ve tek yüz/tek duygu kuralı `.meta` hafızasına işlendi | Pofi'nin sabit karakter değil, duruma göre sahneye girip geri çekilen sakin rehber olması kanonik hale geldi
 - 2026-04-19 | Meta | MinaPlay V2 teknik omurgasının işlenmesi | Tek global Pofi instance, `pofi-root`, modüllerin yalnız olay göndermesi, idle timer, home/touch/matching/mirror/sleep/ceee sıralı kurulum, Parent Panel MVP ve Uyku'da Pofi'nin bulut gibi görünür kalması `.meta` hafızasına işlendi | Kod yazmadan önce V2'nin temiz, modüler ve ölçeklenebilir kurulum sırası netleşti
 - 2026-04-22 | Meta | Final Pofi Engine V2 sözleşmesinin işlenmesi | Pofi için role-first state modeli, `assetKey` ve `locked` alanları, typed event bus, persistent `img` render, deterministik asset çözümü ve Mirror/Sleep kategori kilitleri `.meta` hafızasına işlendi | Implementasyon öncesi Pofi motoru tek instance, tek karar merkezi ve öngörülebilir davranış kurallarıyla netleşti
+- 2026-04-22 | Meta | V2 klasör ağacı ve gelecek taşıma yönünün işlenmesi | V2 uygulama workspace'i `Studio-workspace-Project` olarak, klasör ağacı `core/pofi/entities/features/services/shared/server` ayrımıyla ve online/offline, auth, therapist, görüntülü görüşme, yeni terapi/aktivite yönlerini taşıyacak adapter-first mimariyle hafızaya işlendi | Implementasyon öncesi dosya yerleşimi ve büyüme yönü zorlamayacak şekilde netleşti

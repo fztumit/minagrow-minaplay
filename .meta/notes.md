@@ -2,7 +2,7 @@
 name: notes
 description: MinaPlay için açık soruları, teknik riskleri, görülen eksikleri ve ileri adayları toplar.
 created: 2026-04-17
-updated: 2026-04-19
+updated: 2026-04-22
 ---
 
 # Notlar
@@ -20,6 +20,8 @@ updated: 2026-04-19
 - Railway deploy yeni repo yerleşimine göre nasıl güncellenecek?
 - uyku çıkış gesture'ı sol üst 3 tık + aşağı çekme olarak teknik açıdan nasıl güvenilir uygulanacak?
 - kamera ile yüz/egzersiz ölçümü hangi hassasiyet ve gizlilik sınırlarıyla yapılacak?
+- therapist görüntülü görüşme altyapısında hangi sağlayıcı veya protokol tercih edilecek?
+- üyelik sistemi hangi aşamada local-only yapıdan gerçek auth akışına geçecek?
 
 ## Teknik Riskler
 
@@ -37,6 +39,8 @@ updated: 2026-04-19
 - Uyku modunda ay ve Pofi hareketi mekanik loop gibi hissedilirse sakin ortam etkisi bozulabilir.
 - role -> assetKey eşleme tablosu dağılırsa modüller arası davranış tutarlılığı bozulabilir.
 - random asset varyasyonu erken açılırsa çocuk ekranında öngörülebilirlik kaybolabilir.
+- servis adaptörleri açılmadan feature içine doğrudan storage/auth/call erişimi dağılırsa ileride mimari borç büyür.
+- `entities` ve `features` sınırı korunmazsa yeni terapi modülleri eklendikçe veri ve ekran sorumlulukları karışabilir.
 
 ## Ürün Riskleri
 
@@ -88,6 +92,9 @@ updated: 2026-04-19
 - Pofi Engine V2 role-first state modeli: `module`, `role`, `presence`, `assetKey`, `locked`, `updatedAt`
 - typed event bus ve persistent `img` render kararı
 - MVP'de random asset seçimi yapılmaması
+- final V2 klasör ağacı: `core`, `pofi`, `entities`, `features`, `services`, `shared`, `server`
+- adapter-first online/offline uyum kararı
+- therapist paneli, görüntülü görüşme ve auth yönü için `features` + `services` + `server` ayrımı
 
 ## Bilimsel Dayanak Notu
 
