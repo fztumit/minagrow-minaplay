@@ -332,52 +332,51 @@ Kalıcı veri olmaktan çok runtime state olarak yorumlanır.
 
 ## Pofi State Modeli
 
-Pofi bir davranışsal etkileşim sistemidir. Pofi state modeli çocuğa gösterilen ifade, egzersiz, rehberlik ve global durumları yönetir.
+Pofi V2 role-first bir davranış motorudur. Sistem doğrudan emotion adıyla state tutmaz; önce davranış rolünü belirler, sonra bu rol uygun assetKey'e çözülür.
 
-State kategorileri:
+```ts
+type PofiRole =
+  | "idle"
+  | "attention"
+  | "success"
+  | "error_soft"
+  | "empathy"
+  | "sleep"
+  | "play"
+  | "exercise";
 
-- `emotion`: duygu ifadeleri
-- `exercise`: ağız, dil ve yüz egzersizi ifadeleri
-- `guide`: oyun içi rehberlik, başarı ve yumuşak yönlendirme
-- `state`: global uygulama durumları
+type PofiPresence =
+  | "hidden"
+  | "subtle"
+  | "normal"
+  | "focus"
+  | "stage";
 
-Örnek state akışı:
-
-- App start -> `pofi_state_default`
-- Bekleme -> `pofi_emotion_neutral`
-- Dikkat -> `pofi_emotion_surprised` veya anticipation
-- Doğru cevap -> `pofi_guide_success`
-- Yumuşak uyarı -> `pofi_emotion_nervous_soft`
-- Ayna egzersizi -> `pofi_exercise_teeth_show` veya `pofi_exercise_tongue_out`
-- Uyku girişi -> `pofi_emotion_sleepy`
-- Uyku aktif -> `pofi_state_sleep`
+interface PofiState {
+  module: PofiModule;
+  role: PofiRole;
+  presence: PofiPresence;
+  assetKey: string;
+  locked: boolean;
+  updatedAt: number;
+}
+```
 
 Kurallar:
 
 - aynı anda tek aktif Pofi state olur
 - aynı container içinde Pofi üst üste binmez
 - eski gövde katmanları kullanılmaz
-- PNG emoji sistemi ana kaynaktır
-- Pofi görselleri `/assets/pofi_emoji` altında tutulur
-- emotion geçişleri fade/scale ile yumuşak olur
-- Touch ve Matching gibi modlarda hızlı duygu değişimi engellenir
-- Sleep modunda yalnız sleepy ve sleep durumları kullanılır
-- Mirror modunda egzersiz sırasında guide/reward yüzü gösterilmez
+- PNG sistemi ana kaynaktır
+- Pofi assetleri kategori klasörlerinde tutulur
+- sistem deterministiktir; MVP'de random asset seçimi yoktur
+- Touch ve Matching gibi modlarda hızlı state değişimi engellenir
+- Mirror modunda egzersiz sırasında `locked = true` çalışır
+- Sleep modunda yalnız sleep ailesi davranışı kullanılır
 
 ## Pofi Presence Modeli
 
-Pofi state modeli tek başına yeterli değildir. V2'de Pofi'nin bir de `presence` seviyesi vardır. Presence; Pofi'nin ekranda ne kadar görünür olduğunu, ne kadar büyük olduğunu ve ne kadar dikkat çektiğini yönetir.
-
-Merkezi state şekli:
-
-```ts
-{
-  emotion: string;
-  presence: "hidden" | "subtle" | "normal" | "focus" | "stage";
-}
-```
-
-Modüller bu state'i doğrudan yönetmez; yalnız olay gönderir. Merkezi Pofi sistemi olayları yorumlar ve tek global state üretir.
+Pofi state modeli role + presence + assetKey üzerinden çalışır. Modüller bu state'i doğrudan yönetmez; yalnız olay gönderir. Merkezi Pofi sistemi olayları yorumlar ve tek global state üretir.
 
 Presence seviyeleri:
 
@@ -392,10 +391,11 @@ Temel kurallar:
 - aynı anda tek aktif Pofi state ve tek aktif presence seviyesi olur
 - presence seviyesi mod, dikkat ihtiyacı ve çocuğun beklenen aksiyonu ile ilişkilidir
 - `stage` seviyesi kısa sürelidir ve sonra `normal` veya `subtle` seviyesine döner
+- `stage` süresi 400 ms sabit kabul edilir
 - Pofi'nin büyümesi aktiviteyi kalıcı olarak gölgelemez
 - Pofi nefes hareketi gibi düşük frekanslı bir presence animasyonu taşıyabilir
 - uyku modunda presence `subtle` çizgisine çekilir; Pofi bulut gibi görünür ama rastgele odak veya sahne davranışı çalışmaz
-- aynı anda tek duygu, tek yüz ve tek presence seviyesi olur
+- aynı anda tek rol, tek yüz ve tek presence seviyesi olur
 
 Mod bazlı presence matrisi:
 
@@ -418,19 +418,47 @@ Mod bazlı presence matrisi:
 - Uyku aktif: `subtle`, bulut gibi görünür ama dikkat çekmez
 - Uyku etkileşimleri: tepki yok, dikkat toplama yok
 
-Örnek davranış:
+Event -> role örnekleri:
 
-- idle: `neutral` + `normal`
-- çocukdan aksiyon bekleniyor: `attention` + `focus`
-- dikkat toplanmadı: kısa süreli `attention` + `stage`
-- doğru aksiyon: `softHappy` + `normal`
-- yumuşak yönlendirme: `softPrompt` + `focus`
-- uyku başlangıç: `sleepy` + `subtle`
-- uyku aktif: `sleep` + `subtle`
-- 30 saniye tepkisizlik: önce düşünme/yardım ifadesi, sonra gerekirse mod izin veriyorsa `stage`
-- doğru cevap ödülü: kısa `stage`, 300-500 ms, sonra `normal`
-- Eşleme hatırlatma ritmi: 10 sn, 20 sn, 30 sn
-- Ayna egzersiz modeli: egzersiz sırasında tek state ve tek yüz
+- `APP_START` -> `idle + subtle`
+- `TARGET_SHOWN` -> `attention + focus`
+- `CORRECT` -> `success + stage`
+- `WRONG` -> `error_soft + normal`
+- `REPEAT_FAIL_3` -> `empathy + normal`
+- `MIRROR_MODEL` -> `exercise + focus`
+- `SLEEP_ACTIVE` -> `sleep + subtle`
+- `CEEE_HIDE` -> `play + subtle`
+
+## Pofi Asset Modeli
+
+V2 asset sistemi kategoriye ayrılır.
+
+Klasörler:
+
+- `assets/pofi/emotion`
+- `assets/pofi/exercise`
+- `assets/pofi/sleep`
+- `assets/pofi/play`
+
+Dosya adı standardı:
+
+- `pofi_<category>_<name>.png`
+
+Asset key standardı:
+
+- `emotion.<name>`
+- `exercise.<name>`
+- `sleep.<name>`
+- `play.<name>`
+
+Kategori kuralları:
+
+- Home, Dokun, Eşleme -> yalnız `emotion.*`
+- Ayna -> yalnız `exercise.*`
+- Uyku -> yalnız `sleep.*`
+- Ceee -> yalnız `play.*`
+- aynı PNG iki kategoriye atanmaz
+- Mirror modunda random seçim yoktur; `exerciseId -> assetKey` düz çözülür
 
 ## Parent Panel MVP Modeli
 

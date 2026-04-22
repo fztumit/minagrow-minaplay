@@ -23,6 +23,7 @@ Bu odak, V1'i uygulama temeli olarak taşımayı bırakır. V1 yalnız fikir, da
 - pasif ekran kullanımı problemi özel marka adı kullanılmadan yazılacak
 - Pofi state sistemi yanında presence sistemiyle tanımlanacak
 - Pofi'nin tek global instance, merkezi `pofi-root`, event temelli modül iletişimi ve idle timer kuralı görünür olacak
+- Pofi Engine V2 role-first, deterministik ve assetKey temelli sözleşmeyle yazılı hafızaya işlenecek
 - çocuk ekranı, Parent panel, renk/hareket güvenliği ve MVP kapsam anayasaları görünür olacak
 - Parent Panel MVP kelime/nesne istatistikleri, günlük özet, öğrenildi kuralı ve set seçimiyle sınırlandırılacak
 - başarı ölçütleri teknik çıktılardan çok davranışsal ve duygusal başarıya bağlanacak
@@ -233,7 +234,26 @@ Alınan kararlar:
 - sahne seviyesi yalnız kısa ödül anlarında 300-500 ms kullanılır
 - tüm geçişler yumuşaktır; aynı anda tek duygu ve tek yüz görünür
 
-### 6. V2 Teknik Kurulum Sırası
+### 6. Pofi Engine V2 Sözleşmesi
+
+Amaç:
+
+- Pofi motorunu kod yazımından önce role-first, tek instance ve event-driven sözleşmeyle kesinleştirmek
+
+Alınan kararlar:
+
+- Pofi state modeli `module`, `role`, `presence`, `assetKey`, `locked`, `updatedAt` alanlarını taşır
+- doğrudan emotion adı state tutulmaz; önce role seçilir, sonra assetKey çözülür
+- rol ailesi: `idle`, `attention`, `success`, `error_soft`, `empathy`, `sleep`, `play`, `exercise`
+- typed event bus kullanılır; modüller yalnız event gönderir
+- user event, system event'ten güçlüdür
+- render tek persistent `img` ile çalışır; `innerHTML` ile yeniden kurulum yapılmaz
+- MVP'de random asset seçimi yoktur; event -> role/presence -> assetKey çözümü deterministiktir
+- Mirror yalnız `exercise.*`, Sleep yalnız `sleep.*`, Ceee yalnız `play.*`, Home/Dokun/Eşleme yalnız `emotion.*` kullanır
+- Sleep modunda `focus` ve `stage` kullanılmaz
+- Mirror egzersizi sırasında `locked = true` ile yüz sabitlenir
+
+### 7. V2 Teknik Kurulum Sırası
 
 Amaç:
 

@@ -164,9 +164,13 @@ Gelecek modüller kod/rota düzeyinde var olabilir, ancak MVP çocuk UI içinde 
 
 - Dosya alanı: `src/modules/pofiEmotion/`
 - Rol: Pofi state seçimi, presence seviyesi, render, geçiş ve mod bağlamını yönetmek
-- State kategorileri: `emotion`, `exercise`, `guide`, `state`
+- State kategorileri: `role`, `presence`, `asset`, `module`
 - Presence seviyeleri: `hidden`, `subtle`, `normal`, `focus`, `stage`
-- Asset kökü: `/assets/pofi_emoji`
+- Asset kökleri:
+  - `/assets/pofi/emotion`
+  - `/assets/pofi/exercise`
+  - `/assets/pofi/sleep`
+  - `/assets/pofi/play`
 
 Kritik kurallar:
 
@@ -175,10 +179,69 @@ Kritik kurallar:
 - eski gövde katmanları kullanılmamalıdır
 - geçişler fade/scale ile yumuşak olmalıdır
 - modüller Pofi'yi doğrudan yönetmez; yalnız olay gönderir
+- modüller Pofi DOM'una dokunmaz; yalnız typed event gönderir
+- Pofi yalnız `pofi-root` içine render edilir
+- render tek persistent `img` ile yapılır; `innerHTML` ile node yenileme yapılmaz
 - Touch ve Matching gibi modlarda hızlı duygu değişimi engellenmelidir
 - Mirror egzersizi sırasında ödül/guide yüzü gösterilmemelidir
 - Sleep modunda yalnız sleepy ve sleep durumları kullanılmalıdır
 - `stage` presence kısa süreli olmalı ve aktiviteyi kalıcı olarak gölgelememelidir
+- MVP'de random asset seçimi yapılmaz; event -> role/presence -> assetKey çözümü deterministiktir
+
+Pofi Engine V2 sözleşmesi:
+
+```ts
+interface PofiState {
+  module: PofiModule;
+  role: PofiRole;
+  presence: PofiPresence;
+  assetKey: string;
+  locked: boolean;
+  updatedAt: number;
+}
+```
+
+Rol ailesi:
+
+- `idle`
+- `attention`
+- `success`
+- `error_soft`
+- `empathy`
+- `sleep`
+- `play`
+- `exercise`
+
+Kritik event mimarisi:
+
+- `APP_START`
+- `VIEW_CHANGE`
+- `TARGET_SHOWN`
+- `CORRECT`
+- `WRONG`
+- `SUCCESS_STREAK`
+- `IDLE_10`
+- `IDLE_20`
+- `IDLE_30`
+- `REPEAT_FAIL_3`
+- `STRUGGLE`
+- `MIRROR_START`
+- `MIRROR_MODEL`
+- `MIRROR_SUCCESS`
+- `MIRROR_FAIL`
+- `SLEEP_ENTER`
+- `SLEEP_ACTIVE`
+- `CEEE_START`
+- `CEEE_HIDE`
+- `CEEE_FOUND`
+- `CEEE_TIMEOUT`
+- `USER_INTERACTION`
+
+Öncelik kuralı:
+
+- kullanıcı olayı sistem olayından güçlüdür
+- `CORRECT` ve `WRONG`, aynı anda gelen idle olayını bastırır
+- Sleep modunda `sleep` davranışı diğer dikkat toplama akışlarını bastırır
 
 Global idle sistemi:
 

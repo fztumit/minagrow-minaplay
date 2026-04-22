@@ -106,20 +106,26 @@ Pofi bir davranışsal etkileşim sistemidir.
 Asset kararları:
 
 - Pofi için PNG emoji sistemi esas alınır
-- Pofi görselleri `/assets/pofi_emoji` altında tutulur
+- Pofi görselleri kategori klasörlerinde tutulur:
+  - `/assets/pofi/emotion`
+  - `/assets/pofi/exercise`
+  - `/assets/pofi/sleep`
+  - `/assets/pofi/play`
 - UI ikonları için SVG kullanılabilir
 - background görselleri için PNG kullanılabilir
 - eski gövde katmanı sistemleri kullanılmaz
 - Pofi için SVG parça/gövde sistemi kurulmaz; Pofi tek PNG görsel instance olarak ele alınır
+- asset çözümü deterministiktir; MVP'de random asset varyasyonu kullanılmaz
 
 State ve geçiş ilkeleri:
 
 - aynı anda tek aktif Pofi state olur
 - aynı container içinde üst üste render olmaz
-- emotion geçişleri fade/scale ile yumuşak olur
+- role/presence geçişleri fade/scale ile yumuşak olur
 - hızlı duygu değişimi engellenir
 - Uyku modunda yalnız sleepy ve sleep kullanılır
 - Ayna egzersizi sırasında yalnız egzersiz yüzü görünür; ödül yüzü tamamlanınca gelir
+- render tek persistent `img` ile yapılır; node yenileme yapılmaz
 
 ## Pofi Presence Sistemi
 

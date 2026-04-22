@@ -9,7 +9,6 @@ updated: 2026-04-19
 
 ## Açık Sorular
 
-- Pofi PNG emoji seti hangi dosya adlandırma standardına bağlanacak?
 - Git geçmişi korunmalı mı?
 - `konusu_yorum_*` localStorage key'leri ürünleşme sırasında korunacak mı, yoksa migration ile `minaplay_*` ailesine mi taşınacak?
 - Pofi presence seviyelerinin piksel/ölçek üst sınırları nasıl belirlenecek?
@@ -36,6 +35,8 @@ updated: 2026-04-19
 - Global idle timer mod sınırlarını dikkate almazsa Uyku veya Ayna gibi hassas akışlarda gereksiz yönlendirme üretebilir.
 - Ceee ortamı ham veya düşük kaliteli SVG hissine dönerse V2'nin premium/sakin görsel dili zayıflar.
 - Uyku modunda ay ve Pofi hareketi mekanik loop gibi hissedilirse sakin ortam etkisi bozulabilir.
+- role -> assetKey eşleme tablosu dağılırsa modüller arası davranış tutarlılığı bozulabilir.
+- random asset varyasyonu erken açılırsa çocuk ekranında öngörülebilirlik kaybolabilir.
 
 ## Ürün Riskleri
 
@@ -84,6 +85,9 @@ updated: 2026-04-19
 - Parent Panel MVP: kelime/nesne deneme, doğru, streak, son 5 deneme, öğrenildi durumu, günlük özet ve set seçimi
 - Ceee temiz PNG tarzı çocuk odası ortamı
 - Uyku Pofi bulut davranışı ve ayın yaklaşık 30 dakikalık doğal hareketi
+- Pofi Engine V2 role-first state modeli: `module`, `role`, `presence`, `assetKey`, `locked`, `updatedAt`
+- typed event bus ve persistent `img` render kararı
+- MVP'de random asset seçimi yapılmaması
 
 ## Bilimsel Dayanak Notu
 
