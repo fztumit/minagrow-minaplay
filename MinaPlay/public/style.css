@@ -290,6 +290,28 @@ h2 {
   width: min(42vw, 280px);
 }
 
+.pofi-avatar {
+  position: relative;
+  aspect-ratio: 16 / 9;
+}
+
+.pofi-avatar img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.pofi-avatar .pofi-body {
+  z-index: 1;
+}
+
+.pofi-avatar .pofi-face {
+  z-index: 2;
+}
+
 .analysis-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

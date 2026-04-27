@@ -1,4 +1,5 @@
 type ViewName = 'home' | 'touch' | 'match' | 'sentence' | 'story' | 'mirror' | 'sleep' | 'peekaboo' | 'parent';
+type PofiState = 'neutral' | 'guide' | 'playful' | 'calm' | 'exercise' | 'sleep' | 'peekaboo' | 'success' | 'tryAgain';
 
 interface ModuleStats {
   opens: number;
@@ -15,6 +16,75 @@ interface AnalyticsState {
 
 const STORAGE_KEY = 'minaplay_analytics_v1';
 const PRIMARY_VIEWS: ViewName[] = ['touch', 'match', 'sentence', 'story', 'mirror', 'sleep'];
+
+const POFI_PARTS_ROOT = '/assets/pofi/parts';
+
+const POFI_VIEW_STATES: Partial<Record<ViewName, PofiState>> = {
+  touch: 'guide',
+  match: 'playful',
+  sentence: 'guide',
+  story: 'calm',
+  mirror: 'exercise',
+  sleep: 'sleep',
+  peekaboo: 'peekaboo'
+};
+
+const POFI_ACTION_STATES: Array<[string, PofiState]> = [
+  ['wrong', 'tryAgain'],
+  ['offtarget', 'tryAgain'],
+  ['correct', 'success'],
+  ['complete', 'success'],
+  ['listen', 'success'],
+  ['reveal', 'peekaboo']
+];
+
+const POFI_STATE_PARTS: Record<PofiState, { body: string; eyes: string; mouth: string }> = {
+  neutral: {
+    body: 'default-v01.png',
+    eyes: 'open-v01.png',
+    mouth: 'smile-soft-v01.png'
+  },
+  guide: {
+    body: 'default-v07.png',
+    eyes: 'wide-soft-v01.png',
+    mouth: 'smile-v01.png'
+  },
+  playful: {
+    body: 'default-v08.png',
+    eyes: 'happy-v01.png',
+    mouth: 'open-smile-v01.png'
+  },
+  calm: {
+    body: 'default-v04.png',
+    eyes: 'half-open-v01.png',
+    mouth: 'smile-soft-v01.png'
+  },
+  exercise: {
+    body: 'default-v10.png',
+    eyes: 'open-v01.png',
+    mouth: 'tongue-out-v01.png'
+  },
+  sleep: {
+    body: 'default-v05.png',
+    eyes: 'drowsy-v01.png',
+    mouth: 'closed-v01.png'
+  },
+  peekaboo: {
+    body: 'default-v10.png',
+    eyes: 'surprised-v01.png',
+    mouth: 'open-smile-alt-v01.png'
+  },
+  success: {
+    body: 'default-v06.png',
+    eyes: 'happy-v01.png',
+    mouth: 'open-smile-soft-v01.png'
+  },
+  tryAgain: {
+    body: 'default-v03.png',
+    eyes: 'sad-soft-v01.png',
+    mouth: 'sad-soft-v01.png'
+  }
+};
 
 const DEFAULT_STATE: AnalyticsState = {
   sessions: 0,
@@ -79,6 +149,7 @@ function trackAction(action: string): void {
   }
 
   writeAnalytics(state);
+  renderActivePofi(pofiStateForAction(action) ?? POFI_VIEW_STATES[activeView as ViewName] ?? 'neutral');
   renderParentMetrics();
 }
 
@@ -92,8 +163,48 @@ function activateView(view: ViewName): void {
   });
 
   document.querySelector<HTMLElement>('.app-shell')?.setAttribute('data-active-view', view);
+  renderActivePofi(POFI_VIEW_STATES[view] ?? 'neutral');
   trackViewOpen(view);
   renderParentMetrics();
+}
+
+function pofiStateForAction(action: string): PofiState | undefined {
+  return POFI_ACTION_STATES.find(([keyword]) => action.includes(keyword))?.[1];
+}
+
+function pofiImage(path: string, className: string, alt = ''): HTMLImageElement {
+  const image = document.createElement('img');
+  image.className = className;
+  image.src = path;
+  image.alt = alt;
+  return image;
+}
+
+function renderPofiAvatar(container: HTMLElement, state: PofiState): void {
+  const parts = POFI_STATE_PARTS[state];
+  container.dataset.pofiState = state;
+  container.replaceChildren(
+    pofiImage(`${POFI_PARTS_ROOT}/body/${parts.body}`, 'pofi-body'),
+    pofiImage(`${POFI_PARTS_ROOT}/eyes/${parts.eyes}`, 'pofi-face pofi-eyes'),
+    pofiImage(`${POFI_PARTS_ROOT}/mouth/${parts.mouth}`, 'pofi-face pofi-mouth')
+  );
+}
+
+function renderActivePofi(state?: PofiState): void {
+  document.querySelectorAll<HTMLElement>('[data-pofi-avatar]').forEach((avatar) => {
+    const panel = avatar.closest<HTMLElement>('[data-view-panel]');
+    if (!panel?.classList.contains('active')) {
+      return;
+    }
+
+    renderPofiAvatar(avatar, state ?? (avatar.dataset.pofiState as PofiState | undefined) ?? 'neutral');
+  });
+}
+
+function renderPofiAvatars(): void {
+  document.querySelectorAll<HTMLElement>('[data-pofi-avatar]').forEach((avatar) => {
+    renderPofiAvatar(avatar, (avatar.dataset.pofiState as PofiState | undefined) ?? 'neutral');
+  });
 }
 
 function renderParentMetrics(): void {
@@ -164,6 +275,7 @@ function boot(): void {
     document.querySelector<HTMLButtonElement>(`.bottom-nav button[data-view="${view}"]`)?.classList.toggle('active', false);
   });
 
+  renderPofiAvatars();
   renderParentMetrics();
   registerServiceWorker();
 }
