@@ -1,6 +1,6 @@
 type ViewName = 'home' | 'touch' | 'match' | 'sentence' | 'story' | 'mirror' | 'sleep' | 'peekaboo' | 'parent';
 type PofiState = 'neutral' | 'guide' | 'playful' | 'calm' | 'exercise' | 'sleep' | 'peekaboo' | 'success' | 'tryAgain';
-type PofiMood = PofiState | 'blink' | 'softSmile' | 'curious' | 'bored' | 'excited' | 'sleepBlink';
+type PofiMood = PofiState | 'blink' | 'softSmile' | 'attention' | 'excited' | 'sleepBlink';
 type PofiParts = { body: string; eyes: string; mouth: string };
 
 interface ModuleStats {
@@ -98,15 +98,10 @@ const POFI_EXPRESSIONS: Record<PofiMood, PofiParts> = {
     eyes: 'open-v01.png',
     mouth: 'smile-v01.png'
   },
-  curious: {
+  attention: {
     body: POFI_STABLE_BODY,
     eyes: 'waiting-v01.png',
-    mouth: 'pucker-v01.png'
-  },
-  bored: {
-    body: POFI_STABLE_BODY,
-    eyes: 'half-open-v01.png',
-    mouth: 'smirk-soft-v01.png'
+    mouth: 'talk-small-v01.png'
   },
   excited: {
     body: POFI_STABLE_BODY,
@@ -121,15 +116,15 @@ const POFI_EXPRESSIONS: Record<PofiMood, PofiParts> = {
 };
 
 const POFI_IDLE_MOODS: Partial<Record<PofiState, PofiMood[]>> = {
-  neutral: ['softSmile', 'blink', 'curious'],
-  guide: ['softSmile', 'blink', 'curious', 'excited'],
-  playful: ['excited', 'blink', 'softSmile'],
-  calm: ['bored', 'blink', 'softSmile'],
-  exercise: ['excited', 'blink', 'curious'],
+  neutral: ['softSmile', 'attention'],
+  guide: ['attention', 'excited'],
+  playful: ['excited', 'attention'],
+  calm: ['attention', 'softSmile'],
+  exercise: ['attention', 'excited'],
   sleep: ['sleepBlink'],
-  peekaboo: ['excited', 'blink'],
-  success: ['softSmile', 'blink'],
-  tryAgain: ['blink', 'curious']
+  peekaboo: ['excited'],
+  success: ['softSmile'],
+  tryAgain: ['attention']
 };
 
 let pofiBaseState: PofiState = 'neutral';
@@ -271,8 +266,7 @@ function pickPofiMood(state: PofiState): PofiMood {
   return moods[Math.floor(Math.random() * moods.length)];
 }
 
-function renderPofiAvatar(container: HTMLElement, mood: PofiMood): void {
-  const parts = POFI_EXPRESSIONS[mood];
+function renderPofiParts(container: HTMLElement, mood: PofiMood, parts: PofiParts): void {
   container.dataset.pofiMood = mood;
   container.classList.remove('pofi-expression-change');
   void container.offsetWidth;
@@ -282,6 +276,10 @@ function renderPofiAvatar(container: HTMLElement, mood: PofiMood): void {
     pofiImage(`${POFI_PARTS_ROOT}/eyes/${parts.eyes}`, 'pofi-face pofi-eyes'),
     pofiImage(`${POFI_PARTS_ROOT}/mouth/${parts.mouth}`, 'pofi-face pofi-mouth')
   );
+}
+
+function renderPofiAvatar(container: HTMLElement, mood: PofiMood): void {
+  renderPofiParts(container, mood, POFI_EXPRESSIONS[mood]);
 }
 
 function renderActivePofi(state?: PofiState): void {
@@ -315,12 +313,16 @@ function schedulePofiLife(): void {
       return;
     }
 
-    renderPofiAvatar(avatar, pofiBaseState === 'sleep' ? 'sleepBlink' : 'blink');
+    const baseParts = POFI_EXPRESSIONS[pofiBaseState];
+    renderPofiParts(avatar, pofiBaseState === 'sleep' ? 'sleepBlink' : 'blink', {
+      ...baseParts,
+      eyes: pofiBaseState === 'sleep' ? 'closed-v01.png' : 'closed-soft-v01.png'
+    });
     pofiReturnTimer = window.setTimeout(() => {
       renderActivePofi(pofiBaseState);
       schedulePofiLife();
-    }, pofiBaseState === 'sleep' ? 520 : 160);
-  }, randomBetween(2200, 5200));
+    }, pofiBaseState === 'sleep' ? 520 : 150);
+  }, randomBetween(2800, 6200));
 
   pofiIdleTimer = window.setTimeout(() => {
     const avatar = activePofiAvatar();
@@ -331,8 +333,8 @@ function schedulePofiLife(): void {
     renderPofiAvatar(avatar, pickPofiMood(pofiBaseState));
     pofiReturnTimer = window.setTimeout(() => {
       renderActivePofi(pofiBaseState);
-    }, randomBetween(900, 1500));
-  }, randomBetween(3600, 7800));
+    }, randomBetween(1800, 2600));
+  }, randomBetween(10000, 15000));
 }
 
 function setPofiBaseState(state: PofiState): void {
