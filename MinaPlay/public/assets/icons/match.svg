@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" role="img" aria-label="Eşleme">
-  <rect x="43" y="25" width="74" height="70" rx="18" fill="#ecf8f5" stroke="#7bbcb5" stroke-width="5"/>
-  <path d="M65 49l8 15 16-28 16 28 8-15" fill="none" stroke="#e6b35c" stroke-width="6" stroke-linejoin="round"/>
-  <circle cx="80" cy="77" r="11" fill="#85c8a4"/>
-  <path d="M75 77l4 4 7-8" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
-</svg>
