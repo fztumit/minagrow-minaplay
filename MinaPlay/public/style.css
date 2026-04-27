@@ -293,6 +293,7 @@ h2 {
 .pofi-avatar {
   position: relative;
   aspect-ratio: 16 / 9;
+  transform-origin: 50% 72%;
 }
 
 .pofi-avatar img {
@@ -302,6 +303,9 @@ h2 {
   height: 100%;
   object-fit: contain;
   pointer-events: none;
+  transition:
+    opacity 180ms ease,
+    transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .pofi-avatar .pofi-body {
@@ -310,6 +314,10 @@ h2 {
 
 .pofi-avatar .pofi-face {
   z-index: 2;
+}
+
+.pofi-avatar.pofi-expression-change .pofi-face {
+  animation: pofi-expression-pop 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .analysis-grid {
@@ -422,6 +430,18 @@ h2 {
 }
 
 @media (prefers-reduced-motion: no-preference) {
+  .pofi-avatar {
+    animation: pofi-breath 3.8s ease-in-out infinite;
+  }
+
+  .pofi-avatar .pofi-eyes {
+    animation: pofi-eye-drift 5.4s ease-in-out infinite;
+  }
+
+  .pofi-avatar .pofi-mouth {
+    animation: pofi-mouth-drift 4.8s ease-in-out infinite;
+  }
+
   .mode-card,
   .object-tile,
   .bonus-button {
@@ -432,5 +452,54 @@ h2 {
   .object-tile:hover,
   .bonus-button:hover {
     transform: translateY(-2px);
+  }
+}
+
+@keyframes pofi-breath {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  48% {
+    transform: translateY(-3px) scale(1.035);
+  }
+}
+
+@keyframes pofi-eye-drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  45% {
+    transform: translate(1.2%, -0.7%) scale(1.01);
+  }
+
+  70% {
+    transform: translate(-0.8%, 0.4%) scale(1);
+  }
+}
+
+@keyframes pofi-mouth-drift {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    transform: translateY(0.7%) scale(1.015);
+  }
+}
+
+@keyframes pofi-expression-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(1.4%) scale(0.985);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }

@@ -1,5 +1,7 @@
 type ViewName = 'home' | 'touch' | 'match' | 'sentence' | 'story' | 'mirror' | 'sleep' | 'peekaboo' | 'parent';
 type PofiState = 'neutral' | 'guide' | 'playful' | 'calm' | 'exercise' | 'sleep' | 'peekaboo' | 'success' | 'tryAgain';
+type PofiMood = PofiState | 'blink' | 'softSmile' | 'curious' | 'bored' | 'excited' | 'sleepBlink';
+type PofiParts = { body: string; eyes: string; mouth: string };
 
 interface ModuleStats {
   opens: number;
@@ -38,53 +40,102 @@ const POFI_ACTION_STATES: Array<[string, PofiState]> = [
   ['reveal', 'peekaboo']
 ];
 
-const POFI_STATE_PARTS: Record<PofiState, { body: string; eyes: string; mouth: string }> = {
+const POFI_STABLE_BODY = 'default-v01.png';
+
+const POFI_EXPRESSIONS: Record<PofiMood, PofiParts> = {
   neutral: {
-    body: 'default-v01.png',
+    body: POFI_STABLE_BODY,
     eyes: 'open-v01.png',
     mouth: 'smile-soft-v01.png'
   },
   guide: {
-    body: 'default-v01.png',
+    body: POFI_STABLE_BODY,
     eyes: 'wide-soft-v01.png',
     mouth: 'smile-v01.png'
   },
   playful: {
-    body: 'default-v01.png',
+    body: POFI_STABLE_BODY,
     eyes: 'happy-v01.png',
     mouth: 'open-smile-v01.png'
   },
   calm: {
-    body: 'default-v01.png',
+    body: POFI_STABLE_BODY,
     eyes: 'half-open-v01.png',
     mouth: 'smile-soft-v01.png'
   },
   exercise: {
-    body: 'default-v01.png',
+    body: POFI_STABLE_BODY,
     eyes: 'open-v01.png',
     mouth: 'tongue-out-v01.png'
   },
   sleep: {
-    body: 'default-v01.png',
+    body: POFI_STABLE_BODY,
     eyes: 'drowsy-v01.png',
     mouth: 'closed-v01.png'
   },
   peekaboo: {
-    body: 'default-v01.png',
+    body: POFI_STABLE_BODY,
     eyes: 'surprised-v01.png',
     mouth: 'open-smile-alt-v01.png'
   },
   success: {
-    body: 'default-v01.png',
+    body: POFI_STABLE_BODY,
     eyes: 'happy-v01.png',
     mouth: 'open-smile-soft-v01.png'
   },
   tryAgain: {
-    body: 'default-v01.png',
+    body: POFI_STABLE_BODY,
     eyes: 'sad-soft-v01.png',
     mouth: 'sad-soft-v01.png'
+  },
+  blink: {
+    body: POFI_STABLE_BODY,
+    eyes: 'closed-soft-v01.png',
+    mouth: 'smile-soft-v01.png'
+  },
+  softSmile: {
+    body: POFI_STABLE_BODY,
+    eyes: 'open-v01.png',
+    mouth: 'smile-v01.png'
+  },
+  curious: {
+    body: POFI_STABLE_BODY,
+    eyes: 'waiting-v01.png',
+    mouth: 'pucker-v01.png'
+  },
+  bored: {
+    body: POFI_STABLE_BODY,
+    eyes: 'half-open-v01.png',
+    mouth: 'smirk-soft-v01.png'
+  },
+  excited: {
+    body: POFI_STABLE_BODY,
+    eyes: 'wide-open-v01.png',
+    mouth: 'open-smile-soft-v01.png'
+  },
+  sleepBlink: {
+    body: POFI_STABLE_BODY,
+    eyes: 'closed-v01.png',
+    mouth: 'closed-v01.png'
   }
 };
+
+const POFI_IDLE_MOODS: Partial<Record<PofiState, PofiMood[]>> = {
+  neutral: ['softSmile', 'blink', 'curious'],
+  guide: ['softSmile', 'blink', 'curious', 'excited'],
+  playful: ['excited', 'blink', 'softSmile'],
+  calm: ['bored', 'blink', 'softSmile'],
+  exercise: ['excited', 'blink', 'curious'],
+  sleep: ['sleepBlink'],
+  peekaboo: ['excited', 'blink'],
+  success: ['softSmile', 'blink'],
+  tryAgain: ['blink', 'curious']
+};
+
+let pofiBaseState: PofiState = 'neutral';
+let pofiIdleTimer: number | undefined;
+let pofiBlinkTimer: number | undefined;
+let pofiReturnTimer: number | undefined;
 
 const DEFAULT_STATE: AnalyticsState = {
   sessions: 0,
@@ -149,7 +200,14 @@ function trackAction(action: string): void {
   }
 
   writeAnalytics(state);
-  renderActivePofi(pofiStateForAction(action) ?? POFI_VIEW_STATES[activeView as ViewName] ?? 'neutral');
+
+  const actionState = pofiStateForAction(action);
+  if (actionState) {
+    showPofiReaction(actionState);
+  } else {
+    setPofiBaseState(POFI_VIEW_STATES[activeView as ViewName] ?? 'neutral');
+  }
+
   renderParentMetrics();
 }
 
@@ -163,7 +221,7 @@ function activateView(view: ViewName): void {
   });
 
   document.querySelector<HTMLElement>('.app-shell')?.setAttribute('data-active-view', view);
-  renderActivePofi(POFI_VIEW_STATES[view] ?? 'neutral');
+  setPofiBaseState(POFI_VIEW_STATES[view] ?? 'neutral');
   trackViewOpen(view);
   renderParentMetrics();
 }
@@ -180,9 +238,45 @@ function pofiImage(path: string, className: string, alt = ''): HTMLImageElement 
   return image;
 }
 
-function renderPofiAvatar(container: HTMLElement, state: PofiState): void {
-  const parts = POFI_STATE_PARTS[state];
-  container.dataset.pofiState = state;
+function activePofiAvatar(): HTMLElement | undefined {
+  return Array.from(document.querySelectorAll<HTMLElement>('[data-pofi-avatar]')).find((avatar) => {
+    return avatar.closest<HTMLElement>('[data-view-panel]')?.classList.contains('active');
+  });
+}
+
+function clearPofiTimers(): void {
+  if (pofiIdleTimer) {
+    window.clearTimeout(pofiIdleTimer);
+  }
+
+  if (pofiBlinkTimer) {
+    window.clearTimeout(pofiBlinkTimer);
+  }
+
+  if (pofiReturnTimer) {
+    window.clearTimeout(pofiReturnTimer);
+  }
+}
+
+function pofiMotionAllowed(): boolean {
+  return !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function randomBetween(min: number, max: number): number {
+  return Math.round(min + Math.random() * (max - min));
+}
+
+function pickPofiMood(state: PofiState): PofiMood {
+  const moods = POFI_IDLE_MOODS[state] ?? POFI_IDLE_MOODS.neutral ?? ['blink'];
+  return moods[Math.floor(Math.random() * moods.length)];
+}
+
+function renderPofiAvatar(container: HTMLElement, mood: PofiMood): void {
+  const parts = POFI_EXPRESSIONS[mood];
+  container.dataset.pofiMood = mood;
+  container.classList.remove('pofi-expression-change');
+  void container.offsetWidth;
+  container.classList.add('pofi-expression-change');
   container.replaceChildren(
     pofiImage(`${POFI_PARTS_ROOT}/body/${parts.body}`, 'pofi-body'),
     pofiImage(`${POFI_PARTS_ROOT}/eyes/${parts.eyes}`, 'pofi-face pofi-eyes'),
@@ -191,20 +285,70 @@ function renderPofiAvatar(container: HTMLElement, state: PofiState): void {
 }
 
 function renderActivePofi(state?: PofiState): void {
-  document.querySelectorAll<HTMLElement>('[data-pofi-avatar]').forEach((avatar) => {
-    const panel = avatar.closest<HTMLElement>('[data-view-panel]');
-    if (!panel?.classList.contains('active')) {
-      return;
-    }
+  const avatar = activePofiAvatar();
+  if (!avatar) {
+    return;
+  }
 
-    renderPofiAvatar(avatar, state ?? (avatar.dataset.pofiState as PofiState | undefined) ?? 'neutral');
-  });
+  const nextState = state ?? pofiBaseState;
+  avatar.dataset.pofiState = nextState;
+  renderPofiAvatar(avatar, nextState);
 }
 
 function renderPofiAvatars(): void {
   document.querySelectorAll<HTMLElement>('[data-pofi-avatar]').forEach((avatar) => {
-    renderPofiAvatar(avatar, (avatar.dataset.pofiState as PofiState | undefined) ?? 'neutral');
+    const state = (avatar.dataset.pofiState as PofiState | undefined) ?? 'neutral';
+    avatar.dataset.pofiState = state;
+    renderPofiAvatar(avatar, state);
   });
+}
+
+function schedulePofiLife(): void {
+  if (!pofiMotionAllowed()) {
+    return;
+  }
+
+  pofiBlinkTimer = window.setTimeout(() => {
+    const avatar = activePofiAvatar();
+    if (!avatar) {
+      schedulePofiLife();
+      return;
+    }
+
+    renderPofiAvatar(avatar, pofiBaseState === 'sleep' ? 'sleepBlink' : 'blink');
+    pofiReturnTimer = window.setTimeout(() => {
+      renderActivePofi(pofiBaseState);
+      schedulePofiLife();
+    }, pofiBaseState === 'sleep' ? 520 : 160);
+  }, randomBetween(2200, 5200));
+
+  pofiIdleTimer = window.setTimeout(() => {
+    const avatar = activePofiAvatar();
+    if (!avatar) {
+      return;
+    }
+
+    renderPofiAvatar(avatar, pickPofiMood(pofiBaseState));
+    pofiReturnTimer = window.setTimeout(() => {
+      renderActivePofi(pofiBaseState);
+    }, randomBetween(900, 1500));
+  }, randomBetween(3600, 7800));
+}
+
+function setPofiBaseState(state: PofiState): void {
+  pofiBaseState = state;
+  clearPofiTimers();
+  renderActivePofi(state);
+  schedulePofiLife();
+}
+
+function showPofiReaction(state: PofiState): void {
+  clearPofiTimers();
+  renderActivePofi(state);
+  pofiReturnTimer = window.setTimeout(() => {
+    renderActivePofi(pofiBaseState);
+    schedulePofiLife();
+  }, state === 'tryAgain' ? 1500 : 1200);
 }
 
 function renderParentMetrics(): void {
