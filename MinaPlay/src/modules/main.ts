@@ -100,8 +100,8 @@ const POFI_EXPRESSIONS: Record<PofiMood, PofiParts> = {
   },
   attention: {
     body: POFI_STABLE_BODY,
-    eyes: 'waiting-v01.png',
-    mouth: 'talk-small-v01.png'
+    eyes: 'wide-soft-v01.png',
+    mouth: 'smile-v01.png'
   },
   excited: {
     body: POFI_STABLE_BODY,
@@ -233,6 +233,25 @@ function pofiImage(path: string, className: string, alt = ''): HTMLImageElement 
   return image;
 }
 
+function pofiPartPath(part: keyof PofiParts, fileName: string): string {
+  return `${POFI_PARTS_ROOT}/${part}/${fileName}`;
+}
+
+function preloadPofiParts(): void {
+  const paths = new Set<string>();
+
+  Object.values(POFI_EXPRESSIONS).forEach((parts) => {
+    paths.add(pofiPartPath('body', parts.body));
+    paths.add(pofiPartPath('eyes', parts.eyes));
+    paths.add(pofiPartPath('mouth', parts.mouth));
+  });
+
+  paths.forEach((path) => {
+    const image = new Image();
+    image.src = path;
+  });
+}
+
 function activePofiAvatar(): HTMLElement | undefined {
   return Array.from(document.querySelectorAll<HTMLElement>('[data-pofi-avatar]')).find((avatar) => {
     return avatar.closest<HTMLElement>('[data-view-panel]')?.classList.contains('active');
@@ -266,16 +285,35 @@ function pickPofiMood(state: PofiState): PofiMood {
   return moods[Math.floor(Math.random() * moods.length)];
 }
 
+function ensurePofiLayer(container: HTMLElement, className: string, alt = ''): HTMLImageElement {
+  const layerClass = className.trim().split(/\s+/).at(-1);
+  const existing = layerClass ? container.querySelector<HTMLImageElement>(`.${layerClass}`) : undefined;
+  if (existing) {
+    return existing;
+  }
+
+  const image = pofiImage('', className, alt);
+  container.append(image);
+  return image;
+}
+
+function updatePofiLayer(image: HTMLImageElement, path: string): void {
+  if (image.getAttribute('src') === path) {
+    return;
+  }
+
+  image.src = path;
+}
+
 function renderPofiParts(container: HTMLElement, mood: PofiMood, parts: PofiParts): void {
   container.dataset.pofiMood = mood;
   container.classList.remove('pofi-expression-change');
   void container.offsetWidth;
   container.classList.add('pofi-expression-change');
-  container.replaceChildren(
-    pofiImage(`${POFI_PARTS_ROOT}/body/${parts.body}`, 'pofi-body'),
-    pofiImage(`${POFI_PARTS_ROOT}/eyes/${parts.eyes}`, 'pofi-face pofi-eyes'),
-    pofiImage(`${POFI_PARTS_ROOT}/mouth/${parts.mouth}`, 'pofi-face pofi-mouth')
-  );
+
+  updatePofiLayer(ensurePofiLayer(container, 'pofi-body'), pofiPartPath('body', parts.body));
+  updatePofiLayer(ensurePofiLayer(container, 'pofi-face pofi-eyes'), pofiPartPath('eyes', parts.eyes));
+  updatePofiLayer(ensurePofiLayer(container, 'pofi-face pofi-mouth'), pofiPartPath('mouth', parts.mouth));
 }
 
 function renderPofiAvatar(container: HTMLElement, mood: PofiMood): void {
@@ -421,6 +459,7 @@ function boot(): void {
     document.querySelector<HTMLButtonElement>(`.bottom-nav button[data-view="${view}"]`)?.classList.toggle('active', false);
   });
 
+  preloadPofiParts();
   renderPofiAvatars();
   renderParentMetrics();
   registerServiceWorker();
