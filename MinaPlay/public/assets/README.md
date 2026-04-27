@@ -15,6 +15,7 @@ Bu klasor yalniz uygulamada dogrudan servis edilecek final assetleri tasir.
 - `icons/`: uygulama ve modul ikonlari. Runtime ikonlarda PNG kullanilir.
 - `modules/`: moduller icin buyuk gorsel/illustrasyon PNG dosyalari.
 - `pofi/poses/`: ekranda dogrudan kullanilan butun Pofi PNG pozlari.
+- `pofi/parts/body/`: Pofi govde katmanlari.
 - `pofi/parts/eyes/`: Pofi goz katmanlari.
 - `pofi/parts/mouth/`: Pofi agiz ve konusma katmanlari.
 - `pofi/parts/eyebrows/`: Pofi kas katmanlari.
