@@ -45,42 +45,42 @@ const POFI_STATE_PARTS: Record<PofiState, { body: string; eyes: string; mouth: s
     mouth: 'smile-soft-v01.png'
   },
   guide: {
-    body: 'default-v07.png',
+    body: 'default-v01.png',
     eyes: 'wide-soft-v01.png',
     mouth: 'smile-v01.png'
   },
   playful: {
-    body: 'default-v08.png',
+    body: 'default-v01.png',
     eyes: 'happy-v01.png',
     mouth: 'open-smile-v01.png'
   },
   calm: {
-    body: 'default-v04.png',
+    body: 'default-v01.png',
     eyes: 'half-open-v01.png',
     mouth: 'smile-soft-v01.png'
   },
   exercise: {
-    body: 'default-v10.png',
+    body: 'default-v01.png',
     eyes: 'open-v01.png',
     mouth: 'tongue-out-v01.png'
   },
   sleep: {
-    body: 'default-v05.png',
+    body: 'default-v01.png',
     eyes: 'drowsy-v01.png',
     mouth: 'closed-v01.png'
   },
   peekaboo: {
-    body: 'default-v10.png',
+    body: 'default-v01.png',
     eyes: 'surprised-v01.png',
     mouth: 'open-smile-alt-v01.png'
   },
   success: {
-    body: 'default-v06.png',
+    body: 'default-v01.png',
     eyes: 'happy-v01.png',
     mouth: 'open-smile-soft-v01.png'
   },
   tryAgain: {
-    body: 'default-v03.png',
+    body: 'default-v01.png',
     eyes: 'sad-soft-v01.png',
     mouth: 'sad-soft-v01.png'
   }
