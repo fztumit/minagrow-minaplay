@@ -2,7 +2,7 @@
 name: themes
 description: MinaPlay PWA yüzeyindeki görsel dil, tema, renk, hareket, Pofi ve çocuk ekranı ilkelerini tanımlar.
 created: 2026-04-17
-updated: 2026-04-19
+updated: 2026-04-29
 ---
 
 # Tema
@@ -103,18 +103,74 @@ V2 responsive karar:
 
 Pofi bir davranışsal etkileşim sistemidir.
 
+## Pofi Mizaç Anayasası
+
+Pofi'nin mizacı enerjik ama kontrollü, güven veren, sabırlı ve yönlendiricidir.
+
+Pofi çocuğu eğlendirebilir, dikkat çekebilir ve tepkisiz çocuğu oyuna davet edebilir; ama kontrolsüz gösteri yapmaz. Pofi'nin her mimik ve hareketi çocuğa bir sonraki güvenli adımı anlatmak için vardır. Asset sistemi bu mizaca hizmet eder; asset var diye rastgele duygu, el, ağız veya göz değişimi yapılmaz.
+
+Karakter özellikleri:
+
+- enerjik ama kontrollü rehber
+- sabırlı tekrar arkadaşı
+- düşük uyarımlı model
+- yargılamayan destekçi
+- çocuğun odağını göreve geri taşıyan küçük işaretçi
+- tepkisiz çocuğu merak, sıcaklık ve kısa ipuçlarıyla oyuna çeken arkadaş
+- ebeveynin güven duyacağı tutarlı karakter
+
+Pofi'nin yapmayacağı şeyler:
+
+- sürekli el kol hareketi
+- hızlı ve anlamsız mimik değişimi
+- rastgele şaşırma, aşırı heyecan veya abartılı kutlama
+- yanlışta üzülerek çocuğa başarısızlık hissi verme
+- çocuğun görevini gölgeleyen sahne davranışı
+- aynı anda birden fazla anlam taşıyan yüz ve jest kombinasyonu
+
+Pofi'nin yapacağı şeyler:
+
+- hedefi göstermek için tek ve net işaret kullanır
+- beklerken sakin kalır
+- tepkisiz çocukta attention rolüne geçerek daha canlı ama sınırlı biçimde dikkat toplar
+- doğru denemede kısa ve yumuşak onay verir
+- hedef dışı denemede üzgün görünmek yerine "buraya bak" anlamında yumuşak yönlendirme yapar
+- egzersizde model olur; egzersiz bitene kadar yüz ve jest sabit kalır
+- uykuda görünür ama dikkat çekmez
+- Ceee gibi oyunlarda bile ani, ürkütücü veya taşkın davranmaz
+
+Mimik ve hareket eşleşmesi:
+
+- `idle`: açık yüz, küçük gülümseme, açık eller; bekleme ve güven
+- `welcome`: açık/yumuşak göz, happy kaş, smile-soft ağız, standart allık; güvenli karşılama
+- `guide`: yumuşak bakış, happy kaş, smile ağız; sıradaki aksiyon
+- `attention`: wide-open göz, happy kaş, open-smile-soft ağız, kısa point el ve belirgin allık; tepkisiz çocuğu oyuna çağırma
+- `model`: egzersize uygun tek yüz/tek el; taklit edilecek örnek
+- `affirm`: kısa gülümseme ve tamam işareti; "oldu" hissi
+- `softRedirect`: üzgün yüz değil, sakin işaret; "bir daha buraya bakalım"
+- `sleep`: kapalı/sakin yüz ve kapalı eller; düşük dikkat
+- `play`: kontrollü oyun jesti; neşe var ama taşkınlık yok
+
+Mizacın kısa kuralı:
+
+`Pofi hareket ediyorsa bunun çocuğa söylediği bir şey olmalıdır.`
+
 Asset kararları:
 
-- Pofi için PNG emoji sistemi esas alınır
-- Pofi görselleri kategori klasörlerinde tutulur:
-  - `/assets/pofi/emotion`
-  - `/assets/pofi/exercise`
-  - `/assets/pofi/sleep`
-  - `/assets/pofi/play`
+- Pofi için PNG sistemi esas alınır
+- Pofi görselleri runtime'da iki düzeyde kullanılabilir:
+  - `poses`: doğrudan kullanılan tam Pofi pozları
+  - `parts`: gövde, göz, ağız, el ve ileride kaş/efekt gibi kontrollü katmanlar
+- parça sistemi serbest kombinasyon sistemi değildir; role-first davranış sözleşmesinin seçtiği deterministik kombinasyonları gösterir
+- `blush-soft-v01.png` standart sıcaklık katmanıdır; başarı ve attention rollerinde daha belirginleşebilir
+- happy kaş pozitif/rehber rollerde standart destek katmanı olarak kullanılır
+- el assetleri yalnız rehberlik anlamı taşıdığında kullanılır: açık bekleme, işaret etme, dokunma/model olma, tamam/onay, kapalı sakin uyku
+- el katmanı gerektiğinde yüzün üstünde görünür; yüzün bir kısmının arkasına düşmez
+- el katmanı zorunlu değildir; idle, sakin bekleme ve yalnız yüz mimiklerinin yeterli olduğu durumlarda gizlenebilir
+- karşılama veya mod başlangıcında doğrudan çocuğa uzanan parmak/işaret eli kullanılmaz; bu jest yalnız açık bir hedefe yönlendirme gerektiğinde görünür
+- `pofi_hand_point_left_v01` ve `pofi_hand_point_right_v01` kalıcı poz değildir; "buraya tıkla" anlamında 1-2 saniyelik kısa ipucu olarak görünür ve sonra kaybolur
 - UI ikonları için SVG kullanılabilir
 - background görselleri için PNG kullanılabilir
-- eski gövde katmanı sistemleri kullanılmaz
-- Pofi için SVG parça/gövde sistemi kurulmaz; Pofi tek PNG görsel instance olarak ele alınır
 - asset çözümü deterministiktir; MVP'de random asset varyasyonu kullanılmaz
 
 State ve geçiş ilkeleri:
@@ -123,9 +179,18 @@ State ve geçiş ilkeleri:
 - aynı container içinde üst üste render olmaz
 - role/presence geçişleri fade/scale ile yumuşak olur
 - hızlı duygu değişimi engellenir
+- idle sırasında rastgele duygu seçilmez; yalnız seyrek ve doğal blink veya sakin settle dönüşü yapılır
+- blink sırasında Pofi'nin role, mood, gövde hareketi ve el katmanı değişmez; yalnız göz katmanı kısa süreli kapanıp açılır
+- rastgele göz, ağız veya el drift'i kullanılmaz; ancak Pofi'nin kontrollü life-motion davranışı olabilir
+- life-motion sırasında Pofi bulunduğu konum çevresinde süzülür; gövde hareket sınırı yaklaşık gövde ebatının onda biriyle sınırlıdır
+- nefes hareketinde ölçek `0.95` ile `1.05` arasında kalır
+- nefes ritmi role göre değişebilir; Pofi'nin gövde süzülmesi sakin algı için yavaş tutulur ve önceki hızlı denemelerin yaklaşık üçte biri hızında çalışır
+- hafif sağa/sola rotasyon olabilir; rotasyon rehberliği bozacak kadar belirginleşmez
+- ağız, göz ve kaş katmanları birlikte hareket eder; yüzün gövde üzerindeki hareket sınırı gövde hareket limitinin yaklaşık beşte biridir
+- göz değişimleri kısa tutulur; uzun blur/geçiş çocuğun ifadeyi anlamasını zorlaştırmamalıdır
 - Uyku modunda yalnız sleepy ve sleep kullanılır
 - Ayna egzersizi sırasında yalnız egzersiz yüzü görünür; ödül yüzü tamamlanınca gelir
-- render tek persistent `img` ile yapılır; node yenileme yapılmaz
+- render persistent katmanlarla yapılır; katmanlar gereksiz yeniden oluşturulmaz
 
 ## Pofi Presence Sistemi
 
@@ -199,7 +264,7 @@ Bu kurallar tüm ekranlar için zorunludur.
 - aynı anda yalnız 1 hareketli öğe bulunur
 - patlamalı geçiş, ani sıçrama ve sert giriş/çıkış animasyonları kullanılmaz
 - tüm animasyonlar 300-500 ms aralığında, ease-in-out hissinde ve tercihen fade/soft scale ile çalışır
-- sürekli animasyonlar düşük frekanslıdır; Pofi nefes döngüsü 3-5 saniye aralığında düşünülür
+- sürekli animasyonlar düşük frekanslıdır; Pofi gövde süzülmesi role göre yaklaşık 7-15 saniye aralığında kalır
 - aynı anda hem renk değişimi hem hareket verilmez
 - minimum dokunma alanı 44 x 44 px olur
 - arka plan sakin kalır; hareketli/video arka plan kullanılmaz

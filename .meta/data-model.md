@@ -2,7 +2,7 @@
 name: data-model
 description: MinaPlay projesinin temel veri yapısını, localStorage alanlarını, Pofi state modelini ve ilişki mantığını tanımlar.
 created: 2026-04-17
-updated: 2026-04-19
+updated: 2026-04-29
 ---
 
 # Veri Modeli
@@ -366,13 +366,53 @@ Kurallar:
 
 - aynı anda tek aktif Pofi state olur
 - aynı container içinde Pofi üst üste binmez
-- eski gövde katmanları kullanılmaz
 - PNG sistemi ana kaynaktır
-- Pofi assetleri kategori klasörlerinde tutulur
+- Pofi assetleri `poses` ve `parts` kategori klasörlerinde tutulabilir
+- `parts` sistemi serbest kombinasyon sistemi değildir; role-first kararın seçtiği gövde, göz, ağız ve el katmanlarını deterministik biçimde çözer
+- el, göz ve ağız katmanları yalnız davranış anlamı taşıyan durumlarda değişir
+- el katmanı opsiyoneldir; her state el göstermek zorunda değildir
+- el görünüyorsa yüzün üst katmanında durur ve rehberlik anlamını net taşır
+- point el assetleri transient davranır; `pofi_hand_point_left_v01` ve `pofi_hand_point_right_v01` 1-2 saniyelik hedef ipucu olarak gösterilip otomatik gizlenir
 - sistem deterministiktir; MVP'de random asset seçimi yoktur
+- idle davranışında rastgele duygu veya el hareketi seçilmez
+- göz/mimik geçişleri kısa tutulur; uzun blur etkisi mizaç netliğini zayıflatır
+- blink role/state geçişi değildir; yalnız göz katmanı değişir, gövde life-motion ve role sabit kalır
 - Touch ve Matching gibi modlarda hızlı state değişimi engellenir
 - Mirror modunda egzersiz sırasında `locked = true` çalışır
 - Sleep modunda yalnız sleep ailesi davranışı kullanılır
+
+## Pofi Mizaç Modeli
+
+Pofi'nin davranış modeli çocuk rehberliği için sakin ve tutarlı olmalıdır. Asset çözümü yalnız görsel dosya seçimi değildir; çocuğun ne yapacağını anlamasına yardım eden mizaç katmanıdır.
+
+Role karşılıkları:
+
+- `idle`: bekleyen, güven veren, düşük uyarımlı Pofi
+- `welcome`: canlı ama güvenli karşılama yapan Pofi
+- `attention`: hedefe bakmayı veya dokunmayı hatırlatan Pofi
+- `success`: kısa ve yumuşak onay veren Pofi
+- `error_soft`: yanlış/hatalı değil, tekrar denemeye çağıran Pofi
+- `empathy`: çocuğu sakin tutan, baskı kurmayan Pofi
+- `sleep`: dikkat çekmeyen, uykuya eşlik eden Pofi
+- `play`: Ceee gibi oyunlarda kontrollü neşe taşıyan Pofi
+- `exercise`: taklit edilecek tek modeli gösteren Pofi
+
+Mizaç kuralları:
+
+- her role tek ana niyet taşır
+- aynı anda hem kutlama hem yönlendirme gibi iki anlam verilmez
+- yanlışta üzgün yüz kullanılmaz; yumuşak işaret ve sakin ağız tercih edilir
+- başarıda abartılı zıplama veya taşkın mimik yoktur
+- Ceee dışında oyunbazlık sınırlıdır
+- Ayna'da egzersiz süresince ifade ve jest kilitli kalır
+- Uyku'da blink/nefes dışında dikkat toplayan hareket yoktur
+- Pofi'nin hareketi çocuğun beklenen aksiyonunu açıklamıyorsa kullanılmaz
+- `blush-soft-v01.png` standart sıcaklık efekti olarak kullanılabilir; `attention` ve `success` rollerinde daha belirgin görünebilir
+- happy kaş pozitif/rehber rollerinde standarttır; sad kaş yanlışta çocuğa başarısızlık hissi verebileceği için MVP'de kullanılmaz
+- Pofi blink aralığı 3-7 saniye arasında tutulur
+- Pofi life-motion gövde seviyesinde yaklaşık onda birlik konum hareketi, `0.95-1.05` ölçek nefesi ve hafif rotasyon taşıyabilir
+- role sakinleştikçe gövde süzülmesi yavaşlar; hızlı hareket denemelerinin yaklaşık üçte biri hızında tutulur
+- yüz katmanları, ağız/göz/kaş birlikte olacak şekilde gövde hareket limitinin yaklaşık beşte biri kadar takip hareketi yapabilir
 
 ## Pofi Presence Modeli
 

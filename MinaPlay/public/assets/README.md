@@ -18,6 +18,7 @@ Bu klasor yalniz uygulamada dogrudan servis edilecek final assetleri tasir.
 - `pofi/parts/body/`: Pofi govde katmanlari.
 - `pofi/parts/eyes/`: Pofi goz katmanlari.
 - `pofi/parts/mouth/`: Pofi agiz ve konusma katmanlari.
+- `pofi/parts/hands/`: Pofi el, isaret, dokunma ve yonlendirme katmanlari.
 - `pofi/parts/eyebrows/`: Pofi kas katmanlari.
 - `pofi/parts/effects/`: kizarma, vurgu ve benzeri destek katmanlari.
 

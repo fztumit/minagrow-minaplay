@@ -6,7 +6,7 @@
     <title>MinaPlay</title>
     <meta
       name="description"
-      content="MinaPlay: 0-5 yaş için sakin konuşma, taklit, duygu ve etkileşim PWA deneyimi."
+      content="MinaPlay: 0-5 yaş için güvenli konuşma, taklit, duygu ve etkileşim PWA deneyimi."
     />
     <meta name="theme-color" content="#eef7f4" />
     <link rel="manifest" href="/manifest.webmanifest" />
@@ -16,15 +16,17 @@
   <body>
     <div class="app-shell" data-active-view="home">
       <header class="topbar" aria-label="MinaPlay başlangıç alanı">
-        <img class="topbar-pofi" src="/assets/pofi/poses/happy.png" alt="" />
-        <div>
-          <p class="eyebrow">Pofi ile sakin öğrenme zamanı</p>
-          <h1>MinaPlay</h1>
-          <p class="topbar-copy">Kısa oyna, birlikte dene, sakince tekrar et.</p>
-        </div>
         <button class="parent-entry" type="button" data-open-parent aria-label="Ebeveyn panelini aç">
           Ebeveyn
         </button>
+        <div class="brand-lockup">
+          <p class="eyebrow">Pofi ile birlikte öğrenme zamanı</p>
+          <h1>
+            <img class="topbar-logo" src="/assets/brand/minaplay-logo-runtime.png" alt="MinaPlay" />
+          </h1>
+          <p class="topbar-copy">Kısa oyna, birlikte dene, güvenle tekrar et.</p>
+        </div>
+        <img class="topbar-pofi" src="/assets/pofi/poses/happy.png" alt="" />
       </header>
 
       <main>
@@ -77,7 +79,7 @@
 
             <button class="mode-card sleep" type="button" data-view="sleep">
               <span class="mode-title">Uyku</span>
-              <span class="mode-text">Yavaşla, dinlen, sakinleş.</span>
+              <span class="mode-text">Yavaşla, dinlen, uykuya hazırlan.</span>
               <span class="mode-art">
                 <img class="mode-icon" src="/assets/icons/sleep.png" alt="" />
                 <img class="mode-pofi" src="/assets/pofi/poses/sleeping.png" alt="" />
@@ -118,7 +120,7 @@
           <div class="module-copy">
             <p class="eyebrow">Eşleme</p>
             <h2>Aynısını bul.</h2>
-            <p>Tek hedef, az seçenek, sakin tekrar.</p>
+            <p>Tek hedef, az seçenek, yumuşak tekrar.</p>
           </div>
           <div class="play-surface" data-module-surface>
             <button class="object-tile" type="button" data-track-action="match-correct">Yıldız</button>
@@ -177,7 +179,7 @@
           <button class="back-home" type="button" data-view="home">Ana ekran</button>
           <div class="module-copy">
             <p class="eyebrow">Uyku</p>
-            <h2>Sakinleş.</h2>
+            <h2>Dinlen.</h2>
             <p>Düşük uyarımlı gece yüzeyi. Sadece uyku Pofi’si.</p>
           </div>
           <div class="play-surface night" data-module-surface>
@@ -207,7 +209,7 @@
         <section class="view parent-panel" id="view-parent" data-view-panel="parent" aria-label="Ebeveyn paneli">
           <button class="back-home" type="button" data-view="home">Ana ekran</button>
           <p class="eyebrow">Ebeveyn paneli</p>
-          <h2>Bugünün sakin özeti</h2>
+          <h2>Bugünün yumuşak özeti</h2>
           <div class="analysis-grid">
             <article>
               <span>Oturum</span>

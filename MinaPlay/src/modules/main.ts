@@ -1,7 +1,24 @@
 type ViewName = 'home' | 'touch' | 'match' | 'sentence' | 'story' | 'mirror' | 'sleep' | 'peekaboo' | 'parent';
-type PofiState = 'neutral' | 'guide' | 'playful' | 'calm' | 'exercise' | 'sleep' | 'peekaboo' | 'success' | 'tryAgain';
-type PofiMood = PofiState | 'blink' | 'softSmile' | 'attention' | 'excited' | 'sleepBlink';
-type PofiParts = { body: string; eyes: string; mouth: string };
+type PofiState =
+  | 'welcome'
+  | 'neutral'
+  | 'guide'
+  | 'playful'
+  | 'calm'
+  | 'exercise'
+  | 'sleep'
+  | 'peekaboo'
+  | 'success'
+  | 'tryAgain';
+type PofiMood = PofiState | 'attention' | 'blink' | 'settle' | 'sleepBlink';
+type PofiParts = { body: string; eyes: string; mouth: string; hands?: string; eyebrows?: string; effect?: string };
+type PofiPartFolder = 'body' | 'eyes' | 'mouth' | 'hands' | 'eyebrows' | 'effects';
+type PofiRole = 'welcome' | 'idle' | 'guide' | 'attention' | 'model' | 'affirm' | 'softRedirect' | 'sleep' | 'play';
+
+interface PofiExpression {
+  role: PofiRole;
+  parts: PofiParts;
+}
 
 interface ModuleStats {
   opens: number;
@@ -41,96 +58,177 @@ const POFI_ACTION_STATES: Array<[string, PofiState]> = [
 ];
 
 const POFI_STABLE_BODY = 'default-v01.png';
+const POFI_WARMTH_EFFECT = 'blush-soft-v01.png';
+const POFI_HAPPY_EYEBROWS = 'happy-v01.png';
+const POFI_EXPRESSION_CHANGE_MS = 220;
+const POFI_POINT_HAND_MS = 1200;
+const TOUCH_CUE_MS = 920;
+const CLICK_HAND_CUE_MS = 760;
+const CLICK_HAND_ASSET = '/assets/pofi/parts/hands/pofi_hand_point_right_v01.png';
 
-const POFI_EXPRESSIONS: Record<PofiMood, PofiParts> = {
+const POFI_EXPRESSIONS: Record<PofiMood, PofiExpression> = {
+  welcome: {
+    role: 'welcome',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'open-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'smile-soft-v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
   neutral: {
-    body: POFI_STABLE_BODY,
-    eyes: 'open-v01.png',
-    mouth: 'smile-soft-v01.png'
+    role: 'idle',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'open-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'smile-soft-v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
   },
   guide: {
-    body: POFI_STABLE_BODY,
-    eyes: 'wide-soft-v01.png',
-    mouth: 'smile-v01.png'
-  },
-  playful: {
-    body: POFI_STABLE_BODY,
-    eyes: 'happy-v01.png',
-    mouth: 'open-smile-v01.png'
-  },
-  calm: {
-    body: POFI_STABLE_BODY,
-    eyes: 'half-open-v01.png',
-    mouth: 'smile-soft-v01.png'
-  },
-  exercise: {
-    body: POFI_STABLE_BODY,
-    eyes: 'open-v01.png',
-    mouth: 'tongue-out-v01.png'
-  },
-  sleep: {
-    body: POFI_STABLE_BODY,
-    eyes: 'drowsy-v01.png',
-    mouth: 'closed-v01.png'
-  },
-  peekaboo: {
-    body: POFI_STABLE_BODY,
-    eyes: 'surprised-v01.png',
-    mouth: 'open-smile-alt-v01.png'
-  },
-  success: {
-    body: POFI_STABLE_BODY,
-    eyes: 'happy-v01.png',
-    mouth: 'open-smile-soft-v01.png'
-  },
-  tryAgain: {
-    body: POFI_STABLE_BODY,
-    eyes: 'sad-soft-v01.png',
-    mouth: 'sad-soft-v01.png'
-  },
-  blink: {
-    body: POFI_STABLE_BODY,
-    eyes: 'closed-soft-v01.png',
-    mouth: 'smile-soft-v01.png'
-  },
-  softSmile: {
-    body: POFI_STABLE_BODY,
-    eyes: 'open-v01.png',
-    mouth: 'smile-v01.png'
+    role: 'guide',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'wide-soft-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'smile-v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
   },
   attention: {
-    body: POFI_STABLE_BODY,
-    eyes: 'wide-soft-v01.png',
-    mouth: 'smile-v01.png'
+    role: 'attention',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'wide-open-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'open-smile-soft-v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
   },
-  excited: {
-    body: POFI_STABLE_BODY,
-    eyes: 'wide-open-v01.png',
-    mouth: 'open-smile-soft-v01.png'
+  playful: {
+    role: 'guide',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'happy-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'smile-v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
+  calm: {
+    role: 'idle',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'half-open-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'smile-soft-v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
+  exercise: {
+    role: 'model',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'open-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'tongue-out-v01.png',
+      hands: 'pofi_hand_touch_v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
+  sleep: {
+    role: 'sleep',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'drowsy-v01.png',
+      mouth: 'closed-v01.png',
+      hands: 'pofi_hand_closed_v01.png'
+    }
+  },
+  peekaboo: {
+    role: 'play',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'wide-soft-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'smile-v01.png',
+      hands: 'pofi_hand_steer_left_v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
+  success: {
+    role: 'affirm',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'happy-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'open-smile-soft-v01.png',
+      hands: 'pofi_hand_ok_right_v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
+  tryAgain: {
+    role: 'softRedirect',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'wide-soft-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'smile-soft-v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
+  blink: {
+    role: 'idle',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'closed-soft-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'smile-soft-v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
+  settle: {
+    role: 'idle',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'open-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'smile-soft-v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
   },
   sleepBlink: {
-    body: POFI_STABLE_BODY,
-    eyes: 'closed-v01.png',
-    mouth: 'closed-v01.png'
+    role: 'sleep',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'closed-v01.png',
+      mouth: 'closed-v01.png',
+      hands: 'pofi_hand_closed_v01.png'
+    }
   }
 };
 
-const POFI_IDLE_MOODS: Partial<Record<PofiState, PofiMood[]>> = {
-  neutral: ['softSmile', 'attention'],
-  guide: ['attention', 'excited'],
-  playful: ['excited', 'attention'],
-  calm: ['attention', 'softSmile'],
-  exercise: ['attention', 'excited'],
-  sleep: ['sleepBlink'],
-  peekaboo: ['excited'],
-  success: ['softSmile'],
-  tryAgain: ['attention']
+const POFI_SETTLE_MOODS: Partial<Record<PofiState, PofiMood>> = {
+  welcome: 'welcome',
+  neutral: 'settle',
+  guide: 'attention',
+  playful: 'attention',
+  calm: 'settle',
+  exercise: 'exercise',
+  sleep: 'sleep',
+  peekaboo: 'peekaboo',
+  success: 'settle',
+  tryAgain: 'guide'
 };
 
 let pofiBaseState: PofiState = 'neutral';
 let pofiIdleTimer: number | undefined;
 let pofiBlinkTimer: number | undefined;
 let pofiReturnTimer: number | undefined;
+let pofiExpressionTimer: number | undefined;
+let pofiHandTimer: number | undefined;
 
 const DEFAULT_STATE: AnalyticsState = {
   sessions: 0,
@@ -233,17 +331,26 @@ function pofiImage(path: string, className: string, alt = ''): HTMLImageElement 
   return image;
 }
 
-function pofiPartPath(part: keyof PofiParts, fileName: string): string {
+function pofiPartPath(part: PofiPartFolder, fileName: string): string {
   return `${POFI_PARTS_ROOT}/${part}/${fileName}`;
 }
 
 function preloadPofiParts(): void {
   const paths = new Set<string>();
 
-  Object.values(POFI_EXPRESSIONS).forEach((parts) => {
-    paths.add(pofiPartPath('body', parts.body));
-    paths.add(pofiPartPath('eyes', parts.eyes));
-    paths.add(pofiPartPath('mouth', parts.mouth));
+  Object.values(POFI_EXPRESSIONS).forEach((expression) => {
+    paths.add(pofiPartPath('body', expression.parts.body));
+    paths.add(pofiPartPath('eyes', expression.parts.eyes));
+    paths.add(pofiPartPath('mouth', expression.parts.mouth));
+    if (expression.parts.eyebrows) {
+      paths.add(pofiPartPath('eyebrows', expression.parts.eyebrows));
+    }
+    if (expression.parts.effect) {
+      paths.add(pofiPartPath('effects', expression.parts.effect));
+    }
+    if (expression.parts.hands) {
+      paths.add(pofiPartPath('hands', expression.parts.hands));
+    }
   });
 
   paths.forEach((path) => {
@@ -270,6 +377,14 @@ function clearPofiTimers(): void {
   if (pofiReturnTimer) {
     window.clearTimeout(pofiReturnTimer);
   }
+
+  if (pofiExpressionTimer) {
+    window.clearTimeout(pofiExpressionTimer);
+  }
+
+  if (pofiHandTimer) {
+    window.clearTimeout(pofiHandTimer);
+  }
 }
 
 function pofiMotionAllowed(): boolean {
@@ -280,9 +395,8 @@ function randomBetween(min: number, max: number): number {
   return Math.round(min + Math.random() * (max - min));
 }
 
-function pickPofiMood(state: PofiState): PofiMood {
-  const moods = POFI_IDLE_MOODS[state] ?? POFI_IDLE_MOODS.neutral ?? ['blink'];
-  return moods[Math.floor(Math.random() * moods.length)];
+function settlePofiMood(state: PofiState): PofiMood {
+  return POFI_SETTLE_MOODS[state] ?? 'settle';
 }
 
 function ensurePofiLayer(container: HTMLElement, className: string, alt = ''): HTMLImageElement {
@@ -305,19 +419,57 @@ function updatePofiLayer(image: HTMLImageElement, path: string): void {
   image.src = path;
 }
 
-function renderPofiParts(container: HTMLElement, mood: PofiMood, parts: PofiParts): void {
+function updateOptionalPofiLayer(image: HTMLImageElement, part: PofiPartFolder, fileName?: string): void {
+  if (!fileName) {
+    image.removeAttribute('src');
+    image.hidden = true;
+    return;
+  }
+
+  image.hidden = false;
+  updatePofiLayer(image, pofiPartPath(part, fileName));
+
+  if (isPointHand(fileName)) {
+    pofiHandTimer = window.setTimeout(() => {
+      if (image.getAttribute('src') === pofiPartPath(part, fileName)) {
+        image.removeAttribute('src');
+        image.hidden = true;
+      }
+    }, POFI_POINT_HAND_MS);
+  }
+}
+
+function isPointHand(fileName: string): boolean {
+  return fileName === 'pofi_hand_point_left_v01.png' || fileName === 'pofi_hand_point_right_v01.png';
+}
+
+function renderPofiParts(container: HTMLElement, mood: PofiMood, parts: PofiParts, animateExpression = true): void {
   container.dataset.pofiMood = mood;
-  container.classList.remove('pofi-expression-change');
-  void container.offsetWidth;
-  container.classList.add('pofi-expression-change');
+  container.dataset.pofiRole = POFI_EXPRESSIONS[mood].role;
+
+  if (animateExpression) {
+    container.classList.remove('pofi-expression-change');
+    void container.offsetWidth;
+    container.classList.add('pofi-expression-change');
+    pofiExpressionTimer = window.setTimeout(() => {
+      container.classList.remove('pofi-expression-change');
+    }, POFI_EXPRESSION_CHANGE_MS);
+  }
 
   updatePofiLayer(ensurePofiLayer(container, 'pofi-body'), pofiPartPath('body', parts.body));
+  updateOptionalPofiLayer(ensurePofiLayer(container, 'pofi-effect pofi-blush'), 'effects', parts.effect);
+  updateOptionalPofiLayer(ensurePofiLayer(container, 'pofi-face pofi-eyebrows'), 'eyebrows', parts.eyebrows);
   updatePofiLayer(ensurePofiLayer(container, 'pofi-face pofi-eyes'), pofiPartPath('eyes', parts.eyes));
   updatePofiLayer(ensurePofiLayer(container, 'pofi-face pofi-mouth'), pofiPartPath('mouth', parts.mouth));
+  updateOptionalPofiLayer(ensurePofiLayer(container, 'pofi-hands'), 'hands', parts.hands);
 }
 
 function renderPofiAvatar(container: HTMLElement, mood: PofiMood): void {
-  renderPofiParts(container, mood, POFI_EXPRESSIONS[mood]);
+  renderPofiParts(container, mood, POFI_EXPRESSIONS[mood].parts);
+}
+
+function updatePofiEyes(container: HTMLElement, fileName: string): void {
+  updatePofiLayer(ensurePofiLayer(container, 'pofi-face pofi-eyes'), pofiPartPath('eyes', fileName));
 }
 
 function renderActivePofi(state?: PofiState): void {
@@ -351,16 +503,16 @@ function schedulePofiLife(): void {
       return;
     }
 
-    const baseParts = POFI_EXPRESSIONS[pofiBaseState];
-    renderPofiParts(avatar, pofiBaseState === 'sleep' ? 'sleepBlink' : 'blink', {
-      ...baseParts,
-      eyes: pofiBaseState === 'sleep' ? 'closed-v01.png' : 'closed-soft-v01.png'
-    });
+    const baseParts = POFI_EXPRESSIONS[pofiBaseState].parts;
+    updatePofiEyes(avatar, pofiBaseState === 'sleep' ? 'closed-v01.png' : 'closed-soft-v01.png');
     pofiReturnTimer = window.setTimeout(() => {
-      renderActivePofi(pofiBaseState);
+      const nextAvatar = activePofiAvatar();
+      if (nextAvatar) {
+        updatePofiEyes(nextAvatar, baseParts.eyes);
+      }
       schedulePofiLife();
     }, pofiBaseState === 'sleep' ? 520 : 150);
-  }, randomBetween(2800, 6200));
+  }, randomBetween(3000, 7000));
 
   pofiIdleTimer = window.setTimeout(() => {
     const avatar = activePofiAvatar();
@@ -368,11 +520,11 @@ function schedulePofiLife(): void {
       return;
     }
 
-    renderPofiAvatar(avatar, pickPofiMood(pofiBaseState));
+    renderPofiAvatar(avatar, settlePofiMood(pofiBaseState));
     pofiReturnTimer = window.setTimeout(() => {
       renderActivePofi(pofiBaseState);
-    }, randomBetween(1800, 2600));
-  }, randomBetween(10000, 15000));
+    }, randomBetween(1200, 1800));
+  }, randomBetween(18000, 26000));
 }
 
 function setPofiBaseState(state: PofiState): void {
@@ -388,7 +540,39 @@ function showPofiReaction(state: PofiState): void {
   pofiReturnTimer = window.setTimeout(() => {
     renderActivePofi(pofiBaseState);
     schedulePofiLife();
-  }, state === 'tryAgain' ? 1500 : 1200);
+  }, state === 'tryAgain' ? 1000 : 900);
+}
+
+function resetCueClass(element: HTMLElement, className: string, duration: number): void {
+  element.classList.remove(className);
+  void element.offsetWidth;
+  element.classList.add(className);
+  window.setTimeout(() => {
+    element.classList.remove(className);
+  }, duration);
+}
+
+function showTouchCue(element: HTMLElement): void {
+  resetCueClass(element, 'touch-cue', TOUCH_CUE_MS);
+}
+
+function showClickHandCue(element: HTMLElement): void {
+  let hand = element.querySelector<HTMLImageElement>('.object-click-hand');
+  if (!hand) {
+    hand = pofiImage(CLICK_HAND_ASSET, 'object-click-hand');
+    element.append(hand);
+  }
+
+  resetCueClass(element, 'click-cue', CLICK_HAND_CUE_MS);
+}
+
+function showActionCue(element: HTMLElement, action: string): void {
+  if (action.startsWith('touch-')) {
+    showTouchCue(element);
+    return;
+  }
+
+  showClickHandCue(element);
 }
 
 function renderParentMetrics(): void {
@@ -451,7 +635,9 @@ function boot(): void {
 
   document.querySelectorAll<HTMLButtonElement>('[data-track-action]').forEach((button) => {
     button.addEventListener('click', () => {
-      trackAction(button.dataset.trackAction ?? 'action');
+      const action = button.dataset.trackAction ?? 'action';
+      showActionCue(button, action);
+      trackAction(action);
     });
   });
 
