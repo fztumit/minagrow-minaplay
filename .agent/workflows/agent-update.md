@@ -2,7 +2,7 @@
 name: agent-update
 description: MinaPlay içindeki agent omurgasının nasıl değerlendirileceğini, nasıl güçlendirileceğini ve ne zaman güncelleneceğini tanımlar.
 created: 2026-04-17
-updated: 2026-04-18
+updated: 2026-05-01
 ---
 
 # Agent Update
@@ -35,6 +35,8 @@ Bu workflow, `.agent` omurgası güncelleneceği zaman kullanılır.
 - ajan davranışı gereksiz karmaşıklaştırılmaz
 - kullanıcı Ümit olarak korunur
 - eski hazır bağlam varsayımları taşınmaz
+- `.agent` içindeki hedef klasör, ürün adı veya aktif odak bilgisi `.meta/project.md`, `.meta/plan.md` ve ilgili faz dosyalarıyla çelişmez
+- kanonik uygulama hedefi değiştiyse agent context ve workflow dosyaları da buna göre hizalanır
 - Konusu-Yorum referansı çalışma kaynağı olarak görünür kalır
 - MinaPlay ürün adı, MinaGrow üst bağlamı olarak korunur
 - Pofi davranışsal etkileşim sistemi olarak okunur
@@ -55,6 +57,19 @@ Anlamlı agent değişikliği kapanınca `.agent/worklog.md` güncellenir.
 Kayıt formatı:
 
 `tarih | alan | kısa başlık | ne yapıldı | neden önemli`
+
+## Hedef Alan Kontrolü
+
+Agent omurgası güncellenirken uygulama hedefi dosya isimlerinden veya eski klasör izlerinden tahmin edilmez.
+
+Öncelik sırası:
+
+1. `.meta/plan.md`
+2. `.meta/project.md`
+3. `.meta/architecture.md`
+4. ilgili `.meta/phases/phase-xx.md`
+
+Bugünkü kanonik V2 uygulama hedefi `/Users/umitaydin/Documents/Studio-workspace-Project` olarak okunur. `/Users/umitaydin/Documents/MinaGrow/MinaPlay` altında görülen izler, meta aksi yönde güncellenmedikçe kanonik geliştirme hedefi sayılmaz.
 
 ## Kısa Kural
 

@@ -2,7 +2,7 @@
 name: agent-readme
 description: MinaGrow içindeki agent alanının ne işe yaradığını ve alt yüzeylerin rolünü kısa biçimde açıklar.
 created: 2026-04-17
-updated: 2026-04-18
+updated: 2026-05-01
 ---
 
 # Agent Alanı
@@ -30,6 +30,8 @@ Proje yönü `.meta` altında yaşar.
 
 `.agent` ise Codex'in bu projede nasıl okuyacağını, nasıl karar vereceğini ve nasıl çalışacağını taşır.
 
+Uygulama hedefi, aktif faz veya ürün yönü gibi kanonik kararlar `.agent` içinde tahmin edilmez; önce `.meta/plan.md`, `.meta/project.md` ve ilgili faz dosyaları okunur.
+
 ## Referans
 
 MinaPlay'in çalışan uygulama referansı:
@@ -39,3 +41,7 @@ MinaPlay'in çalışan uygulama referansı:
 Hedef proje kökü:
 
 - `/Users/umitaydin/Documents/MinaGrow`
+
+Bugünkü kanonik V2 uygulama workspace'i:
+
+- `/Users/umitaydin/Documents/Studio-workspace-Project`

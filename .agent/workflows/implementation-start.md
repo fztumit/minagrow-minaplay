@@ -2,7 +2,7 @@
 name: implementation-start
 description: MinaPlay içinde gerçek dosya veya kod üretimine geçmeden önce hangi bağlamın okunacağını, neyin netleştirileceğini ve implementasyona hangi eşiği geçince başlanacağını tanımlar.
 created: 2026-04-17
-updated: 2026-04-18
+updated: 2026-05-01
 ---
 
 # Implementation Start
@@ -14,7 +14,7 @@ Bu workflow, `MinaGrow` üst bağlamındaki `MinaPlay` içinde aktif uygulama ve
 - kullanıcı kod değişikliği isterse
 - kullanıcı `.meta` veya `.agent` düzenlemesi isterse
 - `Konusu-Yorum` referansından bir davranış taşınacaksa
-- MinaPlay klasörüne uygulama kurulacaksa
+- kanonik V2 uygulama workspace'inde uygulama kurulacaksa
 - PWA modülü geliştirilecekse
 - Pofi davranış sistemi, Parent panel analizi veya yeni modül mimarisi etkileniyorsa
 - test/doğrulama çalışması yapılacaksa
@@ -94,7 +94,9 @@ Bugünkü çalışan referans:
 
 Hedef uygulama alanı:
 
-- `/Users/umitaydin/Documents/MinaGrow/MinaPlay`
+- `.meta/plan.md` ve `.meta/project.md` içindeki kanonik hedef okunur
+- bugünkü V2 hedefi: `/Users/umitaydin/Documents/Studio-workspace-Project`
+- `/Users/umitaydin/Documents/MinaGrow/MinaPlay` varsa eski/ara çalışma izi, karşılaştırma veya geçici referans olarak değerlendirilir
 
 ## Kayıt
 
