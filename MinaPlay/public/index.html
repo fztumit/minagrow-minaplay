@@ -16,102 +16,106 @@
   <body>
     <div class="app-shell" data-active-view="home">
       <header class="topbar" aria-label="MinaPlay başlangıç alanı">
-        <button class="parent-entry" type="button" data-open-parent aria-label="Ebeveyn panelini aç">
-          Ebeveyn
+        <button class="topbar-home back-home" type="button" data-view="home" aria-label="Ana ekrana dön">
+          Ana ekran
         </button>
+        <img class="partner-logo minagrow-logo" src="/assets/brand/minagrow-logo-runtime.png" alt="MinaGrow" />
         <div class="brand-lockup">
-          <p class="eyebrow">Pofi ile birlikte öğrenme zamanı</p>
           <h1>
             <img class="topbar-logo" src="/assets/brand/minaplay-logo-runtime.png" alt="MinaPlay" />
           </h1>
-          <p class="topbar-copy">Kısa oyna, birlikte dene, güvenle tekrar et.</p>
         </div>
-        <img class="topbar-pofi" src="/assets/pofi/poses/happy.png" alt="" />
+        <img class="partner-logo sipesystem-logo" src="/assets/brand/sipesystem-kirmizi-beyaz.png" alt="SipeSystem" />
+        <button class="parent-entry" type="button" data-open-parent aria-label="Ebeveyn panelini aç">
+          Ebeveyn
+        </button>
       </header>
 
       <main>
         <section class="view active" id="view-home" data-view-panel="home" aria-label="Ana ekran">
           <div class="mode-grid" aria-label="Öğrenme modları">
             <button class="mode-card touch" type="button" data-view="touch">
-              <span class="mode-title">Dokun</span>
-              <span class="mode-text">Nesneyi seç, sesi dinle.</span>
               <span class="mode-art">
-                <img class="mode-icon" src="/assets/icons/touch.png" alt="" />
-                <img class="mode-pofi" src="/assets/pofi/poses/happy.png" alt="" />
+                <img class="mode-icon" src="/assets/icons/home/touch.png" alt="" />
               </span>
+              <span class="mode-title">Dokun</span>
             </button>
 
             <button class="mode-card match" type="button" data-view="match">
-              <span class="mode-title">Eşleme</span>
-              <span class="mode-text">Aynısını bul, birlikte eşleştir.</span>
               <span class="mode-art">
-                <img class="mode-icon" src="/assets/icons/match.png" alt="" />
-                <img class="mode-pofi" src="/assets/pofi/poses/playful.png" alt="" />
+                <img class="mode-icon" src="/assets/icons/home/match.png" alt="" />
               </span>
+              <span class="mode-title">Eşleme</span>
             </button>
 
             <button class="mode-card sentence" type="button" data-view="sentence">
-              <span class="mode-title">Cümle</span>
-              <span class="mode-text">İki resim seç, cümleyi dinle.</span>
               <span class="mode-art">
-                <img class="mode-icon" src="/assets/icons/sentence.png" alt="" />
-                <img class="mode-pofi" src="/assets/pofi/poses/happy.png" alt="" />
+                <img class="mode-icon" src="/assets/icons/home/sentence.png" alt="" />
               </span>
+              <span class="mode-title">Cümle</span>
             </button>
 
             <button class="mode-card story" type="button" data-view="story">
-              <span class="mode-title">Hikaye</span>
-              <span class="mode-text">Dinle, tekrar et, ilerle.</span>
               <span class="mode-art">
-                <img class="mode-icon" src="/assets/icons/story.png" alt="" />
-                <img class="mode-pofi" src="/assets/pofi/poses/playful.png" alt="" />
+                <img class="mode-icon" src="/assets/icons/home/story.png" alt="" />
               </span>
+              <span class="mode-title">Hikaye</span>
             </button>
 
             <button class="mode-card mirror" type="button" data-view="mirror">
-              <span class="mode-title">Ayna</span>
-              <span class="mode-text">Pofi yapar, sen de denersin.</span>
               <span class="mode-art">
-                <img class="mode-icon" src="/assets/icons/mirror.png" alt="" />
-                <img class="mode-pofi" src="/assets/pofi/poses/tongue.png" alt="" />
+                <img class="mode-icon" src="/assets/icons/home/mirror.png" alt="" />
               </span>
+              <span class="mode-title">Ayna</span>
             </button>
 
             <button class="mode-card sleep" type="button" data-view="sleep">
-              <span class="mode-title">Uyku</span>
-              <span class="mode-text">Yavaşla, dinlen, uykuya hazırlan.</span>
               <span class="mode-art">
-                <img class="mode-icon" src="/assets/icons/sleep.png" alt="" />
-                <img class="mode-pofi" src="/assets/pofi/poses/sleeping.png" alt="" />
+                <img class="mode-icon" src="/assets/icons/home/sleep.png" alt="" />
               </span>
+              <span class="mode-title">Uyku</span>
             </button>
+
+            <div class="home-prompt" aria-hidden="true">
+              <img src="/assets/pofi/poses/happy.png" alt="" />
+              <p>Bugün ne oynamak istiyorsun?</p>
+            </div>
           </div>
 
-          <section class="bonus-strip" aria-label="Bonus oyun">
-            <div>
-              <p class="eyebrow">Bonus oyun</p>
-              <h2>Ceee</h2>
-              <p>Pofi ile kısa saklan-bul oyunu.</p>
+          <section class="bonus-strip" aria-label="Motivasyon ve bonus oyun">
+            <div class="bonus-button bonus-motivation">
+              <img class="bonus-pofi" src="/assets/pofi/poses/playful.png" alt="" />
+              <span class="bonus-copy">
+                <span class="bonus-title">Harika gidiyorsun!</span>
+                <span class="bonus-text">Her gün biraz daha güçleniyorsun.</span>
+              </span>
+              <span class="bonus-star" aria-hidden="true">♥</span>
             </div>
-            <button class="bonus-button" type="button" data-view="peekaboo">
-              <span class="peek-curtain"></span>
-              <img src="/assets/pofi/poses/happy.png" alt="" />
-              <span>Ceee</span>
+            <button class="bonus-button bonus-cee" type="button" data-view="peekaboo">
+              <img class="bonus-pofi" src="/assets/pofi/poses/happy.png" alt="" />
+              <span class="bonus-copy">
+                <span class="bonus-title">Ceee</span>
+                <span class="bonus-text">Pofi ile saklan bul.</span>
+              </span>
             </button>
           </section>
         </section>
 
         <section class="view module-view" id="view-touch" data-view-panel="touch" aria-label="Dokun modu">
-          <button class="back-home" type="button" data-view="home">Ana ekran</button>
-          <div class="module-copy">
-            <p class="eyebrow">Dokun</p>
-            <h2>Kelimeyi duy.</h2>
-            <p>Nesneye dokununca ses çalar. Yanlış deneme cezalandırılmaz.</p>
-          </div>
-          <div class="play-surface" data-module-surface>
-            <button class="object-tile" type="button" data-track-action="touch-correct">Su</button>
-            <button class="object-tile" type="button" data-track-action="touch-offtarget">Top</button>
-            <div class="surface-pofi pofi-avatar" data-pofi-avatar data-pofi-state="guide" aria-label="Pofi rehber"></div>
+          <div class="play-surface touch-ritual-surface" data-module-surface data-touch-surface>
+            <span class="touch-orb touch-orb-one" aria-hidden="true"></span>
+            <span class="touch-orb touch-orb-two" aria-hidden="true"></span>
+            <span class="touch-cloud touch-cloud-left" aria-hidden="true"></span>
+            <span class="touch-cloud touch-cloud-right" aria-hidden="true"></span>
+            <span class="touch-sparkle sparkle-one" aria-hidden="true"></span>
+            <span class="touch-sparkle sparkle-two" aria-hidden="true"></span>
+            <span class="touch-sparkle sparkle-three" aria-hidden="true"></span>
+            <button class="touch-pofi-button" type="button" data-touch-pofi-trigger aria-label="Pofi seçili kelimeyi söylesin">
+              <span class="surface-pofi pofi-avatar large" data-pofi-avatar data-pofi-state="guide" aria-label="Pofi rehber"></span>
+              <span class="touch-pofi-hint">Hadi bir kelime seçelim 😊</span>
+            </button>
+            <div class="touch-card-grid" data-touch-card-grid aria-label="Dokun kartları"></div>
+            <div class="touch-session-message" data-touch-status aria-live="polite"></div>
           </div>
         </section>
 
@@ -229,16 +233,59 @@
             </article>
           </div>
           <div class="module-log" id="module-log" aria-live="polite"></div>
+          <section class="parent-touch-settings" aria-labelledby="touch-cards-title">
+            <div class="parent-section-heading">
+              <div>
+                <p class="eyebrow">Dokun kartları</p>
+                <h3 id="touch-cards-title">Kart ve ahenkli tekrar ayarları</h3>
+              </div>
+              <button class="soft-admin-button" type="button" data-touch-card-add>Kart ekle</button>
+            </div>
+            <div class="repeat-settings-card">
+              <label>
+                Süre (sn)
+                <input type="number" min="5" max="180" step="5" data-touch-repeat-duration />
+              </label>
+              <label>
+                Tekrar sayısı
+                <input type="number" min="1" max="60" step="1" data-touch-repeat-count />
+              </label>
+              <button class="soft-admin-button" type="button" data-touch-repeat-save>Tekrarı kaydet</button>
+            </div>
+            <p class="recording-guide">
+              Aynı kelimeyi farklı ritim ve tonlarla kaydedin: Baba, Bab-ba, Ba Ba, Baaa Baaa, Baaa Ba, Ba Baaa.
+            </p>
+            <div class="touch-card-editor" data-touch-card-editor></div>
+            <p class="touch-parent-status" data-touch-parent-status aria-live="polite"></p>
+          </section>
         </section>
       </main>
 
       <nav class="bottom-nav" aria-label="Ana modlar">
-        <button type="button" data-view="touch">Dokun</button>
-        <button type="button" data-view="match">Eşleme</button>
-        <button type="button" data-view="sentence">Cümle</button>
-        <button type="button" data-view="story">Hikaye</button>
-        <button type="button" data-view="mirror">Ayna</button>
-        <button type="button" data-view="sleep">Uyku</button>
+        <button type="button" data-view="touch">
+          <img class="bottom-nav-icon" src="/assets/icons/home/touch.png" alt="" />
+          <span>Dokun</span>
+        </button>
+        <button type="button" data-view="match">
+          <img class="bottom-nav-icon" src="/assets/icons/home/match.png" alt="" />
+          <span>Eşleme</span>
+        </button>
+        <button type="button" data-view="sentence">
+          <img class="bottom-nav-icon" src="/assets/icons/home/sentence.png" alt="" />
+          <span>Cümle</span>
+        </button>
+        <button type="button" data-view="story">
+          <img class="bottom-nav-icon" src="/assets/icons/home/story.png" alt="" />
+          <span>Hikaye</span>
+        </button>
+        <button type="button" data-view="mirror">
+          <img class="bottom-nav-icon" src="/assets/icons/home/mirror.png" alt="" />
+          <span>Ayna</span>
+        </button>
+        <button type="button" data-view="sleep">
+          <img class="bottom-nav-icon" src="/assets/icons/home/sleep.png" alt="" />
+          <span>Uyku</span>
+        </button>
       </nav>
     </div>
     <script type="module" src="/js/modules/main.js"></script>

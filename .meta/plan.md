@@ -2,7 +2,7 @@
 name: plan
 description: MinaPlay projesinin bugünkü yürütme yönünü, aktif odağını ve yakın çalışma sırasını tanımlar.
 created: 2026-04-17
-updated: 2026-04-22
+updated: 2026-04-27
 ---
 
 # Plan
@@ -11,25 +11,22 @@ updated: 2026-04-22
 
 Bugünkü aktif odak:
 
-`MinaPlay V2` için implementasyon öncesi son mimari kararları yazılı hafızaya geçirmek.
+`MinaPlay V2` için kanonik uygulama hedefi olan `/Users/umitaydin/Documents/Studio-workspace-Project` içinde temiz ürün omurgasını doğrulanabilir hale getirmek.
 
-Bu odak, V1'i uygulama temeli olarak taşımayı bırakır. V1 yalnız fikir, davranış ve örnekleme referansı olarak kalır. V2 tamamen yeni bir ürün versiyonu olarak kurulacaktır.
+Bu odak, V1'i uygulama temeli olarak taşımayı bırakır. V1 yalnız fikir, davranış ve örnekleme referansı olarak kalır. V2 tamamen yeni bir ürün versiyonu olarak `Studio-workspace-Project` içinde kurulacaktır.
+
+`/Users/umitaydin/Documents/MinaGrow/MinaPlay` altında görülen uygulama izi kanonik geliştirme hedefi değildir. Bu alan ancak eski/ara çalışma izi, karşılaştırma veya geçici referans olarak yorumlanır.
 
 ## Bugünkü Kapanış Hedefi
 
-- MinaPlay V2'nin tamamen yeni ürün versiyonu olduğu yazılı hafızaya işlenecek
-- V1 yalnız fikir, davranış ve örnekleme referansı olarak konumlanacak
-- ürün iddiası klinik tedavi yerine geçmeyen ev pratiği/dijital oyun arkadaşı çizgisinde netleşecek
-- pasif ekran kullanımı problemi özel marka adı kullanılmadan yazılacak
-- Pofi state sistemi yanında presence sistemiyle tanımlanacak
-- Pofi'nin tek global instance, merkezi `pofi-root`, event temelli modül iletişimi ve idle timer kuralı görünür olacak
-- Pofi Engine V2 role-first, deterministik ve assetKey temelli sözleşmeyle yazılı hafızaya işlenecek
-- V2 uygulama workspace'i `/Users/umitaydin/Documents/Studio-workspace-Project` olarak sabitlenecek
-- klasör ağacı `core`, `pofi`, `entities`, `features`, `services`, `shared`, `server` ayrımıyla kilitlenecek
-- online/offline, auth, therapist, calls ve yeni terapi/aktivite yönü bu ağaçta yer açılmış şekilde tanımlanacak
-- çocuk ekranı, Parent panel, renk/hareket güvenliği ve MVP kapsam anayasaları görünür olacak
-- Parent Panel MVP kelime/nesne istatistikleri, günlük özet, öğrenildi kuralı ve set seçimiyle sınırlandırılacak
-- başarı ölçütleri teknik çıktılardan çok davranışsal ve duygusal başarıya bağlanacak
+- aktif uygulama hedefi `/Users/umitaydin/Documents/Studio-workspace-Project` olarak korunacak
+- `Studio-workspace-Project` içinde bağımlılıklar kurulup build/lint/test/e2e hattı anlamlı hale getirilecek
+- V2 klasör ağacı `core`, `pofi`, `entities`, `features`, `services`, `shared`, `server` ayrımıyla gerçek uygulama içinde karşılık bulacak
+- Pofi Engine V2 için tek global instance, merkezi `pofi-root`, event temelli modül iletişimi ve idle timer kuralı uygulama omurgasına taşınacak
+- MVP çocuk yüzeyi Ana ekran, Dokun, Eşleme, Ayna, Uyku ve Ceee ekseninde kurulacak
+- Parent Panel MVP kelime/nesne istatistikleri, günlük özet, öğrenildi kuralı ve set seçimiyle sınırlı tutulacak
+- V1 davranışları yalnız seçici referans olarak okunacak; eski UI, CSS, legacy servisler ve doğrudan kopya yaklaşımı taşınmayacak
+- doğrulama sonuçları ve açık kalan kırıklar `.meta/worklog.md` içine kısa kayıt olarak işlenecek
 
 ## Kanonik Ürün Yönü
 
@@ -150,7 +147,7 @@ Kontrol adayları:
 
 Durum:
 
-- aktif
+- tamamlandı / referans karar seti
 
 Kapanış ölçütü:
 
@@ -187,7 +184,21 @@ Alınan kararlar:
 - mod ekranları üst yönlendirme, orta görev alanı, sağ alt Pofi ve alt kısa geri bildirim kalıbını paylaşır
 - Parent panel nötr renkli, az animasyonlu, düzenli ve yorum odaklı olmalıdır
 
-### 3. Ürün Sertleştirme
+### 3. Studio Workspace Doğrulama
+
+Amaç:
+
+- `/Users/umitaydin/Documents/Studio-workspace-Project` içinde V2 uygulama omurgasını install/build/lint/test/e2e hattıyla doğrulanabilir hale getirmek
+
+Kapanış ölçütü:
+
+- `npm install` veya eşdeğer bağımlılık kurulumu tamamlanır
+- `npm run build` çalışır veya açık kırıklar kayıt altına alınır
+- `npm run lint` çalışır veya açık kırıklar kayıt altına alınır
+- `npm test` çalışır veya test yüzeyi yoksa bu durum kayıt altına alınır
+- `npm run test:e2e` çalışır veya e2e yüzeyi yoksa bu durum kayıt altına alınır
+
+### 4. Ürün Sertleştirme
 
 Amaç:
 
@@ -198,7 +209,7 @@ Amaç:
 - Parent panel analizlerinin local-first sınırları
 - Pofi state çakışması kontrolleri
 
-### 4. V2 Klasör ve Katman Kararı
+### 5. V2 Klasör ve Katman Kararı
 
 Amaç:
 
@@ -214,7 +225,8 @@ Alınan kararlar:
 - `server` auth, signaling, storage ve route katmanına yer açar
 - adapter-first kuralı geçerlidir; bugün local implementasyon, yarın remote/synced implementasyon eklenebilir
 - doğrudan `localStorage` erişimi feature katmanına yayılmaz
-### 5. MVP Ekran Akışları
+
+### 6. MVP Ekran Akışları
 
 Amaç:
 
@@ -237,7 +249,7 @@ Alınan kararlar:
 - Ceee temiz PNG tarzı çocuk odası ortamında Pofi'nin saklanma, merkeze gelme, yeniden konumlanma ve otomatik devam etme davranışını taşır
 - Parent panel kelime, cümle, hikaye, ses, resim, egzersiz sırası ve uyku tercihlerini planlama alanı olarak ele alır
 
-### 6. Pofi Presence Matrisi
+### 7. Pofi Presence Matrisi
 
 Amaç:
 
@@ -253,7 +265,7 @@ Alınan kararlar:
 - sahne seviyesi yalnız kısa ödül anlarında 300-500 ms kullanılır
 - tüm geçişler yumuşaktır; aynı anda tek duygu ve tek yüz görünür
 
-### 7. Pofi Engine V2 Sözleşmesi
+### 8. Pofi Engine V2 Sözleşmesi
 
 Amaç:
 

@@ -33,10 +33,65 @@ interface AnalyticsState {
   modules: Record<string, ModuleStats>;
 }
 
+interface TouchVoiceVariation {
+  id: string;
+  label: string;
+  text: string;
+  rhythm: string;
+}
+
+type TouchSoundIntent = 'pofi' | 'word' | 'repeat';
+type TouchSoundSource = 'user' | 'default';
+
+interface TouchCard {
+  id: string;
+  label: string;
+  word: string;
+  image: string;
+  enabled: boolean;
+  order: number;
+  variations: TouchVoiceVariation[];
+}
+
+interface TouchRepeatSettings {
+  enabled: boolean;
+  maxDurationSeconds: number;
+  maxRepeats: number;
+  minIntervalMs: number;
+  maxIntervalMs: number;
+}
+
+interface TouchSettingsState {
+  cards: TouchCard[];
+  repeat: TouchRepeatSettings;
+}
+
 const STORAGE_KEY = 'minaplay_analytics_v1';
 const PRIMARY_VIEWS: ViewName[] = ['touch', 'match', 'sentence', 'story', 'mirror', 'sleep'];
 
 const POFI_PARTS_ROOT = '/assets/pofi/parts';
+const TOUCH_ACTIVE_MS = 900;
+const TOUCH_SETTINGS_KEY = 'minaplay_touch_settings_v1';
+const TOUCH_DB_NAME = 'minaplay_touch_cards_v1';
+const TOUCH_DB_STORE = 'touchSettings';
+const TOUCH_DB_VERSION = 1;
+const TOUCH_MAX_GIF_BYTES = 3_200_000;
+const TOUCH_MAX_IMAGE_EDGE = 720;
+const TOUCH_DEFAULT_REPEAT_SETTINGS: TouchRepeatSettings = {
+  enabled: false,
+  maxDurationSeconds: 30,
+  maxRepeats: 8,
+  minIntervalMs: 1800,
+  maxIntervalMs: 3200
+};
+
+const DEFAULT_TOUCH_CARDS: TouchCard[] = [
+  createDefaultTouchCard('su', 'Su', 'Su', 0, 'water'),
+  createDefaultTouchCard('baba', 'Baba', 'Baba', 1, 'father'),
+  createDefaultTouchCard('top', 'Top', 'Top', 2, 'ball'),
+  createDefaultTouchCard('araba', 'Araba', 'Araba', 3, 'car'),
+  createDefaultTouchCard('elma', 'Elma', 'Elma', 4, 'apple')
+];
 
 const POFI_VIEW_STATES: Partial<Record<ViewName, PofiState>> = {
   touch: 'guide',
@@ -64,7 +119,10 @@ const POFI_EXPRESSION_CHANGE_MS = 220;
 const POFI_POINT_HAND_MS = 1200;
 const TOUCH_CUE_MS = 920;
 const CLICK_HAND_CUE_MS = 760;
-const CLICK_HAND_ASSET = '/assets/pofi/parts/hands/pofi_hand_point_right_v01.png';
+const CLICK_HAND_RIGHT_ASSET = '/assets/pofi/parts/hands/pofi_hand_click_cue_right_v01.png';
+const CLICK_HAND_LEFT_ASSET = '/assets/pofi/parts/hands/pofi_hand_click_cue_left_v01.png';
+const TOUCH_WEATHER_EFFECTS = ['lightning', 'rain', 'snow', 'fog', 'rainbow'] as const;
+type TouchWeatherEffect = (typeof TOUCH_WEATHER_EFFECTS)[number];
 
 const POFI_EXPRESSIONS: Record<PofiMood, PofiExpression> = {
   welcome: {
@@ -229,6 +287,21 @@ let pofiBlinkTimer: number | undefined;
 let pofiReturnTimer: number | undefined;
 let pofiExpressionTimer: number | undefined;
 let pofiHandTimer: number | undefined;
+let touchRepeatTimer: number | undefined;
+let touchActiveTimer: number | undefined;
+let touchVariationIndex = 0;
+let touchAudioUnlocked = false;
+let touchAudioPreload: Promise<void> | undefined;
+let touchAudioPools: Record<string, HTMLAudioElement[]> = {};
+let currentTouchAudio: HTMLAudioElement | undefined;
+let lastTouchAudioSrc: string | undefined;
+let lastTouchVariationId: string | undefined;
+let touchSettings: TouchSettingsState = cloneDefaultTouchSettings();
+let selectedTouchCardId = 'baba';
+let activeTouchWeather: TouchWeatherEffect = 'rainbow';
+let touchRepeatActive = false;
+let touchRepeatStartedAt = 0;
+let touchRepeatCount = 0;
 
 const DEFAULT_STATE: AnalyticsState = {
   sessions: 0,
@@ -274,7 +347,7 @@ function trackViewOpen(view: ViewName): void {
   writeAnalytics(state);
 }
 
-function trackAction(action: string): void {
+function trackAction(action: string, _sourceElement?: HTMLElement): void {
   const activeView = document.querySelector<HTMLElement>('.view.active')?.dataset.viewPanel ?? 'home';
   const state = readAnalytics();
   const module = ensureModule(state, activeView);
@@ -315,6 +388,7 @@ function activateView(view: ViewName): void {
 
   document.querySelector<HTMLElement>('.app-shell')?.setAttribute('data-active-view', view);
   setPofiBaseState(POFI_VIEW_STATES[view] ?? 'neutral');
+  syncTouchRitual(view);
   trackViewOpen(view);
   renderParentMetrics();
 }
@@ -543,6 +617,709 @@ function showPofiReaction(state: PofiState): void {
   }, state === 'tryAgain' ? 1000 : 900);
 }
 
+function touchSurface(): HTMLElement | null {
+  return document.querySelector<HTMLElement>('[data-touch-surface]');
+}
+
+function cloneDefaultTouchSettings(): TouchSettingsState {
+  return {
+    cards: DEFAULT_TOUCH_CARDS.map((card) => ({
+      ...card,
+      variations: card.variations.map((variation) => ({ ...variation }))
+    })),
+    repeat: { ...TOUCH_DEFAULT_REPEAT_SETTINGS }
+  };
+}
+
+function createDefaultTouchCard(id: string, label: string, word: string, order: number, visual: string): TouchCard {
+  return {
+    id,
+    label,
+    word,
+    image: createTouchCardImage(label, visual),
+    enabled: true,
+    order,
+    variations: createDefaultVariations(id, word)
+  };
+}
+
+function createDefaultVariations(cardId: string, word: string): TouchVoiceVariation[] {
+  const lowerId = cardId.toLowerCase();
+  const presets: Record<string, string[]> = {
+    baba: ['Baba', 'Bab-ba', 'Ba Ba', 'Baaa Baaa', 'Baaa Ba', 'Ba Baaa'],
+    su: ['Su', 'Suu', 'Su Su', 'Ssss Su', 'Suuu'],
+    top: ['Top', 'To-op', 'Top Top', 'Tooop', 'Tooop Top'],
+    araba: ['Araba', 'A-ra-ba', 'Araba Araba', 'Aaa-raba', 'Ara-ba'],
+    elma: ['Elma', 'El-ma', 'Elma Elma', 'Eeelma', 'Elmaa']
+  };
+  const texts = presets[lowerId] ?? [word, `${word} ${word}`, word.split('').join('-')];
+  return texts.map((text, index) => ({
+    id: `${lowerId}-${index + 1}`,
+    label: text,
+    text,
+    rhythm: index === 0 ? 'normal' : `ritim-${index + 1}`
+  }));
+}
+
+function createTouchCardImage(label: string, visual: string): string {
+  void label;
+  return `toy:${visual}`;
+}
+
+function defaultToyVisualForCard(card: TouchCard): string | undefined {
+  const defaultVisuals: Record<string, string> = {
+    su: 'water',
+    baba: 'father',
+    top: 'ball',
+    araba: 'car',
+    elma: 'apple'
+  };
+  return defaultVisuals[card.id.toLowerCase()];
+}
+
+function touchCardImageSource(card: TouchCard): string {
+  return card.image.startsWith('data:image/svg+xml')
+    ? createTouchCardImage(card.label, defaultToyVisualForCard(card) ?? 'ball')
+    : card.image;
+}
+
+function touchCardVisualMarkup(card: TouchCard): string {
+  const image = touchCardImageSource(card);
+  if (!image.startsWith('toy:')) {
+    return `<img src="${image}" alt="" loading="lazy" />`;
+  }
+
+  const visual = image.replace('toy:', '');
+  return `<span class="touch-toy touch-toy-${visual}" aria-hidden="true">
+    <span class="toy-shadow"></span>
+    <span class="toy-part toy-main"></span>
+    <span class="toy-part toy-accent"></span>
+    <span class="toy-part toy-detail"></span>
+    <span class="toy-part toy-gloss"></span>
+  </span>`;
+}
+
+function enabledTouchCards(): TouchCard[] {
+  return [...touchSettings.cards].filter((card) => card.enabled).sort((a, b) => a.order - b.order);
+}
+
+function selectedTouchCard(): TouchCard {
+  const enabled = enabledTouchCards();
+  return (
+    enabled.find((card) => card.id === selectedTouchCardId) ??
+    touchSettings.cards.find((card) => card.id === selectedTouchCardId) ??
+    enabled[0] ??
+    touchSettings.cards[0] ??
+    DEFAULT_TOUCH_CARDS[1]
+  );
+}
+
+function nextTouchVariation(card: TouchCard): TouchVoiceVariation {
+  const variations = card.variations.length > 0 ? card.variations : createDefaultVariations(card.id, card.word);
+  const pool = variations.length > 1 ? variations.filter((variation) => variation.id !== lastTouchVariationId) : variations;
+  const variation = pool[randomBetween(0, pool.length - 1)] ?? variations[touchVariationIndex % variations.length];
+  touchVariationIndex += 1;
+  lastTouchVariationId = variation.id;
+  return variation;
+}
+
+function renderTouchCards(): void {
+  const grid = document.querySelector<HTMLElement>('[data-touch-card-grid]');
+  if (!grid) {
+    return;
+  }
+
+  const cards = enabledTouchCards();
+  grid.innerHTML = cards
+    .map((card) => {
+      const activeClass = card.id === selectedTouchCardId ? ' active' : '';
+      const weatherClass = card.id === selectedTouchCardId ? ` weather-${activeTouchWeather}` : '';
+      return `<button class="touch-card${activeClass}" type="button" data-touch-card-id="${card.id}" aria-label="${card.label} kartını dinle">
+        <span class="touch-weather${weatherClass}" aria-hidden="true"></span>
+        <span class="touch-card-image-wrap">${touchCardVisualMarkup(card)}</span>
+        <span class="touch-card-label">${card.label}</span>
+        <span class="touch-card-word">${card.word}</span>
+        <span class="touch-card-variation">Dokun ve dinle</span>
+        <span class="touch-card-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+      </button>`;
+    })
+    .join('');
+  renderTouchSelection();
+}
+
+function renderTouchSelection(variation?: TouchVoiceVariation, active = false): void {
+  const surface = touchSurface();
+  const card = selectedTouchCard();
+  const cards = document.querySelectorAll<HTMLElement>('[data-touch-card-id]');
+
+  if (!surface) {
+    return;
+  }
+
+  surface.classList.toggle('touch-speaking', active);
+  surface.dataset.touchActiveCard = String(Math.max(0, enabledTouchCards().findIndex((entry) => entry.id === card.id)));
+  cards.forEach((element) => {
+    const isActive = element.dataset.touchCardId === card.id;
+    const elementCard = touchSettings.cards.find((entry) => entry.id === element.dataset.touchCardId);
+    element.classList.toggle('active', isActive);
+    element.classList.toggle('speaking', active && isActive);
+    element.querySelector<HTMLElement>('.touch-card-word')!.textContent = elementCard?.word ?? '';
+    element.querySelector<HTMLElement>('.touch-card-variation')!.textContent = isActive ? variation?.text ?? 'Dokun ve dinle' : 'Dokun ve dinle';
+    const weather = element.querySelector<HTMLElement>('.touch-weather');
+    if (weather) {
+      weather.className = `touch-weather${isActive ? ` weather-${activeTouchWeather}` : ''}`;
+    }
+  });
+
+  if (touchActiveTimer) {
+    window.clearTimeout(touchActiveTimer);
+  }
+
+  if (active) {
+    touchActiveTimer = window.setTimeout(() => {
+      surface.classList.remove('touch-speaking');
+      cards.forEach((element) => element.classList.remove('speaking'));
+    }, TOUCH_ACTIVE_MS);
+  }
+}
+
+function setTouchStatus(message?: string): void {
+  const status = touchSurface()?.querySelector<HTMLElement>('[data-touch-status]');
+  if (!status) {
+    return;
+  }
+  status.textContent = message ?? '';
+  status.classList.toggle('active', Boolean(message));
+}
+
+function loadAudioCandidate(src: string): Promise<HTMLAudioElement | undefined> {
+  return new Promise((resolve) => {
+    const audio = new Audio(src);
+    const timeout = window.setTimeout(() => {
+      cleanup();
+      resolve(undefined);
+    }, 1600);
+
+    function cleanup(): void {
+      window.clearTimeout(timeout);
+      audio.removeEventListener('canplaythrough', handleReady);
+      audio.removeEventListener('loadeddata', handleReady);
+      audio.removeEventListener('error', handleError);
+    }
+
+    function handleReady(): void {
+      cleanup();
+      resolve(audio);
+    }
+
+    function handleError(): void {
+      cleanup();
+      resolve(undefined);
+    }
+
+    audio.preload = 'auto';
+    audio.volume = 0.72;
+    audio.addEventListener('canplaythrough', handleReady, { once: true });
+    audio.addEventListener('loadeddata', handleReady, { once: true });
+    audio.addEventListener('error', handleError, { once: true });
+    audio.load();
+  });
+}
+
+async function loadAudioPool(paths: string[]): Promise<HTMLAudioElement[]> {
+  const loaded = await Promise.all(paths.map((path) => loadAudioCandidate(path)));
+  return loaded.filter((audio): audio is HTMLAudioElement => Boolean(audio));
+}
+
+async function preloadTouchAudio(): Promise<void> {
+  if (touchAudioPreload) {
+    return touchAudioPreload;
+  }
+
+  touchAudioPreload = (async () => {
+    const loadedEntries = await Promise.all(enabledTouchCards().map(async (card) => [card.id, await loadTouchAudioForCard(card)] as const));
+    touchAudioPools = Object.fromEntries(loadedEntries);
+  })();
+
+  return touchAudioPreload;
+}
+
+function touchSoundPaths(card: TouchCard, source: TouchSoundSource): string[] {
+  const id = card.id.toLowerCase().replace(/[^a-z0-9-]/g, '');
+  return [`/sounds/${source}/${id}_1.wav`, `/sounds/${source}/${id}_2.wav`, `/sounds/${source}/${id}_3.wav`];
+}
+
+async function loadTouchAudioForCard(card: TouchCard): Promise<HTMLAudioElement[]> {
+  const userPool = await loadAudioPool(touchSoundPaths(card, 'user'));
+  if (userPool.length > 0) {
+    return userPool;
+  }
+  return loadAudioPool(touchSoundPaths(card, 'default'));
+}
+
+function unlockTouchAudio(): void {
+  touchAudioUnlocked = true;
+  void preloadTouchAudio();
+}
+
+function stopCurrentTouchAudio(): void {
+  if (!currentTouchAudio) {
+    return;
+  }
+
+  currentTouchAudio.pause();
+  currentTouchAudio.currentTime = 0;
+  currentTouchAudio = undefined;
+}
+
+function selectTouchAudio(pool: HTMLAudioElement[]): HTMLAudioElement | undefined {
+  if (pool.length === 0) {
+    return undefined;
+  }
+
+  const selectable = pool.length > 1 ? pool.filter((audio) => audio.currentSrc !== lastTouchAudioSrc) : pool;
+  const audio = selectable[randomBetween(0, selectable.length - 1)];
+  lastTouchAudioSrc = audio.currentSrc;
+  return audio;
+}
+
+async function playTouchCardSound(card: TouchCard, intent: TouchSoundIntent, volume: number): Promise<void> {
+  if (!touchAudioUnlocked) {
+    return;
+  }
+
+  await preloadTouchAudio();
+  const pool = touchAudioPools[card.id] ?? [];
+  const audio = selectTouchAudio(pool);
+
+  stopCurrentTouchAudio();
+
+  if (!audio) {
+    playSoftTouchTone();
+    return;
+  }
+
+  currentTouchAudio = audio;
+  audio.pause();
+  audio.currentTime = 0;
+  audio.volume = volume;
+  await audio.play().catch(() => {
+    playSoftTouchTone();
+  });
+}
+
+function playSoftTouchTone(): void {
+  const AudioContextConstructor = window.AudioContext;
+  if (!AudioContextConstructor) {
+    return;
+  }
+
+  const context = new AudioContextConstructor();
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+  const now = context.currentTime;
+
+  oscillator.type = 'sine';
+  oscillator.frequency.setValueAtTime(660, now);
+  oscillator.frequency.exponentialRampToValueAtTime(880, now + 0.18);
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.045, now + 0.03);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.34);
+  oscillator.connect(gain);
+  gain.connect(context.destination);
+  oscillator.start(now);
+  oscillator.stop(now + 0.36);
+  oscillator.addEventListener('ended', () => {
+    void context.close();
+  });
+}
+
+function stopTouchRepeat(): void {
+  touchRepeatActive = false;
+  touchSettings.repeat.enabled = false;
+
+  if (touchRepeatTimer) {
+    window.clearTimeout(touchRepeatTimer);
+    touchRepeatTimer = undefined;
+  }
+
+  renderTouchRepeatState();
+}
+
+function startTouchRepeat(): void {
+  unlockTouchAudio();
+  touchRepeatActive = true;
+  touchSettings.repeat.enabled = true;
+  touchRepeatStartedAt = Date.now();
+  touchRepeatCount = 0;
+  renderTouchRepeatState();
+  runTouchRepeatCue();
+}
+
+function toggleTouchRepeat(): void {
+  if (touchRepeatActive) {
+    stopTouchRepeat();
+    return;
+  }
+  startTouchRepeat();
+}
+
+function runTouchRepeatCue(): void {
+  if (!touchRepeatActive || document.querySelector<HTMLElement>('.app-shell')?.dataset.activeView !== 'touch') {
+    stopTouchRepeat();
+    return;
+  }
+
+  const elapsedSeconds = (Date.now() - touchRepeatStartedAt) / 1000;
+  if (elapsedSeconds >= touchSettings.repeat.maxDurationSeconds || touchRepeatCount >= touchSettings.repeat.maxRepeats) {
+    setTouchStatus('Ahenkli tekrar tamamlandı.');
+    stopTouchRepeat();
+    return;
+  }
+
+  touchRepeatCount += 1;
+  void handleTouchCardPlayback(selectedTouchCard(), 'repeat');
+  renderTouchRepeatState();
+
+  touchRepeatTimer = window.setTimeout(
+    runTouchRepeatCue,
+    randomBetween(touchSettings.repeat.minIntervalMs, touchSettings.repeat.maxIntervalMs)
+  );
+}
+
+function renderTouchRepeatState(): void {
+  const toggle = document.querySelector<HTMLButtonElement>('[data-touch-repeat-toggle]');
+  const status = document.querySelector<HTMLElement>('[data-touch-repeat-status]');
+  if (toggle) {
+    toggle.classList.toggle('active', touchRepeatActive);
+    toggle.textContent = touchRepeatActive ? 'Ahenkli tekrar açık' : 'Ahenkli tekrar';
+  }
+  if (status) {
+    status.textContent = touchRepeatActive ? `${touchRepeatCount}/${touchSettings.repeat.maxRepeats}` : 'Kapalı';
+  }
+}
+
+function stopTouchRitual(): void {
+  stopTouchRepeat();
+
+  if (touchActiveTimer) {
+    window.clearTimeout(touchActiveTimer);
+    touchActiveTimer = undefined;
+  }
+
+  touchSurface()?.classList.remove('touch-speaking');
+  stopCurrentTouchAudio();
+}
+
+function startTouchRitual(): void {
+  touchVariationIndex = 0;
+  lastTouchVariationId = undefined;
+  renderTouchCards();
+  renderTouchRepeatState();
+  renderTouchSelection();
+  setTouchStatus();
+}
+
+function syncTouchRitual(view: ViewName): void {
+  stopTouchRitual();
+
+  if (view === 'touch') {
+    startTouchRitual();
+  }
+}
+
+async function handleTouchCardPlayback(card: TouchCard, intent: TouchSoundIntent): Promise<void> {
+  const variation = nextTouchVariation(card);
+  activeTouchWeather = TOUCH_WEATHER_EFFECTS[randomBetween(0, TOUCH_WEATHER_EFFECTS.length - 1)];
+  renderTouchSelection(variation, true);
+  setTouchStatus(`${card.label}: ${variation.label}`);
+  showPofiReaction('success');
+  await playTouchCardSound(card, intent, intent === 'pofi' ? 0.9 : 0.78);
+}
+
+function handleTouchCardPress(cardId: string, element?: HTMLElement): void {
+  const card = touchSettings.cards.find((entry) => entry.id === cardId);
+  if (!card) {
+    return;
+  }
+
+  unlockTouchAudio();
+  selectedTouchCardId = card.id;
+  renderTouchCards();
+  if (element) {
+    showTouchCue(element);
+  }
+  trackAction('touch-listen', element);
+  void handleTouchCardPlayback(card, 'word');
+}
+
+function handleTouchPofiPress(element?: HTMLElement): void {
+  unlockTouchAudio();
+  if (element) {
+    showTouchCue(element);
+  }
+  trackAction('touch-listen', element);
+  void handleTouchCardPlayback(selectedTouchCard(), 'pofi');
+}
+
+function openTouchDb(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(TOUCH_DB_NAME, TOUCH_DB_VERSION);
+    request.addEventListener('upgradeneeded', () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(TOUCH_DB_STORE)) {
+        db.createObjectStore(TOUCH_DB_STORE);
+      }
+    });
+    request.addEventListener('success', () => resolve(request.result));
+    request.addEventListener('error', () => reject(request.error));
+  });
+}
+
+async function readTouchSettings(): Promise<TouchSettingsState | undefined> {
+  try {
+    if (!('indexedDB' in window)) {
+      const raw = localStorage.getItem(TOUCH_SETTINGS_KEY);
+      return raw ? (JSON.parse(raw) as TouchSettingsState) : undefined;
+    }
+    const db = await openTouchDb();
+    return await new Promise<TouchSettingsState | undefined>((resolve) => {
+      const transaction = db.transaction(TOUCH_DB_STORE, 'readonly');
+      const request = transaction.objectStore(TOUCH_DB_STORE).get(TOUCH_SETTINGS_KEY);
+      request.addEventListener('success', () => resolve(request.result as TouchSettingsState | undefined));
+      request.addEventListener('error', () => resolve(undefined));
+    });
+  } catch {
+    return undefined;
+  }
+}
+
+async function writeTouchSettings(): Promise<void> {
+  const payload: TouchSettingsState = {
+    cards: touchSettings.cards,
+    repeat: { ...touchSettings.repeat, enabled: false }
+  };
+
+  localStorage.setItem(TOUCH_SETTINGS_KEY, JSON.stringify(payload));
+
+  if (!('indexedDB' in window)) {
+    return;
+  }
+
+  try {
+    const db = await openTouchDb();
+    await new Promise<void>((resolve) => {
+      const transaction = db.transaction(TOUCH_DB_STORE, 'readwrite');
+      transaction.objectStore(TOUCH_DB_STORE).put(payload, TOUCH_SETTINGS_KEY);
+      transaction.addEventListener('complete', () => resolve());
+      transaction.addEventListener('error', () => resolve());
+    });
+  } catch {
+    // localStorage fallback above is enough for older browsers.
+  }
+}
+
+function normalizeTouchSettings(stored?: TouchSettingsState): TouchSettingsState {
+  const defaults = cloneDefaultTouchSettings();
+  if (!stored?.cards?.length) {
+    return defaults;
+  }
+
+  const normalizedCards = stored.cards.map((card, index) => ({
+    ...card,
+    id: card.id || `card-${Date.now()}-${index}`,
+    label: card.label || card.word || 'Kart',
+    word: card.word || card.label || 'Kart',
+    image: card.image || createTouchCardImage(card.label || 'Kart', 'ball'),
+    enabled: card.enabled !== false,
+    order: Number.isFinite(card.order) ? card.order : index,
+    variations: card.variations?.length ? card.variations : createDefaultVariations(card.id || `card-${index}`, card.word || card.label || 'Kart')
+  }));
+
+  return {
+    cards: normalizedCards.sort((a, b) => a.order - b.order).map((card, order) => ({ ...card, order })),
+    repeat: { ...TOUCH_DEFAULT_REPEAT_SETTINGS, ...stored.repeat, enabled: false }
+  };
+}
+
+async function initializeTouchSettings(): Promise<void> {
+  const stored = await readTouchSettings();
+  touchSettings = normalizeTouchSettings(stored);
+  selectedTouchCardId = enabledTouchCards()[0]?.id ?? touchSettings.cards[0]?.id ?? 'baba';
+  touchAudioPreload = undefined;
+  renderTouchCards();
+  renderParentTouchSettings();
+}
+
+function renderParentTouchSettings(): void {
+  const editor = document.querySelector<HTMLElement>('[data-touch-card-editor]');
+  const duration = document.querySelector<HTMLInputElement>('[data-touch-repeat-duration]');
+  const repeats = document.querySelector<HTMLInputElement>('[data-touch-repeat-count]');
+  if (duration) {
+    duration.value = String(touchSettings.repeat.maxDurationSeconds);
+  }
+  if (repeats) {
+    repeats.value = String(touchSettings.repeat.maxRepeats);
+  }
+  if (!editor) {
+    return;
+  }
+
+  editor.innerHTML = [...touchSettings.cards]
+    .sort((a, b) => a.order - b.order)
+    .map((card, index, cards) => {
+      return `<article class="touch-card-admin" data-touch-card-admin="${card.id}">
+        <div class="touch-card-admin-preview">${touchCardVisualMarkup(card)}</div>
+        <div class="touch-card-admin-fields">
+          <label>Kart adı <input type="text" value="${card.label}" data-touch-card-field="label" /></label>
+          <label>Kelime <input type="text" value="${card.word}" data-touch-card-field="word" /></label>
+          <label class="inline-check"><input type="checkbox" data-touch-card-enabled ${card.enabled ? 'checked' : ''} /> Aktif</label>
+          <input type="file" accept="image/png,image/jpeg,image/gif" data-touch-card-image />
+        </div>
+        <div class="touch-card-admin-actions">
+          <button type="button" data-touch-card-move="up" ${index === 0 ? 'disabled' : ''}>Yukarı</button>
+          <button type="button" data-touch-card-move="down" ${index === cards.length - 1 ? 'disabled' : ''}>Aşağı</button>
+          <button type="button" data-touch-card-delete>Sil</button>
+        </div>
+      </article>`;
+    })
+    .join('');
+}
+
+function setTouchParentStatus(message: string): void {
+  const status = document.querySelector<HTMLElement>('[data-touch-parent-status]');
+  if (status) {
+    status.textContent = message;
+  }
+}
+
+function touchCardFromAdminElement(element: Element | null | undefined): TouchCard | undefined {
+  const wrapper = element?.closest<HTMLElement>('[data-touch-card-admin]');
+  const cardId = wrapper?.dataset.touchCardAdmin;
+  return touchSettings.cards.find((card) => card.id === cardId);
+}
+
+function reorderTouchCards(): void {
+  touchSettings.cards = [...touchSettings.cards]
+    .sort((a, b) => a.order - b.order)
+    .map((card, order) => ({ ...card, order }));
+}
+
+function addTouchCard(): void {
+  const id = `kart-${Date.now()}`;
+  touchSettings.cards.push({
+    id,
+    label: 'Yeni kart',
+    word: 'Yeni',
+    image: createTouchCardImage('Yeni', 'ball'),
+    enabled: true,
+    order: touchSettings.cards.length,
+    variations: createDefaultVariations(id, 'Yeni')
+  });
+  renderParentTouchSettings();
+  renderTouchCards();
+  void writeTouchSettings();
+}
+
+function moveTouchCard(card: TouchCard, direction: 'up' | 'down'): void {
+  const ordered = [...touchSettings.cards].sort((a, b) => a.order - b.order);
+  const index = ordered.findIndex((entry) => entry.id === card.id);
+  const swapIndex = direction === 'up' ? index - 1 : index + 1;
+  const swap = ordered[swapIndex];
+  if (!swap) {
+    return;
+  }
+  [card.order, swap.order] = [swap.order, card.order];
+  reorderTouchCards();
+  renderParentTouchSettings();
+  renderTouchCards();
+  void writeTouchSettings();
+}
+
+function deleteTouchCard(card: TouchCard): void {
+  if (touchSettings.cards.length <= 1) {
+    setTouchParentStatus('En az bir Dokun kartı kalmalı.');
+    return;
+  }
+  touchSettings.cards = touchSettings.cards.filter((entry) => entry.id !== card.id);
+  reorderTouchCards();
+  selectedTouchCardId = enabledTouchCards()[0]?.id ?? touchSettings.cards[0]?.id ?? selectedTouchCardId;
+  renderParentTouchSettings();
+  renderTouchCards();
+  void writeTouchSettings();
+}
+
+async function handleTouchCardImageUpload(card: TouchCard, file: File): Promise<void> {
+  if (!['image/png', 'image/jpeg', 'image/gif'].includes(file.type)) {
+    setTouchParentStatus('Sadece PNG, JPEG veya GIF yüklenebilir.');
+    return;
+  }
+
+  if (file.type === 'image/gif') {
+    if (file.size > TOUCH_MAX_GIF_BYTES) {
+      setTouchParentStatus('GIF çok büyük. Lütfen daha küçük bir animasyon seçin.');
+      return;
+    }
+    card.image = await readFileAsDataUrl(file);
+  } else {
+    card.image = await resizeTouchImage(file);
+  }
+
+  renderParentTouchSettings();
+  renderTouchCards();
+  setTouchParentStatus('Kart görseli güncellendi.');
+  void writeTouchSettings();
+}
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener('load', () => resolve(String(reader.result)));
+    reader.addEventListener('error', () => reject(reader.error));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function resizeTouchImage(file: File): Promise<string> {
+  const dataUrl = await readFileAsDataUrl(file);
+  const image = new Image();
+  await new Promise<void>((resolve, reject) => {
+    image.addEventListener('load', () => resolve(), { once: true });
+    image.addEventListener('error', () => reject(new Error('image-load-failed')), { once: true });
+    image.src = dataUrl;
+  });
+
+  const scale = Math.min(1, TOUCH_MAX_IMAGE_EDGE / Math.max(image.naturalWidth, image.naturalHeight));
+  if (scale >= 1 && file.size < 900_000) {
+    return dataUrl;
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+  canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+  const context = canvas.getContext('2d');
+  context?.drawImage(image, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.86);
+}
+
+function saveRepeatSettingsFromPanel(): void {
+  const duration = document.querySelector<HTMLInputElement>('[data-touch-repeat-duration]');
+  const repeats = document.querySelector<HTMLInputElement>('[data-touch-repeat-count]');
+  touchSettings.repeat.maxDurationSeconds = clampNumber(Number(duration?.value), 5, 180, TOUCH_DEFAULT_REPEAT_SETTINGS.maxDurationSeconds);
+  touchSettings.repeat.maxRepeats = clampNumber(Number(repeats?.value), 1, 60, TOUCH_DEFAULT_REPEAT_SETTINGS.maxRepeats);
+  renderTouchRepeatState();
+  renderParentTouchSettings();
+  setTouchParentStatus('Ahenkli tekrar ayarları kaydedildi.');
+  void writeTouchSettings();
+}
+
+function clampNumber(value: number, min: number, max: number, fallback: number): number {
+  if (!Number.isFinite(value)) {
+    return fallback;
+  }
+  return Math.min(max, Math.max(min, Math.round(value)));
+}
+
 function resetCueClass(element: HTMLElement, className: string, duration: number): void {
   element.classList.remove(className);
   void element.offsetWidth;
@@ -559,11 +1336,34 @@ function showTouchCue(element: HTMLElement): void {
 function showClickHandCue(element: HTMLElement): void {
   let hand = element.querySelector<HTMLImageElement>('.object-click-hand');
   if (!hand) {
-    hand = pofiImage(CLICK_HAND_ASSET, 'object-click-hand');
+    hand = pofiImage(CLICK_HAND_RIGHT_ASSET, 'object-click-hand');
     element.append(hand);
   }
 
+  const useLeftHand = shouldUseLeftClickHand(element);
+  hand.src = useLeftHand ? CLICK_HAND_LEFT_ASSET : CLICK_HAND_RIGHT_ASSET;
+  hand.classList.toggle('from-left', !useLeftHand);
+  hand.classList.toggle('from-right', useLeftHand);
   resetCueClass(element, 'click-cue', CLICK_HAND_CUE_MS);
+}
+
+function shouldUseLeftClickHand(element: HTMLElement): boolean {
+  const tileGroup = element.parentElement;
+  if (!tileGroup) {
+    return false;
+  }
+
+  const tileRects = Array.from(tileGroup.querySelectorAll<HTMLElement>('.object-tile')).map((tile) =>
+    tile.getBoundingClientRect()
+  );
+  if (tileRects.length === 0) {
+    return false;
+  }
+
+  const groupLeft = Math.min(...tileRects.map((rect) => rect.left));
+  const groupRight = Math.max(...tileRects.map((rect) => rect.right));
+  const elementRect = element.getBoundingClientRect();
+  return elementRect.left + elementRect.width / 2 > groupLeft + (groupRight - groupLeft) / 2;
 }
 
 function showActionCue(element: HTMLElement, action: string): void {
@@ -625,19 +1425,114 @@ function registerServiceWorker(): void {
 }
 
 function boot(): void {
-  document.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((button) => {
-    button.addEventListener('click', () => activateView((button.dataset.view ?? 'home') as ViewName));
+  document.addEventListener('click', (event) => {
+    const target = event.target instanceof Element ? event.target : undefined;
+    const touchCardTrigger = target?.closest<HTMLElement>('[data-touch-card-id]');
+    const touchPofiTrigger = target?.closest<HTMLElement>('[data-touch-pofi-trigger]');
+    const touchRepeatTrigger = target?.closest<HTMLElement>('[data-touch-repeat-toggle]');
+    const touchCardAdd = target?.closest<HTMLElement>('[data-touch-card-add]');
+    const touchRepeatSave = target?.closest<HTMLElement>('[data-touch-repeat-save]');
+    const touchCardDelete = target?.closest<HTMLElement>('[data-touch-card-delete]');
+    const touchCardMove = target?.closest<HTMLElement>('[data-touch-card-move]');
+    const viewTrigger = target?.closest<HTMLElement>('[data-view]');
+    const parentTrigger = target?.closest<HTMLElement>('[data-open-parent]');
+
+    if (touchCardTrigger?.dataset.touchCardId) {
+      handleTouchCardPress(touchCardTrigger.dataset.touchCardId, touchCardTrigger);
+      return;
+    }
+
+    if (touchPofiTrigger) {
+      handleTouchPofiPress(touchPofiTrigger);
+      return;
+    }
+
+    if (touchRepeatTrigger) {
+      toggleTouchRepeat();
+      return;
+    }
+
+    if (touchCardAdd) {
+      addTouchCard();
+      return;
+    }
+
+    if (touchRepeatSave) {
+      saveRepeatSettingsFromPanel();
+      return;
+    }
+
+    if (touchCardDelete) {
+      const card = touchCardFromAdminElement(touchCardDelete);
+      if (card) {
+        deleteTouchCard(card);
+      }
+      return;
+    }
+
+    if (touchCardMove?.dataset.touchCardMove) {
+      const card = touchCardFromAdminElement(touchCardMove);
+      const direction = touchCardMove.dataset.touchCardMove === 'up' ? 'up' : 'down';
+      if (card) {
+        moveTouchCard(card, direction);
+      }
+      return;
+    }
+
+    if (viewTrigger?.dataset.view) {
+      const requestedView = viewTrigger.dataset.view as ViewName;
+      const activeView = document.querySelector<HTMLElement>('.app-shell')?.dataset.activeView;
+      const isBottomNavTrigger = Boolean(viewTrigger.closest('.bottom-nav'));
+      activateView(isBottomNavTrigger && requestedView === activeView ? 'home' : requestedView);
+      return;
+    }
+
+    if (parentTrigger) {
+      activateView('parent');
+    }
   });
 
-  document.querySelectorAll<HTMLElement>('[data-open-parent]').forEach((entry) => {
-    entry.addEventListener('click', () => activateView('parent'));
+  document.addEventListener('change', (event) => {
+    const target = event.target instanceof HTMLInputElement ? event.target : undefined;
+    if (!target) {
+      return;
+    }
+
+    const card = touchCardFromAdminElement(target);
+    if (target.dataset.touchCardField && card) {
+      const value = target.value.trim() || 'Kart';
+      if (target.dataset.touchCardField === 'label') {
+        card.label = value;
+      }
+      if (target.dataset.touchCardField === 'word') {
+        card.word = value;
+        card.variations = createDefaultVariations(card.id, value);
+      }
+      renderTouchCards();
+      void writeTouchSettings();
+      return;
+    }
+
+    if (target.hasAttribute('data-touch-card-enabled') && card) {
+      card.enabled = target.checked;
+      if (!enabledTouchCards().some((entry) => entry.id === selectedTouchCardId)) {
+        selectedTouchCardId = enabledTouchCards()[0]?.id ?? card.id;
+      }
+      renderTouchCards();
+      void writeTouchSettings();
+      return;
+    }
+
+    if (target.hasAttribute('data-touch-card-image') && card && target.files?.[0]) {
+      void handleTouchCardImageUpload(card, target.files[0]);
+    }
   });
 
   document.querySelectorAll<HTMLButtonElement>('[data-track-action]').forEach((button) => {
     button.addEventListener('click', () => {
       const action = button.dataset.trackAction ?? 'action';
       showActionCue(button, action);
-      trackAction(action);
+      trackAction(action, button);
     });
   });
 
@@ -648,6 +1543,8 @@ function boot(): void {
   preloadPofiParts();
   renderPofiAvatars();
   renderParentMetrics();
+  renderTouchCards();
+  void initializeTouchSettings().then(() => preloadTouchAudio());
   registerServiceWorker();
 }
 

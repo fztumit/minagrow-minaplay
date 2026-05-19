@@ -2,7 +2,7 @@
 name: minaplay-assets
 description: MinaPlay runtime asset klasorlerinin rol ayrimini tanimlar.
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-05-08
 ---
 
 # Assets
@@ -13,7 +13,7 @@ Bu klasor yalniz uygulamada dogrudan servis edilecek final assetleri tasir.
 
 - `brand/`: MinaGrow ve MinaPlay logo, ikon ve marka PNG dosyalari.
 - `icons/`: uygulama ve modul ikonlari. Runtime ikonlarda PNG kullanilir.
-- `modules/`: moduller icin buyuk gorsel/illustrasyon PNG dosyalari.
+- `modules/`: moduller icin optimize runtime PNG dosyalari.
 - `pofi/poses/`: ekranda dogrudan kullanilan butun Pofi PNG pozlari.
 - `pofi/parts/body/`: Pofi govde katmanlari.
 - `pofi/parts/eyes/`: Pofi goz katmanlari.
@@ -31,6 +31,6 @@ Bu klasor yalniz uygulamada dogrudan servis edilecek final assetleri tasir.
 - Modul gorselleri Ingilizce rota adlariyla tutulur: `touch.png`, `matching.png`, `mirror.png`, `sleep.png`.
 - Marka gorselleri urun adi ve rol ile tutulur: `minaplay-logo.png`, `minaplay-icon.png`.
 - PSD ve benzeri kaynak dosyalar `public/assets/` altinda tutulmaz; `MinaPlay/assets-source/` altinda bulunur.
-- Buyuk ikon PNG kaynaklari `MinaPlay/assets-source/icons/original-png/` altinda saklanir; public ikonlar 512x512 optimize kopyalardir.
-- ChatGPT uretim referanslari ve deneme ciktisi burada tutulmaz; onlar repo kokundeki `Pofi-Visuals/` altinda kalir.
+- Buyuk PNG kaynaklari `MinaPlay/assets-source/` altinda saklanir; public ikonlar ve modul gorselleri optimize runtime kopyalardir.
+- ChatGPT uretim referanslari ve deneme ciktisi burada tutulmaz; repo disi calisma alani olarak ayrica saklanir.
 - PSD ve benzeri kaynak dosyalar public altinda servis edilmez; `MinaPlay/assets-source/` altinda tutulur.
