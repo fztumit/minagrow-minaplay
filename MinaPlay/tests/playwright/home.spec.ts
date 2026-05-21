@@ -13,7 +13,12 @@ test('parent panel records simple module activity', async ({ page }) => {
   await page.goto('/');
 
   await page.click('.mode-card[data-view="touch"]');
-  await page.click('#view-touch [data-touch-card-id="baba"]');
+  await page.waitForFunction(() => {
+    const surface = document.querySelector<HTMLElement>('#view-touch [data-touch-surface]');
+    return Boolean(surface?.dataset.touchTargetId) && ['targeting', 'waiting'].includes(surface?.dataset.touchState ?? '');
+  });
+  const targetId = await page.locator('#view-touch [data-touch-surface]').getAttribute('data-touch-target-id');
+  await page.click(`#view-touch [data-touch-card-id="${targetId}"]`, { force: true });
   await page.click('[data-open-parent]');
 
   await expect(page.locator('#view-parent')).toHaveClass(/active/);
@@ -47,20 +52,29 @@ test('active bottom nav button returns to home', async ({ page }) => {
   }
 });
 
-test('touch module renders five cards without choice bubbles', async ({ page }) => {
+test('touch module runs a single-target listen and touch round', async ({ page }) => {
   await page.goto('/');
 
   await page.click('.mode-card[data-view="touch"]');
   await expect(page.locator('#view-touch .touch-listen-card')).toHaveCount(0);
-  await expect(page.locator('#view-touch [data-touch-card-id="su"]')).toContainText('Su');
-  await expect(page.locator('#view-touch [data-touch-card-id]')).toHaveCount(5);
   await expect(page.locator('#view-touch [data-touch-bubble]')).toHaveCount(0);
   await expect(page.locator('#view-touch .touch-meaning-object')).toHaveCount(0);
 
-  await page.click('#view-touch [data-touch-card-id="top"]', { force: true });
-  await expect(page.locator('#view-touch [data-touch-card-id="top"]')).toContainText('Top');
+  await page.waitForFunction(() => {
+    const surface = document.querySelector<HTMLElement>('#view-touch [data-touch-surface]');
+    return ['targeting', 'waiting'].includes(surface?.dataset.touchState ?? '');
+  });
+
+  await expect(page.locator('#view-touch [data-touch-card-id]')).toHaveCount(2);
+  const targetId = await page.locator('#view-touch [data-touch-surface]').getAttribute('data-touch-target-id');
+  expect(targetId).toBeTruthy();
+  await expect(page.locator(`#view-touch [data-touch-card-id="${targetId}"]`)).toHaveClass(/active-target/);
+  await expect(page.locator('#view-touch .touch-pofi-hint')).toContainText('dokun');
+
+  await page.click(`#view-touch [data-touch-card-id="${targetId}"]`, { force: true });
+  await expect(page.locator('#view-touch [data-touch-surface]')).toHaveAttribute('data-touch-state', 'success');
   await expect(page.locator('#view-touch [data-touch-surface]')).toHaveClass(/touch-speaking/);
-  await expect(page.locator('#view-touch [data-touch-card-id="top"]')).toHaveClass(/speaking/);
+  await expect(page.locator(`#view-touch [data-touch-card-id="${targetId}"]`)).toHaveClass(/target-success/);
 });
 
 test('touch repeat is explicit and parent controlled', async ({ page }) => {
@@ -89,9 +103,14 @@ test('module surfaces render stateful layered Pofi parts', async ({ page }) => {
 
   await page.click('#view-mirror [data-view="home"]');
   await page.click('.mode-card[data-view="touch"]');
-  await page.click('#view-touch [data-touch-card-id="baba"]', { force: true });
+  await page.waitForFunction(() => {
+    const surface = document.querySelector<HTMLElement>('#view-touch [data-touch-surface]');
+    return Boolean(surface?.dataset.touchTargetId) && ['targeting', 'waiting'].includes(surface?.dataset.touchState ?? '');
+  });
+  const targetId = await page.locator('#view-touch [data-touch-surface]').getAttribute('data-touch-target-id');
+  await page.click(`#view-touch [data-touch-card-id="${targetId}"]`, { force: true });
 
   const touchPofi = page.locator('#view-touch [data-pofi-avatar]');
-  await expect(page.locator('#view-touch [data-touch-surface]')).toHaveClass(/touch-speaking/);
+  await expect(page.locator('#view-touch [data-touch-surface]')).toHaveAttribute('data-touch-state', 'success');
   await expect(touchPofi.locator('.pofi-body')).toHaveAttribute('src', /default-v01\.png$/);
 });

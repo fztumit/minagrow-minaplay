@@ -1,19 +1,27 @@
+import { SpeechStateMachine, type SpeechMachineSnapshot, type SpeechPromptEvent, type SpeechSoundEvent } from './speech/index.js';
+
 type ViewName = 'home' | 'touch' | 'match' | 'sentence' | 'story' | 'mirror' | 'sleep' | 'peekaboo' | 'parent';
 type PofiState =
   | 'welcome'
   | 'neutral'
   | 'guide'
+  | 'attention'
+  | 'targeting'
+  | 'waiting'
+  | 'hint'
   | 'playful'
   | 'calm'
   | 'exercise'
   | 'sleep'
   | 'peekaboo'
   | 'success'
+  | 'successSoft'
+  | 'successCelebrate'
   | 'tryAgain';
 type PofiMood = PofiState | 'attention' | 'blink' | 'settle' | 'sleepBlink';
 type PofiParts = { body: string; eyes: string; mouth: string; hands?: string; eyebrows?: string; effect?: string };
 type PofiPartFolder = 'body' | 'eyes' | 'mouth' | 'hands' | 'eyebrows' | 'effects';
-type PofiRole = 'welcome' | 'idle' | 'guide' | 'attention' | 'model' | 'affirm' | 'softRedirect' | 'sleep' | 'play';
+type PofiRole = 'welcome' | 'idle' | 'guide' | 'attention' | 'model' | 'affirm' | 'celebrate' | 'softRedirect' | 'sleep' | 'play' | 'wait';
 
 interface PofiExpression {
   role: PofiRole;
@@ -121,6 +129,8 @@ const TOUCH_CUE_MS = 920;
 const CLICK_HAND_CUE_MS = 760;
 const CLICK_HAND_RIGHT_ASSET = '/assets/pofi/parts/hands/pofi_hand_click_cue_right_v01.png';
 const CLICK_HAND_LEFT_ASSET = '/assets/pofi/parts/hands/pofi_hand_click_cue_left_v01.png';
+const POFI_GUIDE_HAND_LEFT = 'pofi_hand_click_cue_right_v01.png';
+const POFI_GUIDE_HAND_RIGHT = 'pofi_hand_click_cue_left_v01.png';
 const TOUCH_WEATHER_EFFECTS = ['lightning', 'rain', 'snow', 'fog', 'rainbow'] as const;
 type TouchWeatherEffect = (typeof TOUCH_WEATHER_EFFECTS)[number];
 
@@ -152,6 +162,38 @@ const POFI_EXPRESSIONS: Record<PofiMood, PofiExpression> = {
       eyes: 'wide-soft-v01.png',
       eyebrows: POFI_HAPPY_EYEBROWS,
       mouth: 'smile-v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
+  targeting: {
+    role: 'guide',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'wide-open-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'open-smile-soft-v01.png',
+      hands: 'pofi_hand_open_v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
+  waiting: {
+    role: 'wait',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'waiting-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'smile-soft-v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
+  hint: {
+    role: 'guide',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'wide-open-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'smile-v01.png',
+      hands: POFI_GUIDE_HAND_RIGHT,
       effect: POFI_WARMTH_EFFECT
     }
   },
@@ -227,6 +269,27 @@ const POFI_EXPRESSIONS: Record<PofiMood, PofiExpression> = {
       effect: POFI_WARMTH_EFFECT
     }
   },
+  successSoft: {
+    role: 'affirm',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'happy-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'smile-v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
+  successCelebrate: {
+    role: 'celebrate',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'wink-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'open-smile-v01.png',
+      hands: 'pofi_hand_steer_clap_v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
   tryAgain: {
     role: 'softRedirect',
     parts: {
@@ -272,12 +335,18 @@ const POFI_SETTLE_MOODS: Partial<Record<PofiState, PofiMood>> = {
   welcome: 'welcome',
   neutral: 'settle',
   guide: 'attention',
+  attention: 'attention',
+  targeting: 'targeting',
+  waiting: 'waiting',
+  hint: 'hint',
   playful: 'attention',
   calm: 'settle',
   exercise: 'exercise',
   sleep: 'sleep',
   peekaboo: 'peekaboo',
   success: 'settle',
+  successSoft: 'settle',
+  successCelebrate: 'settle',
   tryAgain: 'guide'
 };
 
@@ -302,6 +371,10 @@ let activeTouchWeather: TouchWeatherEffect = 'rainbow';
 let touchRepeatActive = false;
 let touchRepeatStartedAt = 0;
 let touchRepeatCount = 0;
+let touchSpeechMachine: SpeechStateMachine | undefined;
+let touchSpeechSnapshot: SpeechMachineSnapshot | undefined;
+let lastTouchSpeechState: SpeechMachineSnapshot['state'] | undefined;
+let touchSuccessCount = 0;
 
 const DEFAULT_STATE: AnalyticsState = {
   sessions: 0,
@@ -368,6 +441,12 @@ function trackAction(action: string, _sourceElement?: HTMLElement): void {
   writeAnalytics(state);
 
   const actionState = pofiStateForAction(action);
+  const touchMachineOwnsPofi = activeView === 'touch' && Boolean(touchSpeechMachine) && action.startsWith('touch-');
+  if (touchMachineOwnsPofi) {
+    renderParentMetrics();
+    return;
+  }
+
   if (actionState) {
     showPofiReaction(actionState);
   } else {
@@ -514,7 +593,7 @@ function updateOptionalPofiLayer(image: HTMLImageElement, part: PofiPartFolder, 
 }
 
 function isPointHand(fileName: string): boolean {
-  return fileName === 'pofi_hand_point_left_v01.png' || fileName === 'pofi_hand_point_right_v01.png';
+  return [POFI_GUIDE_HAND_LEFT, POFI_GUIDE_HAND_RIGHT, 'pofi_hand_point_left_v01.png', 'pofi_hand_point_right_v01.png'].includes(fileName);
 }
 
 function renderPofiParts(container: HTMLElement, mood: PofiMood, parts: PofiParts, animateExpression = true): void {
@@ -647,10 +726,10 @@ function createDefaultVariations(cardId: string, word: string): TouchVoiceVariat
   const lowerId = cardId.toLowerCase();
   const presets: Record<string, string[]> = {
     baba: ['Baba', 'Bab-ba', 'Ba Ba', 'Baaa Baaa', 'Baaa Ba', 'Ba Baaa'],
-    su: ['Su', 'Suu', 'Su Su', 'Ssss Su', 'Suuu'],
-    top: ['Top', 'To-op', 'Top Top', 'Tooop', 'Tooop Top'],
-    araba: ['Araba', 'A-ra-ba', 'Araba Araba', 'Aaa-raba', 'Ara-ba'],
-    elma: ['Elma', 'El-ma', 'Elma Elma', 'Eeelma', 'Elmaa']
+    su: ['Su', 'Suu', 'Ssss Su', 'Suuu'],
+    top: ['Top', 'To-op', 'Tooop', 'To-op Top'],
+    araba: ['Araba', 'A-ra-ba', 'Aaa-raba', 'Ara-ba'],
+    elma: ['Elma', 'El-ma', 'Eeelma', 'Elmaa']
   };
   const texts = presets[lowerId] ?? [word, `${word} ${word}`, word.split('').join('-')];
   return texts.map((text, index) => ({
@@ -703,6 +782,19 @@ function enabledTouchCards(): TouchCard[] {
   return [...touchSettings.cards].filter((card) => card.enabled).sort((a, b) => a.order - b.order);
 }
 
+function visibleTouchCards(): TouchCard[] {
+  const enabled = enabledTouchCards();
+  const visibleIds = touchSpeechSnapshot?.visibleItemIds ?? [];
+  if (visibleIds.length === 0) {
+    return enabled;
+  }
+
+  const visible = visibleIds
+    .map((id) => enabled.find((card) => card.id === id))
+    .filter((card): card is TouchCard => Boolean(card));
+  return visible.length > 0 ? visible : enabled;
+}
+
 function selectedTouchCard(): TouchCard {
   const enabled = enabledTouchCards();
   return (
@@ -729,15 +821,19 @@ function renderTouchCards(): void {
     return;
   }
 
-  const cards = enabledTouchCards();
+  const cards = visibleTouchCards();
   grid.innerHTML = cards
     .map((card) => {
       const activeClass = card.id === selectedTouchCardId ? ' active' : '';
+      const targetClass = card.id === touchSpeechSnapshot?.targetId ? ' active-target' : '';
+      const stateClass = card.id === touchSpeechSnapshot?.targetId ? ` target-${touchSpeechSnapshot.state}` : '';
       const weatherClass = card.id === selectedTouchCardId ? ` weather-${activeTouchWeather}` : '';
-      return `<button class="touch-card${activeClass}" type="button" data-touch-card-id="${card.id}" aria-label="${card.label} kartını dinle">
+      const secondaryLabel = card.label.trim().toLocaleLowerCase('tr-TR') === card.word.trim().toLocaleLowerCase('tr-TR') ? '' : card.label;
+      return `<button class="touch-card${activeClass}${targetClass}${stateClass}" type="button" data-touch-card-id="${card.id}" aria-label="${card.label} kartını dinle">
         <span class="touch-weather${weatherClass}" aria-hidden="true"></span>
+        <img class="touch-card-guide-hand" src="${CLICK_HAND_RIGHT_ASSET}" alt="" aria-hidden="true" />
         <span class="touch-card-image-wrap">${touchCardVisualMarkup(card)}</span>
-        <span class="touch-card-label">${card.label}</span>
+        <span class="touch-card-label">${secondaryLabel}</span>
         <span class="touch-card-word">${card.word}</span>
         <span class="touch-card-variation">Dokun ve dinle</span>
         <span class="touch-card-dots" aria-hidden="true"><i></i><i></i><i></i></span>
@@ -751,25 +847,39 @@ function renderTouchSelection(variation?: TouchVoiceVariation, active = false): 
   const surface = touchSurface();
   const card = selectedTouchCard();
   const cards = document.querySelectorAll<HTMLElement>('[data-touch-card-id]');
+  let activeCardElement: HTMLElement | undefined;
 
   if (!surface) {
     return;
   }
 
   surface.classList.toggle('touch-speaking', active);
+  surface.dataset.touchState = touchSpeechSnapshot?.state ?? 'idle';
+  surface.dataset.touchTargetId = touchSpeechSnapshot?.targetId ?? '';
+  surface.dataset.touchLevel = String(touchSpeechSnapshot?.level ?? 1);
   surface.dataset.touchActiveCard = String(Math.max(0, enabledTouchCards().findIndex((entry) => entry.id === card.id)));
   cards.forEach((element) => {
     const isActive = element.dataset.touchCardId === card.id;
+    const isTarget = element.dataset.touchCardId === touchSpeechSnapshot?.targetId;
     const elementCard = touchSettings.cards.find((entry) => entry.id === element.dataset.touchCardId);
+    if (isActive) {
+      activeCardElement = element;
+    }
     element.classList.toggle('active', isActive);
+    element.classList.toggle('active-target', isTarget);
+    ['idle', 'attention', 'targeting', 'waiting', 'success', 'retry', 'hint'].forEach((state) => {
+      element.classList.toggle(`target-${state}`, isTarget && touchSpeechSnapshot?.state === state);
+    });
     element.classList.toggle('speaking', active && isActive);
     element.querySelector<HTMLElement>('.touch-card-word')!.textContent = elementCard?.word ?? '';
-    element.querySelector<HTMLElement>('.touch-card-variation')!.textContent = isActive ? variation?.text ?? 'Dokun ve dinle' : 'Dokun ve dinle';
+    element.querySelector<HTMLElement>('.touch-card-variation')!.textContent = touchCardSupportText(elementCard, variation, isActive, isTarget);
     const weather = element.querySelector<HTMLElement>('.touch-weather');
     if (weather) {
       weather.className = `touch-weather${isActive ? ` weather-${activeTouchWeather}` : ''}`;
     }
   });
+  positionTouchGuide(surface, activeCardElement);
+  renderTouchGuideText(card, variation, active);
 
   if (touchActiveTimer) {
     window.clearTimeout(touchActiveTimer);
@@ -781,6 +891,90 @@ function renderTouchSelection(variation?: TouchVoiceVariation, active = false): 
       cards.forEach((element) => element.classList.remove('speaking'));
     }, TOUCH_ACTIVE_MS);
   }
+}
+
+function positionTouchGuide(surface: HTMLElement, activeCardElement?: HTMLElement): void {
+  if (!activeCardElement) {
+    surface.style.setProperty('--touch-pofi-left', '50%');
+    surface.style.setProperty('--touch-pofi-lean', '0deg');
+    return;
+  }
+
+  const surfaceRect = surface.getBoundingClientRect();
+  const cardRect = activeCardElement.getBoundingClientRect();
+  const center = cardRect.left + cardRect.width / 2 - surfaceRect.left;
+  const guidePadding = surfaceRect.width < 520 ? 106 : 42;
+  const padding = Math.min(150, Math.max(guidePadding, surfaceRect.width * 0.08));
+  const clampedCenter = Math.min(surfaceRect.width - padding, Math.max(padding, center));
+  surface.style.setProperty('--touch-pofi-left', `${clampedCenter}px`);
+  surface.style.setProperty('--touch-pofi-lean', clampedCenter < surfaceRect.width / 2 ? '-1.8deg' : '1.8deg');
+  updateTouchGuideHand(surface, clampedCenter);
+}
+
+function updateTouchGuideHand(surface: HTMLElement, pofiCenter: number): void {
+  const avatar = activePofiAvatar();
+  if (!avatar || !avatar.closest('#view-touch')) {
+    return;
+  }
+
+  const handSide = pofiCenter < surface.getBoundingClientRect().width / 2 ? 'left' : 'right';
+  surface.dataset.touchHandSide = handSide;
+  const hand = avatar.querySelector<HTMLImageElement>('.pofi-hands');
+  if (!hand || hand.hidden) {
+    return;
+  }
+
+  const fileName = handSide === 'left' ? POFI_GUIDE_HAND_LEFT : POFI_GUIDE_HAND_RIGHT;
+  updatePofiLayer(hand, pofiPartPath('hands', fileName));
+}
+
+function renderTouchGuideText(card: TouchCard, variation?: TouchVoiceVariation, active = false): void {
+  const hint = document.querySelector<HTMLElement>('[data-touch-pofi-trigger] .touch-pofi-hint');
+  if (!hint) {
+    return;
+  }
+
+  if (touchSpeechSnapshot?.prompt) {
+    hint.textContent = touchSpeechSnapshot.prompt;
+    return;
+  }
+
+  hint.textContent = active
+    ? `Birlikte söyle: ${variation?.text ?? card.word}`
+    : `${card.label} kartındayım. Dokun, ben söyleyeyim.`;
+}
+
+function touchCardSupportText(
+  card: TouchCard | undefined,
+  variation: TouchVoiceVariation | undefined,
+  isActive: boolean,
+  isTarget: boolean
+): string {
+  if (!card) {
+    return '';
+  }
+
+  if (!isTarget) {
+    return 'Bekle';
+  }
+
+  if (touchSpeechSnapshot?.state === 'success') {
+    return `Evet! ${card.label}`;
+  }
+
+  if (touchSpeechSnapshot?.state === 'retry') {
+    return 'Tekrar bakalım';
+  }
+
+  if (touchSpeechSnapshot?.state === 'hint') {
+    return 'Burada';
+  }
+
+  if (touchSpeechSnapshot?.state === 'targeting' || touchSpeechSnapshot?.state === 'waiting') {
+    return 'Dokun';
+  }
+
+  return isActive ? variation?.text ?? 'Dokun ve dinle' : 'Dokun ve dinle';
 }
 
 function setTouchStatus(message?: string): void {
@@ -846,6 +1040,9 @@ async function preloadTouchAudio(): Promise<void> {
 
 function touchSoundPaths(card: TouchCard, source: TouchSoundSource): string[] {
   const id = card.id.toLowerCase().replace(/[^a-z0-9-]/g, '');
+  if (source === 'default' && id !== 'baba') {
+    return [`/sounds/${source}/${id}_1.wav`, `/sounds/${source}/${id}_2.wav`];
+  }
   return [`/sounds/${source}/${id}_1.wav`, `/sounds/${source}/${id}_2.wav`, `/sounds/${source}/${id}_3.wav`];
 }
 
@@ -999,7 +1196,103 @@ function renderTouchRepeatState(): void {
   }
 }
 
+function createTouchSpeechMachine(): SpeechStateMachine {
+  return new SpeechStateMachine({
+    items: () =>
+      enabledTouchCards().map((card) => ({
+        id: card.id,
+        label: card.label,
+        audio: touchSoundPaths(card, 'default')[0]
+      })),
+    onStateChange: handleTouchSpeechState,
+    onPrompt: handleTouchSpeechPrompt,
+    onSound: handleTouchSpeechSound
+  });
+}
+
+function handleTouchSpeechState(snapshot: SpeechMachineSnapshot): void {
+  if (snapshot.state === 'success' && lastTouchSpeechState !== 'success') {
+    touchSuccessCount += 1;
+  }
+  lastTouchSpeechState = snapshot.state;
+  touchSpeechSnapshot = snapshot;
+  if (snapshot.targetId) {
+    selectedTouchCardId = snapshot.targetId;
+  }
+
+  applyTouchPofiState(snapshot.state);
+  renderTouchCards();
+  if (snapshot.prompt) {
+    setTouchStatus(snapshot.prompt);
+  }
+}
+
+function handleTouchSpeechPrompt(event: SpeechPromptEvent): void {
+  setTouchStatus(event.text);
+  if (event.kind === 'attention' || event.kind === 'retry' || event.kind === 'hint') {
+    playSoftTouchTone();
+  }
+}
+
+async function handleTouchSpeechSound(event: SpeechSoundEvent): Promise<void> {
+  const card = touchSettings.cards.find((entry) => entry.id === event.item.id);
+  if (!card) {
+    return;
+  }
+
+  const variation: TouchVoiceVariation = {
+    id: `speech-${event.intent}-${card.id}`,
+    label: event.phrase,
+    text: event.phrase,
+    rhythm: event.intent
+  };
+  activeTouchWeather = TOUCH_WEATHER_EFFECTS[randomBetween(0, TOUCH_WEATHER_EFFECTS.length - 1)];
+  renderTouchSelection(variation, true);
+  await playTouchCardSound(card, event.intent === 'success' ? 'pofi' : 'word', event.intent === 'success' ? 0.9 : 0.78);
+}
+
+function applyTouchPofiState(state: SpeechMachineSnapshot['state']): void {
+  if (state === 'attention') {
+    setPofiBaseState('attention');
+    return;
+  }
+
+  if (state === 'targeting' || state === 'waiting') {
+    setPofiBaseState(state === 'targeting' ? 'targeting' : 'waiting');
+    return;
+  }
+
+  if (state === 'hint') {
+    setPofiBaseState('hint');
+    return;
+  }
+
+  if (state === 'success') {
+    setPofiBaseState(touchSuccessPofiState());
+    return;
+  }
+
+  if (state === 'retry') {
+    setPofiBaseState('tryAgain');
+    return;
+  }
+
+  setPofiBaseState('guide');
+}
+
+function touchSuccessPofiState(): PofiState {
+  if (touchSuccessCount > 0 && touchSuccessCount % 8 === 0) {
+    return 'successCelebrate';
+  }
+
+  return 'successSoft';
+}
+
 function stopTouchRitual(): void {
+  touchSpeechMachine?.stop();
+  touchSpeechMachine = undefined;
+  touchSpeechSnapshot = undefined;
+  lastTouchSpeechState = undefined;
   stopTouchRepeat();
 
   if (touchActiveTimer) {
@@ -1014,10 +1307,13 @@ function stopTouchRitual(): void {
 function startTouchRitual(): void {
   touchVariationIndex = 0;
   lastTouchVariationId = undefined;
-  renderTouchCards();
+  lastTouchSpeechState = undefined;
+  touchSuccessCount = 0;
+  touchSpeechMachine = createTouchSpeechMachine();
   renderTouchRepeatState();
-  renderTouchSelection();
   setTouchStatus();
+  unlockTouchAudio();
+  touchSpeechMachine.start();
 }
 
 function syncTouchRitual(view: ViewName): void {
@@ -1033,7 +1329,7 @@ async function handleTouchCardPlayback(card: TouchCard, intent: TouchSoundIntent
   activeTouchWeather = TOUCH_WEATHER_EFFECTS[randomBetween(0, TOUCH_WEATHER_EFFECTS.length - 1)];
   renderTouchSelection(variation, true);
   setTouchStatus(`${card.label}: ${variation.label}`);
-  showPofiReaction('success');
+  showPofiReaction(intent === 'repeat' ? 'waiting' : touchSuccessPofiState());
   await playTouchCardSound(card, intent, intent === 'pofi' ? 0.9 : 0.78);
 }
 
@@ -1049,6 +1345,12 @@ function handleTouchCardPress(cardId: string, element?: HTMLElement): void {
   if (element) {
     showTouchCue(element);
   }
+  if (touchSpeechMachine) {
+    touchSpeechMachine.submit(card.id);
+    trackAction(card.id === touchSpeechSnapshot?.targetId ? 'touch-correct' : 'touch-offtarget', element);
+    return;
+  }
+
   trackAction('touch-listen', element);
   void handleTouchCardPlayback(card, 'word');
 }
@@ -1058,6 +1360,12 @@ function handleTouchPofiPress(element?: HTMLElement): void {
   if (element) {
     showTouchCue(element);
   }
+  if (touchSpeechMachine) {
+    touchSpeechMachine.nudge();
+    trackAction('touch-guide', element);
+    return;
+  }
+
   trackAction('touch-listen', element);
   void handleTouchCardPlayback(selectedTouchCard(), 'pofi');
 }
