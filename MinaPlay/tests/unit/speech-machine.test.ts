@@ -98,4 +98,53 @@ describe('SpeechStateMachine', () => {
       vi.advanceTimersByTime(1200);
     }
   });
+
+  test('increases visible choices at level two and level three without changing the child flow', () => {
+    const snapshots: SpeechMachineSnapshot[] = [];
+    const machine = new SpeechStateMachine({
+      items: () => items,
+      onStateChange: (snapshot) => snapshots.push(snapshot)
+    });
+
+    machine.start();
+
+    for (let index = 1; index <= 45; index += 1) {
+      vi.advanceTimersByTime(1800);
+      const round = snapshots.at(-1);
+      expect(round?.visibleItemIds).toHaveLength(index > 20 ? (index > 45 ? 5 : 3) : 2);
+      machine.submit(round?.targetId ?? '');
+      expect(snapshots.at(-1)?.level).toBe(index >= 45 ? 3 : index >= 20 ? 2 : 1);
+      vi.advanceTimersByTime(1200);
+    }
+
+    vi.advanceTimersByTime(1800);
+    expect(snapshots.at(-1)?.level).toBe(3);
+    expect(snapshots.at(-1)?.visibleItemIds).toHaveLength(5);
+  });
+
+  test('does not pick the same target twice in a row when alternatives exist', () => {
+    const snapshots: SpeechMachineSnapshot[] = [];
+    const targets: string[] = [];
+    const machine = new SpeechStateMachine({
+      items: () => items,
+      onStateChange: (snapshot) => {
+        snapshots.push(snapshot);
+        if (snapshot.state === 'targeting' && snapshot.targetId) {
+          targets.push(snapshot.targetId);
+        }
+      }
+    });
+
+    machine.start();
+
+    for (let index = 0; index < 8; index += 1) {
+      vi.advanceTimersByTime(1800);
+      machine.submit(snapshots.at(-1)?.targetId ?? '');
+      vi.advanceTimersByTime(1200);
+    }
+
+    for (let index = 1; index < targets.length; index += 1) {
+      expect(targets[index]).not.toBe(targets[index - 1]);
+    }
+  });
 });
