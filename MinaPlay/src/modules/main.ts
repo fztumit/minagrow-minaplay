@@ -171,6 +171,9 @@ type MirrorExerciseId = 'tongue-out' | 'open-mouth' | 'pucker' | 'teeth' | 'tong
 type StoryState = 'idle' | 'attention' | 'narration' | 'interaction' | 'waiting' | 'success' | 'continue' | 'closure';
 type StoryStepKind = 'attention' | 'narration' | 'interaction' | 'repeat' | 'closure';
 type StoryEffect = 'sparkle' | 'water' | 'chime' | 'step' | 'warm' | 'sleep' | 'pop';
+type ChildLockSettings = { enabled: boolean; keepAwake: boolean };
+type WakeLockSentinelLike = { release: () => Promise<void>; addEventListener: (type: 'release', listener: () => void) => void };
+type NavigatorWithWakeLock = Navigator & { wakeLock?: { request: (type: 'screen') => Promise<WakeLockSentinelLike> } };
 
 interface SentenceScene {
   id: string;
@@ -279,6 +282,8 @@ const SPEECH_MIN_DURATION_MS = 900;
 const SPEECH_MAX_DURATION_MS = 5200;
 const AUDIO_FALLBACK_DURATION_MS = 2200;
 const TOUCH_SETTINGS_KEY = 'minaplay_touch_settings_v1';
+const CHILD_LOCK_SETTINGS_KEY = 'minaplay_child_lock_settings_v1';
+const CHILD_LOCK_LONG_PRESS_MS = 1800;
 const TOUCH_DB_NAME = 'minaplay_touch_cards_v1';
 const TOUCH_DB_STORE = 'touchSettings';
 const TOUCH_DB_VERSION = 1;
@@ -1288,6 +1293,11 @@ let mirrorTimer: number | undefined;
 let mirrorFlowToken = 0;
 let mirrorCameraStream: MediaStream | undefined;
 let mirrorCameraRequested = false;
+let childLockSettings: ChildLockSettings = { enabled: true, keepAwake: true };
+let childLockPressTimer: number | undefined;
+let sleepLongPressTimer: number | undefined;
+let wakeLockSentinel: WakeLockSentinelLike | undefined;
+let wakeLockRequestInFlight = false;
 
 const DEFAULT_STATE: AnalyticsState = {
   sessions: 0,
@@ -1315,6 +1325,84 @@ function readAnalytics(): AnalyticsState {
 
 function writeAnalytics(state: AnalyticsState): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function readChildLockSettings(): ChildLockSettings {
+  try {
+    const raw = localStorage.getItem(CHILD_LOCK_SETTINGS_KEY);
+    return raw ? { ...childLockSettings, ...JSON.parse(raw) } : { ...childLockSettings };
+  } catch {
+    return { ...childLockSettings };
+  }
+}
+
+function writeChildLockSettings(settings: ChildLockSettings): void {
+  localStorage.setItem(CHILD_LOCK_SETTINGS_KEY, JSON.stringify(settings));
+}
+
+function isChildMode(view: ViewName | string | undefined): boolean {
+  return view === 'peekaboo' || PRIMARY_VIEWS.includes(view as ViewName);
+}
+
+function shouldLockChildNavigation(view: ViewName | string | undefined = document.querySelector<HTMLElement>('.app-shell')?.dataset.activeView): boolean {
+  return childLockSettings.enabled && isChildMode(view);
+}
+
+function renderChildLockSettings(): void {
+  const enabledInput = document.querySelector<HTMLInputElement>('[data-child-lock-enabled]');
+  const awakeInput = document.querySelector<HTMLInputElement>('[data-child-lock-awake]');
+  const status = document.querySelector<HTMLElement>('[data-child-lock-status]');
+  if (enabledInput) {
+    enabledInput.checked = childLockSettings.enabled;
+  }
+  if (awakeInput) {
+    awakeInput.checked = childLockSettings.keepAwake;
+  }
+  if (status) {
+    status.textContent = childLockSettings.enabled
+      ? 'Çocuk kilidi açık. Modlardan çıkış için Ebeveyn düğmesine uzun basın.'
+      : 'Çocuk kilidi kapalı. Modlar arasında normal geçiş yapılabilir.';
+  }
+}
+
+function syncChildLockMode(view: ViewName | string | undefined = document.querySelector<HTMLElement>('.app-shell')?.dataset.activeView): void {
+  document.querySelector<HTMLElement>('.app-shell')?.setAttribute('data-child-lock', String(shouldLockChildNavigation(view)));
+  renderChildLockSettings();
+  void syncScreenWakeLock();
+}
+
+async function syncScreenWakeLock(): Promise<void> {
+  const activeView = document.querySelector<HTMLElement>('.app-shell')?.dataset.activeView;
+  const shouldKeepAwake = childLockSettings.enabled && childLockSettings.keepAwake && isChildMode(activeView);
+  if (!shouldKeepAwake || document.visibilityState !== 'visible') {
+    if (wakeLockSentinel) {
+      const sentinel = wakeLockSentinel;
+      wakeLockSentinel = undefined;
+      await sentinel.release().catch(() => undefined);
+    }
+    return;
+  }
+
+  if (wakeLockSentinel || wakeLockRequestInFlight) {
+    return;
+  }
+
+  const wakeLock = (navigator as NavigatorWithWakeLock).wakeLock;
+  if (!wakeLock) {
+    return;
+  }
+
+  wakeLockRequestInFlight = true;
+  try {
+    wakeLockSentinel = await wakeLock.request('screen');
+    wakeLockSentinel.addEventListener('release', () => {
+      wakeLockSentinel = undefined;
+    });
+  } catch {
+    wakeLockSentinel = undefined;
+  } finally {
+    wakeLockRequestInFlight = false;
+  }
 }
 
 function ensureTouchAnalytics(state: AnalyticsState): NonNullable<AnalyticsState['touch']> {
@@ -1596,6 +1684,7 @@ function activateView(view: ViewName): void {
   });
 
   document.querySelector<HTMLElement>('.app-shell')?.setAttribute('data-active-view', view);
+  syncChildLockMode(view);
   setPofiBaseState(POFI_VIEW_STATES[view] ?? 'neutral');
   syncTouchRitual(view);
   syncSleepMode(view);
@@ -1624,9 +1713,47 @@ function activateView(view: ViewName): void {
   if (view === 'parent') {
     renderTouchProgressTable();
     renderMatchProgressTable();
+    renderChildLockSettings();
   }
   trackViewOpen(view);
   renderParentMetrics();
+}
+
+function openParentWithUnlock(): void {
+  activateView('parent');
+}
+
+function startChildLockParentPress(): void {
+  window.clearTimeout(childLockPressTimer);
+  childLockPressTimer = window.setTimeout(() => {
+    childLockPressTimer = undefined;
+    openParentWithUnlock();
+  }, CHILD_LOCK_LONG_PRESS_MS);
+}
+
+function clearChildLockParentPress(): void {
+  if (childLockPressTimer) {
+    window.clearTimeout(childLockPressTimer);
+    childLockPressTimer = undefined;
+  }
+}
+
+function startSleepLongPressStop(): void {
+  if (!sleepMusicRunning) {
+    return;
+  }
+  window.clearTimeout(sleepLongPressTimer);
+  sleepLongPressTimer = window.setTimeout(() => {
+    sleepLongPressTimer = undefined;
+    void stopSleepMusic();
+  }, CHILD_LOCK_LONG_PRESS_MS);
+}
+
+function clearSleepLongPressStop(): void {
+  if (sleepLongPressTimer) {
+    window.clearTimeout(sleepLongPressTimer);
+    sleepLongPressTimer = undefined;
+  }
 }
 
 function pofiStateForAction(action: string): PofiState | undefined {
@@ -4874,11 +5001,17 @@ function boot(): void {
       const requestedView = viewTrigger.dataset.view as ViewName;
       const activeView = document.querySelector<HTMLElement>('.app-shell')?.dataset.activeView;
       const isBottomNavTrigger = Boolean(viewTrigger.closest('.bottom-nav'));
+      if (shouldLockChildNavigation(activeView)) {
+        return;
+      }
       activateView(isBottomNavTrigger && requestedView === activeView ? 'home' : requestedView);
       return;
     }
 
     if (parentTrigger) {
+      if (shouldLockChildNavigation()) {
+        return;
+      }
       activateView('parent');
     }
   });
@@ -4943,12 +5076,49 @@ function boot(): void {
     void toggleSleepMusic(event.currentTarget instanceof HTMLElement ? event.currentTarget : undefined);
   });
 
-  document.querySelector<HTMLElement>('[data-sleep-surface]')?.addEventListener('click', (event) => {
+  const sleepSurface = document.querySelector<HTMLElement>('[data-sleep-surface]');
+  sleepSurface?.addEventListener('click', (event) => {
     const clickedToggle = event.target instanceof HTMLElement && Boolean(event.target.closest('[data-sleep-toggle]'));
-    if (!sleepMusicRunning || clickedToggle) {
+    if (!sleepMusicRunning || clickedToggle || childLockSettings.enabled) {
       return;
     }
     void stopSleepMusic();
+  });
+  sleepSurface?.addEventListener('pointerdown', () => {
+    if (childLockSettings.enabled) {
+      startSleepLongPressStop();
+    }
+  });
+  sleepSurface?.addEventListener('pointerup', clearSleepLongPressStop);
+  sleepSurface?.addEventListener('pointercancel', clearSleepLongPressStop);
+  sleepSurface?.addEventListener('pointerleave', clearSleepLongPressStop);
+
+  const parentEntry = document.querySelector<HTMLElement>('[data-open-parent]');
+  parentEntry?.addEventListener('pointerdown', () => {
+    if (shouldLockChildNavigation()) {
+      startChildLockParentPress();
+    }
+  });
+  parentEntry?.addEventListener('pointerup', clearChildLockParentPress);
+  parentEntry?.addEventListener('pointercancel', clearChildLockParentPress);
+  parentEntry?.addEventListener('pointerleave', clearChildLockParentPress);
+
+  document.querySelector<HTMLInputElement>('[data-child-lock-enabled]')?.addEventListener('change', (event) => {
+    const input = event.currentTarget as HTMLInputElement;
+    childLockSettings = { ...childLockSettings, enabled: input.checked };
+    writeChildLockSettings(childLockSettings);
+    syncChildLockMode();
+  });
+
+  document.querySelector<HTMLInputElement>('[data-child-lock-awake]')?.addEventListener('change', (event) => {
+    const input = event.currentTarget as HTMLInputElement;
+    childLockSettings = { ...childLockSettings, keepAwake: input.checked };
+    writeChildLockSettings(childLockSettings);
+    syncChildLockMode();
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    void syncScreenWakeLock();
   });
 
   PRIMARY_VIEWS.forEach((view) => {
@@ -4956,12 +5126,14 @@ function boot(): void {
   });
 
   preloadPofiParts();
+  childLockSettings = readChildLockSettings();
   touchProgress = readTouchProgress();
   touchMastery = readTouchMastery();
   matchProgress = readMatchProgress();
   sentenceProgress = readSentenceProgress();
   publishTouchMasteryForMatching();
   renderPofiAvatars();
+  syncChildLockMode();
   renderParentMetrics();
   renderTouchProgressTable();
   renderMatchProgressTable();

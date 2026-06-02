@@ -1,4 +1,12 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+const CHILD_LOCK_SETTINGS_KEY = 'minaplay_child_lock_settings_v1';
+
+async function disableChildLock(page: Page) {
+  await page.addInitScript((key) => {
+    localStorage.setItem(key, JSON.stringify({ enabled: false, keepAwake: false }));
+  }, CHILD_LOCK_SETTINGS_KEY);
+}
 
 test('home opens with six calm modes and bonus ceee', async ({ page }) => {
   await page.goto('/');
@@ -11,6 +19,7 @@ test('home opens with six calm modes and bonus ceee', async ({ page }) => {
 });
 
 test('parent panel records simple module activity', async ({ page }) => {
+  await disableChildLock(page);
   await page.goto('/');
 
   await page.click('.mode-card[data-view="touch"]');
@@ -28,6 +37,7 @@ test('parent panel records simple module activity', async ({ page }) => {
 });
 
 test('module back buttons return to home', async ({ page }) => {
+  await disableChildLock(page);
   await page.goto('/');
 
   for (const view of ['touch', 'match', 'sentence', 'story', 'mirror', 'sleep', 'peekaboo']) {
@@ -41,6 +51,7 @@ test('module back buttons return to home', async ({ page }) => {
 });
 
 test('active bottom nav button returns to home', async ({ page }) => {
+  await disableChildLock(page);
   await page.goto('/');
 
   for (const view of ['touch', 'match', 'sentence', 'story', 'mirror', 'sleep']) {
@@ -51,6 +62,30 @@ test('active bottom nav button returns to home', async ({ page }) => {
     await expect(page.locator('#view-home')).toHaveClass(/active/);
     await expect(page.locator('.app-shell')).toHaveAttribute('data-active-view', 'home');
   }
+});
+
+test('child lock blocks module exits and opens parent with long press', async ({ page }) => {
+  await page.goto('/');
+
+  await page.click('.mode-card[data-view="touch"]');
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-child-lock', 'true');
+
+  await page.click('.topbar-home');
+  await expect(page.locator('#view-touch')).toHaveClass(/active/);
+
+  await page.click('.bottom-nav button[data-view="sleep"]', { force: true });
+  await expect(page.locator('#view-touch')).toHaveClass(/active/);
+
+  await page.click('[data-open-parent]');
+  await expect(page.locator('#view-touch')).toHaveClass(/active/);
+
+  await page.locator('[data-open-parent]').hover();
+  await page.mouse.down();
+  await page.waitForTimeout(1900);
+  await page.mouse.up();
+  await expect(page.locator('#view-parent')).toHaveClass(/active/);
+  await expect(page.locator('[data-child-lock-enabled]')).toBeChecked();
+  await expect(page.locator('[data-child-lock-awake]')).toBeChecked();
 });
 
 test('touch module runs a single-target listen and touch round', async ({ page }) => {
@@ -79,6 +114,7 @@ test('touch module runs a single-target listen and touch round', async ({ page }
 });
 
 test('touch repeat is explicit and parent controlled', async ({ page }) => {
+  await disableChildLock(page);
   await page.goto('/');
   await page.click('.mode-card[data-view="touch"]');
 
@@ -219,6 +255,12 @@ test('sleep module shows moon scene and toggles sleeping Pofi', async ({ page })
   await expect(page.locator('[data-sleep-toggle]')).toHaveCSS('opacity', '0');
 
   await page.click('[data-sleep-surface]', { position: { x: 20, y: 20 } });
+  await expect(page.locator('[data-sleep-surface]')).toHaveAttribute('data-sleep-running', 'true');
+
+  await page.mouse.move(20, 20);
+  await page.mouse.down();
+  await page.waitForTimeout(1900);
+  await page.mouse.up();
   await expect(page.locator('[data-sleep-surface]')).toHaveAttribute('data-sleep-running', 'false', { timeout: 2200 });
   await expect(page.locator('[data-sleep-label]')).toHaveText('Başlat');
 });
@@ -251,12 +293,15 @@ test('parent panel shows touch word progress rows', async ({ page }) => {
   await page.goto('/');
 
   await page.click('[data-open-parent]');
+  await expect(page.locator('[data-child-lock-enabled]')).toBeChecked();
+  await expect(page.locator('[data-child-lock-awake]')).toBeChecked();
   await expect(page.locator('[data-touch-progress-table] .touch-progress-row')).toHaveCount(5);
   await expect(page.locator('[data-touch-progress-table]')).toContainText('Su');
   await expect(page.locator('[data-touch-progress-table]')).toContainText('3 doğru');
 });
 
 test('module surfaces render stateful layered Pofi parts', async ({ page }) => {
+  await disableChildLock(page);
   await page.goto('/');
 
   await page.click('.mode-card[data-view="mirror"]');

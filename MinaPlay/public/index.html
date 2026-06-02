@@ -249,6 +249,31 @@
             </article>
           </div>
           <div class="module-log" id="module-log" aria-live="polite"></div>
+          <section class="parent-safety-settings" aria-labelledby="child-lock-title">
+            <div class="parent-section-heading">
+              <div>
+                <p class="eyebrow">Tablet güvenli kullanım</p>
+                <h3 id="child-lock-title">Çocuk kilidi</h3>
+              </div>
+            </div>
+            <div class="safety-settings-card">
+              <label class="safety-toggle">
+                <input type="checkbox" data-child-lock-enabled />
+                <span>
+                  Mod içindeyken çıkışı kilitle
+                  <small>Alt menü ve ana ekran geçişleri kapanır; ebeveyn paneli uzun basma ile açılır.</small>
+                </span>
+              </label>
+              <label class="safety-toggle">
+                <input type="checkbox" data-child-lock-awake />
+                <span>
+                  Ekranı açık tut
+                  <small>Destekleyen tabletlerde oyun sırasında ekranın uyumasını azaltır.</small>
+                </span>
+              </label>
+            </div>
+            <p class="safety-parent-status" data-child-lock-status aria-live="polite"></p>
+          </section>
           <section class="parent-touch-progress" aria-labelledby="touch-progress-title">
             <div class="parent-section-heading">
               <div>

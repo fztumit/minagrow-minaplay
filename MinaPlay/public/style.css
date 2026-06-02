@@ -555,7 +555,7 @@ h2 {
 
 .parent-panel {
   max-height: calc(100dvh - 270px);
-  padding-bottom: 40px;
+  padding-bottom: 180px;
   overflow-y: auto;
 }
 
@@ -3188,6 +3188,16 @@ h2 {
   display: none;
 }
 
+.app-shell[data-child-lock="true"]:not([data-active-view="home"]):not([data-active-view="parent"]) .bottom-nav,
+.app-shell[data-child-lock="true"]:not([data-active-view="home"]):not([data-active-view="parent"]) .module-view > .back-home {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.app-shell[data-child-lock="true"]:not([data-active-view="home"]):not([data-active-view="parent"]) .parent-entry {
+  box-shadow: 0 0 0 3px rgba(124, 143, 214, 0.12);
+}
+
 .app-shell[data-active-view="match"] .bottom-nav,
 .app-shell[data-active-view="sentence"] .bottom-nav {
   opacity: 0.52;
@@ -4391,7 +4401,8 @@ h2 {
 }
 
 .parent-touch-settings,
-.parent-touch-progress {
+.parent-touch-progress,
+.parent-safety-settings {
   margin-top: 28px;
   padding: clamp(18px, 2vw, 28px);
   background: rgba(255, 255, 255, 0.72);
@@ -4425,7 +4436,8 @@ h2 {
 }
 
 .parent-section-heading,
-.repeat-settings-card {
+.repeat-settings-card,
+.safety-settings-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -4447,6 +4459,40 @@ h2 {
 .repeat-settings-card {
   justify-content: flex-start;
   margin-top: 18px;
+}
+
+.safety-settings-card {
+  justify-content: flex-start;
+  align-items: stretch;
+  margin-top: 18px;
+}
+
+.safety-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  max-width: 420px;
+  padding: 14px;
+  color: #4d3670;
+  font-weight: 900;
+  background: rgba(255, 253, 250, 0.82);
+  border: 1px solid rgba(82, 64, 101, 0.08);
+  border-radius: 18px;
+}
+
+.safety-toggle input {
+  width: 24px;
+  height: 24px;
+  margin-top: 2px;
+  accent-color: #7c8fd6;
+}
+
+.safety-toggle small {
+  display: block;
+  margin-top: 4px;
+  color: #7b728a;
+  font-size: 0.82rem;
+  line-height: 1.35;
 }
 
 .repeat-settings-card label,
@@ -4471,7 +4517,8 @@ h2 {
 }
 
 .recording-guide,
-.touch-parent-status {
+.touch-parent-status,
+.safety-parent-status {
   color: #6d6480;
   font-weight: 800;
 }
