@@ -777,6 +777,42 @@ h2 {
   background: rgba(255, 244, 206, 0.2);
 }
 
+.app-shell[data-active-view="sleep"]:has(.sleep-surface[data-sleep-running="true"]) {
+  padding: 0;
+  overflow: hidden;
+}
+
+.app-shell[data-active-view="sleep"]:has(.sleep-surface[data-sleep-running="true"]) .topbar,
+.app-shell[data-active-view="sleep"]:has(.sleep-surface[data-sleep-running="true"]) #view-sleep > .back-home,
+.app-shell[data-active-view="sleep"]:has(.sleep-surface[data-sleep-running="true"]) .bottom-nav,
+.sleep-surface[data-sleep-running="true"] .sleep-toggle {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sleep-surface[data-sleep-running="true"] {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  min-height: 100dvh;
+  width: 100vw;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.sleep-surface[data-sleep-running="true"] .sleep-moon {
+  top: clamp(28px, 5vw, 70px);
+  left: clamp(30px, 6vw, 92px);
+  width: clamp(112px, 14vw, 210px);
+}
+
+.sleep-surface[data-sleep-running="true"] .sleep-pofi-wrap {
+  width: min(54vw, 560px);
+  min-width: 280px;
+}
+
 .sleep-surface[data-sleep-running="true"] .sleep-toggle-icon {
   animation: sleep-toggle-pulse 2.8s ease-in-out infinite;
 }

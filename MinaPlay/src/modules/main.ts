@@ -4939,7 +4939,16 @@ function boot(): void {
   });
 
   document.querySelector<HTMLButtonElement>('[data-sleep-toggle]')?.addEventListener('click', (event) => {
+    event.stopPropagation();
     void toggleSleepMusic(event.currentTarget instanceof HTMLElement ? event.currentTarget : undefined);
+  });
+
+  document.querySelector<HTMLElement>('[data-sleep-surface]')?.addEventListener('click', (event) => {
+    const clickedToggle = event.target instanceof HTMLElement && Boolean(event.target.closest('[data-sleep-toggle]'));
+    if (!sleepMusicRunning || clickedToggle) {
+      return;
+    }
+    void stopSleepMusic();
   });
 
   PRIMARY_VIEWS.forEach((view) => {

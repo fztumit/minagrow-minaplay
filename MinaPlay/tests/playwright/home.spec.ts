@@ -214,8 +214,11 @@ test('sleep module shows moon scene and toggles sleeping Pofi', async ({ page })
   await expect(page.locator('[data-sleep-surface]')).toHaveAttribute('data-sleep-running', 'true');
   await expect(page.locator('[data-sleep-label]')).toHaveText('Durdur');
   await expect(page.locator('#view-sleep .sleeping-pofi-pose')).toHaveCSS('opacity', '1', { timeout: 2000 });
+  await expect(page.locator('.topbar')).toHaveCSS('opacity', '0');
+  await expect(page.locator('.bottom-nav')).toHaveCSS('opacity', '0');
+  await expect(page.locator('[data-sleep-toggle]')).toHaveCSS('opacity', '0');
 
-  await page.click('[data-sleep-toggle]');
+  await page.click('[data-sleep-surface]', { position: { x: 20, y: 20 } });
   await expect(page.locator('[data-sleep-surface]')).toHaveAttribute('data-sleep-running', 'false', { timeout: 2200 });
   await expect(page.locator('[data-sleep-label]')).toHaveText('Başlat');
 });
