@@ -71,6 +71,14 @@ type PofiState =
   | 'storySuccess'
   | 'storyContinue'
   | 'sleepReady'
+  | 'mirrorAttention'
+  | 'mirrorTongueOut'
+  | 'mirrorTongueLeft'
+  | 'mirrorTongueRight'
+  | 'mirrorOpenMouth'
+  | 'mirrorPucker'
+  | 'mirrorTeeth'
+  | 'mirrorSuccess'
   | 'tryAgain';
 type PofiMood = PofiState | 'attention' | 'blink' | 'settle' | 'sleepBlink';
 type PofiParts = { body: string; eyes: string; mouth: string; hands?: string; eyebrows?: string; effect?: string };
@@ -157,6 +165,8 @@ interface MatchRound {
 type SentenceState = 'attention' | 'context' | 'waiting' | 'hint' | 'success' | 'repeat_prompt' | 'retry';
 type SentenceCue = 'water' | 'food' | 'toilet' | 'sleep' | 'pain' | 'cold' | 'hot' | 'caregiver' | 'help' | 'walk';
 type SentenceMode = 'learn' | 'board';
+type MirrorState = 'idle' | 'attention' | 'exercise' | 'camera' | 'waiting' | 'success' | 'transition';
+type MirrorExerciseId = 'tongue-out' | 'open-mouth' | 'pucker' | 'teeth' | 'tongue-left' | 'tongue-right';
 
 type StoryState = 'idle' | 'attention' | 'narration' | 'interaction' | 'waiting' | 'success' | 'continue' | 'closure';
 type StoryStepKind = 'attention' | 'narration' | 'interaction' | 'repeat' | 'closure';
@@ -181,6 +191,15 @@ interface SentencePrompt {
   group: 'core-needs' | 'care' | 'social' | 'movement' | 'preference';
   stage: 1 | 2 | 3;
   scenes: SentenceScene[];
+}
+
+interface MirrorExercise {
+  id: MirrorExerciseId;
+  command: string;
+  success: string;
+  pofiState: PofiState;
+  durationMs: number;
+  level: 1 | 2 | 3;
 }
 
 interface SentenceRound {
@@ -253,6 +272,8 @@ const STORY_NARRATION_MS = 2100;
 const STORY_WAITING_MS = 11000;
 const STORY_SUCCESS_MS = 1200;
 const STORY_REPEAT_MS = 1700;
+const MIRROR_ATTENTION_MS = 700;
+const MIRROR_SUCCESS_MS = 1100;
 const VOICE_QUEUE_GAP_MS = 280;
 const SPEECH_MIN_DURATION_MS = 900;
 const SPEECH_MAX_DURATION_MS = 5200;
@@ -284,6 +305,15 @@ const DEFAULT_TOUCH_CARDS: TouchCard[] = [
   createDefaultTouchCard('top', 'Top', 'Top', 2, 'ball'),
   createDefaultTouchCard('araba', 'Araba', 'Araba', 3, 'car'),
   createDefaultTouchCard('elma', 'Elma', 'Elma', 4, 'apple')
+];
+
+const MIRROR_EXERCISES: MirrorExercise[] = [
+  { id: 'tongue-out', command: 'Dil çıkar', success: 'Harika', pofiState: 'mirrorTongueOut', durationMs: 4200, level: 1 },
+  { id: 'open-mouth', command: 'Ağzını aç', success: 'Harika', pofiState: 'mirrorOpenMouth', durationMs: 3900, level: 1 },
+  { id: 'pucker', command: 'Dudak büz', success: 'Çok güzel', pofiState: 'mirrorPucker', durationMs: 3900, level: 1 },
+  { id: 'teeth', command: 'Diş göster', success: 'Harika', pofiState: 'mirrorTeeth', durationMs: 4200, level: 1 },
+  { id: 'tongue-left', command: 'Dil sola', success: 'Çok güzel', pofiState: 'mirrorTongueLeft', durationMs: 4500, level: 2 },
+  { id: 'tongue-right', command: 'Dil sağa', success: 'Harika', pofiState: 'mirrorTongueRight', durationMs: 4500, level: 2 }
 ];
 
 const SENTENCE_PROMPTS: SentencePrompt[] = [
@@ -641,7 +671,7 @@ const POFI_VIEW_STATES: Partial<Record<ViewName, PofiState>> = {
   match: 'matchGuide',
   sentence: 'sentenceGuide',
   story: 'storyIdle',
-  mirror: 'exercise',
+  mirror: 'mirrorAttention',
   sleep: 'sleepReady',
   peekaboo: 'peekaboo'
 };
@@ -770,6 +800,87 @@ const POFI_EXPRESSIONS: Record<PofiMood, PofiExpression> = {
       eyebrows: POFI_HAPPY_EYEBROWS,
       mouth: 'tongue-out-v01.png',
       hands: 'pofi_hand_touch_v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
+  mirrorAttention: {
+    role: 'attention',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'wide-open-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'open-smile-soft-v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
+  mirrorTongueOut: {
+    role: 'model',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'open-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'tongue-out-v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
+  mirrorTongueLeft: {
+    role: 'model',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'open-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'tongue-left-v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
+  mirrorTongueRight: {
+    role: 'model',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'open-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'tongue-right-v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
+  mirrorOpenMouth: {
+    role: 'model',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'surprised-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'open-vertical-big-v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
+  mirrorPucker: {
+    role: 'model',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'open-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'pucker-v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
+  mirrorTeeth: {
+    role: 'model',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'happy-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'grimace-soft-v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
+  mirrorSuccess: {
+    role: 'affirm',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'happy-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'open-smile-soft-v01.png',
+      hands: 'pofi_hand_ok_right_v01.png',
       effect: POFI_WARMTH_EFFECT
     }
   },
@@ -1171,6 +1282,12 @@ let sleepMusicNodes: Array<OscillatorNode | GainNode> = [];
 let sleepMelodyTimer: number | undefined;
 let sleepMusicRunning = false;
 let storyFlowToken = 0;
+let mirrorState: MirrorState = 'idle';
+let mirrorExerciseIndex = 0;
+let mirrorTimer: number | undefined;
+let mirrorFlowToken = 0;
+let mirrorCameraStream: MediaStream | undefined;
+let mirrorCameraRequested = false;
 
 const DEFAULT_STATE: AnalyticsState = {
   sessions: 0,
@@ -1497,6 +1614,12 @@ function activateView(view: ViewName): void {
     startStorySession();
   } else {
     clearStoryTimer();
+  }
+  if (view === 'mirror') {
+    unlockTouchAudio();
+    startMirrorSession();
+  } else {
+    stopMirrorSession();
   }
   if (view === 'parent') {
     renderTouchProgressTable();
@@ -3128,6 +3251,163 @@ function playStoryEffect(effect?: StoryEffect): Promise<void> {
   });
 }
 
+function clearMirrorTimer(): void {
+  if (mirrorTimer) {
+    window.clearTimeout(mirrorTimer);
+    mirrorTimer = undefined;
+  }
+}
+
+function currentMirrorExercise(): MirrorExercise {
+  return MIRROR_EXERCISES[mirrorExerciseIndex % MIRROR_EXERCISES.length] ?? MIRROR_EXERCISES[0];
+}
+
+function startMirrorSession(): void {
+  clearMirrorTimer();
+  mirrorFlowToken += 1;
+  mirrorState = 'attention';
+  setPofiBaseState('mirrorAttention');
+  renderMirrorMode();
+  void ensureMirrorCamera();
+  void scheduleMirrorExercise(mirrorFlowToken, true);
+}
+
+function stopMirrorSession(): void {
+  clearMirrorTimer();
+  mirrorFlowToken += 1;
+  mirrorState = 'idle';
+  stopMirrorCamera();
+  renderMirrorMode();
+}
+
+async function scheduleMirrorExercise(token: number, withAttention: boolean): Promise<void> {
+  if (withAttention) {
+    await speakMirrorText('Bak', 'attention');
+    await wait(MIRROR_ATTENTION_MS);
+  }
+  if (token !== mirrorFlowToken || !isMirrorViewActive()) {
+    return;
+  }
+  enterMirrorExercise(token);
+}
+
+function enterMirrorExercise(token = ++mirrorFlowToken): void {
+  clearMirrorTimer();
+  const exercise = currentMirrorExercise();
+  mirrorState = 'exercise';
+  setPofiBaseState(exercise.pofiState);
+  renderMirrorMode();
+  void speakMirrorText(exercise.command, 'exercise');
+  mirrorTimer = window.setTimeout(() => {
+    if (token !== mirrorFlowToken || !isMirrorViewActive()) {
+      return;
+    }
+    enterMirrorWaiting(token);
+  }, 900);
+}
+
+function enterMirrorWaiting(token: number): void {
+  const exercise = currentMirrorExercise();
+  mirrorState = 'waiting';
+  setPofiBaseState(exercise.pofiState);
+  renderMirrorMode();
+  mirrorTimer = window.setTimeout(() => {
+    if (token !== mirrorFlowToken || !isMirrorViewActive()) {
+      return;
+    }
+    enterMirrorSuccess(token);
+  }, exercise.durationMs);
+}
+
+function enterMirrorSuccess(token: number): void {
+  const exercise = currentMirrorExercise();
+  mirrorState = 'success';
+  setPofiBaseState('mirrorSuccess');
+  trackAction('mirror-complete');
+  renderMirrorMode();
+  void speakMirrorText(exercise.success, 'success');
+  mirrorTimer = window.setTimeout(() => {
+    if (token !== mirrorFlowToken || !isMirrorViewActive()) {
+      return;
+    }
+    mirrorExerciseIndex = (mirrorExerciseIndex + 1) % MIRROR_EXERCISES.length;
+    mirrorFlowToken += 1;
+    void scheduleMirrorExercise(mirrorFlowToken, false);
+  }, MIRROR_SUCCESS_MS);
+}
+
+function isMirrorViewActive(): boolean {
+  return document.querySelector<HTMLElement>('#view-mirror')?.classList.contains('active') ?? false;
+}
+
+function renderMirrorMode(): void {
+  const surface = document.querySelector<HTMLElement>('[data-mirror-surface]');
+  const pofi = document.querySelector<HTMLElement>('#view-mirror [data-pofi-avatar]');
+  const video = document.querySelector<HTMLVideoElement>('[data-mirror-video]');
+  const fallback = document.querySelector<HTMLElement>('[data-mirror-fallback]');
+  const progress = document.querySelector<HTMLElement>('[data-mirror-progress]');
+  const status = document.querySelector<HTMLElement>('[data-mirror-status]');
+  if (!surface || !pofi || !video || !fallback || !progress || !status) {
+    return;
+  }
+
+  const exercise = currentMirrorExercise();
+  surface.dataset.mirrorState = mirrorState;
+  surface.dataset.mirrorExercise = exercise.id;
+  pofi.dataset.pofiState = mirrorState === 'attention' ? 'mirrorAttention' : mirrorState === 'success' ? 'mirrorSuccess' : exercise.pofiState;
+  renderPofiAvatar(pofi, pofi.dataset.pofiState as PofiState);
+  fallback.textContent = mirrorCameraStream ? '' : mirrorCameraRequested ? 'Kamera kapalı' : '';
+  video.classList.toggle('active', Boolean(mirrorCameraStream));
+  progress.style.setProperty('--mirror-duration', `${exercise.durationMs}ms`);
+  progress.classList.toggle('running', mirrorState === 'waiting');
+  status.textContent = mirrorState === 'success' ? exercise.success : exercise.command;
+}
+
+async function ensureMirrorCamera(): Promise<void> {
+  if (mirrorCameraStream || mirrorCameraRequested) {
+    renderMirrorMode();
+    return;
+  }
+
+  mirrorCameraRequested = true;
+  const video = document.querySelector<HTMLVideoElement>('[data-mirror-video]');
+  if (!video || !navigator.mediaDevices?.getUserMedia) {
+    renderMirrorMode();
+    return;
+  }
+
+  try {
+    mirrorCameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: { ideal: 960 }, height: { ideal: 720 } },
+      audio: false
+    });
+    video.srcObject = mirrorCameraStream;
+    await video.play().catch(() => undefined);
+  } catch {
+    mirrorCameraStream = undefined;
+  }
+  renderMirrorMode();
+}
+
+function stopMirrorCamera(): void {
+  const video = document.querySelector<HTMLVideoElement>('[data-mirror-video]');
+  mirrorCameraStream?.getTracks().forEach((track) => track.stop());
+  mirrorCameraStream = undefined;
+  mirrorCameraRequested = false;
+  if (video) {
+    video.srcObject = null;
+  }
+}
+
+function speakMirrorText(text: string, kind: 'attention' | 'exercise' | 'success'): Promise<void> {
+  const profiles: Record<typeof kind, { rate: number; pitch: number; volume: number }> = {
+    attention: { rate: 0.84, pitch: 1.08, volume: 0.78 },
+    exercise: { rate: 0.78, pitch: 1.04, volume: 0.82 },
+    success: { rate: 0.92, pitch: 1.16, volume: 0.84 }
+  };
+  return enqueueSpeechText(text, profiles[kind]);
+}
+
 function syncSleepMode(view: ViewName): void {
   if (view === 'sleep') {
     renderSleepMode();
@@ -4474,6 +4754,8 @@ function boot(): void {
     const sentencePofiTrigger = target?.closest<HTMLElement>('[data-sentence-pofi-trigger]');
     const storyChoice = target?.closest<HTMLElement>('[data-story-choice]');
     const storyPofiTrigger = target?.closest<HTMLElement>('[data-story-pofi-trigger]');
+    const mirrorRepeat = target?.closest<HTMLElement>('[data-mirror-repeat]');
+    const mirrorNext = target?.closest<HTMLElement>('[data-mirror-next]');
     const viewTrigger = target?.closest<HTMLElement>('[data-view]');
     const parentTrigger = target?.closest<HTMLElement>('[data-open-parent]');
 
@@ -4484,6 +4766,19 @@ function boot(): void {
 
     if (storyChoice?.dataset.storyChoice) {
       handleStoryChoice(storyChoice.dataset.storyChoice, storyChoice);
+      return;
+    }
+
+    if (mirrorRepeat) {
+      mirrorFlowToken += 1;
+      enterMirrorExercise(mirrorFlowToken);
+      return;
+    }
+
+    if (mirrorNext) {
+      mirrorExerciseIndex = (mirrorExerciseIndex + 1) % MIRROR_EXERCISES.length;
+      mirrorFlowToken += 1;
+      enterMirrorExercise(mirrorFlowToken);
       return;
     }
 

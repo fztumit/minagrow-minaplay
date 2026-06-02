@@ -169,19 +169,22 @@
 
         <section class="view module-view" id="view-mirror" data-view-panel="mirror" aria-label="Ayna modu">
           <button class="back-home" type="button" data-view="home">Ana ekran</button>
-          <div class="module-copy">
-            <p class="eyebrow">Ayna</p>
-            <h2>Taklit zamanı.</h2>
-            <p>Pofi egzersizi gösterir; algılama yok, baskı yok.</p>
-          </div>
-          <div class="play-surface" data-module-surface>
-            <button class="object-tile wide" type="button" data-track-action="mirror-complete">Egzersizi tamamla</button>
-            <div
-              class="surface-pofi pofi-avatar large"
-              data-pofi-avatar
-              data-pofi-state="exercise"
-              aria-label="Pofi egzersiz gösteriyor"
-            ></div>
+          <div class="play-surface mirror-surface" data-module-surface data-mirror-surface data-mirror-state="idle" data-mirror-exercise="tongue-out">
+            <button class="mirror-pofi-card" type="button" data-mirror-repeat aria-label="Pofi egzersizi tekrar göstersin">
+              <span class="surface-pofi pofi-avatar large" data-pofi-avatar data-pofi-state="mirrorTongueOut" aria-hidden="true"></span>
+            </button>
+            <div class="mirror-camera-card" data-mirror-camera-card>
+              <video class="mirror-video" data-mirror-video playsinline autoplay muted aria-label="Ayna görüntüsü"></video>
+              <div class="mirror-camera-fallback" data-mirror-fallback aria-live="polite"></div>
+              <div class="mirror-count-ring" aria-hidden="true">
+                <span class="mirror-count-fill" data-mirror-progress></span>
+              </div>
+            </div>
+            <div class="mirror-actions" aria-label="Ayna kontrolleri">
+              <button class="mirror-action-button" type="button" data-mirror-repeat>Tekrar</button>
+              <button class="mirror-action-button next" type="button" data-mirror-next>Başka</button>
+            </div>
+            <div class="mirror-status sr-only" data-mirror-status aria-live="polite"></div>
           </div>
         </section>
 
