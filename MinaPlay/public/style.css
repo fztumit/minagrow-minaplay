@@ -3188,6 +3188,10 @@ h2 {
   display: none;
 }
 
+.app-shell[data-active-view="parent"] .bottom-nav {
+  display: none;
+}
+
 .app-shell[data-child-lock="true"]:not([data-active-view="home"]):not([data-active-view="parent"]) .bottom-nav,
 .app-shell[data-child-lock="true"]:not([data-active-view="home"]):not([data-active-view="parent"]) .module-view > .back-home {
   opacity: 0;
@@ -4496,6 +4500,7 @@ h2 {
 }
 
 .repeat-settings-card label,
+.safety-settings-card label:not(.safety-toggle),
 .touch-card-admin-fields label {
   display: grid;
   gap: 6px;
@@ -4505,6 +4510,7 @@ h2 {
 }
 
 .repeat-settings-card input,
+.safety-settings-card input[type="number"],
 .touch-card-admin-fields input[type="text"] {
   width: 150px;
   padding: 10px 12px;
@@ -4521,6 +4527,80 @@ h2 {
 .safety-parent-status {
   color: #6d6480;
   font-weight: 800;
+}
+
+.topbar-spacer {
+  display: none;
+}
+
+.brand-home {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.parent-gesture-zone {
+  position: fixed;
+  z-index: 210;
+  top: 0;
+  left: 0;
+  width: 96px;
+  height: 96px;
+  background: transparent;
+  touch-action: none;
+}
+
+.parent-secret-intro[hidden] {
+  display: none;
+}
+
+.parent-secret-intro {
+  position: fixed;
+  z-index: 300;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(36, 28, 48, 0.26);
+  backdrop-filter: blur(12px);
+}
+
+.parent-secret-card {
+  width: min(520px, 100%);
+  padding: clamp(22px, 3vw, 34px);
+  color: #4d3670;
+  background: rgba(255, 253, 250, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  border-radius: 28px;
+  box-shadow: 0 24px 68px rgba(70, 67, 79, 0.18);
+}
+
+.parent-secret-card p:not(.eyebrow) {
+  color: #6d6480;
+  font-weight: 850;
+  line-height: 1.45;
+}
+
+.topbar {
+  grid-template-columns: minmax(104px, 1fr) minmax(260px, 1.6fr) minmax(104px, 1fr);
+}
+
+.minagrow-logo {
+  grid-column: 1;
+  justify-self: center;
+}
+
+.brand-lockup {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: center;
+}
+
+.sipesystem-logo {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: center;
 }
 
 .touch-card-editor {
@@ -6841,4 +6921,31 @@ h2 {
     opacity: 0;
     transform: translate(-50%, -52%) rotate(0deg) scale(0.58);
   }
+}
+
+.topbar {
+  grid-template-columns: minmax(104px, 1fr) minmax(260px, 1.6fr) minmax(104px, 1fr);
+}
+
+.minagrow-logo {
+  grid-column: 1;
+  justify-self: center;
+}
+
+.brand-lockup {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: center;
+}
+
+.sipesystem-logo {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: center;
+}
+
+.brand-home {
+  padding: 0;
+  border: 0;
+  background: transparent;
 }

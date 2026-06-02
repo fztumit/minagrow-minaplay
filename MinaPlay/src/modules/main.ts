@@ -171,7 +171,7 @@ type MirrorExerciseId = 'tongue-out' | 'open-mouth' | 'pucker' | 'teeth' | 'tong
 type StoryState = 'idle' | 'attention' | 'narration' | 'interaction' | 'waiting' | 'success' | 'continue' | 'closure';
 type StoryStepKind = 'attention' | 'narration' | 'interaction' | 'repeat' | 'closure';
 type StoryEffect = 'sparkle' | 'water' | 'chime' | 'step' | 'warm' | 'sleep' | 'pop';
-type ChildLockSettings = { enabled: boolean; keepAwake: boolean };
+type ChildLockSettings = { enabled: boolean; keepAwake: boolean; parentTapCount: number; parentPullDistance: number; introSeen: boolean };
 type WakeLockSentinelLike = { release: () => Promise<void>; addEventListener: (type: 'release', listener: () => void) => void };
 type NavigatorWithWakeLock = Navigator & { wakeLock?: { request: (type: 'screen') => Promise<WakeLockSentinelLike> } };
 
@@ -284,6 +284,8 @@ const AUDIO_FALLBACK_DURATION_MS = 2200;
 const TOUCH_SETTINGS_KEY = 'minaplay_touch_settings_v1';
 const CHILD_LOCK_SETTINGS_KEY = 'minaplay_child_lock_settings_v1';
 const CHILD_LOCK_LONG_PRESS_MS = 1800;
+const PARENT_GESTURE_ZONE_PX = 112;
+const PARENT_GESTURE_RESET_MS = 1700;
 const TOUCH_DB_NAME = 'minaplay_touch_cards_v1';
 const TOUCH_DB_STORE = 'touchSettings';
 const TOUCH_DB_VERSION = 1;
@@ -1293,11 +1295,14 @@ let mirrorTimer: number | undefined;
 let mirrorFlowToken = 0;
 let mirrorCameraStream: MediaStream | undefined;
 let mirrorCameraRequested = false;
-let childLockSettings: ChildLockSettings = { enabled: true, keepAwake: true };
-let childLockPressTimer: number | undefined;
+let childLockSettings: ChildLockSettings = { enabled: true, keepAwake: true, parentTapCount: 3, parentPullDistance: 80, introSeen: false };
 let sleepLongPressTimer: number | undefined;
 let wakeLockSentinel: WakeLockSentinelLike | undefined;
 let wakeLockRequestInFlight = false;
+let parentGestureTapCount = 0;
+let parentGestureStartedAt = 0;
+let parentGestureStartY = 0;
+let parentGestureReadyForPull = false;
 
 const DEFAULT_STATE: AnalyticsState = {
   sessions: 0,
@@ -1351,6 +1356,8 @@ function shouldLockChildNavigation(view: ViewName | string | undefined = documen
 function renderChildLockSettings(): void {
   const enabledInput = document.querySelector<HTMLInputElement>('[data-child-lock-enabled]');
   const awakeInput = document.querySelector<HTMLInputElement>('[data-child-lock-awake]');
+  const tapsInput = document.querySelector<HTMLInputElement>('[data-parent-gesture-taps]');
+  const pullInput = document.querySelector<HTMLInputElement>('[data-parent-gesture-pull]');
   const status = document.querySelector<HTMLElement>('[data-child-lock-status]');
   if (enabledInput) {
     enabledInput.checked = childLockSettings.enabled;
@@ -1358,11 +1365,21 @@ function renderChildLockSettings(): void {
   if (awakeInput) {
     awakeInput.checked = childLockSettings.keepAwake;
   }
+  if (tapsInput) {
+    tapsInput.value = String(childLockSettings.parentTapCount);
+  }
+  if (pullInput) {
+    pullInput.value = String(childLockSettings.parentPullDistance);
+  }
   if (status) {
     status.textContent = childLockSettings.enabled
-      ? 'Çocuk kilidi açık. Modlardan çıkış için Ebeveyn düğmesine uzun basın.'
+      ? parentGestureGuideText()
       : 'Çocuk kilidi kapalı. Modlar arasında normal geçiş yapılabilir.';
   }
+}
+
+function parentGestureGuideText(): string {
+  return `Sol üst köşeye ${childLockSettings.parentTapCount} kez dokunun; sonraki dokunuşta parmağı aşağı çekin.`;
 }
 
 function syncChildLockMode(view: ViewName | string | undefined = document.querySelector<HTMLElement>('.app-shell')?.dataset.activeView): void {
@@ -1723,21 +1740,6 @@ function openParentWithUnlock(): void {
   activateView('parent');
 }
 
-function startChildLockParentPress(): void {
-  window.clearTimeout(childLockPressTimer);
-  childLockPressTimer = window.setTimeout(() => {
-    childLockPressTimer = undefined;
-    openParentWithUnlock();
-  }, CHILD_LOCK_LONG_PRESS_MS);
-}
-
-function clearChildLockParentPress(): void {
-  if (childLockPressTimer) {
-    window.clearTimeout(childLockPressTimer);
-    childLockPressTimer = undefined;
-  }
-}
-
 function startSleepLongPressStop(): void {
   if (!sleepMusicRunning) {
     return;
@@ -1753,6 +1755,74 @@ function clearSleepLongPressStop(): void {
   if (sleepLongPressTimer) {
     window.clearTimeout(sleepLongPressTimer);
     sleepLongPressTimer = undefined;
+  }
+}
+
+function showParentSecretIntroIfNeeded(): void {
+  const intro = document.querySelector<HTMLElement>('[data-parent-secret-intro]');
+  const guide = document.querySelector<HTMLElement>('[data-parent-secret-guide]');
+  if (!intro || !guide || childLockSettings.introSeen) {
+    return;
+  }
+  guide.textContent = `${parentGestureGuideText()} Bu hareket ebeveyn panelini açar. İsterseniz bu şifreyi Ebeveyn panelinden güncelleyebilirsiniz.`;
+  intro.hidden = false;
+}
+
+function acceptParentSecretIntro(): void {
+  childLockSettings = { ...childLockSettings, introSeen: true };
+  writeChildLockSettings(childLockSettings);
+  document.querySelector<HTMLElement>('[data-parent-secret-intro]')?.setAttribute('hidden', '');
+}
+
+function resetParentGesture(): void {
+  parentGestureTapCount = 0;
+  parentGestureStartedAt = 0;
+  parentGestureStartY = 0;
+  parentGestureReadyForPull = false;
+}
+
+function isInParentGestureZone(event: PointerEvent): boolean {
+  return event.clientX <= PARENT_GESTURE_ZONE_PX && event.clientY <= PARENT_GESTURE_ZONE_PX;
+}
+
+function handleParentGesturePointerDown(event: PointerEvent): void {
+  if (!isInParentGestureZone(event)) {
+    resetParentGesture();
+    return;
+  }
+
+  const now = window.performance.now();
+  if (!parentGestureStartedAt || now - parentGestureStartedAt > PARENT_GESTURE_RESET_MS) {
+    parentGestureTapCount = 0;
+  }
+
+  parentGestureStartedAt = now;
+  parentGestureStartY = event.clientY;
+  parentGestureReadyForPull = parentGestureTapCount >= childLockSettings.parentTapCount;
+}
+
+function handleParentGesturePointerUp(event: PointerEvent): void {
+  if (!isInParentGestureZone(event)) {
+    resetParentGesture();
+    return;
+  }
+
+  if (parentGestureReadyForPull) {
+    resetParentGesture();
+    return;
+  }
+
+  parentGestureTapCount += 1;
+}
+
+function handleParentGesturePointerMove(event: PointerEvent): void {
+  if (!parentGestureReadyForPull) {
+    return;
+  }
+
+  if (event.clientY - parentGestureStartY >= childLockSettings.parentPullDistance) {
+    resetParentGesture();
+    openParentWithUnlock();
   }
 }
 
@@ -4884,7 +4954,6 @@ function boot(): void {
     const mirrorRepeat = target?.closest<HTMLElement>('[data-mirror-repeat]');
     const mirrorNext = target?.closest<HTMLElement>('[data-mirror-next]');
     const viewTrigger = target?.closest<HTMLElement>('[data-view]');
-    const parentTrigger = target?.closest<HTMLElement>('[data-open-parent]');
 
     if (storyPofiTrigger) {
       handleStoryPofiPress();
@@ -5001,19 +5070,14 @@ function boot(): void {
       const requestedView = viewTrigger.dataset.view as ViewName;
       const activeView = document.querySelector<HTMLElement>('.app-shell')?.dataset.activeView;
       const isBottomNavTrigger = Boolean(viewTrigger.closest('.bottom-nav'));
-      if (shouldLockChildNavigation(activeView)) {
+      const isBrandHomeTrigger = viewTrigger.classList.contains('brand-home') && requestedView === 'home';
+      if (shouldLockChildNavigation(activeView) && !isBrandHomeTrigger) {
         return;
       }
       activateView(isBottomNavTrigger && requestedView === activeView ? 'home' : requestedView);
       return;
     }
 
-    if (parentTrigger) {
-      if (shouldLockChildNavigation()) {
-        return;
-      }
-      activateView('parent');
-    }
   });
 
   document.addEventListener('change', (event) => {
@@ -5093,15 +5157,24 @@ function boot(): void {
   sleepSurface?.addEventListener('pointercancel', clearSleepLongPressStop);
   sleepSurface?.addEventListener('pointerleave', clearSleepLongPressStop);
 
-  const parentEntry = document.querySelector<HTMLElement>('[data-open-parent]');
-  parentEntry?.addEventListener('pointerdown', () => {
-    if (shouldLockChildNavigation()) {
-      startChildLockParentPress();
+  const parentGestureZone = document.querySelector<HTMLElement>('[data-parent-gesture-zone]');
+  parentGestureZone?.addEventListener('pointerdown', (event) => {
+    parentGestureZone.setPointerCapture(event.pointerId);
+    handleParentGesturePointerDown(event);
+  });
+  parentGestureZone?.addEventListener('pointermove', (event) => {
+    handleParentGesturePointerMove(event);
+  });
+  parentGestureZone?.addEventListener('pointerup', (event) => {
+    handleParentGesturePointerUp(event);
+  });
+  parentGestureZone?.addEventListener('pointercancel', resetParentGesture);
+  parentGestureZone?.addEventListener('pointerleave', (event) => {
+    handleParentGesturePointerMove(event);
+    if (!parentGestureReadyForPull) {
+      resetParentGesture();
     }
   });
-  parentEntry?.addEventListener('pointerup', clearChildLockParentPress);
-  parentEntry?.addEventListener('pointercancel', clearChildLockParentPress);
-  parentEntry?.addEventListener('pointerleave', clearChildLockParentPress);
 
   document.querySelector<HTMLInputElement>('[data-child-lock-enabled]')?.addEventListener('change', (event) => {
     const input = event.currentTarget as HTMLInputElement;
@@ -5116,6 +5189,19 @@ function boot(): void {
     writeChildLockSettings(childLockSettings);
     syncChildLockMode();
   });
+
+  document.querySelector<HTMLElement>('[data-parent-gesture-save]')?.addEventListener('click', () => {
+    const tapsInput = document.querySelector<HTMLInputElement>('[data-parent-gesture-taps]');
+    const pullInput = document.querySelector<HTMLInputElement>('[data-parent-gesture-pull]');
+    const parentTapCount = Math.min(6, Math.max(2, Number(tapsInput?.value ?? childLockSettings.parentTapCount)));
+    const parentPullDistance = Math.min(180, Math.max(40, Number(pullInput?.value ?? childLockSettings.parentPullDistance)));
+    childLockSettings = { ...childLockSettings, parentTapCount, parentPullDistance };
+    writeChildLockSettings(childLockSettings);
+    resetParentGesture();
+    renderChildLockSettings();
+  });
+
+  document.querySelector<HTMLElement>('[data-parent-secret-accept]')?.addEventListener('click', acceptParentSecretIntro);
 
   document.addEventListener('visibilitychange', () => {
     void syncScreenWakeLock();
@@ -5134,6 +5220,7 @@ function boot(): void {
   publishTouchMasteryForMatching();
   renderPofiAvatars();
   syncChildLockMode();
+  showParentSecretIntroIfNeeded();
   renderParentMetrics();
   renderTouchProgressTable();
   renderMatchProgressTable();

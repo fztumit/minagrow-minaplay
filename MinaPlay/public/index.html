@@ -16,19 +16,15 @@
   <body>
     <div class="app-shell" data-active-view="home">
       <header class="topbar" aria-label="MinaPlay başlangıç alanı">
-        <button class="topbar-home back-home" type="button" data-view="home" aria-label="Ana ekrana dön">
-          Ana ekran
-        </button>
+        <span class="topbar-spacer" aria-hidden="true"></span>
         <img class="partner-logo minagrow-logo" src="/assets/brand/minagrow-logo-runtime.png" alt="MinaGrow" />
-        <div class="brand-lockup">
+        <button class="brand-lockup brand-home" type="button" data-view="home" aria-label="Ana ekrana dön">
           <h1>
             <img class="topbar-logo" src="/assets/brand/minaplay-logo-runtime.png" alt="MinaPlay" />
           </h1>
-        </div>
-        <img class="partner-logo sipesystem-logo" src="/assets/brand/sipesystem-kirmizi-beyaz.png" alt="SipeSystem" />
-        <button class="parent-entry" type="button" data-open-parent aria-label="Ebeveyn panelini aç">
-          Ebeveyn
         </button>
+        <img class="partner-logo sipesystem-logo" src="/assets/brand/sipesystem-kirmizi-beyaz.png" alt="SipeSystem" />
+        <span class="parent-gesture-zone" data-parent-gesture-zone aria-hidden="true"></span>
       </header>
 
       <main>
@@ -168,7 +164,6 @@
         </section>
 
         <section class="view module-view" id="view-mirror" data-view-panel="mirror" aria-label="Ayna modu">
-          <button class="back-home" type="button" data-view="home">Ana ekran</button>
           <div class="play-surface mirror-surface" data-module-surface data-mirror-surface data-mirror-state="idle" data-mirror-exercise="tongue-out">
             <button class="mirror-pofi-card" type="button" data-mirror-repeat aria-label="Pofi egzersizi tekrar göstersin">
               <span class="surface-pofi pofi-avatar large" data-pofi-avatar data-pofi-state="mirrorTongueOut" aria-hidden="true"></span>
@@ -185,7 +180,6 @@
         </section>
 
         <section class="view module-view" id="view-sleep" data-view-panel="sleep" aria-label="Uyku modu">
-          <button class="back-home" type="button" data-view="home">Ana ekran</button>
           <div class="play-surface sleep-surface" data-module-surface data-sleep-surface data-sleep-running="false">
             <div class="sleep-sky" aria-hidden="true">
               <img class="sleep-moon" src="/assets/sleep/moon.png" alt="" decoding="async" draggable="false" />
@@ -209,7 +203,6 @@
         </section>
 
         <section class="view module-view" id="view-peekaboo" data-view-panel="peekaboo" aria-label="Ceee modu">
-          <button class="back-home" type="button" data-view="home">Ana ekran</button>
           <div class="module-copy">
             <p class="eyebrow">Ceee</p>
             <h2>Kısa sürpriz.</h2>
@@ -227,7 +220,6 @@
         </section>
 
         <section class="view parent-panel" id="view-parent" data-view-panel="parent" aria-label="Ebeveyn paneli">
-          <button class="back-home" type="button" data-view="home">Ana ekran</button>
           <p class="eyebrow">Ebeveyn paneli</p>
           <h2>Bugünün yumuşak özeti</h2>
           <div class="analysis-grid">
@@ -261,7 +253,7 @@
                 <input type="checkbox" data-child-lock-enabled />
                 <span>
                   Mod içindeyken çıkışı kilitle
-                  <small>Alt menü ve ana ekran geçişleri kapanır; ebeveyn paneli uzun basma ile açılır.</small>
+                  <small>Alt menü geçişleri kapanır; ebeveyn paneli gizli sol üst hareketle açılır.</small>
                 </span>
               </label>
               <label class="safety-toggle">
@@ -271,6 +263,15 @@
                   <small>Destekleyen tabletlerde oyun sırasında ekranın uyumasını azaltır.</small>
                 </span>
               </label>
+              <label>
+                Gizli dokunma
+                <input type="number" min="2" max="6" step="1" data-parent-gesture-taps />
+              </label>
+              <label>
+                Aşağı çekme (px)
+                <input type="number" min="40" max="180" step="10" data-parent-gesture-pull />
+              </label>
+              <button class="soft-admin-button" type="button" data-parent-gesture-save>Girişi kaydet</button>
             </div>
             <p class="safety-parent-status" data-child-lock-status aria-live="polite"></p>
           </section>
@@ -346,6 +347,14 @@
           <span>Uyku</span>
         </button>
       </nav>
+      <div class="parent-secret-intro" data-parent-secret-intro hidden>
+        <div class="parent-secret-card" role="dialog" aria-modal="true" aria-labelledby="parent-secret-title">
+          <p class="eyebrow">Ebeveyn girişi</p>
+          <h2 id="parent-secret-title">Gizli hareket</h2>
+          <p data-parent-secret-guide></p>
+          <button class="soft-admin-button" type="button" data-parent-secret-accept>Anladım</button>
+        </div>
+      </div>
     </div>
     <script type="module" src="/js/modules/main.js"></script>
   </body>

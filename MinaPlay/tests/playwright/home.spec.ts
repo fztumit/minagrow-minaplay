@@ -1,11 +1,31 @@
 import { expect, test, type Page } from '@playwright/test';
 
 const CHILD_LOCK_SETTINGS_KEY = 'minaplay_child_lock_settings_v1';
+const DEFAULT_CHILD_LOCK_SETTINGS = { enabled: true, keepAwake: true, parentTapCount: 3, parentPullDistance: 80, introSeen: true };
+
+test.beforeEach(async ({ page }, testInfo) => {
+  if (testInfo.title === 'first run teaches parent secret gesture') {
+    return;
+  }
+  await page.addInitScript(({ key, value }) => {
+    localStorage.setItem(key, JSON.stringify(value));
+  }, { key: CHILD_LOCK_SETTINGS_KEY, value: DEFAULT_CHILD_LOCK_SETTINGS });
+});
 
 async function disableChildLock(page: Page) {
   await page.addInitScript((key) => {
-    localStorage.setItem(key, JSON.stringify({ enabled: false, keepAwake: false }));
+    localStorage.setItem(key, JSON.stringify({ enabled: false, keepAwake: false, parentTapCount: 3, parentPullDistance: 80, introSeen: true }));
   }, CHILD_LOCK_SETTINGS_KEY);
+}
+
+async function openParentBySecretGesture(page: Page, taps = 3, pull = 100) {
+  for (let index = 0; index < taps; index += 1) {
+    await page.mouse.click(24, 24);
+  }
+  await page.mouse.move(24, 24);
+  await page.mouse.down();
+  await page.mouse.move(24, 24 + pull, { steps: 6 });
+  await page.mouse.up();
 }
 
 test('home opens with six calm modes and bonus ceee', async ({ page }) => {
@@ -16,6 +36,17 @@ test('home opens with six calm modes and bonus ceee', async ({ page }) => {
   await expect(page.locator('.mode-card[data-view="sentence"]')).toContainText('İfade');
   await expect(page.locator('.bonus-strip')).toContainText('Ceee');
   await expect(page.locator('.bottom-nav button')).toHaveCount(6);
+  await expect(page.locator('[data-open-parent]')).toHaveCount(0);
+  await expect(page.locator('.topbar-home')).toHaveCount(0);
+});
+
+test('first run teaches parent secret gesture', async ({ page }) => {
+  await page.goto('/');
+
+  await expect(page.locator('[data-parent-secret-intro]')).toBeVisible();
+  await expect(page.locator('[data-parent-secret-guide]')).toContainText('Sol üst köşeye 3 kez dokunun');
+  await page.click('[data-parent-secret-accept]');
+  await expect(page.locator('[data-parent-secret-intro]')).toBeHidden();
 });
 
 test('parent panel records simple module activity', async ({ page }) => {
@@ -29,14 +60,14 @@ test('parent panel records simple module activity', async ({ page }) => {
   });
   const targetId = await page.locator('#view-touch [data-touch-surface]').getAttribute('data-touch-target-id');
   await page.click(`#view-touch [data-touch-card-id="${targetId}"]`, { force: true });
-  await page.click('[data-open-parent]');
+  await openParentBySecretGesture(page);
 
   await expect(page.locator('#view-parent')).toHaveClass(/active/);
   await expect(page.locator('#metric-sessions')).toHaveText('1');
   await expect(page.locator('#metric-correct')).toHaveText('1');
 });
 
-test('module back buttons return to home', async ({ page }) => {
+test('MinaPlay logo returns modules to home', async ({ page }) => {
   await disableChildLock(page);
   await page.goto('/');
 
@@ -44,7 +75,7 @@ test('module back buttons return to home', async ({ page }) => {
     await page.click(`[data-view="${view}"]`);
     await expect(page.locator(`#view-${view}`)).toHaveClass(/active/);
 
-    await page.click('.topbar-home');
+    await page.click('.brand-home');
     await expect(page.locator('#view-home')).toHaveClass(/active/);
     await expect(page.locator('.app-shell')).toHaveAttribute('data-active-view', 'home');
   }
@@ -64,28 +95,37 @@ test('active bottom nav button returns to home', async ({ page }) => {
   }
 });
 
-test('child lock blocks module exits and opens parent with long press', async ({ page }) => {
+test('child lock blocks module exits and opens parent with secret gesture', async ({ page }) => {
   await page.goto('/');
 
   await page.click('.mode-card[data-view="touch"]');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-child-lock', 'true');
 
-  await page.click('.topbar-home');
-  await expect(page.locator('#view-touch')).toHaveClass(/active/);
-
   await page.click('.bottom-nav button[data-view="sleep"]', { force: true });
   await expect(page.locator('#view-touch')).toHaveClass(/active/);
 
-  await page.click('[data-open-parent]');
-  await expect(page.locator('#view-touch')).toHaveClass(/active/);
-
-  await page.locator('[data-open-parent]').hover();
-  await page.mouse.down();
-  await page.waitForTimeout(1900);
-  await page.mouse.up();
+  await openParentBySecretGesture(page);
   await expect(page.locator('#view-parent')).toHaveClass(/active/);
   await expect(page.locator('[data-child-lock-enabled]')).toBeChecked();
   await expect(page.locator('[data-child-lock-awake]')).toBeChecked();
+});
+
+test('parent secret gesture can be updated', async ({ page }) => {
+  await page.goto('/');
+
+  await openParentBySecretGesture(page);
+  await page.fill('[data-parent-gesture-taps]', '4');
+  await page.fill('[data-parent-gesture-pull]', '120');
+  await page.click('[data-parent-gesture-save]');
+  await expect(page.locator('[data-child-lock-status]')).toContainText('4 kez');
+
+  await page.click('.brand-home');
+  await openParentBySecretGesture(page, 4, 140);
+  await expect(page.locator('#view-parent')).toHaveClass(/active/);
+
+  const saved = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? '{}'), CHILD_LOCK_SETTINGS_KEY);
+  expect(saved.parentTapCount).toBe(4);
+  expect(saved.parentPullDistance).toBe(120);
 });
 
 test('touch module runs a single-target listen and touch round', async ({ page }) => {
@@ -120,7 +160,7 @@ test('touch repeat is explicit and parent controlled', async ({ page }) => {
 
   await expect(page.locator('#view-touch [data-touch-repeat-toggle]')).toHaveCount(0);
 
-  await page.click('[data-open-parent]');
+  await openParentBySecretGesture(page);
   await expect(page.locator('[data-touch-repeat-duration]')).toHaveValue('30');
   await expect(page.locator('[data-touch-repeat-count]')).toHaveValue('8');
   await expect(page.locator('[data-touch-card-editor] [data-touch-card-admin]')).toHaveCount(5);
@@ -292,7 +332,7 @@ test('parent panel shows touch word progress rows', async ({ page }) => {
   });
   await page.goto('/');
 
-  await page.click('[data-open-parent]');
+  await openParentBySecretGesture(page);
   await expect(page.locator('[data-child-lock-enabled]')).toBeChecked();
   await expect(page.locator('[data-child-lock-awake]')).toBeChecked();
   await expect(page.locator('[data-touch-progress-table] .touch-progress-row')).toHaveCount(5);
@@ -312,7 +352,7 @@ test('module surfaces render stateful layered Pofi parts', async ({ page }) => {
   await expect(mirrorPofi.locator('.pofi-body')).toHaveAttribute('src', /default-v01\.png$/);
   await expect(mirrorPofi.locator('.pofi-mouth')).toHaveAttribute('src', /open-smile-soft-v01\.png|tongue-out-v01\.png$/);
 
-  await page.click('#view-mirror [data-view="home"]');
+  await page.click('.brand-home');
   await page.click('.mode-card[data-view="touch"]');
   await page.waitForFunction(() => {
     const surface = document.querySelector<HTMLElement>('#view-touch [data-touch-surface]');
