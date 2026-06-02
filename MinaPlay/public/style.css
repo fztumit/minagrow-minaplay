@@ -925,6 +925,53 @@ h2 {
   box-shadow: inset 0 0 0 1px rgba(85, 108, 154, 0.08), 0 0 0 8px rgba(144, 207, 133, 0.18), 0 24px 58px rgba(68, 82, 118, 0.14);
 }
 
+#view-mirror.module-view {
+  min-height: 0;
+  padding-bottom: clamp(116px, 14vh, 188px);
+}
+
+#view-mirror .mirror-surface {
+  box-sizing: border-box;
+  width: min(100%, 1560px);
+  min-height: min(640px, calc(100dvh - 300px));
+  margin-inline: auto;
+  grid-template-columns: minmax(300px, 0.9fr) minmax(460px, 1.1fr);
+  grid-template-rows: minmax(330px, 1fr) auto;
+  align-content: center;
+  align-items: stretch;
+  padding-bottom: clamp(102px, 12vh, 166px);
+}
+
+#view-mirror .mirror-pofi-card,
+#view-mirror .mirror-camera-card {
+  align-self: center;
+}
+
+#view-mirror .mirror-pofi-card .surface-pofi.large {
+  width: min(36vw, 430px);
+  min-width: 260px;
+}
+
+#view-mirror .mirror-video {
+  min-height: min(520px, calc(100dvh - 430px));
+}
+
+#view-mirror .mirror-actions {
+  align-self: start;
+}
+
+.app-shell[data-active-view="mirror"] .bottom-nav {
+  opacity: 0.46;
+  transform: translateY(84px) scale(0.98);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.app-shell[data-active-view="mirror"] .bottom-nav:hover,
+.app-shell[data-active-view="mirror"] .bottom-nav:focus-within {
+  opacity: 0.72;
+  transform: translateY(58px) scale(0.98);
+}
+
 .match-surface::after {
   position: absolute;
   z-index: 1;
@@ -3300,35 +3347,59 @@ h2 {
 
   .mirror-surface {
     grid-template-columns: 1fr;
-    grid-template-rows: minmax(150px, 0.36fr) minmax(300px, 1fr) auto;
+    grid-template-rows: minmax(190px, 0.38fr) minmax(320px, 1fr) auto;
     gap: 14px;
-    min-height: calc(100dvh - 178px);
+    min-height: calc(100dvh - 150px);
     padding: 16px;
     border-radius: 30px;
   }
 
   .mirror-pofi-card {
-    min-height: 150px;
+    min-height: 190px;
     border-radius: 28px;
   }
 
   .mirror-pofi-card .surface-pofi.large {
-    width: min(52vw, 210px);
-    min-width: 150px;
+    width: min(68vw, 270px);
+    min-width: 190px;
   }
 
   .mirror-camera-card {
-    min-height: 310px;
+    min-height: 320px;
     border-width: 10px;
     border-radius: 28px;
   }
 
   .mirror-video {
-    min-height: 310px;
+    min-height: 320px;
   }
 
   .mirror-actions {
-    padding-bottom: 76px;
+    padding-bottom: 104px;
+  }
+
+  #view-mirror.module-view {
+    padding-bottom: 110px;
+  }
+
+  #view-mirror .mirror-surface {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(190px, 0.38fr) minmax(320px, 1fr) auto;
+    min-height: calc(100dvh - 150px);
+    padding-bottom: 16px;
+  }
+
+  #view-mirror .mirror-pofi-card .surface-pofi.large {
+    width: min(68vw, 270px);
+    min-width: 190px;
+  }
+
+  #view-mirror .mirror-video {
+    min-height: 320px;
+  }
+
+  #view-mirror .mirror-actions {
+    padding-bottom: 104px;
   }
 
   .sleep-surface {
