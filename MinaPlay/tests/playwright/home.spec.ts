@@ -69,7 +69,7 @@ test('touch module runs a single-target listen and touch round', async ({ page }
   const targetId = await page.locator('#view-touch [data-touch-surface]').getAttribute('data-touch-target-id');
   expect(targetId).toBeTruthy();
   await expect(page.locator(`#view-touch [data-touch-card-id="${targetId}"]`)).toHaveClass(/active-target/);
-  await expect(page.locator('#view-touch .touch-pofi-hint')).toContainText('dokun');
+  await expect(page.locator('#view-touch .touch-pofi-hint')).toHaveCount(0);
 
   await page.click(`#view-touch [data-touch-card-id="${targetId}"]`, { force: true });
   await expect(page.locator('#view-touch [data-touch-surface]')).toHaveAttribute('data-touch-state', 'success');
@@ -88,6 +88,111 @@ test('touch repeat is explicit and parent controlled', async ({ page }) => {
   await expect(page.locator('[data-touch-repeat-count]')).toHaveValue('8');
   await expect(page.locator('[data-touch-card-editor] [data-touch-card-admin]')).toHaveCount(5);
   await expect(page.locator('[data-touch-card-image]').first()).toHaveAttribute('accept', 'image/png,image/jpeg,image/gif');
+});
+
+test('matching module uses words mastered in touch', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('minaplay_mastered_words_v1', JSON.stringify({ masteredWords: ['su', 'top'] }));
+    localStorage.setItem(
+      'minaplay_touch_progress_v1',
+      JSON.stringify({
+        su: { success: 5, fail: 0, hintLevels: {}, successLatencyMsTotal: 2400, successLatencySamples: 5, repeatNeeds: 0 },
+        top: { success: 4, fail: 1, hintLevels: {}, successLatencyMsTotal: 2800, successLatencySamples: 4, repeatNeeds: 1 }
+      })
+    );
+  });
+  await page.goto('/');
+
+  await page.click('.mode-card[data-view="match"]');
+  const targetId = await page.locator('[data-match-surface]').getAttribute('data-match-target-id');
+  expect(['su', 'top']).toContain(targetId);
+  expect(await page.locator('[data-match-choice]').count()).toBeGreaterThanOrEqual(2);
+  await page.click(`[data-match-choice="${targetId}"]`, { force: true });
+  await expect(page.locator('[data-match-status]')).toContainText('Evet');
+});
+
+test('matching module escalates hints and records repeat needs', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('minaplay_mastered_words_v1', JSON.stringify({ masteredWords: ['su', 'top'] }));
+    localStorage.setItem(
+      'minaplay_touch_progress_v1',
+      JSON.stringify({
+        su: { success: 5, fail: 0, hintLevels: {}, successLatencyMsTotal: 2400, successLatencySamples: 5, repeatNeeds: 0 },
+        top: { success: 4, fail: 1, hintLevels: {}, successLatencyMsTotal: 2800, successLatencySamples: 4, repeatNeeds: 1 }
+      })
+    );
+  });
+  await page.goto('/');
+
+  await page.click('.mode-card[data-view="match"]');
+  await expect(page.locator('[data-match-surface]')).toHaveAttribute('data-match-state', 'hint', { timeout: 7000 });
+  await expect(page.locator('[data-match-surface]')).toHaveAttribute('data-match-hint-level', '1');
+  await expect(page.locator('[data-match-surface]')).toHaveAttribute('data-match-hint-level', '2', { timeout: 4000 });
+  const targetId = await page.locator('[data-match-surface]').getAttribute('data-match-target-id');
+  const wrongChoice = page.locator(`[data-match-choice]:not([data-match-choice="${targetId}"])`).first();
+  await wrongChoice.click({ force: true });
+
+  const progress = await page.evaluate((id) => JSON.parse(localStorage.getItem('minaplay_match_progress_v1') ?? '{}')[id ?? ''], targetId);
+  expect(progress.hintLevels['1']).toBeGreaterThanOrEqual(1);
+  expect(progress.hintLevels['2']).toBeGreaterThanOrEqual(1);
+  expect(progress.repeatNeeds).toBeGreaterThanOrEqual(2);
+});
+
+test('sentence module completes a short expression from context', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('minaplay_mastered_words_v1', JSON.stringify({ masteredWords: ['su', 'top', 'baba'] }));
+  });
+  await page.goto('/');
+
+  await page.click('.mode-card[data-view="sentence"]');
+  await expect(page.locator('[data-sentence-surface]')).toHaveAttribute('data-sentence-state', /context|waiting/);
+  await expect(page.locator('[data-sentence-context]')).toBeHidden();
+  await expect(page.locator('[data-sentence-card]')).toHaveText('');
+  await expect(page.locator('[data-sentence-choice]')).toHaveCount(2);
+
+  const targetVerb = await page.locator('[data-sentence-surface]').getAttribute('data-sentence-verb-id');
+  const sentenceKey = await page.locator('[data-sentence-surface]').getAttribute('data-sentence-key');
+  expect(targetVerb).toBeTruthy();
+  await page.click(`[data-sentence-choice="${targetVerb}"]`, { force: true });
+  await expect(page.locator('[data-sentence-surface]')).toHaveAttribute('data-sentence-state', 'success');
+  await expect(page.locator('[data-sentence-card]')).toHaveText('');
+  await expect(page.locator('[data-sentence-surface]')).toHaveAttribute('data-sentence-state', 'repeat_prompt', { timeout: 1200 });
+  await expect(page.locator('[data-sentence-card]')).toHaveText('');
+  const progress = await page.evaluate((key) => JSON.parse(localStorage.getItem('minaplay_sentence_progress_v1') ?? '{}')[key ?? ''], sentenceKey);
+  expect(progress.success).toBeGreaterThanOrEqual(1);
+  expect(progress.repeatPrompts).toBeGreaterThanOrEqual(1);
+});
+
+test('story module narrates and opens an interaction point', async ({ page }) => {
+  await page.goto('/');
+
+  await page.click('.mode-card[data-view="story"]');
+  await expect(page.locator('[data-story-surface]')).toHaveAttribute('data-story-state', /attention|narration/);
+  await expect(page.locator('[data-story-scene] .story-object')).toHaveCount(1);
+  await expect(page.locator('[data-story-surface]')).toHaveAttribute('data-story-step', 'who-throws', { timeout: 9000 });
+  await expect(page.locator('[data-story-choice]')).toHaveCount(2);
+
+  await page.click('[data-story-choice="baba"]', { force: true });
+  await expect(page.locator('[data-story-surface]')).toHaveAttribute('data-story-state', 'success');
+  await expect(page.locator('[data-story-choice="baba"]')).toHaveClass(/story-correct/);
+  await expect(page.locator('[data-story-surface]')).toHaveAttribute('data-story-step', 'baba-throw', { timeout: 2500 });
+});
+
+test('parent panel shows touch word progress rows', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      'minaplay_touch_progress_v1',
+      JSON.stringify({
+        su: { success: 3, fail: 1, hintLevels: { 1: 1 }, successLatencyMsTotal: 1800, successLatencySamples: 3, repeatNeeds: 1 }
+      })
+    );
+  });
+  await page.goto('/');
+
+  await page.click('[data-open-parent]');
+  await expect(page.locator('[data-touch-progress-table] .touch-progress-row')).toHaveCount(5);
+  await expect(page.locator('[data-touch-progress-table]')).toContainText('Su');
+  await expect(page.locator('[data-touch-progress-table]')).toContainText('3 doğru');
 });
 
 test('module surfaces render stateful layered Pofi parts', async ({ page }) => {

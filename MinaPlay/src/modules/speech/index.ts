@@ -2,12 +2,15 @@ export type SpeechMachineState = 'idle' | 'attention' | 'targeting' | 'waiting' 
 
 export type SpeechPromptKind = 'attention' | 'targeting' | 'success' | 'retry' | 'hint';
 
-export type SpeechSoundIntent = 'target' | 'success';
+export type SpeechSoundIntent = 'target' | 'success' | 'hint';
+
+export type SpeechSoundStyle = 'clear' | 'celebration' | 'gentle';
 
 export interface SpeechItem {
   id: string;
   label: string;
   audio?: string;
+  learningGoal?: string;
 }
 
 export interface SpeechMachineSnapshot {
@@ -16,29 +19,46 @@ export interface SpeechMachineSnapshot {
   visibleItemIds: string[];
   level: 1 | 2 | 3;
   prompt?: string;
+  hintLevel?: 1 | 2 | 3 | 4;
 }
 
 export interface SpeechPromptEvent {
   kind: SpeechPromptKind;
   item?: SpeechItem;
   text: string;
+  hintLevel?: 1 | 2 | 3 | 4;
 }
 
 export interface SpeechSoundEvent {
   intent: SpeechSoundIntent;
   item: SpeechItem;
   phrase: string;
+  style: SpeechSoundStyle;
+}
+
+export interface SpeechAttemptEvent {
+  item: SpeechItem;
+  submittedId: string;
+  correct: boolean;
+  latencyMs: number;
 }
 
 export interface SpeechStateMachineOptions {
   items: () => SpeechItem[];
   waitingMs?: number;
+  hintStepMs?: number;
+  targetWeight?: (item: SpeechItem) => number;
+  overallSuccessRate?: () => number;
+  promptText?: (event: { kind: SpeechPromptKind; item?: SpeechItem; hintLevel?: 1 | 2 | 3 | 4 }) => string | undefined;
   onStateChange: (snapshot: SpeechMachineSnapshot) => void;
   onPrompt?: (event: SpeechPromptEvent) => void;
   onSound?: (event: SpeechSoundEvent) => void | Promise<void>;
+  onAttempt?: (event: SpeechAttemptEvent) => void;
+  onHint?: (event: { item: SpeechItem; hintLevel: 1 | 2 | 3 | 4 }) => void;
 }
 
 const DEFAULT_WAITING_MS = 5000;
+const DEFAULT_HINT_STEP_MS = 3000;
 const ATTENTION_MS = 620;
 const TARGETING_MS = 760;
 const SUCCESS_MS = 800;
@@ -62,9 +82,13 @@ export class SpeechStateMachine {
   private lastTargetIds: string[] = [];
   private timer: number | undefined;
   private readonly waitingMs: number;
+  private readonly hintStepMs: number;
+  private hintLevel: 1 | 2 | 3 | 4 | undefined;
+  private roundStartedAt = 0;
 
   constructor(private readonly options: SpeechStateMachineOptions) {
     this.waitingMs = options.waitingMs ?? DEFAULT_WAITING_MS;
+    this.hintStepMs = options.hintStepMs ?? DEFAULT_HINT_STEP_MS;
   }
 
   start(): void {
@@ -72,6 +96,8 @@ export class SpeechStateMachine {
     this.correctCount = 0;
     this.level = 1;
     this.lastTargetIds = [];
+    this.hintLevel = undefined;
+    this.roundStartedAt = 0;
     this.enterIdle(true);
   }
 
@@ -80,6 +106,7 @@ export class SpeechStateMachine {
     this.state = 'idle';
     this.target = undefined;
     this.visibleItemIds = [];
+    this.hintLevel = undefined;
     this.emit();
   }
 
@@ -89,12 +116,15 @@ export class SpeechStateMachine {
     }
 
     this.clearTimer();
+    const latencyMs = this.roundStartedAt > 0 ? Math.max(0, Date.now() - this.roundStartedAt) : 0;
 
     if (itemId === this.target.id) {
+      this.options.onAttempt?.({ item: this.target, submittedId: itemId, correct: true, latencyMs });
       this.enterSuccess();
       return;
     }
 
+    this.options.onAttempt?.({ item: this.target, submittedId: itemId, correct: false, latencyMs });
     this.enterRetry();
   }
 
@@ -105,7 +135,7 @@ export class SpeechStateMachine {
     }
 
     if (this.state === 'waiting') {
-      this.enterHint();
+      this.enterHint(1);
     }
   }
 
@@ -115,7 +145,8 @@ export class SpeechStateMachine {
       targetId: this.target?.id,
       visibleItemIds: [...this.visibleItemIds],
       level: this.level,
-      prompt: this.promptText()
+      prompt: this.promptText(),
+      hintLevel: this.hintLevel
     };
   }
 
@@ -137,6 +168,7 @@ export class SpeechStateMachine {
 
     this.target = this.pickTarget(items);
     this.visibleItemIds = this.pickVisibleItemIds(items, this.target);
+    this.hintLevel = undefined;
     this.enterAttention();
   }
 
@@ -154,16 +186,18 @@ export class SpeechStateMachine {
     }
 
     this.state = 'targeting';
+    this.roundStartedAt = Date.now();
     this.emit();
-    this.options.onPrompt?.({ kind: 'targeting', item: this.target, text: `${this.target.label} kartına dokun 😊` });
-    void this.options.onSound?.({ intent: 'target', item: this.target, phrase: this.target.label });
+    this.options.onPrompt?.({ kind: 'targeting', item: this.target, text: this.promptFor('targeting', this.target) });
+    void this.options.onSound?.({ intent: 'target', item: this.target, phrase: this.target.label, style: 'clear' });
     this.timer = window.setTimeout(() => this.enterWaiting(), TARGETING_MS);
   }
 
   private enterWaiting(): void {
     this.state = 'waiting';
+    this.hintLevel = undefined;
     this.emit();
-    this.timer = window.setTimeout(() => this.enterHint(), this.waitingMs);
+    this.timer = window.setTimeout(() => this.enterHint(1), this.waitingMs);
   }
 
   private enterSuccess(): void {
@@ -178,28 +212,36 @@ export class SpeechStateMachine {
     this.emit();
     const successText = this.correctCount % 8 === 0 ? `Harika! ${this.target.label} 😄` : this.target.label;
     const successPhrase = this.correctCount % 8 === 0 ? `Harika, ${this.target.label}` : this.target.label;
-    this.options.onPrompt?.({ kind: 'success', item: this.target, text: successText });
-    void this.options.onSound?.({ intent: 'success', item: this.target, phrase: successPhrase });
+    this.options.onPrompt?.({ kind: 'success', item: this.target, text: this.promptFor('success', this.target) ?? successText });
+    void this.options.onSound?.({ intent: 'success', item: this.target, phrase: successPhrase, style: 'celebration' });
     this.timer = window.setTimeout(() => this.enterIdle(true), SUCCESS_MS);
   }
 
   private enterRetry(): void {
     this.state = 'retry';
+    this.hintLevel = undefined;
     this.emit();
-    this.options.onPrompt?.({ kind: 'retry', item: this.target, text: 'Hadi tekrar bakalım 😊' });
+    this.options.onPrompt?.({ kind: 'retry', item: this.target, text: this.promptFor('retry', this.target) });
     this.timer = window.setTimeout(() => this.enterWaiting(), RETRY_MS);
   }
 
-  private enterHint(): void {
+  private enterHint(level: 1 | 2 | 3 | 4): void {
     if (!this.target) {
       this.startRound();
       return;
     }
 
     this.state = 'hint';
+    this.hintLevel = level;
     this.emit();
-    this.options.onPrompt?.({ kind: 'hint', item: this.target, text: `${this.target.label} burada 😊` });
-    this.timer = window.setTimeout(() => this.enterWaiting(), HINT_MS);
+    this.options.onHint?.({ item: this.target, hintLevel: level });
+    this.options.onPrompt?.({ kind: 'hint', item: this.target, text: this.promptFor('hint', this.target, level), hintLevel: level });
+    void this.options.onSound?.({ intent: 'hint', item: this.target, phrase: this.target.label, style: 'gentle' });
+    const nextLevel = Math.min(4, level + 1) as 1 | 2 | 3 | 4;
+    this.timer = window.setTimeout(
+      () => (level < 4 ? this.enterHint(nextLevel) : this.enterWaiting()),
+      level < 4 ? this.hintStepMs : HINT_MS
+    );
   }
 
   private emit(): void {
@@ -220,7 +262,7 @@ export class SpeechStateMachine {
 
       return !(recentLimit.length === 2 && recentLimit.every((id) => id === item.id));
     });
-    const target = this.pickOne(pool.length > 0 ? pool : items);
+    const target = this.pickWeighted(pool.length > 0 ? pool : items);
     this.lastTargetIds.push(target.id);
     this.lastTargetIds = this.lastTargetIds.slice(-6);
     return target;
@@ -233,6 +275,11 @@ export class SpeechStateMachine {
   }
 
   private levelForCorrectCount(count: number): 1 | 2 | 3 {
+    const rate = this.options.overallSuccessRate?.();
+    if (typeof rate === 'number' && rate > 0.75 && count >= 8) {
+      return count >= 16 ? 3 : 2;
+    }
+
     if (count >= LEVEL_3_CORRECT_THRESHOLD) {
       return 3;
     }
@@ -254,22 +301,66 @@ export class SpeechStateMachine {
     }
 
     if (this.state === 'retry') {
-      return 'Hadi tekrar bakalım 😊';
+      return this.promptFor('retry', this.target);
     }
 
     if (this.state === 'hint') {
-      return `${this.target.label} burada 😊`;
+      return this.promptFor('hint', this.target, this.hintLevel);
     }
 
     if (this.state === 'targeting' || this.state === 'waiting') {
-      return `${this.target.label} kartına dokun 😊`;
+      return this.promptFor('targeting', this.target);
     }
 
     return undefined;
   }
 
+  private promptFor(kind: SpeechPromptKind, item?: SpeechItem, hintLevel?: 1 | 2 | 3 | 4): string {
+    const custom = this.options.promptText?.({ kind, item, hintLevel });
+    if (custom) {
+      return custom;
+    }
+
+    if (kind === 'attention') {
+      return 'Bak 😊';
+    }
+
+    if (!item) {
+      return '';
+    }
+
+    if (kind === 'targeting') {
+      return `${item.label} kartına dokun 😊`;
+    }
+
+    if (kind === 'success') {
+      return this.correctCount % 8 === 0 ? `Harika! ${item.label} 😄` : item.label;
+    }
+
+    if (kind === 'retry') {
+      return 'Hadi tekrar bakalım 😊';
+    }
+
+    return hintLevel && hintLevel >= 4 ? `${item.label} burada. Bu karta dokun 😊` : `${item.label} burada 😊`;
+  }
+
   private pickOne(items: SpeechItem[]): SpeechItem {
     return items[Math.floor(Math.random() * items.length)] ?? items[0];
+  }
+
+  private pickWeighted(items: SpeechItem[]): SpeechItem {
+    const weighted = items.map((item) => ({ item, weight: Math.max(0.1, this.options.targetWeight?.(item) ?? 1) }));
+    const total = weighted.reduce((sum, entry) => sum + entry.weight, 0);
+    let cursor = Math.random() * total;
+
+    for (const entry of weighted) {
+      cursor -= entry.weight;
+      if (cursor <= 0) {
+        return entry.item;
+      }
+    }
+
+    return this.pickOne(items);
   }
 
   private shuffle(items: SpeechItem[]): SpeechItem[] {

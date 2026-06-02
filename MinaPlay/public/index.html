@@ -112,7 +112,6 @@
             <span class="touch-sparkle sparkle-three" aria-hidden="true"></span>
             <button class="touch-pofi-button" type="button" data-touch-pofi-trigger aria-label="Pofi seçili kelimeyi söylesin">
               <span class="surface-pofi pofi-avatar large" data-pofi-avatar data-pofi-state="guide" aria-label="Pofi rehber"></span>
-              <span class="touch-pofi-hint">Hadi bir kelime seçelim 😊</span>
             </button>
             <div class="touch-card-grid" data-touch-card-grid aria-label="Dokun kartları"></div>
             <div class="touch-session-message" data-touch-status aria-live="polite"></div>
@@ -120,44 +119,47 @@
         </section>
 
         <section class="view module-view" id="view-match" data-view-panel="match" aria-label="Eşleme modu">
-          <button class="back-home" type="button" data-view="home">Ana ekran</button>
-          <div class="module-copy">
-            <p class="eyebrow">Eşleme</p>
-            <h2>Aynısını bul.</h2>
-            <p>Tek hedef, az seçenek, yumuşak tekrar.</p>
-          </div>
-          <div class="play-surface" data-module-surface>
-            <button class="object-tile" type="button" data-track-action="match-correct">Yıldız</button>
-            <button class="object-tile" type="button" data-track-action="match-wrong">Ay</button>
-            <div class="surface-pofi pofi-avatar" data-pofi-avatar data-pofi-state="playful" aria-label="Pofi rehber"></div>
+          <div class="play-surface match-surface" data-module-surface data-match-surface>
+            <span class="touch-cloud touch-cloud-left" aria-hidden="true"></span>
+            <span class="touch-cloud touch-cloud-right" aria-hidden="true"></span>
+            <span class="touch-sparkle sparkle-one" aria-hidden="true"></span>
+            <span class="touch-sparkle sparkle-two" aria-hidden="true"></span>
+            <button class="match-pofi-button" type="button" data-match-pofi-trigger aria-label="Pofi eşleme hedefini söylesin">
+              <span class="surface-pofi pofi-avatar large" data-pofi-avatar data-pofi-state="playful" aria-label="Pofi rehber"></span>
+            </button>
+            <div class="match-target" data-match-target aria-live="polite"></div>
+            <div class="match-choice-grid" data-match-choice-grid aria-label="Eşleme seçenekleri"></div>
+            <div class="match-status sr-only" data-match-status aria-live="polite"></div>
           </div>
         </section>
 
         <section class="view module-view" id="view-sentence" data-view-panel="sentence" aria-label="Cümle modu">
-          <button class="back-home" type="button" data-view="home">Ana ekran</button>
-          <div class="module-copy">
-            <p class="eyebrow">Cümle</p>
-            <h2>Seç, birleştir, dinle.</h2>
-            <p>İki görsel bir cümleye dönüşür.</p>
-          </div>
-          <div class="play-surface" data-module-surface>
-            <button class="object-tile" type="button" data-track-action="sentence-select">Ben</button>
-            <button class="object-tile" type="button" data-track-action="sentence-select">Su</button>
-            <div class="surface-pofi pofi-avatar" data-pofi-avatar data-pofi-state="guide" aria-label="Pofi rehber"></div>
+          <div class="play-surface sentence-surface" data-module-surface data-sentence-surface>
+            <span class="touch-cloud touch-cloud-left" aria-hidden="true"></span>
+            <span class="touch-cloud touch-cloud-right" aria-hidden="true"></span>
+            <span class="touch-sparkle sparkle-one" aria-hidden="true"></span>
+            <button class="sentence-pofi-button" type="button" data-sentence-pofi-trigger aria-label="Pofi cümle yönergesini söylesin">
+              <span class="surface-pofi pofi-avatar large" data-pofi-avatar data-pofi-state="sentenceGuide" aria-label="Pofi rehber"></span>
+            </button>
+            <div class="sentence-context" data-sentence-context aria-live="polite"></div>
+            <div class="sentence-card" data-sentence-card></div>
+            <div class="sentence-choice-grid" data-sentence-choice-grid aria-label="Cümle seçenekleri"></div>
+            <div class="sentence-status sr-only" data-sentence-status aria-live="polite"></div>
           </div>
         </section>
 
         <section class="view module-view" id="view-story" data-view-panel="story" aria-label="Hikaye modu">
-          <button class="back-home" type="button" data-view="home">Ana ekran</button>
-          <div class="module-copy">
-            <p class="eyebrow">Hikaye</p>
-            <h2>Kısa hikaye.</h2>
-            <p>Dinle, tekrar et, sonraki cümleye geç.</p>
-          </div>
-          <div class="play-surface" data-module-surface>
-            <button class="object-tile wide" type="button" data-track-action="story-listen">Dinle</button>
-            <button class="object-tile wide" type="button" data-track-action="story-repeat">Tekrar et</button>
-            <div class="surface-pofi pofi-avatar" data-pofi-avatar data-pofi-state="calm" aria-label="Pofi rehber"></div>
+          <div class="play-surface story-surface" data-module-surface data-story-surface>
+            <span class="touch-cloud touch-cloud-left" aria-hidden="true"></span>
+            <span class="touch-cloud touch-cloud-right" aria-hidden="true"></span>
+            <span class="touch-sparkle sparkle-one" aria-hidden="true"></span>
+            <button class="story-pofi-button" type="button" data-story-pofi-trigger aria-label="Pofi hikayeyi anlatsın">
+              <span class="surface-pofi pofi-avatar large" data-pofi-avatar data-pofi-state="storyIdle" aria-label="Pofi anlatıcı"></span>
+            </button>
+            <div class="story-scene" data-story-scene aria-live="polite"></div>
+            <div class="story-choice-grid" data-story-choice-grid aria-label="Hikaye seçenekleri"></div>
+            <div class="story-progress" data-story-progress aria-hidden="true"></div>
+            <div class="story-status sr-only" data-story-status aria-live="polite"></div>
           </div>
         </section>
 
@@ -233,6 +235,24 @@
             </article>
           </div>
           <div class="module-log" id="module-log" aria-live="polite"></div>
+          <section class="parent-touch-progress" aria-labelledby="touch-progress-title">
+            <div class="parent-section-heading">
+              <div>
+                <p class="eyebrow">Dokun öğrenme</p>
+                <h3 id="touch-progress-title">Kelime bazlı ilerleme</h3>
+              </div>
+            </div>
+            <div class="touch-progress-table" data-touch-progress-table></div>
+          </section>
+          <section class="parent-touch-progress" aria-labelledby="match-progress-title">
+            <div class="parent-section-heading">
+              <div>
+                <p class="eyebrow">Eşleme öğrenme</p>
+                <h3 id="match-progress-title">Kavram genelleme izi</h3>
+              </div>
+            </div>
+            <div class="touch-progress-table" data-match-progress-table></div>
+          </section>
           <section class="parent-touch-settings" aria-labelledby="touch-cards-title">
             <div class="parent-section-heading">
               <div>

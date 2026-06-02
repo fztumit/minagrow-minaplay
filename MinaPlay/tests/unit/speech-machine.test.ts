@@ -147,4 +147,56 @@ describe('SpeechStateMachine', () => {
       expect(targets[index]).not.toBe(targets[index - 1]);
     }
   });
+
+  test('progresses hint levels while keeping the target stable', () => {
+    const snapshots: SpeechMachineSnapshot[] = [];
+    const hints: number[] = [];
+    const machine = new SpeechStateMachine({
+      items: () => items,
+      waitingMs: 5000,
+      hintStepMs: 3000,
+      onStateChange: (snapshot) => snapshots.push(snapshot),
+      onHint: (event) => hints.push(event.hintLevel)
+    });
+
+    machine.start();
+    vi.advanceTimersByTime(1800);
+    const targetId = snapshots.at(-1)?.targetId;
+
+    vi.advanceTimersByTime(5010);
+    expect(snapshots.at(-1)?.state).toBe('hint');
+    expect(snapshots.at(-1)?.hintLevel).toBe(1);
+
+    vi.advanceTimersByTime(3010);
+    expect(snapshots.at(-1)?.targetId).toBe(targetId);
+    expect(snapshots.at(-1)?.hintLevel).toBe(2);
+
+    vi.advanceTimersByTime(3010);
+    expect(snapshots.at(-1)?.hintLevel).toBe(3);
+    expect(hints).toEqual([1, 2, 3]);
+  });
+
+  test('uses adaptive weighting and overall success rate without skipping the calm flow', () => {
+    const targets: string[] = [];
+    const machine = new SpeechStateMachine({
+      items: () => items,
+      targetWeight: (item) => (item.id === 'su' ? 8 : 0.2),
+      overallSuccessRate: () => 0.8,
+      onStateChange: (snapshot) => {
+        if (snapshot.state === 'targeting' && snapshot.targetId) {
+          targets.push(snapshot.targetId);
+        }
+      }
+    });
+
+    machine.start();
+    for (let index = 1; index <= 8; index += 1) {
+      vi.advanceTimersByTime(1800);
+      machine.submit(targets.at(-1) ?? '');
+      expect(machine.snapshot().level).toBe(index >= 8 ? 2 : 1);
+      vi.advanceTimersByTime(1200);
+    }
+
+    expect(targets).toContain('su');
+  });
 });
