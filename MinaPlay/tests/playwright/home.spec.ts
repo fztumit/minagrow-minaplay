@@ -229,10 +229,11 @@ test('mirror module starts camera-safe imitation flow', async ({ page }) => {
   await expect(page.locator('#view-mirror [data-pofi-avatar] .pofi-mouth')).toHaveAttribute('src', /tongue-out-v01\.png$/, { timeout: 3000 });
   await expect(page.locator('[data-mirror-video]')).toHaveCount(1);
   await expect(page.locator('[data-mirror-progress]')).toHaveCSS('--mirror-duration', '4200ms');
+  await expect(page.locator('.mirror-actions')).toHaveCount(0);
+  await expect(page.locator('[data-mirror-next]')).toHaveCount(0);
 
-  await page.click('[data-mirror-next]');
-  await expect(page.locator('[data-mirror-surface]')).toHaveAttribute('data-mirror-exercise', 'open-mouth');
-  await expect(page.locator('#view-mirror [data-pofi-avatar] .pofi-mouth')).toHaveAttribute('src', /open-vertical-big-v01\.png$/);
+  await page.click('[data-mirror-repeat]');
+  await expect(page.locator('[data-mirror-surface]')).toHaveAttribute('data-mirror-exercise', 'tongue-out');
 });
 
 test('parent panel shows touch word progress rows', async ({ page }) => {
