@@ -5,6 +5,7 @@ test('home opens with six calm modes and bonus ceee', async ({ page }) => {
 
   await expect(page.locator('#view-home')).toHaveClass(/active/);
   await expect(page.locator('.mode-card')).toHaveCount(6);
+  await expect(page.locator('.mode-card[data-view="sentence"]')).toContainText('İfade');
   await expect(page.locator('.bonus-strip')).toContainText('Ceee');
   await expect(page.locator('.bottom-nav button')).toHaveCount(6);
 });
@@ -146,21 +147,40 @@ test('sentence module completes a short expression from context', async ({ page 
 
   await page.click('.mode-card[data-view="sentence"]');
   await expect(page.locator('[data-sentence-surface]')).toHaveAttribute('data-sentence-state', /context|waiting/);
+  await expect(page.locator('[data-sentence-surface]')).toHaveAttribute('data-sentence-mode', 'learn');
+  await expect(page.locator('.sentence-mode-button[data-sentence-mode="learn"]')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('[data-sentence-context]')).toBeHidden();
   await expect(page.locator('[data-sentence-card]')).toHaveText('');
-  await expect(page.locator('[data-sentence-choice]')).toHaveCount(2);
+  await expect(page.locator('[data-sentence-choice]')).toHaveCount(0);
+  await expect(page.locator('[data-sentence-card] img.sentence-need-image')).toHaveCount(1);
 
-  const targetVerb = await page.locator('[data-sentence-surface]').getAttribute('data-sentence-verb-id');
   const sentenceKey = await page.locator('[data-sentence-surface]').getAttribute('data-sentence-key');
-  expect(targetVerb).toBeTruthy();
-  await page.click(`[data-sentence-choice="${targetVerb}"]`, { force: true });
+  await page.click('[data-sentence-card]', { force: true });
   await expect(page.locator('[data-sentence-surface]')).toHaveAttribute('data-sentence-state', 'success');
   await expect(page.locator('[data-sentence-card]')).toHaveText('');
-  await expect(page.locator('[data-sentence-surface]')).toHaveAttribute('data-sentence-state', 'repeat_prompt', { timeout: 1200 });
+  await expect(page.locator('[data-sentence-surface]')).toHaveAttribute('data-sentence-state', 'repeat_prompt', { timeout: 7000 });
   await expect(page.locator('[data-sentence-card]')).toHaveText('');
   const progress = await page.evaluate((key) => JSON.parse(localStorage.getItem('minaplay_sentence_progress_v1') ?? '{}')[key ?? ''], sentenceKey);
   expect(progress.success).toBeGreaterThanOrEqual(1);
   expect(progress.repeatPrompts).toBeGreaterThanOrEqual(1);
+});
+
+test('sentence module offers a select and speak needs board', async ({ page }) => {
+  await page.goto('/');
+
+  await page.click('.mode-card[data-view="sentence"]');
+  await page.click('.sentence-mode-button[data-sentence-mode="board"]');
+  await expect(page.locator('[data-sentence-surface]')).toHaveAttribute('data-sentence-mode', 'board');
+  await expect(page.locator('.sentence-mode-button[data-sentence-mode="board"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('[data-sentence-board-card]')).toHaveCount(11);
+  await expect(page.locator('[data-sentence-card]')).toBeHidden();
+
+  const water = page.locator('[data-sentence-board-card="su-istiyorum"]');
+  await water.click({ force: true });
+  await expect(page.locator('[data-sentence-surface]')).toHaveAttribute('data-sentence-state', 'success');
+  await expect(page.locator('[data-sentence-surface]')).toHaveAttribute('data-sentence-key', 'su_istiyorum');
+  await expect(water).toHaveClass(/selected/);
+  await expect(page.locator('[data-sentence-surface]')).toHaveAttribute('data-sentence-state', 'repeat_prompt', { timeout: 7000 });
 });
 
 test('story module narrates and opens an interaction point', async ({ page }) => {
@@ -168,14 +188,36 @@ test('story module narrates and opens an interaction point', async ({ page }) =>
 
   await page.click('.mode-card[data-view="story"]');
   await expect(page.locator('[data-story-surface]')).toHaveAttribute('data-story-state', /attention|narration/);
-  await expect(page.locator('[data-story-scene] .story-object')).toHaveCount(1);
-  await expect(page.locator('[data-story-surface]')).toHaveAttribute('data-story-step', 'who-throws', { timeout: 9000 });
+  await expect(page.locator('[data-story-scene] .story-scene-image, [data-story-scene] .story-object')).toHaveCount(1);
+  await expect(page.locator('[data-story-surface]')).toHaveAttribute('data-story-step', 'what-needed', { timeout: 18000 });
   await expect(page.locator('[data-story-choice]')).toHaveCount(2);
 
-  await page.click('[data-story-choice="baba"]', { force: true });
+  await page.click('[data-story-choice="su"]', { force: true });
   await expect(page.locator('[data-story-surface]')).toHaveAttribute('data-story-state', 'success');
-  await expect(page.locator('[data-story-choice="baba"]')).toHaveClass(/story-correct/);
-  await expect(page.locator('[data-story-surface]')).toHaveAttribute('data-story-step', 'baba-throw', { timeout: 2500 });
+  await expect(page.locator('[data-story-choice="su"]')).toHaveClass(/story-correct/);
+  await expect(page.locator('[data-story-surface]')).toHaveAttribute('data-story-step', 'water-drink', { timeout: 11000 });
+});
+
+test('sleep module shows moon scene and toggles sleeping Pofi', async ({ page }) => {
+  await page.goto('/');
+
+  await page.click('.mode-card[data-view="sleep"]');
+  await expect(page.locator('[data-sleep-surface]')).toHaveAttribute('data-sleep-running', 'false');
+  await expect(page.locator('#view-sleep .sleep-moon')).toHaveAttribute('src', /assets\/sleep\/moon\.png$/);
+  await expect(page.locator('#view-sleep .sleep-floating-pofi')).toBeVisible();
+  await expect(page.locator('#view-sleep .sleep-floating-pofi')).toHaveAttribute('data-pofi-state', 'sleepReady');
+  await expect(page.locator('#view-sleep .sleep-floating-pofi .pofi-eyes')).toHaveAttribute('src', /half-open-v01\.png$/);
+  await expect(page.locator('#view-sleep .sleeping-pofi-pose')).toHaveCSS('opacity', '0');
+  await expect(page.locator('[data-sleep-label]')).toHaveText('Başlat');
+
+  await page.click('[data-sleep-toggle]');
+  await expect(page.locator('[data-sleep-surface]')).toHaveAttribute('data-sleep-running', 'true');
+  await expect(page.locator('[data-sleep-label]')).toHaveText('Durdur');
+  await expect(page.locator('#view-sleep .sleeping-pofi-pose')).toHaveCSS('opacity', '1', { timeout: 2000 });
+
+  await page.click('[data-sleep-toggle]');
+  await expect(page.locator('[data-sleep-surface]')).toHaveAttribute('data-sleep-running', 'false', { timeout: 2200 });
+  await expect(page.locator('[data-sleep-label]')).toHaveText('Başlat');
 });
 
 test('parent panel shows touch word progress rows', async ({ page }) => {

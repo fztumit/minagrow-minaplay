@@ -27,7 +27,6 @@ import {
 import {
   SENTENCE_PROGRESS_KEY,
   normalizeSentenceProgress,
-  sentenceChoiceCount,
   sentenceKey,
   sentenceProgressEntry,
   sentenceTargetWeight,
@@ -71,6 +70,7 @@ type PofiState =
   | 'storyWaiting'
   | 'storySuccess'
   | 'storyContinue'
+  | 'sleepReady'
   | 'tryAgain';
 type PofiMood = PofiState | 'attention' | 'blink' | 'settle' | 'sleepBlink';
 type PofiParts = { body: string; eyes: string; mouth: string; hands?: string; eyebrows?: string; effect?: string };
@@ -155,37 +155,36 @@ interface MatchRound {
 }
 
 type SentenceState = 'attention' | 'context' | 'waiting' | 'hint' | 'success' | 'repeat_prompt' | 'retry';
-type SentenceCue = 'drink' | 'eat' | 'play' | 'call' | 'share' | 'take' | 'pour' | 'flow';
+type SentenceCue = 'water' | 'food' | 'toilet' | 'sleep' | 'pain' | 'cold' | 'hot' | 'caregiver' | 'help' | 'walk';
+type SentenceMode = 'learn' | 'board';
 
 type StoryState = 'idle' | 'attention' | 'narration' | 'interaction' | 'waiting' | 'success' | 'continue' | 'closure';
 type StoryStepKind = 'attention' | 'narration' | 'interaction' | 'repeat' | 'closure';
-
-interface SentenceVerb {
-  id: string;
-  label: string;
-}
+type StoryEffect = 'sparkle' | 'water' | 'chime' | 'step' | 'warm' | 'sleep' | 'pop';
 
 interface SentenceScene {
   id: string;
   context: string;
   detail: string;
   cue: SentenceCue;
+  image: string;
+  alt: string;
 }
 
 interface SentencePrompt {
   id: string;
   subjectId: string;
   verbId: string;
-  verbs: string[];
   phrase: string;
+  shortLabel: string;
   communicationGoal: string;
+  group: 'core-needs' | 'care' | 'social' | 'movement' | 'preference';
   stage: 1 | 2 | 3;
   scenes: SentenceScene[];
 }
 
 interface SentenceRound {
   prompt: SentencePrompt;
-  choices: SentenceVerb[];
   scene: SentenceScene;
   state: SentenceState;
   hintLevel: 0 | 1 | 2 | 3 | 4;
@@ -194,23 +193,33 @@ interface SentenceRound {
 
 interface StoryChoice {
   id: string;
-  cardId: string;
+  cardId?: string;
   correct: boolean;
   symbol: string;
+  label?: string;
+  image?: string;
+  alt?: string;
 }
 
 interface StoryStep {
   id: string;
   kind: StoryStepKind;
   text: string;
-  cardIds: string[];
+  cardIds?: string[];
   actionSymbol?: string;
+  sceneImage?: string;
+  sceneAlt?: string;
+  effect?: StoryEffect;
   choices?: StoryChoice[];
+  successText?: string;
+  fallbackText?: string;
   pauseMs?: number;
 }
 
 interface StoryDefinition {
   id: string;
+  title: string;
+  theme: 'need' | 'play' | 'comfort' | 'sleep';
   steps: StoryStep[];
 }
 
@@ -241,9 +250,13 @@ const SENTENCE_REPEAT_PROMPT_MS = 1600;
 const SENTENCE_RETRY_MS = 900;
 const STORY_ATTENTION_MS = 850;
 const STORY_NARRATION_MS = 2100;
-const STORY_WAITING_MS = 6200;
+const STORY_WAITING_MS = 11000;
 const STORY_SUCCESS_MS = 1200;
 const STORY_REPEAT_MS = 1700;
+const VOICE_QUEUE_GAP_MS = 280;
+const SPEECH_MIN_DURATION_MS = 900;
+const SPEECH_MAX_DURATION_MS = 5200;
+const AUDIO_FALLBACK_DURATION_MS = 2200;
 const TOUCH_SETTINGS_KEY = 'minaplay_touch_settings_v1';
 const TOUCH_DB_NAME = 'minaplay_touch_cards_v1';
 const TOUCH_DB_STORE = 'touchSettings';
@@ -273,171 +286,352 @@ const DEFAULT_TOUCH_CARDS: TouchCard[] = [
   createDefaultTouchCard('elma', 'Elma', 'Elma', 4, 'apple')
 ];
 
-const SENTENCE_VERBS: SentenceVerb[] = [
-  { id: 'ver', label: 'ver' },
-  { id: 'gel', label: 'gel' },
-  { id: 'ye', label: 'ye' },
-  { id: 'at', label: 'at' },
-  { id: 'al', label: 'al' },
-  { id: 'ic', label: 'iç' },
-  { id: 'dok', label: 'dök' },
-  { id: 'ak', label: 'ak' },
-  { id: 'bak', label: 'bak' },
-  { id: 'tut', label: 'tut' },
-  { id: 'iste', label: 'iste' }
-];
-
 const SENTENCE_PROMPTS: SentencePrompt[] = [
   {
-    id: 'su-ver',
+    id: 'su-istiyorum',
     subjectId: 'su',
-    verbId: 'ver',
-    verbs: ['ver', 'al'],
-    phrase: 'Su ver',
-    communicationGoal: 'ihtiyaç isteme',
+    verbId: 'istiyorum',
+    phrase: 'Su istiyorum',
+    shortLabel: 'Su',
+    communicationGoal: 'susuzluk ve içme ihtiyacını ifade etme',
+    group: 'core-needs',
     stage: 1,
     scenes: [
-      { id: 'cup-water-share', context: 'Su isteyelim.', detail: 'bardakta su', cue: 'share' },
-      { id: 'blue-water-share', context: 'Su isteyelim.', detail: 'mavi su', cue: 'share' },
-      { id: 'table-water-share', context: 'Su isteyelim.', detail: 'masadaki su', cue: 'share' }
+      {
+        id: 'water-request-glass',
+        context: 'Su istiyorum.',
+        detail: 'su isteyen çocuk ve bardak',
+        cue: 'water',
+        image: '/assets/sentence/water-request.png',
+        alt: 'Su isteyen çocuk ve su bardağı'
+      },
+      {
+        id: 'water-drink-child',
+        context: 'Su içelim.',
+        detail: 'su içen çocuk',
+        cue: 'water',
+        image: '/assets/sentence/water-drink.png',
+        alt: 'Su içen çocuk'
+      }
     ]
   },
   {
-    id: 'su-al',
-    subjectId: 'su',
-    verbId: 'al',
-    verbs: ['al', 'ver'],
-    phrase: 'Su al',
-    communicationGoal: 'nesne alma',
+    id: 'yemek-istiyorum',
+    subjectId: 'yemek',
+    verbId: 'istiyorum',
+    phrase: 'Yemek istiyorum',
+    shortLabel: 'Yemek',
+    communicationGoal: 'açlık ve beslenme ihtiyacını ifade etme',
+    group: 'core-needs',
     stage: 1,
     scenes: [
-      { id: 'cup-water-take', context: 'Suyu alalım.', detail: 'bardakta su', cue: 'take' },
-      { id: 'blue-water-take', context: 'Suyu alalım.', detail: 'mavi su', cue: 'take' },
-      { id: 'table-water-take', context: 'Suyu alalım.', detail: 'masadaki su', cue: 'take' }
+      {
+        id: 'food-request-plate',
+        context: 'Yemek istiyorum.',
+        detail: 'yemek isteyen çocuk ve tabak',
+        cue: 'food',
+        image: '/assets/sentence/food-request.png',
+        alt: 'Yemek isteyen çocuk ve yemek tabağı'
+      },
+      {
+        id: 'food-eat-child',
+        context: 'Yemek yiyelim.',
+        detail: 'yemek yiyen çocuk',
+        cue: 'food',
+        image: '/assets/sentence/food-eat.png',
+        alt: 'Yemek yiyen çocuk'
+      }
     ]
   },
   {
-    id: 'su-ic',
-    subjectId: 'su',
-    verbId: 'ic',
-    verbs: ['ic', 'ver'],
-    phrase: 'Su iç',
-    communicationGoal: 'içme eylemi',
-    stage: 2,
-    scenes: [
-      { id: 'cup-water-drink', context: 'Su içelim.', detail: 'bardakta su', cue: 'drink' },
-      { id: 'blue-water-drink', context: 'Su içelim.', detail: 'mavi su', cue: 'drink' },
-      { id: 'table-water-drink', context: 'Su içelim.', detail: 'masadaki su', cue: 'drink' }
-    ]
-  },
-  {
-    id: 'su-dok',
-    subjectId: 'su',
-    verbId: 'dok',
-    verbs: ['dok', 'ak'],
-    phrase: 'Su dök',
-    communicationGoal: 'eylem ve neden-sonuç',
-    stage: 3,
-    scenes: [
-      { id: 'water-pour-cup', context: 'Su dökelim.', detail: 'dökülen su', cue: 'pour' },
-      { id: 'water-pour-table', context: 'Su dökelim.', detail: 'masada su', cue: 'pour' },
-      { id: 'water-pour-glass', context: 'Su dökelim.', detail: 'bardakta su', cue: 'pour' }
-    ]
-  },
-  {
-    id: 'su-ak',
-    subjectId: 'su',
-    verbId: 'ak',
-    verbs: ['ak', 'dok'],
-    phrase: 'Su akıyor',
-    communicationGoal: 'olay betimleme',
-    stage: 3,
-    scenes: [
-      { id: 'water-flow-tap', context: 'Su akıyor.', detail: 'akan su', cue: 'flow' },
-      { id: 'water-flow-blue', context: 'Su akıyor.', detail: 'mavi su', cue: 'flow' },
-      { id: 'water-flow-table', context: 'Su akıyor.', detail: 'masadaki su', cue: 'flow' }
-    ]
-  },
-  {
-    id: 'top-ver',
-    subjectId: 'top',
-    verbId: 'ver',
-    verbs: ['ver', 'at', 'tut'],
-    phrase: 'Top ver',
-    communicationGoal: 'paylaşma ve nesne isteme',
+    id: 'tuvalet',
+    subjectId: 'tuvalet',
+    verbId: 'soyle',
+    phrase: 'Tuvalet',
+    shortLabel: 'Tuvalet',
+    communicationGoal: 'tuvalet ihtiyacını ifade etme',
+    group: 'core-needs',
     stage: 1,
     scenes: [
-      { id: 'red-ball-share', context: 'Topu verelim.', detail: 'kırmızı top', cue: 'share' },
-      { id: 'big-ball-share', context: 'Topu verelim.', detail: 'büyük top', cue: 'share' },
-      { id: 'floor-ball-share', context: 'Topu verelim.', detail: 'yerde top', cue: 'share' }
+      {
+        id: 'toilet-need',
+        context: 'Tuvalet.',
+        detail: 'tuvalet ihtiyacını anlatan çocuk',
+        cue: 'toilet',
+        image: '/assets/sentence/toilet-need.png',
+        alt: 'Tuvalet ihtiyacını anlatan çocuk'
+      }
+    ]
+  },
+  {
+    id: 'uykum-var',
+    subjectId: 'uyku',
+    verbId: 'var',
+    phrase: 'Uykum var',
+    shortLabel: 'Uyku',
+    communicationGoal: 'uyku ve dinlenme ihtiyacını ifade etme',
+    group: 'core-needs',
+    stage: 1,
+    scenes: [
+      {
+        id: 'sleepy-child',
+        context: 'Uykum var.',
+        detail: 'uykusu gelen çocuk',
+        cue: 'sleep',
+        image: '/assets/sentence/sleepy-child.png',
+        alt: 'Uykusu gelen çocuk'
+      }
+    ]
+  },
+  {
+    id: 'acidi',
+    subjectId: 'aci',
+    verbId: 'soyle',
+    phrase: 'Acıdı',
+    shortLabel: 'Acıdı',
+    communicationGoal: 'ağrı ve rahatsızlığı bildirme',
+    group: 'core-needs',
+    stage: 1,
+    scenes: [
+      {
+        id: 'pain-child',
+        context: 'Acıdı.',
+        detail: 'canı acıyan çocuk',
+        cue: 'pain',
+        image: '/assets/sentence/pain-child.png',
+        alt: 'Canı acıyan çocuk'
+      }
+    ]
+  },
+  {
+    id: 'usudum',
+    subjectId: 'usudum',
+    verbId: 'soyle',
+    phrase: 'Üşüdüm',
+    shortLabel: 'Üşüdüm',
+    communicationGoal: 'soğuk ve korunma ihtiyacını ifade etme',
+    group: 'core-needs',
+    stage: 1,
+    scenes: [
+      {
+        id: 'cold-child',
+        context: 'Üşüdüm.',
+        detail: 'üşüyen çocuk ve mont',
+        cue: 'cold',
+        image: '/assets/sentence/cold-child.png',
+        alt: 'Üşüyen çocuk ve mont'
+      }
+    ]
+  },
+  {
+    id: 'sicak-oldu',
+    subjectId: 'sicak',
+    verbId: 'soyle',
+    phrase: 'Sıcak oldu',
+    shortLabel: 'Sıcak',
+    communicationGoal: 'sıcak ve rahatlama ihtiyacını ifade etme',
+    group: 'core-needs',
+    stage: 1,
+    scenes: [
+      {
+        id: 'hot-child',
+        context: 'Sıcak oldu.',
+        detail: 'sıcaklayan çocuk ve serinleme',
+        cue: 'hot',
+        image: '/assets/sentence/hot-child.png',
+        alt: 'Sıcaklayan çocuk'
+      }
+    ]
+  },
+  {
+    id: 'anne-gel',
+    subjectId: 'anne',
+    verbId: 'gel',
+    phrase: 'Anne gel',
+    shortLabel: 'Anne',
+    communicationGoal: 'yakın kişiyi çağırma',
+    group: 'core-needs',
+    stage: 1,
+    scenes: [
+      {
+        id: 'mother-come',
+        context: 'Anne gel.',
+        detail: 'annesini çağıran çocuk',
+        cue: 'caregiver',
+        image: '/assets/sentence/mother-come.png',
+        alt: 'Annesini çağıran çocuk'
+      }
     ]
   },
   {
     id: 'baba-gel',
     subjectId: 'baba',
     verbId: 'gel',
-    verbs: ['gel', 'bak'],
     phrase: 'Baba gel',
-    communicationGoal: 'kişiyi çağırma',
+    shortLabel: 'Baba',
+    communicationGoal: 'yakın kişiyi çağırma',
+    group: 'core-needs',
     stage: 1,
     scenes: [
-      { id: 'near-father', context: 'Baba gelsin.', detail: 'yakındaki baba', cue: 'call' },
-      { id: 'door-father', context: 'Baba gelsin.', detail: 'kapıdaki baba', cue: 'call' },
-      { id: 'happy-father', context: 'Baba gelsin.', detail: 'gülen baba', cue: 'call' }
+      {
+        id: 'father-come',
+        context: 'Baba gel.',
+        detail: 'babasını çağıran çocuk',
+        cue: 'caregiver',
+        image: '/assets/sentence/father-come.png',
+        alt: 'Babasını çağıran çocuk'
+      }
     ]
   },
   {
-    id: 'elma-ye',
-    subjectId: 'elma',
-    verbId: 'ye',
-    verbs: ['ye', 'ver'],
-    phrase: 'Elma ye',
-    communicationGoal: 'yeme eylemi ifade etme',
+    id: 'yardim-et',
+    subjectId: 'yardim',
+    verbId: 'et',
+    phrase: 'Yardım et',
+    shortLabel: 'Yardım',
+    communicationGoal: 'destek isteme',
+    group: 'core-needs',
     stage: 1,
     scenes: [
-      { id: 'red-apple', context: 'Elma yiyelim.', detail: 'kırmızı elma', cue: 'eat' },
-      { id: 'big-apple', context: 'Elma yiyelim.', detail: 'büyük elma', cue: 'eat' },
-      { id: 'plate-apple', context: 'Elma yiyelim.', detail: 'tabaktaki elma', cue: 'eat' }
+      {
+        id: 'help-child',
+        context: 'Yardım et.',
+        detail: 'yardım isteyen çocuk',
+        cue: 'help',
+        image: '/assets/sentence/help-child.png',
+        alt: 'Yardım isteyen çocuk'
+      }
     ]
   },
   {
-    id: 'top-at',
-    subjectId: 'top',
-    verbId: 'at',
-    verbs: ['at', 'tut', 'ver'],
-    phrase: 'Top at',
-    communicationGoal: 'oyun başlatma',
+    id: 'gezmek-istiyorum',
+    subjectId: 'gezmek',
+    verbId: 'istiyorum',
+    phrase: 'Gezmek istiyorum',
+    shortLabel: 'Gezmek',
+    communicationGoal: 'hareket ve dışarı çıkma isteğini ifade etme',
+    group: 'movement',
     stage: 1,
     scenes: [
-      { id: 'red-ball-throw', context: 'Top atalım.', detail: 'kırmızı top', cue: 'play' },
-      { id: 'big-ball-throw', context: 'Top atalım.', detail: 'büyük top', cue: 'play' },
-      { id: 'floor-ball-throw', context: 'Top atalım.', detail: 'yerde top', cue: 'play' }
+      {
+        id: 'walk-request',
+        context: 'Gezmek istiyorum.',
+        detail: 'dışarı çıkmak isteyen çocuk',
+        cue: 'walk',
+        image: '/assets/sentence/walk-request.png',
+        alt: 'Gezmek isteyen çocuk'
+      }
     ]
   }
 ];
 
 const STORY_LIBRARY: StoryDefinition[] = [
   {
-    id: 'ball-with-baba',
+    id: 'water-little-cloud',
+    title: 'Küçük Su Molası',
+    theme: 'need',
     steps: [
-      { id: 'look', kind: 'attention', text: 'Bak', cardIds: ['top'], pauseMs: STORY_ATTENTION_MS },
-      { id: 'ball-exists', kind: 'narration', text: 'Top var', cardIds: ['top'] },
-      { id: 'ball-floor', kind: 'narration', text: 'Top yerde', cardIds: ['top'], actionSymbol: '↓' },
-      { id: 'baba-comes', kind: 'narration', text: 'Baba geldi', cardIds: ['baba'] },
+      { id: 'look', kind: 'attention', text: 'Bak', sceneImage: '/assets/sentence/water-request.png', sceneAlt: 'Su isteyen çocuk', effect: 'sparkle', pauseMs: STORY_ATTENTION_MS },
+      { id: 'child-thirsty', kind: 'narration', text: 'Çocuk susadı', sceneImage: '/assets/sentence/water-request.png', sceneAlt: 'Su isteyen çocuk', effect: 'water' },
+      { id: 'water-request', kind: 'narration', text: 'Su istiyorum', sceneImage: '/assets/sentence/water-request.png', sceneAlt: 'Su isteyen çocuk', effect: 'chime' },
+      {
+        id: 'what-needed',
+        kind: 'interaction',
+        text: 'Ne istiyor?',
+        sceneImage: '/assets/sentence/water-request.png',
+        sceneAlt: 'Su isteyen çocuk',
+        effect: 'water',
+        successText: 'Evet. Su istiyorum.',
+        fallbackText: 'Su istiyorum.',
+        choices: [
+          { id: 'su', label: 'Su', correct: true, symbol: '✓', image: '/assets/sentence/water-drink.png', alt: 'Su içen çocuk' },
+          { id: 'yemek', label: 'Yemek', correct: false, symbol: '•', image: '/assets/sentence/food-request.png', alt: 'Yemek isteyen çocuk' }
+        ]
+      },
+      { id: 'water-drink', kind: 'narration', text: 'Su içti', sceneImage: '/assets/sentence/water-drink.png', sceneAlt: 'Su içen çocuk', effect: 'water' },
+      { id: 'repeat-water', kind: 'repeat', text: 'Hadi söyle. Su istiyorum', sceneImage: '/assets/sentence/water-request.png', sceneAlt: 'Su isteyen çocuk', effect: 'chime', pauseMs: STORY_REPEAT_MS },
+      { id: 'done', kind: 'closure', text: 'Oh, iyi oldu', sceneImage: '/assets/sentence/water-drink.png', sceneAlt: 'Su içen çocuk', effect: 'sparkle' }
+    ]
+  },
+  {
+    id: 'ball-with-baba',
+    title: 'Baba Top Attı',
+    theme: 'play',
+    steps: [
+      { id: 'look', kind: 'attention', text: 'Bak', cardIds: ['top'], effect: 'sparkle', pauseMs: STORY_ATTENTION_MS },
+      { id: 'ball-exists', kind: 'narration', text: 'Top var', cardIds: ['top'], effect: 'pop' },
+      { id: 'ball-floor', kind: 'narration', text: 'Top yerde', cardIds: ['top'], actionSymbol: '↓', effect: 'pop' },
+      { id: 'baba-comes', kind: 'narration', text: 'Baba geldi', cardIds: ['baba'], effect: 'step' },
       {
         id: 'who-throws',
         kind: 'interaction',
         text: 'Topu kim atacak?',
         cardIds: ['top'],
         actionSymbol: '↷',
+        effect: 'pop',
+        successText: 'Evet. Baba top attı.',
+        fallbackText: 'Baba top attı.',
         choices: [
-          { id: 'baba', cardId: 'baba', correct: true, symbol: '↷' },
-          { id: 'top', cardId: 'top', correct: false, symbol: '•' }
+          { id: 'baba', cardId: 'baba', correct: true, symbol: '↷', label: 'Baba' },
+          { id: 'top', cardId: 'top', correct: false, symbol: '•', label: 'Top' }
         ]
       },
-      { id: 'baba-throw', kind: 'narration', text: 'Baba top attı', cardIds: ['baba', 'top'], actionSymbol: '↷' },
-      { id: 'repeat', kind: 'repeat', text: 'Hadi söyle. Top attı', cardIds: ['top'], actionSymbol: '↷', pauseMs: STORY_REPEAT_MS },
-      { id: 'done', kind: 'closure', text: 'Bitti', cardIds: ['top'], actionSymbol: '✓' }
+      { id: 'baba-throw', kind: 'narration', text: 'Baba top attı', cardIds: ['baba', 'top'], actionSymbol: '↷', effect: 'pop' },
+      { id: 'repeat', kind: 'repeat', text: 'Hadi söyle. Top attı', cardIds: ['top'], actionSymbol: '↷', effect: 'chime', pauseMs: STORY_REPEAT_MS },
+      { id: 'done', kind: 'closure', text: 'Bitti', cardIds: ['top'], actionSymbol: '✓', effect: 'sparkle' }
+    ]
+  },
+  {
+    id: 'cold-coat',
+    title: 'Mont Giyelim',
+    theme: 'comfort',
+    steps: [
+      { id: 'look', kind: 'attention', text: 'Bak', sceneImage: '/assets/sentence/cold-child.png', sceneAlt: 'Üşüyen çocuk', effect: 'sparkle', pauseMs: STORY_ATTENTION_MS },
+      { id: 'cold', kind: 'narration', text: 'Çocuk üşüdü', sceneImage: '/assets/sentence/cold-child.png', sceneAlt: 'Üşüyen çocuk', effect: 'warm' },
+      { id: 'say-cold', kind: 'narration', text: 'Üşüdüm', sceneImage: '/assets/sentence/cold-child.png', sceneAlt: 'Üşüyen çocuk', effect: 'chime' },
+      {
+        id: 'what-say',
+        kind: 'interaction',
+        text: 'Ne söyleyelim?',
+        sceneImage: '/assets/sentence/cold-child.png',
+        sceneAlt: 'Üşüyen çocuk',
+        effect: 'warm',
+        successText: 'Evet. Üşüdüm.',
+        fallbackText: 'Üşüdüm.',
+        choices: [
+          { id: 'cold', label: 'Üşüdüm', correct: true, symbol: '✓', image: '/assets/sentence/cold-child.png', alt: 'Üşüyen çocuk' },
+          { id: 'hot', label: 'Sıcak oldu', correct: false, symbol: '•', image: '/assets/sentence/hot-child.png', alt: 'Sıcaklayan çocuk' }
+        ]
+      },
+      { id: 'coat', kind: 'narration', text: 'Mont geldi', sceneImage: '/assets/sentence/cold-child.png', sceneAlt: 'Üşüyen çocuk', effect: 'warm' },
+      { id: 'repeat-cold', kind: 'repeat', text: 'Hadi söyle. Üşüdüm', sceneImage: '/assets/sentence/cold-child.png', sceneAlt: 'Üşüyen çocuk', effect: 'chime', pauseMs: STORY_REPEAT_MS },
+      { id: 'warm-done', kind: 'closure', text: 'Şimdi iyi', sceneImage: '/assets/sentence/cold-child.png', sceneAlt: 'Üşüyen çocuk', effect: 'sparkle' }
+    ]
+  },
+  {
+    id: 'food-time',
+    title: 'Yemek Zamanı',
+    theme: 'need',
+    steps: [
+      { id: 'look', kind: 'attention', text: 'Bak', sceneImage: '/assets/sentence/food-request.png', sceneAlt: 'Yemek isteyen çocuk', effect: 'sparkle', pauseMs: STORY_ATTENTION_MS },
+      { id: 'hungry', kind: 'narration', text: 'Çocuk acıktı', sceneImage: '/assets/sentence/food-request.png', sceneAlt: 'Yemek isteyen çocuk', effect: 'chime' },
+      { id: 'food-request', kind: 'narration', text: 'Yemek istiyorum', sceneImage: '/assets/sentence/food-request.png', sceneAlt: 'Yemek isteyen çocuk', effect: 'chime' },
+      { id: 'food-eat', kind: 'narration', text: 'Yemek geldi', sceneImage: '/assets/sentence/food-eat.png', sceneAlt: 'Yemek yiyen çocuk', effect: 'pop' },
+      { id: 'repeat-food', kind: 'repeat', text: 'Hadi söyle. Yemek istiyorum', sceneImage: '/assets/sentence/food-request.png', sceneAlt: 'Yemek isteyen çocuk', effect: 'chime', pauseMs: STORY_REPEAT_MS },
+      { id: 'done', kind: 'closure', text: 'Afiyet olsun', sceneImage: '/assets/sentence/food-eat.png', sceneAlt: 'Yemek yiyen çocuk', effect: 'sparkle' }
+    ]
+  },
+  {
+    id: 'sleep-soft',
+    title: 'Uyku Bulutu',
+    theme: 'sleep',
+    steps: [
+      { id: 'look', kind: 'attention', text: 'Bak', sceneImage: '/assets/sentence/sleepy-child.png', sceneAlt: 'Uykusu gelen çocuk', effect: 'sparkle', pauseMs: STORY_ATTENTION_MS },
+      { id: 'sleepy', kind: 'narration', text: 'Uykum var', sceneImage: '/assets/sentence/sleepy-child.png', sceneAlt: 'Uykusu gelen çocuk', effect: 'sleep' },
+      { id: 'soft', kind: 'narration', text: 'Yastık yumuşak', sceneImage: '/assets/sentence/sleepy-child.png', sceneAlt: 'Uykusu gelen çocuk', effect: 'sleep' },
+      { id: 'quiet', kind: 'narration', text: 'Pofi sessiz', sceneImage: '/assets/sentence/sleepy-child.png', sceneAlt: 'Uykusu gelen çocuk', effect: 'sleep' },
+      { id: 'repeat-sleep', kind: 'repeat', text: 'Hadi söyle. Uykum var', sceneImage: '/assets/sentence/sleepy-child.png', sceneAlt: 'Uykusu gelen çocuk', effect: 'chime', pauseMs: STORY_REPEAT_MS },
+      { id: 'good-night', kind: 'closure', text: 'İyi uykular', sceneImage: '/assets/sentence/sleepy-child.png', sceneAlt: 'Uykusu gelen çocuk', effect: 'sleep' }
     ]
   }
 ];
@@ -448,7 +642,7 @@ const POFI_VIEW_STATES: Partial<Record<ViewName, PofiState>> = {
   sentence: 'sentenceGuide',
   story: 'storyIdle',
   mirror: 'exercise',
-  sleep: 'sleep',
+  sleep: 'sleepReady',
   peekaboo: 'peekaboo'
 };
 
@@ -586,6 +780,16 @@ const POFI_EXPRESSIONS: Record<PofiMood, PofiExpression> = {
       eyes: 'drowsy-v01.png',
       mouth: 'closed-v01.png',
       hands: 'pofi_hand_closed_v01.png'
+    }
+  },
+  sleepReady: {
+    role: 'sleep',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'half-open-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'smile-soft-v01.png',
+      effect: POFI_WARMTH_EFFECT
     }
   },
   peekaboo: {
@@ -925,6 +1129,7 @@ let touchAudioPreload: Promise<void> | undefined;
 let touchAudioPools: Record<string, HTMLAudioElement[]> = {};
 let currentTouchAudio: HTMLAudioElement | undefined;
 let lastTouchAudioSrc: string | undefined;
+let voiceQueue: Promise<void> = Promise.resolve();
 let lastTouchVariationId: string | undefined;
 let touchSettings: TouchSettingsState = cloneDefaultTouchSettings();
 let selectedTouchCardId = 'baba';
@@ -949,15 +1154,23 @@ let matchCorrectStreak = 0;
 let matchWrongStreak = 0;
 let sentenceRound: SentenceRound | undefined;
 let sentenceTimer: number | undefined;
+let sentenceMode: SentenceMode = 'learn';
 let lastSentencePromptId: string | undefined;
 let lastSentenceSubjectId: string | undefined;
 let sentenceSameSubjectCount = 0;
 let lastSentenceSceneByPrompt: Record<string, string> = {};
 let sentenceProgress: SentenceProgressState = {};
 let lastSentenceSpeechKind: 'targeting' | 'success' | 'repeat' | 'hint' | 'retry' | undefined;
+let sentenceFlowToken = 0;
 let storyTimer: number | undefined;
 let storySession: StorySession | undefined;
+let storyCursor = 0;
 let lastStorySpeechKind: 'attention' | 'narration' | 'interaction' | 'success' | 'repeat' | 'closure' | undefined;
+let sleepAudioContext: AudioContext | undefined;
+let sleepMusicNodes: Array<OscillatorNode | GainNode> = [];
+let sleepMelodyTimer: number | undefined;
+let sleepMusicRunning = false;
+let storyFlowToken = 0;
 
 const DEFAULT_STATE: AnalyticsState = {
   sessions: 0,
@@ -1268,6 +1481,7 @@ function activateView(view: ViewName): void {
   document.querySelector<HTMLElement>('.app-shell')?.setAttribute('data-active-view', view);
   setPofiBaseState(POFI_VIEW_STATES[view] ?? 'neutral');
   syncTouchRitual(view);
+  syncSleepMode(view);
   if (view === 'match') {
     startMatchRound();
   } else {
@@ -2060,6 +2274,7 @@ function clearSentenceTimer(): void {
 
 function startSentenceRound(): void {
   clearSentenceTimer();
+  sentenceMode = 'learn';
   const round = createSentenceRound();
   if (!round) {
     sentenceRound = undefined;
@@ -2068,6 +2283,7 @@ function startSentenceRound(): void {
   }
 
   sentenceRound = round;
+  const token = ++sentenceFlowToken;
   lastSentencePromptId = round.prompt.id;
   if (lastSentenceSubjectId === round.prompt.subjectId) {
     sentenceSameSubjectCount += 1;
@@ -2077,14 +2293,29 @@ function startSentenceRound(): void {
   }
   setPofiBaseState('sentenceContext');
   renderSentenceGame();
-  void playSentencePrompt('context');
-  sentenceTimer = window.setTimeout(() => enterSentenceState('waiting'), SENTENCE_CONTEXT_MS);
+  void scheduleSentenceStateAfterSpeech(token, 'context', SENTENCE_CONTEXT_MS, () => enterSentenceState('waiting'));
+}
+
+function selectSentenceMode(mode: SentenceMode): void {
+  if (sentenceMode === mode) {
+    return;
+  }
+
+  sentenceMode = mode;
+  clearSentenceTimer();
+  sentenceFlowToken += 1;
+  if (mode === 'learn') {
+    startSentenceRound();
+    return;
+  }
+
+  sentenceRound = undefined;
+  setPofiBaseState('sentenceGuide');
+  renderSentenceGame();
 }
 
 function createSentenceRound(): SentenceRound | undefined {
-  const cards = enabledTouchCards();
-  const availableIds = new Set(cards.map((card) => card.id));
-  const prompts = SENTENCE_PROMPTS.filter((prompt) => availableIds.has(prompt.subjectId) && sentencePromptUnlocked(prompt));
+  const prompts = SENTENCE_PROMPTS.filter((prompt) => sentencePromptUnlocked(prompt));
   if (prompts.length === 0) {
     return undefined;
   }
@@ -2094,21 +2325,11 @@ function createSentenceRound(): SentenceRound | undefined {
     sentenceSameSubjectCount >= 2 && withoutLast.some((prompt) => prompt.subjectId !== lastSentenceSubjectId)
       ? withoutLast.filter((prompt) => prompt.subjectId !== lastSentenceSubjectId)
       : withoutLast;
-  const mastered = source.filter((prompt) => touchMastery.masteredWords.includes(prompt.subjectId));
-  const promptPool = mastered.length > 0 ? mastered : source;
-  const prompt = pickWeightedSentencePrompt(promptPool.length > 0 ? promptPool : source);
-  const correct = SENTENCE_VERBS.find((verb) => verb.id === prompt.verbId) ?? SENTENCE_VERBS[0];
-  const validVerbs = prompt.verbs
-    .map((verbId) => SENTENCE_VERBS.find((verb) => verb.id === verbId))
-    .filter((verb): verb is SentenceVerb => Boolean(verb));
-  const choiceCount = sentenceChoiceCount(sentenceProgress[sentenceKey(prompt.subjectId, prompt.verbId)], validVerbs.length);
-  const distractors = validVerbs.filter((verb) => verb.id !== prompt.verbId).sort(() => Math.random() - 0.5).slice(0, Math.max(0, choiceCount - 1));
-  const choices = [correct, ...distractors].sort(() => Math.random() - 0.5);
+  const prompt = pickWeightedSentencePrompt(source);
   const scene = chooseSentenceScene(prompt);
 
   return {
     prompt,
-    choices,
     scene,
     state: 'attention',
     hintLevel: 0,
@@ -2121,15 +2342,14 @@ function sentencePromptUnlocked(prompt: SentencePrompt): boolean {
     return true;
   }
 
-  const sameSubjectProgress = SENTENCE_PROMPTS.filter((entry) => entry.subjectId === prompt.subjectId && entry.stage < prompt.stage)
+  const sameGroupProgress = SENTENCE_PROMPTS.filter((entry) => entry.group === prompt.group && entry.stage < prompt.stage)
     .map((entry) => sentenceProgress[sentenceKey(entry.subjectId, entry.verbId)])
     .filter(Boolean);
-  const successCount = sameSubjectProgress.reduce((sum, entry) => sum + (entry?.success ?? 0), 0);
-  const hasTouchMastery = touchMastery.masteredWords.includes(prompt.subjectId);
+  const successCount = sameGroupProgress.reduce((sum, entry) => sum + (entry?.success ?? 0), 0);
   if (prompt.stage === 2) {
-    return hasTouchMastery && successCount >= 2;
+    return successCount >= 8;
   }
-  return hasTouchMastery && successCount >= 4;
+  return successCount >= 18;
 }
 
 function pickWeightedSentencePrompt(prompts: SentencePrompt[]): SentencePrompt {
@@ -2149,7 +2369,19 @@ function pickWeightedSentencePrompt(prompts: SentencePrompt[]): SentencePrompt {
 }
 
 function chooseSentenceScene(prompt: SentencePrompt): SentenceScene {
-  const scenes = prompt.scenes.length > 0 ? prompt.scenes : [{ id: 'default', context: '', detail: '', cue: 'share' as const }];
+  const scenes =
+    prompt.scenes.length > 0
+      ? prompt.scenes
+      : [
+          {
+            id: 'default',
+            context: prompt.phrase,
+            detail: prompt.shortLabel,
+            cue: 'help' as const,
+            image: '/assets/sentence/help-child.png',
+            alt: prompt.phrase
+          }
+        ];
   const lastSceneId = lastSentenceSceneByPrompt[prompt.id];
   const pool = scenes.length > 1 ? scenes.filter((scene) => scene.id !== lastSceneId) : scenes;
   const scene = pool[randomBetween(0, pool.length - 1)] ?? scenes[0];
@@ -2169,6 +2401,7 @@ function enterSentenceState(state: SentenceState, hintLevel: 0 | 1 | 2 | 3 | 4 =
     hintLevel,
     startedAt: state === 'waiting' ? Date.now() : sentenceRound.startedAt
   };
+  const token = ++sentenceFlowToken;
 
   if (state === 'waiting') {
     setPofiBaseState('sentenceWaiting');
@@ -2178,32 +2411,44 @@ function enterSentenceState(state: SentenceState, hintLevel: 0 | 1 | 2 | 3 | 4 =
   if (state === 'hint') {
     setPofiBaseState('sentenceHint');
     recordSentenceHint(hintLevel);
-    void playSentencePrompt('hint');
     if (hintLevel < 4) {
-      sentenceTimer = window.setTimeout(() => enterSentenceHint((hintLevel + 1) as 1 | 2 | 3 | 4), SENTENCE_HINT_STEP_MS);
+      void scheduleSentenceStateAfterSpeech(token, 'hint', SENTENCE_HINT_STEP_MS, () => enterSentenceHint((hintLevel + 1) as 1 | 2 | 3 | 4));
+    } else {
+      void playSentencePrompt('hint');
     }
   }
 
   if (state === 'success') {
     setPofiBaseState('sentenceSuccess');
-    void playSentencePrompt('success');
-    sentenceTimer = window.setTimeout(() => enterSentenceState('repeat_prompt'), SENTENCE_REPEAT_PAUSE_MS);
+    void scheduleSentenceStateAfterSpeech(token, 'success', SENTENCE_REPEAT_PAUSE_MS, () => enterSentenceState('repeat_prompt'));
   }
 
   if (state === 'repeat_prompt') {
     setPofiBaseState('sentenceRepeat');
     recordSentenceRepeatPrompt();
-    void playSentencePrompt('repeat');
-    sentenceTimer = window.setTimeout(() => startSentenceRound(), SENTENCE_REPEAT_PROMPT_MS);
+    void scheduleSentenceStateAfterSpeech(token, 'repeat', SENTENCE_REPEAT_PROMPT_MS, () => startSentenceRound());
   }
 
   if (state === 'retry') {
     setPofiBaseState('sentenceRetry');
-    void playSentencePrompt('retry');
-    sentenceTimer = window.setTimeout(() => enterSentenceState('waiting'), SENTENCE_RETRY_MS);
+    void scheduleSentenceStateAfterSpeech(token, 'retry', SENTENCE_RETRY_MS, () => enterSentenceState('waiting'));
   }
 
   renderSentenceGame();
+}
+
+async function scheduleSentenceStateAfterSpeech(
+  token: number,
+  speechKind: 'context' | 'hint' | 'success' | 'repeat' | 'retry',
+  holdMs: number,
+  next: () => void
+): Promise<void> {
+  await playSentencePrompt(speechKind);
+  await wait(holdMs);
+  if (token !== sentenceFlowToken || !isSentenceViewActive()) {
+    return;
+  }
+  next();
 }
 
 function enterSentenceHint(level: 1 | 2 | 3 | 4): void {
@@ -2220,6 +2465,13 @@ function renderSentenceGame(): void {
     return;
   }
 
+  renderSentenceModeControls();
+  surface.dataset.sentenceMode = sentenceMode;
+  if (sentenceMode === 'board') {
+    renderSentenceBoard(surface, context, card, grid, status);
+    return;
+  }
+
   if (!sentenceRound) {
     context.textContent = '';
     card.innerHTML = '';
@@ -2228,88 +2480,100 @@ function renderSentenceGame(): void {
     return;
   }
 
-  const subject = touchSettings.cards.find((entry) => entry.id === sentenceRound?.prompt.subjectId);
-  if (!subject) {
-    return;
-  }
-
-  const correctVerb = SENTENCE_VERBS.find((verb) => verb.id === sentenceRound?.prompt.verbId) ?? SENTENCE_VERBS[0];
-  const completeSentence = sentencePhrase(sentenceRound.prompt, subject, correctVerb);
+  const completeSentence = sentencePhrase(sentenceRound.prompt);
   surface.dataset.sentenceState = sentenceRound.state;
   surface.dataset.sentenceHintLevel = String(sentenceRound.hintLevel);
-  surface.dataset.sentenceTargetId = subject.id;
-  surface.dataset.sentenceVerbId = correctVerb.id;
-  surface.dataset.sentenceKey = sentenceKey(subject.id, correctVerb.id);
+  surface.dataset.sentenceTargetId = sentenceRound.prompt.subjectId;
+  surface.dataset.sentenceVerbId = sentenceRound.prompt.verbId;
+  surface.dataset.sentenceKey = sentenceKey(sentenceRound.prompt.subjectId, sentenceRound.prompt.verbId);
   surface.dataset.sentenceGoal = sentenceRound.prompt.communicationGoal;
+  surface.dataset.sentenceGroup = sentenceRound.prompt.group;
   context.textContent = '';
+  card.removeAttribute('aria-hidden');
+  card.setAttribute('role', 'button');
+  card.setAttribute('tabindex', '0');
   card.setAttribute('aria-label', completeSentence);
-  card.dataset.actionVisible = String(sentenceActionVisible(sentenceRound));
   card.dataset.sceneCue = sentenceRound.scene.cue;
-  card.innerHTML = `<span class="sentence-card-composer">
-    <span class="sentence-scene-cue sentence-scene-${sentenceRound.scene.cue}" aria-hidden="true">${sentenceSceneCueMarkup(sentenceRound.scene.cue)}</span>
-    <span class="sentence-card-object sentence-card-visual">${touchCardVisualMarkup(subject)}</span>
-    <span class="sentence-card-link" aria-hidden="true"></span>
-    <span class="sentence-card-action" aria-hidden="true">${sentenceActionVisible(sentenceRound) ? sentenceVerbVisualMarkup(correctVerb) : '<span class="sentence-action-placeholder"></span>'}</span>
+  card.innerHTML = `<span class="sentence-need-card">
+    <span class="sentence-need-halo" aria-hidden="true"></span>
+    <img class="sentence-need-image" src="${sentenceRound.scene.image}" alt="${sentenceRound.scene.alt}" decoding="async" draggable="false">
+    <span class="sentence-repeat-ring" aria-hidden="true"></span>
   </span>`;
-  grid.innerHTML = sentenceRound.choices
-    .map((choice) => {
-      const isCorrect = choice.id === correctVerb.id;
-      const hintClass = sentenceRound?.state === 'hint' && sentenceRound.hintLevel >= 3 && isCorrect ? ' sentence-answer' : '';
-      return `<button class="object-tile sentence-choice${hintClass}" type="button" data-sentence-choice="${choice.id}" aria-label="${choice.label} cümle seçeneği">
-        ${sentenceVerbVisualMarkup(choice)}
-        <span class="sentence-choice-label" aria-hidden="true">${choice.label}</span>
+  grid.innerHTML = '';
+  status.textContent = sentenceStatusText();
+}
+
+function renderSentenceModeControls(): void {
+  document.querySelectorAll<HTMLButtonElement>('.sentence-mode-button[data-sentence-mode]').forEach((button) => {
+    const active = button.dataset.sentenceMode === sentenceMode;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+}
+
+function renderSentenceBoard(
+  surface: HTMLElement,
+  context: HTMLElement,
+  card: HTMLElement,
+  grid: HTMLElement,
+  status: HTMLElement
+): void {
+  const activePrompt = sentenceRound?.prompt;
+  surface.dataset.sentenceState = sentenceRound?.state ?? 'board';
+  surface.dataset.sentenceHintLevel = String(sentenceRound?.hintLevel ?? 0);
+  surface.dataset.sentenceTargetId = activePrompt?.subjectId ?? '';
+  surface.dataset.sentenceVerbId = activePrompt?.verbId ?? '';
+  surface.dataset.sentenceKey = activePrompt ? sentenceKey(activePrompt.subjectId, activePrompt.verbId) : '';
+  surface.dataset.sentenceGoal = activePrompt?.communicationGoal ?? 'ihtiyaç seçme';
+  surface.dataset.sentenceGroup = activePrompt?.group ?? 'core-needs';
+  context.textContent = '';
+  card.innerHTML = '';
+  card.setAttribute('aria-hidden', 'true');
+  card.setAttribute('tabindex', '-1');
+  grid.innerHTML = sentenceBoardPrompts()
+    .map((prompt) => {
+      const scene = prompt.scenes[0];
+      const selected = activePrompt?.id === prompt.id ? ' selected' : '';
+      return `<button class="sentence-board-card${selected}" type="button" data-sentence-board-card="${prompt.id}" aria-label="${prompt.phrase}">
+        <img class="sentence-board-image" src="${scene.image}" alt="${scene.alt}" decoding="async" draggable="false">
       </button>`;
     })
     .join('');
-  status.textContent = sentenceStatusText(subject, correctVerb);
+  status.textContent = activePrompt ? sentencePhrase(activePrompt) : 'İhtiyacını seç.';
 }
 
-function sentenceActionVisible(round: SentenceRound): boolean {
-  return round.state === 'success' || round.state === 'repeat_prompt' || (round.state === 'hint' && round.hintLevel >= 2);
+function sentenceBoardPrompts(): SentencePrompt[] {
+  return SENTENCE_PROMPTS.filter((prompt) => prompt.stage === 1);
 }
 
-function sentenceSceneCueMarkup(cue: SentenceCue): string {
-  const cues: Record<SentenceCue, string> = {
-    drink: '<span class="cue-cup"></span><span class="cue-drop"></span>',
-    eat: '<span class="cue-plate"></span><span class="cue-bite"></span>',
-    play: '<span class="cue-ball-small"></span><span class="cue-path"></span>',
-    call: '<span class="cue-person"></span><span class="cue-wave one"></span><span class="cue-wave two"></span>',
-    share: '<span class="cue-dot left"></span><span class="cue-bridge"></span><span class="cue-dot right"></span>',
-    take: '<span class="cue-dot right"></span><span class="cue-bridge reverse"></span><span class="cue-dot left"></span>',
-    pour: '<span class="cue-cup tilted"></span><span class="cue-stream"></span>',
-    flow: '<span class="cue-flow-line one"></span><span class="cue-flow-line two"></span><span class="cue-drop flow-drop"></span>'
-  };
-  return cues[cue];
+function sentencePhrase(prompt: SentencePrompt): string {
+  return prompt.phrase;
 }
 
-function sentencePhrase(prompt: SentencePrompt, subject: TouchCard, verb: SentenceVerb): string {
-  return prompt.phrase || `${subject.word} ${verb.label}`;
-}
-
-function sentenceStatusText(subject: TouchCard, verb: SentenceVerb): string {
+function sentenceStatusText(): string {
   if (!sentenceRound) {
     return '';
   }
 
   if (sentenceRound.state === 'context' || sentenceRound.state === 'waiting') {
-    return sentenceRound.scene.context || sentencePhrase(sentenceRound.prompt, subject, verb);
+    return sentenceRound.scene.context || sentencePhrase(sentenceRound.prompt);
   }
 
   if (sentenceRound.state === 'hint') {
     if (sentenceRound.hintLevel <= 1) {
-      return sentencePhrase(sentenceRound.prompt, subject, verb);
+      return sentencePhrase(sentenceRound.prompt);
     }
     if (sentenceRound.hintLevel === 2) {
-      return 'Cümleye bir daha bakalım.';
+      return 'İhtiyaç kartına bir daha bakalım.';
     }
     if (sentenceRound.hintLevel === 3) {
-      return `${verb.label} seçeneği parlıyor.`;
+      return 'İhtiyaç kartı parlıyor.';
     }
-    return `Pofi ${verb.label} seçeneğini gösteriyor.`;
+    return `Pofi ${sentenceRound.prompt.shortLabel} kartını gösteriyor.`;
   }
 
   if (sentenceRound.state === 'success') {
-    return `Evet. ${sentencePhrase(sentenceRound.prompt, subject, verb)}.`;
+    return `Evet. ${sentencePhrase(sentenceRound.prompt)}.`;
   }
 
   if (sentenceRound.state === 'repeat_prompt') {
@@ -2319,45 +2583,73 @@ function sentenceStatusText(subject: TouchCard, verb: SentenceVerb): string {
   return 'Bir daha bakalım.';
 }
 
-function sentenceVerbVisualMarkup(verb: SentenceVerb): string {
-  const parts: Record<string, string> = {
-    ver: '<span class="verb-hand giving"></span><span class="verb-object moving-out"></span><span class="verb-recipient"></span><span class="verb-motion motion-right"></span>',
-    gel: '<span class="verb-person"></span><span class="verb-motion motion-left"></span>',
-    ye: '<span class="verb-apple"></span><span class="verb-mouth"></span>',
-    at: '<span class="verb-ball"></span><span class="verb-arc"></span>',
-    al: '<span class="verb-object object-from"></span><span class="verb-motion motion-left"></span><span class="verb-hand taking"></span>',
-    ic: '<span class="verb-cup"></span><span class="verb-drop"></span>',
-    dok: '<span class="verb-cup tilted"></span><span class="verb-stream"></span>',
-    ak: '<span class="verb-flow-line one"></span><span class="verb-flow-line two"></span><span class="verb-drop flow-drop"></span>',
-    bak: '<span class="verb-eye"></span><span class="verb-spark"></span>',
-    tut: '<span class="verb-hand hold"></span><span class="verb-ball held"></span>',
-    iste: '<span class="verb-heart"></span><span class="verb-hand small-hand"></span>'
-  };
-
-  return `<span class="sentence-verb-visual sentence-verb-${verb.id}" aria-hidden="true">${parts[verb.id] ?? '<span class="verb-object"></span>'}</span>`;
-}
-
-function handleSentenceChoice(verbId: string, element?: HTMLElement): void {
-  if (!sentenceRound || ['success', 'repeat_prompt', 'retry'].includes(sentenceRound.state)) {
+function handleSentenceExpressionPress(element?: HTMLElement): void {
+  if (sentenceMode !== 'learn' || !sentenceRound || ['success', 'repeat_prompt', 'retry'].includes(sentenceRound.state)) {
     return;
   }
 
   unlockTouchAudio();
-  const correct = verbId === sentenceRound.prompt.verbId;
   if (element) {
     showClickHandCue(element);
-    element.classList.toggle('sentence-correct', correct);
-    element.classList.toggle('sentence-wrong', !correct);
+    element.classList.add('sentence-correct');
   }
 
-  recordSentenceAttempt(correct);
-  trackAction(correct ? 'sentence-correct' : 'sentence-wrong', element);
-  enterSentenceState(correct ? 'success' : 'retry');
+  recordSentenceAttempt(true);
+  trackAction('sentence-expression', element);
+  enterSentenceState('success');
+}
+
+function handleSentenceBoardCard(promptId: string, element?: HTMLElement): void {
+  const prompt = SENTENCE_PROMPTS.find((entry) => entry.id === promptId);
+  if (!prompt || sentenceMode !== 'board') {
+    return;
+  }
+
+  unlockTouchAudio();
+  clearSentenceTimer();
+  const scene = chooseSentenceScene(prompt);
+  sentenceRound = {
+    prompt,
+    scene,
+    state: 'success',
+    hintLevel: 0,
+    startedAt: Date.now()
+  };
+  const token = ++sentenceFlowToken;
+  lastSentencePromptId = prompt.id;
+  lastSentenceSubjectId = prompt.subjectId;
+  sentenceSameSubjectCount = 1;
+  setPofiBaseState('sentenceSuccess');
+  if (element) {
+    showClickHandCue(element);
+    element.classList.add('selected');
+  }
+  recordSentenceAttempt(true);
+  trackAction('sentence-board-select', element);
+  renderSentenceGame();
+  void scheduleSentenceStateAfterSpeech(token, 'success', SENTENCE_REPEAT_PAUSE_MS, () => {
+    if (sentenceMode !== 'board' || !sentenceRound) {
+      return;
+    }
+    sentenceRound = { ...sentenceRound, state: 'repeat_prompt' };
+    sentenceFlowToken += 1;
+    setPofiBaseState('sentenceRepeat');
+    recordSentenceRepeatPrompt();
+    renderSentenceGame();
+    void playSentencePrompt('repeat');
+  });
 }
 
 function handleSentencePofiPress(element: HTMLElement): void {
   unlockTouchAudio();
   showClickHandCue(element);
+
+  if (sentenceMode === 'board') {
+    if (sentenceRound) {
+      void playSentencePrompt(sentenceRound.state === 'repeat_prompt' ? 'repeat' : 'success');
+    }
+    return;
+  }
 
   if (!sentenceRound) {
     startSentenceRound();
@@ -2425,41 +2717,21 @@ async function playSentencePrompt(kind: 'context' | 'hint' | 'success' | 'repeat
     return;
   }
 
-  const subject = touchSettings.cards.find((entry) => entry.id === sentenceRound?.prompt.subjectId);
-  const verb = SENTENCE_VERBS.find((entry) => entry.id === sentenceRound?.prompt.verbId);
-  if (!subject || !verb) {
-    return;
-  }
-
   const text =
     kind === 'success'
-      ? sentencePhrase(sentenceRound.prompt, subject, verb)
+      ? sentencePhrase(sentenceRound.prompt)
       : kind === 'repeat'
         ? 'Hadi söyle'
       : kind === 'retry'
         ? 'Bir daha bakalım'
       : kind === 'hint'
-        ? sentenceRound.hintLevel <= 1
-          ? sentencePhrase(sentenceRound.prompt, subject, verb)
-          : `${verb.label}`
-        : sentenceRound.scene.context || sentencePhrase(sentenceRound.prompt, subject, verb);
-  speakSentenceText(text, kind === 'context' ? 'targeting' : kind === 'repeat' ? 'repeat' : kind);
+        ? sentencePhrase(sentenceRound.prompt)
+        : sentenceRound.scene.context || sentencePhrase(sentenceRound.prompt);
+  await speakSentenceText(text, kind === 'context' ? 'targeting' : kind === 'repeat' ? 'repeat' : kind);
 }
 
-function speakSentenceText(text: string, kind: 'targeting' | 'success' | 'repeat' | 'hint' | 'retry'): void {
-  if ('speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'tr-TR';
-    const profile = sentenceSpeechProfile(kind);
-    utterance.rate = profile.rate;
-    utterance.pitch = profile.pitch;
-    utterance.volume = 0.82;
-    window.speechSynthesis.speak(utterance);
-    return;
-  }
-
-  playSoftTouchTone();
+function speakSentenceText(text: string, kind: 'targeting' | 'success' | 'repeat' | 'hint' | 'retry'): Promise<void> {
+  return enqueueSpeechText(text, { ...sentenceSpeechProfile(kind), volume: 0.82 });
 }
 
 function sentenceSpeechProfile(kind: 'targeting' | 'success' | 'repeat' | 'hint' | 'retry'): { rate: number; pitch: number } {
@@ -2503,8 +2775,10 @@ function clearStoryTimer(): void {
 
 function startStorySession(): void {
   clearStoryTimer();
+  const story = STORY_LIBRARY[storyCursor % STORY_LIBRARY.length];
+  storyCursor += 1;
   storySession = {
-    story: STORY_LIBRARY[0],
+    story,
     stepIndex: 0,
     state: 'idle',
     startedAt: Date.now()
@@ -2535,25 +2809,10 @@ function enterStoryStep(stepIndex: number): void {
     state: nextState,
     startedAt: Date.now()
   };
+  const token = ++storyFlowToken;
   setPofiBaseState(storyPofiState(nextState));
   renderStory();
-  void playStoryStep(step);
-
-  if (step.kind === 'interaction') {
-    storyTimer = window.setTimeout(() => {
-      if (!storySession || currentStoryStep()?.id !== step.id) {
-        return;
-      }
-      storySession = { ...storySession, state: 'waiting' };
-      setPofiBaseState('storyWaiting');
-      renderStory();
-      storyTimer = window.setTimeout(() => resolveStoryInteraction(undefined), STORY_WAITING_MS);
-    }, 900);
-    return;
-  }
-
-  const pause = step.pauseMs ?? (step.kind === 'attention' ? STORY_ATTENTION_MS : step.kind === 'repeat' ? STORY_REPEAT_MS : STORY_NARRATION_MS);
-  storyTimer = window.setTimeout(() => enterStoryStep(stepIndex + 1), pause);
+  void scheduleStoryStepAfterAudio(token, stepIndex, step);
 }
 
 function storyStateForStep(step: StoryStep): StoryState {
@@ -2586,6 +2845,45 @@ function storyPofiState(state: StoryState): PofiState {
   return states[state];
 }
 
+async function scheduleStoryStepAfterAudio(token: number, stepIndex: number, step: StoryStep): Promise<void> {
+  await playStoryStep(step);
+  if (!storyStepStillActive(token, step.id)) {
+    return;
+  }
+
+  if (step.kind === 'interaction') {
+    if (!storySession) {
+      return;
+    }
+    storySession = { ...storySession, state: 'waiting' };
+    setPofiBaseState('storyWaiting');
+    renderStory();
+    storyTimer = window.setTimeout(() => {
+      if (!storyStepStillActive(token, step.id)) {
+        return;
+      }
+      resolveStoryInteraction(undefined);
+    }, STORY_WAITING_MS);
+    return;
+  }
+
+  const pause = storyPostSpeechPause(step);
+  await wait(pause);
+  if (!storyStepStillActive(token, step.id)) {
+    return;
+  }
+  enterStoryStep(stepIndex + 1);
+}
+
+function storyStepStillActive(token: number, stepId: string): boolean {
+  return token === storyFlowToken && isStoryViewActive() && Boolean(storySession) && currentStoryStep()?.id === stepId;
+}
+
+function storyPostSpeechPause(step: StoryStep): number {
+  const pause = step.pauseMs ?? (step.kind === 'attention' ? STORY_ATTENTION_MS : step.kind === 'repeat' ? STORY_REPEAT_MS : STORY_NARRATION_MS);
+  return Math.max(360, pause - estimatedSpeechDurationMs(step.text, 0.82));
+}
+
 function renderStory(): void {
   const surface = document.querySelector<HTMLElement>('[data-story-surface]');
   const scene = document.querySelector<HTMLElement>('[data-story-scene]');
@@ -2599,6 +2897,8 @@ function renderStory(): void {
   const step = currentStoryStep();
   surface.dataset.storyState = storySession?.state ?? 'idle';
   surface.dataset.storyStep = step?.id ?? '';
+  surface.dataset.storyId = storySession?.story.id ?? '';
+  surface.dataset.storyTheme = storySession?.story.theme ?? '';
 
   if (!step) {
     scene.innerHTML = '';
@@ -2614,13 +2914,19 @@ function renderStory(): void {
     step.kind === 'interaction'
       ? (step.choices ?? [])
           .map((choice) => {
-            const card = touchSettings.cards.find((entry) => entry.id === choice.cardId);
-            if (!card) {
+            const card = choice.cardId ? touchSettings.cards.find((entry) => entry.id === choice.cardId) : undefined;
+            const label = choice.label ?? card?.word ?? choice.id;
+            const visual = choice.image
+              ? `<img class="story-choice-image" src="${choice.image}" alt="${choice.alt ?? label}" decoding="async" draggable="false">`
+              : card
+                ? touchCardVisualMarkup(card)
+                : '';
+            if (!visual) {
               return '';
             }
             const stateClass = storySession?.state === 'success' && choice.correct ? ' story-correct' : '';
-            return `<button class="story-choice${stateClass}" type="button" data-story-choice="${choice.id}" aria-label="${card.word}">
-              <span class="story-choice-visual">${touchCardVisualMarkup(card)}</span>
+            return `<button class="story-choice${stateClass}" type="button" data-story-choice="${choice.id}" aria-label="${label}">
+              <span class="story-choice-visual">${visual}</span>
               <span class="story-choice-symbol" aria-hidden="true">${choice.symbol}</span>
             </button>`;
           })
@@ -2651,14 +2957,17 @@ function storyProgressClass(step: StoryStep, visualIndex: number): string {
 }
 
 function storySceneMarkup(step: StoryStep): string {
-  const cards = step.cardIds
+  const cards = (step.cardIds ?? [])
     .map((id) => touchSettings.cards.find((card) => card.id === id))
     .filter((card): card is TouchCard => Boolean(card));
   const visuals = cards
     .map((card) => `<span class="story-object" data-story-object="${card.id}">${touchCardVisualMarkup(card)}</span>`)
     .join('');
+  const sceneImage = step.sceneImage
+    ? `<span class="story-scene-image-wrap"><img class="story-scene-image" src="${step.sceneImage}" alt="${step.sceneAlt ?? step.text}" decoding="async" draggable="false"></span>`
+    : '';
   const action = step.actionSymbol ? `<span class="story-action-symbol" aria-hidden="true">${step.actionSymbol}</span>` : '';
-  return `<div class="story-object-row">${visuals}${action}</div>`;
+  return `<div class="story-object-row">${sceneImage}${visuals}${action}</div>`;
 }
 
 function handleStoryPofiPress(): void {
@@ -2702,11 +3011,24 @@ function resolveStoryInteraction(choiceId: string | undefined): void {
   const choice = step.choices?.find((entry) => entry.id === choiceId);
   const correctChoice = step.choices?.find((entry) => entry.correct);
   const selected = choice ?? correctChoice;
+  const selectedIsCorrect = selected?.correct ?? false;
+  const feedbackText = selectedIsCorrect || !choiceId ? (step.successText ?? 'Evet') : (step.fallbackText ?? step.successText ?? 'Bir daha bakalım');
   storySession = { ...storySession, state: 'success' };
+  const token = ++storyFlowToken;
+  const stepIndex = storySession.stepIndex;
   setPofiBaseState('storySuccess');
   renderStory();
-  speakStoryText(selected?.correct ? 'Evet' : 'Baba top attı', 'success');
-  storyTimer = window.setTimeout(() => enterStoryStep(storySession ? storySession.stepIndex + 1 : 0), STORY_SUCCESS_MS);
+  void scheduleStoryFeedbackAfterAudio(token, step.id, stepIndex, feedbackText, selectedIsCorrect || !choiceId ? 'sparkle' : 'chime');
+}
+
+async function scheduleStoryFeedbackAfterAudio(token: number, stepId: string, stepIndex: number, feedbackText: string, effect: StoryEffect): Promise<void> {
+  await speakStoryText(feedbackText, 'success');
+  await playStoryEffect(effect);
+  await wait(STORY_SUCCESS_MS);
+  if (!storyStepStillActive(token, stepId)) {
+    return;
+  }
+  enterStoryStep(stepIndex + 1);
 }
 
 async function playStoryStep(step: StoryStep): Promise<void> {
@@ -2723,23 +3045,12 @@ async function playStoryStep(step: StoryStep): Promise<void> {
           : step.kind === 'closure'
             ? 'closure'
             : 'narration';
-  speakStoryText(step.text, kind);
+  await speakStoryText(step.text, kind);
+  await playStoryEffect(step.effect);
 }
 
-function speakStoryText(text: string, kind: 'attention' | 'narration' | 'interaction' | 'success' | 'repeat' | 'closure'): void {
-  if ('speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'tr-TR';
-    const profile = storySpeechProfile(kind);
-    utterance.rate = profile.rate;
-    utterance.pitch = profile.pitch;
-    utterance.volume = 0.82;
-    window.speechSynthesis.speak(utterance);
-    return;
-  }
-
-  playSoftTouchTone();
+function speakStoryText(text: string, kind: 'attention' | 'narration' | 'interaction' | 'success' | 'repeat' | 'closure'): Promise<void> {
+  return enqueueSpeechText(text, { ...storySpeechProfile(kind), volume: 0.82 });
 }
 
 function storySpeechProfile(kind: 'attention' | 'narration' | 'interaction' | 'success' | 'repeat' | 'closure'): { rate: number; pitch: number } {
@@ -2772,6 +3083,179 @@ function storySpeechProfile(kind: 'attention' | 'narration' | 'interaction' | 's
   const kindPool = kind === lastStorySpeechKind ? [...profiles[kind]].reverse() : profiles[kind];
   lastStorySpeechKind = kind;
   return kindPool[0];
+}
+
+function playStoryEffect(effect?: StoryEffect): Promise<void> {
+  if (!effect || !touchAudioUnlocked) {
+    return Promise.resolve();
+  }
+
+  const AudioContextConstructor = window.AudioContext;
+  if (!AudioContextConstructor) {
+    return Promise.resolve();
+  }
+
+  const profiles: Record<StoryEffect, { type: OscillatorType; notes: number[]; duration: number; gain: number }> = {
+    sparkle: { type: 'triangle', notes: [740, 980, 1180], duration: 0.34, gain: 0.026 },
+    water: { type: 'sine', notes: [520, 690, 590], duration: 0.42, gain: 0.018 },
+    chime: { type: 'sine', notes: [660, 880], duration: 0.32, gain: 0.022 },
+    step: { type: 'triangle', notes: [260, 310], duration: 0.28, gain: 0.018 },
+    warm: { type: 'sine', notes: [430, 520, 610], duration: 0.44, gain: 0.018 },
+    sleep: { type: 'sine', notes: [420, 360], duration: 0.5, gain: 0.014 },
+    pop: { type: 'square', notes: [380, 620], duration: 0.22, gain: 0.014 }
+  };
+  const profile = profiles[effect];
+  return enqueueVoiceTask(async () => {
+    const context = new AudioContextConstructor();
+    const gain = context.createGain();
+    const now = context.currentTime;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(profile.gain, now + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + profile.duration + 0.08);
+    gain.connect(context.destination);
+    profile.notes.forEach((note, index) => {
+      const oscillator = context.createOscillator();
+      const start = now + index * (profile.duration / profile.notes.length);
+      const end = start + profile.duration / profile.notes.length + 0.04;
+      oscillator.type = profile.type;
+      oscillator.frequency.setValueAtTime(note, start);
+      oscillator.connect(gain);
+      oscillator.start(start);
+      oscillator.stop(end);
+    });
+    await wait((profile.duration + 0.2) * 1000);
+    await context.close();
+  });
+}
+
+function syncSleepMode(view: ViewName): void {
+  if (view === 'sleep') {
+    renderSleepMode();
+    return;
+  }
+  void stopSleepMusic();
+}
+
+function renderSleepMode(): void {
+  const surface = document.querySelector<HTMLElement>('[data-sleep-surface]');
+  const toggle = document.querySelector<HTMLButtonElement>('[data-sleep-toggle]');
+  const label = document.querySelector<HTMLElement>('[data-sleep-label]');
+  if (!surface || !toggle || !label) {
+    return;
+  }
+
+  surface.dataset.sleepRunning = String(sleepMusicRunning);
+  toggle.setAttribute('aria-pressed', String(sleepMusicRunning));
+  toggle.setAttribute('aria-label', sleepMusicRunning ? 'Uyku müziğini durdur' : 'Uyku müziğini başlat');
+  label.textContent = sleepMusicRunning ? 'Durdur' : 'Başlat';
+}
+
+async function toggleSleepMusic(button?: HTMLElement): Promise<void> {
+  if (sleepMusicRunning) {
+    await stopSleepMusic();
+    trackAction('sleep-stop', button);
+    return;
+  }
+
+  startSleepMusic();
+  trackAction('sleep-start', button);
+}
+
+function startSleepMusic(): void {
+  if (sleepMusicRunning) {
+    return;
+  }
+
+  const AudioContextConstructor = window.AudioContext;
+  if (!AudioContextConstructor) {
+    playSoftTouchTone();
+    return;
+  }
+
+  sleepAudioContext = new AudioContextConstructor();
+  sleepMusicRunning = true;
+  sleepMusicNodes = [];
+  const context = sleepAudioContext;
+  const master = context.createGain();
+  const padGain = context.createGain();
+  const lowPad = context.createOscillator();
+  const highPad = context.createOscillator();
+  const now = context.currentTime;
+
+  master.gain.setValueAtTime(0.0001, now);
+  master.gain.exponentialRampToValueAtTime(0.055, now + 1.4);
+  padGain.gain.setValueAtTime(0.18, now);
+  lowPad.type = 'sine';
+  highPad.type = 'sine';
+  lowPad.frequency.setValueAtTime(196, now);
+  highPad.frequency.setValueAtTime(294, now);
+  lowPad.connect(padGain);
+  highPad.connect(padGain);
+  padGain.connect(master);
+  master.connect(context.destination);
+  lowPad.start(now);
+  highPad.start(now + 0.08);
+  sleepMusicNodes = [master, padGain, lowPad, highPad];
+  scheduleSleepMelody();
+  renderSleepMode();
+}
+
+function scheduleSleepMelody(): void {
+  if (!sleepAudioContext || !sleepMusicRunning) {
+    return;
+  }
+
+  const context = sleepAudioContext;
+  const master = sleepMusicNodes[0];
+  if (!(master instanceof GainNode)) {
+    return;
+  }
+
+  const notes = [392, 330, 294, 262, 294, 330];
+  notes.forEach((frequency, index) => {
+    const start = context.currentTime + index * 0.72;
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(frequency, start);
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(0.018, start + 0.18);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.68);
+    oscillator.connect(gain);
+    gain.connect(master);
+    oscillator.start(start);
+    oscillator.stop(start + 0.74);
+  });
+
+  sleepMelodyTimer = window.setTimeout(scheduleSleepMelody, 5200);
+}
+
+async function stopSleepMusic(): Promise<void> {
+  if (sleepMelodyTimer) {
+    window.clearTimeout(sleepMelodyTimer);
+    sleepMelodyTimer = undefined;
+  }
+
+  if (!sleepMusicRunning && !sleepAudioContext) {
+    renderSleepMode();
+    return;
+  }
+
+  sleepMusicRunning = false;
+  const context = sleepAudioContext;
+  const master = sleepMusicNodes[0];
+  if (context && master instanceof GainNode) {
+    const now = context.currentTime;
+    master.gain.cancelScheduledValues(now);
+    master.gain.setValueAtTime(Math.max(master.gain.value, 0.0001), now);
+    master.gain.exponentialRampToValueAtTime(0.0001, now + 0.8);
+    await wait(840);
+  }
+
+  await context?.close().catch(() => undefined);
+  sleepAudioContext = undefined;
+  sleepMusicNodes = [];
+  renderSleepMode();
 }
 
 function recordMatchAttempt(targetId: string, correct: boolean, mode: MatchMode, latencyMs: number): void {
@@ -3041,6 +3525,99 @@ function selectTouchAudio(pool: HTMLAudioElement[]): HTMLAudioElement | undefine
   return audio;
 }
 
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
+function enqueueVoiceTask(task: () => Promise<void> | void): Promise<void> {
+  const next = voiceQueue
+    .catch(() => undefined)
+    .then(() => wait(VOICE_QUEUE_GAP_MS))
+    .then(() => task());
+  voiceQueue = next.catch(() => undefined);
+  return next;
+}
+
+function estimatedSpeechDurationMs(text: string, rate: number): number {
+  const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+  const punctuationPause = (text.match(/[.,!?]/g) ?? []).length * 180;
+  const base = (wordCount * 430) / Math.max(0.6, rate) + punctuationPause;
+  return Math.min(SPEECH_MAX_DURATION_MS, Math.max(SPEECH_MIN_DURATION_MS, base));
+}
+
+function enqueueSpeechText(text: string, profile: { rate: number; pitch: number; volume: number }): Promise<void> {
+  if (!text.trim()) {
+    return Promise.resolve();
+  }
+
+  if (!('speechSynthesis' in window)) {
+    return enqueueVoiceTask(() => {
+      playSoftTouchTone();
+      return wait(420);
+    });
+  }
+
+  return enqueueVoiceTask(
+    () =>
+      new Promise<void>((resolve) => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        let settled = false;
+        const finish = (): void => {
+          if (settled) {
+            return;
+          }
+          settled = true;
+          window.clearTimeout(timeout);
+          resolve();
+        };
+        const timeout = window.setTimeout(finish, estimatedSpeechDurationMs(text, profile.rate) + 900);
+        utterance.lang = 'tr-TR';
+        utterance.rate = profile.rate;
+        utterance.pitch = profile.pitch;
+        utterance.volume = profile.volume;
+        utterance.addEventListener('end', finish, { once: true });
+        utterance.addEventListener('error', finish, { once: true });
+        window.speechSynthesis.speak(utterance);
+      })
+  );
+}
+
+function enqueueAudioPlayback(audio: HTMLAudioElement, volume: number): Promise<void> {
+  return enqueueVoiceTask(
+    () =>
+      new Promise<void>((resolve) => {
+        let settled = false;
+        const durationMs = Number.isFinite(audio.duration) && audio.duration > 0 ? Math.min(audio.duration * 1000 + 220, 5000) : AUDIO_FALLBACK_DURATION_MS;
+        const finish = (): void => {
+          if (settled) {
+            return;
+          }
+          settled = true;
+          window.clearTimeout(timeout);
+          audio.removeEventListener('ended', finish);
+          audio.removeEventListener('error', finish);
+          if (currentTouchAudio === audio) {
+            currentTouchAudio = undefined;
+          }
+          resolve();
+        };
+        const timeout = window.setTimeout(finish, durationMs);
+        currentTouchAudio = audio;
+        audio.pause();
+        audio.currentTime = 0;
+        audio.volume = volume;
+        audio.addEventListener('ended', finish, { once: true });
+        audio.addEventListener('error', finish, { once: true });
+        void audio.play().catch(() => {
+          playSoftTouchTone();
+          finish();
+        });
+      })
+  );
+}
+
 async function playTouchCardSound(card: TouchCard, intent: TouchSoundIntent, volume: number): Promise<void> {
   if (!touchAudioUnlocked) {
     return;
@@ -3050,20 +3627,15 @@ async function playTouchCardSound(card: TouchCard, intent: TouchSoundIntent, vol
   const pool = touchAudioPools[card.id] ?? [];
   const audio = selectTouchAudio(pool);
 
-  stopCurrentTouchAudio();
-
   if (!audio) {
-    playSoftTouchTone();
+    enqueueVoiceTask(() => {
+      playSoftTouchTone();
+      return wait(420);
+    });
     return;
   }
 
-  currentTouchAudio = audio;
-  audio.pause();
-  audio.currentTime = 0;
-  audio.volume = volume;
-  await audio.play().catch(() => {
-    playSoftTouchTone();
-  });
+  await enqueueAudioPlayback(audio, volume);
 }
 
 function playSoftTouchTone(): void {
@@ -3896,7 +4468,9 @@ function boot(): void {
     const touchImageDelete = target?.closest<HTMLElement>('[data-touch-image-delete]');
     const matchChoice = target?.closest<HTMLElement>('[data-match-choice]');
     const matchPofiTrigger = target?.closest<HTMLElement>('[data-match-pofi-trigger]');
-    const sentenceChoice = target?.closest<HTMLElement>('[data-sentence-choice]');
+    const sentenceModeButton = target?.closest<HTMLElement>('.sentence-mode-button[data-sentence-mode]');
+    const sentenceBoardCard = target?.closest<HTMLElement>('[data-sentence-board-card]');
+    const sentenceCard = target?.closest<HTMLElement>('[data-sentence-card]');
     const sentencePofiTrigger = target?.closest<HTMLElement>('[data-sentence-pofi-trigger]');
     const storyChoice = target?.closest<HTMLElement>('[data-story-choice]');
     const storyPofiTrigger = target?.closest<HTMLElement>('[data-story-pofi-trigger]');
@@ -3918,8 +4492,18 @@ function boot(): void {
       return;
     }
 
-    if (sentenceChoice?.dataset.sentenceChoice) {
-      handleSentenceChoice(sentenceChoice.dataset.sentenceChoice, sentenceChoice);
+    if (sentenceModeButton?.dataset.sentenceMode === 'learn' || sentenceModeButton?.dataset.sentenceMode === 'board') {
+      selectSentenceMode(sentenceModeButton.dataset.sentenceMode);
+      return;
+    }
+
+    if (sentenceBoardCard?.dataset.sentenceBoardCard) {
+      handleSentenceBoardCard(sentenceBoardCard.dataset.sentenceBoardCard, sentenceBoardCard);
+      return;
+    }
+
+    if (sentenceCard) {
+      handleSentenceExpressionPress(sentenceCard);
       return;
     }
 
@@ -4057,6 +4641,10 @@ function boot(): void {
       showActionCue(button, action);
       trackAction(action, button);
     });
+  });
+
+  document.querySelector<HTMLButtonElement>('[data-sleep-toggle]')?.addEventListener('click', (event) => {
+    void toggleSleepMusic(event.currentTarget instanceof HTMLElement ? event.currentTarget : undefined);
   });
 
   PRIMARY_VIEWS.forEach((view) => {

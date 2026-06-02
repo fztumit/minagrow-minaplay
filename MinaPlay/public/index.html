@@ -52,7 +52,7 @@
               <span class="mode-art">
                 <img class="mode-icon" src="/assets/icons/home/sentence.png" alt="" />
               </span>
-              <span class="mode-title">Cümle</span>
+              <span class="mode-title">İfade</span>
             </button>
 
             <button class="mode-card story" type="button" data-view="story">
@@ -133,17 +133,21 @@
           </div>
         </section>
 
-        <section class="view module-view" id="view-sentence" data-view-panel="sentence" aria-label="Cümle modu">
+        <section class="view module-view" id="view-sentence" data-view-panel="sentence" aria-label="İfade modu">
           <div class="play-surface sentence-surface" data-module-surface data-sentence-surface>
             <span class="touch-cloud touch-cloud-left" aria-hidden="true"></span>
             <span class="touch-cloud touch-cloud-right" aria-hidden="true"></span>
             <span class="touch-sparkle sparkle-one" aria-hidden="true"></span>
-            <button class="sentence-pofi-button" type="button" data-sentence-pofi-trigger aria-label="Pofi cümle yönergesini söylesin">
+            <div class="sentence-mode-switch" role="group" aria-label="İfade akışı">
+              <button class="sentence-mode-button" type="button" data-sentence-mode="learn">Öğren</button>
+              <button class="sentence-mode-button" type="button" data-sentence-mode="board">Seç ve Söyle</button>
+            </div>
+            <button class="sentence-pofi-button" type="button" data-sentence-pofi-trigger aria-label="Pofi ifade yönergesini söylesin">
               <span class="surface-pofi pofi-avatar large" data-pofi-avatar data-pofi-state="sentenceGuide" aria-label="Pofi rehber"></span>
             </button>
             <div class="sentence-context" data-sentence-context aria-live="polite"></div>
-            <div class="sentence-card" data-sentence-card></div>
-            <div class="sentence-choice-grid" data-sentence-choice-grid aria-label="Cümle seçenekleri"></div>
+            <button class="sentence-card" type="button" data-sentence-card aria-label="İhtiyaç ifadesini dinle"></button>
+            <div class="sentence-choice-grid" data-sentence-choice-grid aria-hidden="true"></div>
             <div class="sentence-status sr-only" data-sentence-status aria-live="polite"></div>
           </div>
         </section>
@@ -183,14 +187,25 @@
 
         <section class="view module-view" id="view-sleep" data-view-panel="sleep" aria-label="Uyku modu">
           <button class="back-home" type="button" data-view="home">Ana ekran</button>
-          <div class="module-copy">
-            <p class="eyebrow">Uyku</p>
-            <h2>Dinlen.</h2>
-            <p>Düşük uyarımlı gece yüzeyi. Sadece uyku Pofi’si.</p>
-          </div>
-          <div class="play-surface night" data-module-surface>
-            <button class="object-tile wide" type="button" data-track-action="sleep-start">Sesi başlat</button>
-            <div class="surface-pofi pofi-avatar large" data-pofi-avatar data-pofi-state="sleep" aria-label="Uyuyan Pofi"></div>
+          <div class="play-surface sleep-surface" data-module-surface data-sleep-surface data-sleep-running="false">
+            <div class="sleep-sky" aria-hidden="true">
+              <img class="sleep-moon" src="/assets/sleep/moon.png" alt="" decoding="async" draggable="false" />
+              <span class="sleep-star star-a"></span>
+              <span class="sleep-star star-b"></span>
+              <span class="sleep-star star-c"></span>
+              <span class="sleep-star star-d"></span>
+              <span class="sleep-star star-e"></span>
+              <span class="sleep-star star-f"></span>
+              <span class="sleep-star star-g"></span>
+            </div>
+            <div class="sleep-pofi-wrap" aria-label="Pofi gökyüzünde süzülüyor">
+              <div class="pofi-avatar sleep-floating-pofi" data-pofi-avatar data-pofi-state="sleepReady" aria-hidden="true"></div>
+              <img class="sleeping-pofi-pose" src="/assets/pofi/poses/sleeping.png" alt="" decoding="async" draggable="false" />
+            </div>
+            <button class="sleep-toggle" type="button" data-sleep-toggle aria-pressed="false" aria-label="Uyku müziğini başlat">
+              <span class="sleep-toggle-icon" aria-hidden="true"></span>
+              <span class="sleep-toggle-label" data-sleep-label>Başlat</span>
+            </button>
           </div>
         </section>
 
@@ -292,7 +307,7 @@
         </button>
         <button type="button" data-view="sentence">
           <img class="bottom-nav-icon" src="/assets/icons/home/sentence.png" alt="" />
-          <span>Cümle</span>
+          <span>İfade</span>
         </button>
         <button type="button" data-view="story">
           <img class="bottom-nav-icon" src="/assets/icons/home/story.png" alt="" />
