@@ -5,6 +5,9 @@ export interface TouchProgressEntry {
   successLatencyMsTotal: number;
   successLatencySamples: number;
   repeatNeeds: number;
+  consecutiveCorrectCount: number;
+  recentResults: boolean[];
+  lastPracticedAt: number;
 }
 
 export type TouchProgressState = Record<string, TouchProgressEntry>;
@@ -16,8 +19,9 @@ export interface TouchMasteryState {
 export const TOUCH_PROGRESS_KEY = 'minaplay_touch_progress_v1';
 export const TOUCH_MASTERY_KEY = 'minaplay_mastered_words_v1';
 
-export const TOUCH_MASTERY_SUCCESS_THRESHOLD = 4;
-export const TOUCH_MASTERY_RATE_THRESHOLD = 0.78;
+export const TOUCH_MASTERY_RECENT_WINDOW = 5;
+export const TOUCH_MASTERY_RECENT_CORRECT_THRESHOLD = 4;
+export const TOUCH_MASTERY_STREAK_THRESHOLD = 3;
 
 export function createEmptyTouchProgressEntry(): TouchProgressEntry {
   return {
@@ -26,7 +30,10 @@ export function createEmptyTouchProgressEntry(): TouchProgressEntry {
     hintLevels: {},
     successLatencyMsTotal: 0,
     successLatencySamples: 0,
-    repeatNeeds: 0
+    repeatNeeds: 0,
+    consecutiveCorrectCount: 0,
+    recentResults: [],
+    lastPracticedAt: 0
   };
 }
 
@@ -46,7 +53,10 @@ export function normalizeTouchProgress(raw: unknown): TouchProgressState {
       hintLevels: normalizeHintLevels(entry.hintLevels),
       successLatencyMsTotal: safeCount(entry.successLatencyMsTotal),
       successLatencySamples: safeCount(entry.successLatencySamples),
-      repeatNeeds: safeCount(entry.repeatNeeds)
+      repeatNeeds: safeCount(entry.repeatNeeds),
+      consecutiveCorrectCount: safeCount(entry.consecutiveCorrectCount),
+      recentResults: normalizeRecentResults(entry.recentResults),
+      lastPracticedAt: safeCount(entry.lastPracticedAt)
     };
     return state;
   }, {});
@@ -77,6 +87,25 @@ export function overallSuccessRate(state: TouchProgressState): number {
   );
   const total = totals.success + totals.fail;
   return total > 0 ? totals.success / total : 0;
+}
+
+export function registerTouchAttempt(
+  entry: TouchProgressEntry,
+  correct: boolean,
+  practicedAt = Date.now()
+): TouchProgressEntry {
+  if (correct) {
+    entry.success += 1;
+    entry.consecutiveCorrectCount += 1;
+  } else {
+    entry.fail += 1;
+    entry.repeatNeeds += 1;
+    entry.consecutiveCorrectCount = 0;
+  }
+
+  entry.recentResults = [...entry.recentResults, correct].slice(-TOUCH_MASTERY_RECENT_WINDOW);
+  entry.lastPracticedAt = safeCount(practicedAt);
+  return entry;
 }
 
 export function adaptiveTargetWeight(entry: TouchProgressEntry | undefined): number {
@@ -118,10 +147,16 @@ export function adaptiveRepeatInterval(entry: TouchProgressEntry | undefined, mi
 }
 
 export function isMastered(entry: TouchProgressEntry | undefined): boolean {
-  return Boolean(
-    entry &&
-      entry.success >= TOUCH_MASTERY_SUCCESS_THRESHOLD &&
-      successRate(entry) >= TOUCH_MASTERY_RATE_THRESHOLD
+  if (!entry) {
+    return false;
+  }
+
+  const recentResults = entry.recentResults.slice(-TOUCH_MASTERY_RECENT_WINDOW);
+  const recentCorrectCount = recentResults.filter(Boolean).length;
+  return (
+    recentResults.length === TOUCH_MASTERY_RECENT_WINDOW &&
+    recentCorrectCount >= TOUCH_MASTERY_RECENT_CORRECT_THRESHOLD &&
+    entry.consecutiveCorrectCount >= TOUCH_MASTERY_STREAK_THRESHOLD
   );
 }
 
@@ -149,6 +184,12 @@ function normalizeHintLevels(raw: unknown): Record<number, number> {
     }
     return levels;
   }, {});
+}
+
+function normalizeRecentResults(raw: unknown): boolean[] {
+  return Array.isArray(raw)
+    ? raw.filter((result): result is boolean => typeof result === 'boolean').slice(-TOUCH_MASTERY_RECENT_WINDOW)
+    : [];
 }
 
 function safeCount(value: unknown): number {

@@ -8,6 +8,7 @@ import {
   normalizeMastery,
   normalizeTouchProgress,
   overallSuccessRate,
+  registerTouchAttempt,
   touchProgressEntry,
   type TouchMasteryState,
   type TouchProgressState
@@ -1561,13 +1562,10 @@ function publishTouchMasteryForMatching(): void {
 
 function recordTouchAttempt(targetId: string, correct: boolean, latencyMs: number): void {
   const entry = touchProgressEntry(touchProgress, targetId);
+  registerTouchAttempt(entry, correct);
   if (correct) {
-    entry.success += 1;
-    entry.successLatencyMsTotal += latencyMs;
+    entry.successLatencyMsTotal += Math.max(0, latencyMs);
     entry.successLatencySamples += 1;
-  } else {
-    entry.fail += 1;
-    entry.repeatNeeds += 1;
   }
   writeTouchProgress();
   updateTouchMastery(targetId);
@@ -1625,14 +1623,18 @@ function renderTouchProgressTable(): void {
       const latency =
         entry && entry.successLatencySamples > 0 ? Math.round(entry.successLatencyMsTotal / entry.successLatencySamples) : 0;
       const mastered = touchMastery.masteredWords.includes(card.id);
+      const recentCorrectCount = entry?.recentResults.filter(Boolean).length ?? 0;
+      const recentSummary = entry?.recentResults.length ? `${recentCorrectCount}/${entry.recentResults.length}` : '-';
       return `<article class="touch-progress-row">
         <strong>${card.word}</strong>
         <span>${card.learningGoal}</span>
         <span>${success} doğru</span>
         <span>${fail} yönlendirme</span>
         <span>%${rate}</span>
+        <span>Son 5: ${recentSummary}</span>
+        <span>${entry?.consecutiveCorrectCount ?? 0} seri</span>
         <span>${latency ? `${latency} ms` : '-'}</span>
-        <span>${mastered ? 'Eşleme hazır' : 'Çalışıyor'}</span>
+        <span>${mastered ? 'Öğrenildi' : 'Çalışılıyor'}</span>
       </article>`;
     })
     .join('');

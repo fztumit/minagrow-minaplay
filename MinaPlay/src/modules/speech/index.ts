@@ -57,8 +57,8 @@ export interface SpeechStateMachineOptions {
   onHint?: (event: { item: SpeechItem; hintLevel: 1 | 2 | 3 | 4 }) => void;
 }
 
-const DEFAULT_WAITING_MS = 5000;
-const DEFAULT_HINT_STEP_MS = 3000;
+const DEFAULT_WAITING_MS = 10_000;
+const DEFAULT_HINT_STEP_MS = 10_000;
 const ATTENTION_MS = 620;
 const TARGETING_MS = 760;
 const SUCCESS_MS = 800;

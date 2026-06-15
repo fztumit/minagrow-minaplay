@@ -203,6 +203,30 @@ describe('SpeechStateMachine', () => {
     expect(hints).toEqual([1, 2, 3]);
   });
 
+  test('uses the calm 10, 20 and 30 second idle cadence by default', () => {
+    const hints: number[] = [];
+    const machine = new SpeechStateMachine({
+      items: () => items,
+      onStateChange: () => undefined,
+      onHint: (event) => hints.push(event.hintLevel)
+    });
+
+    machine.start();
+    vi.advanceTimersByTime(1740);
+
+    vi.advanceTimersByTime(9999);
+    expect(hints).toEqual([]);
+
+    vi.advanceTimersByTime(1);
+    expect(hints).toEqual([1]);
+
+    vi.advanceTimersByTime(10_000);
+    expect(hints).toEqual([1, 2]);
+
+    vi.advanceTimersByTime(10_000);
+    expect(hints).toEqual([1, 2, 3]);
+  });
+
   test('stops repeating hint audio after one complete hint sequence', () => {
     const snapshots: SpeechMachineSnapshot[] = [];
     const sounds: string[] = [];

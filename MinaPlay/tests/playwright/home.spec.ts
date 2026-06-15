@@ -512,9 +512,20 @@ test('parent panel shows touch word progress rows', async ({ page }) => {
     localStorage.setItem(
       'minaplay_touch_progress_v1',
       JSON.stringify({
-        su: { success: 3, fail: 1, hintLevels: { 1: 1 }, successLatencyMsTotal: 1800, successLatencySamples: 3, repeatNeeds: 1 }
+        su: {
+          success: 4,
+          fail: 1,
+          hintLevels: { 1: 1 },
+          successLatencyMsTotal: 1800,
+          successLatencySamples: 4,
+          repeatNeeds: 1,
+          consecutiveCorrectCount: 3,
+          recentResults: [false, true, true, true, true],
+          lastPracticedAt: Date.now()
+        }
       })
     );
+    localStorage.setItem('minaplay_mastered_words_v1', JSON.stringify({ masteredWords: ['su'] }));
   });
   await page.goto('/');
 
@@ -523,7 +534,10 @@ test('parent panel shows touch word progress rows', async ({ page }) => {
   await expect(page.locator('[data-child-lock-awake]')).toBeChecked();
   await expect(page.locator('[data-touch-progress-table] .touch-progress-row')).toHaveCount(5);
   await expect(page.locator('[data-touch-progress-table]')).toContainText('Su');
-  await expect(page.locator('[data-touch-progress-table]')).toContainText('3 doğru');
+  await expect(page.locator('[data-touch-progress-table]')).toContainText('4 doğru');
+  await expect(page.locator('[data-touch-progress-table]')).toContainText('Son 5: 4/5');
+  await expect(page.locator('[data-touch-progress-table]')).toContainText('3 seri');
+  await expect(page.locator('[data-touch-progress-table]')).toContainText('Öğrenildi');
 });
 
 test('module surfaces render stateful layered Pofi parts', async ({ page }) => {

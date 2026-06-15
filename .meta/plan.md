@@ -38,10 +38,30 @@ Kapanış sonucu:
 - mobil ana ekran için yatay taşma regresyon testi vardır
 - Faz 1 değişiklikleri tek git kapanışında kayıt altına alınmıştır
 
+## Faz 2 - MVP Modüllerini Tamamlama
+
+Durum:
+
+- devam ediyor
+
+Kapanan paketler:
+
+- 2-1: Dokun modunun öğrenme kaydı, dikkat ritmi ve Parent panel görünürlüğü kanonik MVP kurallarıyla tamamlandı
+
+Faz 2-1 sonucu:
+
+- Dokun tepkisizlik akışı 10, 20 ve 30 saniyelik sakin ipucu ritmini kullanır
+- her kelime için son 5 deneme, ardışık doğru sayısı ve son çalışma zamanı kaydedilir
+- öğrenildi durumu son 5 denemede en az 4 doğru ve en az 3 ardışık doğru kuralıyla hesaplanır
+- eski localStorage kayıtları yeni alanlara güvenli varsayılanlarla taşınır
+- Parent panel son 5 özetini, doğru serisini ve öğrenildi durumunu gösterir
+- build, lint, 23 unit test ve 25 Playwright e2e testi başarılıdır
+
 ## Bugünkü Kapanış Hedefi
 
 - aktif uygulama hedefi `/Users/umitaydin/Documents/MinaGrow/MinaPlay` olarak korunacak
 - `MinaPlay` içinde build/lint/test/e2e hattı kararlı tutulacak
+- Faz 2 içinde sıradaki tek aktif modül paketi belirlenerek yürütülecek
 - V2 klasör ağacı `core`, `pofi`, `entities`, `features`, `services`, `shared`, `server` ayrımıyla gerçek uygulama içinde karşılık bulacak
 - Pofi Engine V2 için tek global instance, merkezi `pofi-root`, event temelli modül iletişimi ve idle timer kuralı uygulama omurgasına taşınacak
 - MVP çocuk yüzeyi Ana ekran, Dokun, Eşleme, Ayna, Uyku ve Ceee ekseninde kurulacak
