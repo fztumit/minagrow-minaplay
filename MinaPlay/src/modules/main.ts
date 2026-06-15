@@ -47,6 +47,8 @@ type PofiState =
   | 'exercise'
   | 'sleep'
   | 'peekaboo'
+  | 'peekabooHidden'
+  | 'peekabooFound'
   | 'success'
   | 'successSoft'
   | 'successCelebrate'
@@ -84,6 +86,13 @@ type PofiMood = PofiState | 'attention' | 'blink' | 'settle' | 'sleepBlink';
 type PofiParts = { body: string; eyes: string; mouth: string; hands?: string; eyebrows?: string; effect?: string };
 type PofiPartFolder = 'body' | 'eyes' | 'mouth' | 'hands' | 'eyebrows' | 'effects';
 type PofiRole = 'welcome' | 'idle' | 'guide' | 'attention' | 'model' | 'affirm' | 'celebrate' | 'softRedirect' | 'sleep' | 'play' | 'wait';
+type PeekabooState = 'ready' | 'hidden' | 'found';
+type TouchPofiMotion = 'idle' | 'focus' | 'listen' | 'speak' | 'affirm' | 'reassure';
+type MatchPofiMotion = 'focus' | 'model' | 'listen' | 'guide' | 'affirm' | 'reassure';
+
+interface PofiViewTransition {
+  bridge: HTMLElement;
+}
 
 interface PofiExpression {
   role: PofiRole;
@@ -697,7 +706,9 @@ const POFI_WARMTH_EFFECT = 'blush-soft-v01.png';
 const POFI_HAPPY_EYEBROWS = 'happy-v01.png';
 const POFI_EXPRESSION_CHANGE_MS = 220;
 const POFI_POINT_HAND_MS = 1200;
+const POFI_VIEW_TRANSITION_MS = 360;
 const TOUCH_CUE_MS = 920;
+const TOUCH_AFFIRM_MOTION_MS = 900;
 const CLICK_HAND_CUE_MS = 760;
 const CLICK_HAND_RIGHT_ASSET = '/assets/pofi/parts/hands/pofi_hand_click_cue_right_v01.png';
 const CLICK_HAND_LEFT_ASSET = '/assets/pofi/parts/hands/pofi_hand_click_cue_left_v01.png';
@@ -714,6 +725,7 @@ const POFI_EXPRESSIONS: Record<PofiMood, PofiExpression> = {
       eyes: 'open-v01.png',
       eyebrows: POFI_HAPPY_EYEBROWS,
       mouth: 'smile-soft-v01.png',
+      hands: 'pofi_hand_open_v01.png',
       effect: POFI_WARMTH_EFFECT
     }
   },
@@ -921,6 +933,28 @@ const POFI_EXPRESSIONS: Record<PofiMood, PofiExpression> = {
       effect: POFI_WARMTH_EFFECT
     }
   },
+  peekabooHidden: {
+    role: 'play',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'waiting-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'smile-soft-v01.png',
+      hands: 'pofi_hand_closed_v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
+  peekabooFound: {
+    role: 'affirm',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'happy-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'open-smile-soft-v01.png',
+      hands: 'pofi_hand_open_v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
   success: {
     role: 'affirm',
     parts: {
@@ -1079,7 +1113,7 @@ const POFI_EXPRESSIONS: Record<PofiMood, PofiExpression> = {
       body: POFI_STABLE_BODY,
       eyes: 'wide-soft-v01.png',
       eyebrows: POFI_HAPPY_EYEBROWS,
-      mouth: 'soft-o-v01.png',
+      mouth: 'smile-soft-v01.png',
       effect: POFI_WARMTH_EFFECT
     }
   },
@@ -1207,6 +1241,8 @@ const POFI_SETTLE_MOODS: Partial<Record<PofiState, PofiMood>> = {
   exercise: 'exercise',
   sleep: 'sleep',
   peekaboo: 'peekaboo',
+  peekabooHidden: 'peekabooHidden',
+  peekabooFound: 'peekaboo',
   success: 'settle',
   successSoft: 'settle',
   successCelebrate: 'settle',
@@ -1239,8 +1275,12 @@ let pofiBlinkTimer: number | undefined;
 let pofiReturnTimer: number | undefined;
 let pofiExpressionTimer: number | undefined;
 let pofiHandTimer: number | undefined;
+let peekabooState: PeekabooState = 'ready';
+let peekabooReturnTimer: number | undefined;
 let touchRepeatTimer: number | undefined;
 let touchActiveTimer: number | undefined;
+let touchAffirmTimer: number | undefined;
+let touchAffirmUntil = 0;
 let touchVariationIndex = 0;
 let touchAudioUnlocked = false;
 let touchAudioPreload: Promise<void> | undefined;
@@ -1692,6 +1732,10 @@ function trackAction(action: string, _sourceElement?: HTMLElement): void {
 }
 
 function activateView(view: ViewName): void {
+  const transition = beginPofiViewTransition();
+  const shell = document.querySelector<HTMLElement>('.app-shell');
+  shell?.classList.add('view-transitioning');
+
   document.querySelectorAll<HTMLElement>('[data-view-panel]').forEach((panel) => {
     panel.classList.toggle('active', panel.dataset.viewPanel === view);
   });
@@ -1700,11 +1744,12 @@ function activateView(view: ViewName): void {
     button.classList.toggle('active', button.dataset.view === view);
   });
 
-  document.querySelector<HTMLElement>('.app-shell')?.setAttribute('data-active-view', view);
+  shell?.setAttribute('data-active-view', view);
   syncChildLockMode(view);
   setPofiBaseState(POFI_VIEW_STATES[view] ?? 'neutral');
   syncTouchRitual(view);
   syncSleepMode(view);
+  syncPeekabooMode(view);
   if (view === 'match') {
     startMatchRound();
   } else {
@@ -1734,6 +1779,56 @@ function activateView(view: ViewName): void {
   }
   trackViewOpen(view);
   renderParentMetrics();
+  completePofiViewTransition(transition);
+  window.setTimeout(() => shell?.classList.remove('view-transitioning'), POFI_VIEW_TRANSITION_MS);
+}
+
+function syncPeekabooMode(view: ViewName): void {
+  if (peekabooReturnTimer) {
+    window.clearTimeout(peekabooReturnTimer);
+    peekabooReturnTimer = undefined;
+  }
+
+  if (view === 'peekaboo') {
+    peekabooState = 'ready';
+    renderPeekabooMode();
+  }
+}
+
+function renderPeekabooMode(): void {
+  const surface = document.querySelector<HTMLElement>('[data-peekaboo-surface]');
+  const button = document.querySelector<HTMLButtonElement>('[data-peekaboo-toggle]');
+  const label = document.querySelector<HTMLElement>('[data-peekaboo-label]');
+  if (!surface || !button || !label) {
+    return;
+  }
+
+  surface.dataset.peekabooState = peekabooState;
+  button.dataset.trackAction = peekabooState === 'hidden' ? 'peekaboo-found' : 'peekaboo-hide';
+  label.textContent = peekabooState === 'hidden' ? 'Pofi bulundu' : 'Pofi saklandı';
+}
+
+function handlePeekabooToggle(button: HTMLElement): void {
+  if (peekabooState === 'hidden') {
+    peekabooState = 'found';
+    renderPeekabooMode();
+    trackAction('peekaboo-found', button);
+    setPofiBaseState('peekabooFound');
+    peekabooReturnTimer = window.setTimeout(() => {
+      peekabooReturnTimer = undefined;
+      peekabooState = 'ready';
+      renderPeekabooMode();
+      if (document.querySelector<HTMLElement>('#view-peekaboo')?.classList.contains('active')) {
+        setPofiBaseState('peekaboo');
+      }
+    }, 1000);
+    return;
+  }
+
+  peekabooState = 'hidden';
+  renderPeekabooMode();
+  trackAction('peekaboo-hide', button);
+  setPofiBaseState('peekabooHidden');
 }
 
 function openParentWithUnlock(): void {
@@ -1870,6 +1965,60 @@ function activePofiAvatar(): HTMLElement | undefined {
   return Array.from(document.querySelectorAll<HTMLElement>('[data-pofi-avatar]')).find((avatar) => {
     return avatar.closest<HTMLElement>('[data-view-panel]')?.classList.contains('active');
   });
+}
+
+function applyPofiBridgeRect(bridge: HTMLElement, rect: DOMRect): void {
+  bridge.style.left = `${rect.left}px`;
+  bridge.style.top = `${rect.top}px`;
+  bridge.style.width = `${rect.width}px`;
+  bridge.style.height = `${rect.height}px`;
+}
+
+function beginPofiViewTransition(): PofiViewTransition | undefined {
+  if (!pofiMotionAllowed()) {
+    return undefined;
+  }
+
+  const avatar = activePofiAvatar();
+  if (!avatar) {
+    return undefined;
+  }
+
+  const rect = avatar.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) {
+    return undefined;
+  }
+
+  const bridge = avatar.cloneNode(true) as HTMLElement;
+  bridge.classList.add('pofi-transition-bridge');
+  bridge.setAttribute('aria-hidden', 'true');
+  bridge.removeAttribute('aria-label');
+  bridge.removeAttribute('id');
+  applyPofiBridgeRect(bridge, rect);
+  document.body.append(bridge);
+  void bridge.offsetWidth;
+  bridge.dataset.transitionPhase = 'move';
+
+  return { bridge };
+}
+
+function completePofiViewTransition(transition?: PofiViewTransition): void {
+  if (!transition) {
+    return;
+  }
+
+  window.setTimeout(() => {
+    const nextAvatar = activePofiAvatar();
+    if (!nextAvatar) {
+      transition.bridge.dataset.transitionPhase = 'exit';
+      window.setTimeout(() => transition.bridge.remove(), POFI_VIEW_TRANSITION_MS);
+      return;
+    }
+
+    applyPofiBridgeRect(transition.bridge, nextAvatar.getBoundingClientRect());
+    transition.bridge.dataset.transitionPhase = 'arrive';
+    window.setTimeout(() => transition.bridge.remove(), POFI_VIEW_TRANSITION_MS);
+  }, 40);
 }
 
 function clearPofiTimers(): void {
@@ -2347,7 +2496,9 @@ function enterMatchState(state: MatchState, hintLevel: 0 | 1 | 2 | 3 | 4 = 0): v
   if (state === 'hint') {
     setPofiBaseState('matchHint');
     recordMatchHint(matchRound.targetId, hintLevel);
-    void playMatchTargetSound('hint');
+    if (hintLevel === 1 || hintLevel === 3) {
+      void playMatchTargetSound('hint');
+    }
     if (hintLevel < 4) {
       matchTimer = window.setTimeout(() => enterMatchHint((hintLevel + 1) as 1 | 2 | 3 | 4), MATCH_HINT_STEP_MS);
     }
@@ -2418,6 +2569,7 @@ function renderMatchingGame(): void {
   surface.dataset.matchTargetId = selected.id;
   surface.dataset.matchChoiceCount = String(round.choices.length);
   surface.dataset.matchState = round.state;
+  surface.dataset.matchPofiMotion = matchPofiMotion(round.state);
   surface.dataset.matchLevel = String(round.level);
   surface.dataset.matchHintLevel = String(round.hintLevel);
   surface.dataset.matchMode = round.mode;
@@ -2435,6 +2587,30 @@ function renderMatchingGame(): void {
     .join('');
   status.textContent = matchStatusText(selected, correctChoice);
   positionMatchGuide(surface, correctIndex);
+}
+
+function matchPofiMotion(state: MatchState): MatchPofiMotion {
+  if (state === 'attention') {
+    return 'focus';
+  }
+
+  if (state === 'targeting') {
+    return 'model';
+  }
+
+  if (state === 'waiting') {
+    return 'listen';
+  }
+
+  if (state === 'hint') {
+    return 'guide';
+  }
+
+  if (state === 'success') {
+    return 'affirm';
+  }
+
+  return 'reassure';
 }
 
 function positionMatchGuide(surface: HTMLElement, correctIndex: number): void {
@@ -3625,6 +3801,12 @@ function renderSleepMode(): void {
   toggle.setAttribute('aria-pressed', String(sleepMusicRunning));
   toggle.setAttribute('aria-label', sleepMusicRunning ? 'Uyku müziğini durdur' : 'Uyku müziğini başlat');
   label.textContent = sleepMusicRunning ? 'Durdur' : 'Başlat';
+
+  const shell = document.querySelector<HTMLElement>('.app-shell');
+  const nextPofiState: PofiState = sleepMusicRunning ? 'sleep' : 'sleepReady';
+  if (shell?.dataset.activeView === 'sleep' && pofiBaseState !== nextPofiState) {
+    setPofiBaseState(nextPofiState);
+  }
 }
 
 async function toggleSleepMusic(button?: HTMLElement): Promise<void> {
@@ -3636,6 +3818,7 @@ async function toggleSleepMusic(button?: HTMLElement): Promise<void> {
 
   startSleepMusic();
   trackAction('sleep-start', button);
+  renderSleepMode();
 }
 
 function startSleepMusic(): void {
@@ -3773,6 +3956,7 @@ function renderTouchSelection(variation?: TouchVoiceVariation, active = false): 
 
   surface.classList.toggle('touch-speaking', active);
   surface.dataset.touchState = touchSpeechSnapshot?.state ?? 'idle';
+  renderTouchPofiMotion(surface, touchSpeechSnapshot?.state ?? 'idle', active);
   surface.dataset.touchTargetId = touchSpeechSnapshot?.targetId ?? '';
   surface.dataset.touchLevel = String(touchSpeechSnapshot?.level ?? 1);
   surface.dataset.touchHintLevel = String(touchSpeechSnapshot?.hintLevel ?? 0);
@@ -3810,9 +3994,62 @@ function renderTouchSelection(variation?: TouchVoiceVariation, active = false): 
   if (active) {
     touchActiveTimer = window.setTimeout(() => {
       surface.classList.remove('touch-speaking');
+      renderTouchPofiMotion(surface, touchSpeechSnapshot?.state ?? 'idle', false);
       cards.forEach((element) => element.classList.remove('speaking'));
     }, TOUCH_ACTIVE_MS);
   }
+}
+
+function renderTouchPofiMotion(
+  surface: HTMLElement,
+  state: SpeechMachineSnapshot['state'] | 'idle',
+  speaking: boolean
+): void {
+  if (state === 'success') {
+    touchAffirmUntil = Date.now() + TOUCH_AFFIRM_MOTION_MS;
+    if (touchAffirmTimer) {
+      window.clearTimeout(touchAffirmTimer);
+    }
+    surface.dataset.pofiMotion = 'affirm';
+    touchAffirmTimer = window.setTimeout(() => {
+      touchAffirmUntil = 0;
+      surface.dataset.pofiMotion = touchPofiMotion(
+        touchSpeechSnapshot?.state ?? 'idle',
+        surface.classList.contains('touch-speaking')
+      );
+    }, TOUCH_AFFIRM_MOTION_MS);
+    return;
+  }
+
+  if (Date.now() < touchAffirmUntil) {
+    return;
+  }
+
+  surface.dataset.pofiMotion = touchPofiMotion(state, speaking);
+}
+
+function touchPofiMotion(state: SpeechMachineSnapshot['state'] | 'idle', speaking: boolean): TouchPofiMotion {
+  if (state === 'success') {
+    return 'affirm';
+  }
+
+  if (state === 'retry') {
+    return 'reassure';
+  }
+
+  if (speaking) {
+    return 'speak';
+  }
+
+  if (state === 'attention' || state === 'targeting' || state === 'hint') {
+    return 'focus';
+  }
+
+  if (state === 'waiting') {
+    return 'listen';
+  }
+
+  return 'idle';
 }
 
 function positionTouchGuide(surface: HTMLElement, activeCardElement?: HTMLElement): void {
@@ -4428,6 +4665,11 @@ function stopTouchRitual(): void {
     window.clearTimeout(touchActiveTimer);
     touchActiveTimer = undefined;
   }
+  if (touchAffirmTimer) {
+    window.clearTimeout(touchAffirmTimer);
+    touchAffirmTimer = undefined;
+  }
+  touchAffirmUntil = 0;
 
   touchSurface()?.classList.remove('touch-speaking');
   stopCurrentTouchAudio();
@@ -4895,7 +5137,7 @@ function renderParentMetrics(): void {
       ? 'Henüz kayıt yok. İlk oyun açıldığında burada sakin bir özet oluşacak.'
       : modules
           .map(([name, stats]) => {
-            return `<p><strong>${name}</strong>: ${stats.opens} açılış, ${stats.actions} eylem, ${stats.correct} olumlu deneme, ${stats.softRedirects} yumuşak yönlendirme.</p>`;
+            return `<p><strong>${parentModuleLabel(name)}</strong>: ${stats.opens} açılış, ${stats.actions} eylem, ${stats.correct} olumlu deneme, ${stats.softRedirects} yönlendirme.</p>`;
           })
           .join('');
 
@@ -4912,6 +5154,19 @@ function renderParentMetrics(): void {
       `<p><strong>Dokun öğrenme</strong>: ipucu kullanımı ${hintSummary || '0'}, ortalama doğru dokunma ${averageLatency} ms, tekrar ihtiyacı ${state.touch.repeatNeeds}.</p>`
     );
   }
+}
+
+function parentModuleLabel(name: string): string {
+  const labels: Record<string, string> = {
+    touch: 'Dokun',
+    match: 'Eşleme',
+    sentence: 'İfade',
+    story: 'Hikaye',
+    mirror: 'Ayna',
+    sleep: 'Uyku',
+    peekaboo: 'Ceee'
+  };
+  return labels[name] ?? name;
 }
 
 function registerServiceWorker(): void {
@@ -5129,6 +5384,11 @@ function boot(): void {
 
   document.querySelectorAll<HTMLButtonElement>('[data-track-action]').forEach((button) => {
     button.addEventListener('click', () => {
+      if (button.hasAttribute('data-peekaboo-toggle')) {
+        handlePeekabooToggle(button);
+        return;
+      }
+
       const action = button.dataset.trackAction ?? 'action';
       showActionCue(button, action);
       trackAction(action, button);

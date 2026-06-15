@@ -2,7 +2,7 @@
 name: profile
 description: Ümit için MinaGrow/MinaPlay bağlamında temel çalışma profili ve proje içi rol bilgisini taşır.
 created: 2026-04-17
-updated: 2026-05-01
+updated: 2026-06-15
 ---
 
 # Profil
@@ -24,10 +24,10 @@ Amaç, kişisel ayrıntıları gereksiz yere çoğaltmak değil; `MinaGrow` üst
 
 Bugünkü pratik gerçeklik:
 
-- çalışan referans uygulama `/Users/umitaydin/Documents/Konusu-Yorum` içindedir
+- V1 çalışan referans uygulama `/Users/umitaydin/Documents/Konusu-Yorum` içindedir
 - yeni proje hafızası `/Users/umitaydin/Documents/MinaGrow` içinde kurulmaktadır
-- kanonik V2 uygulama hedefi `.meta/plan.md` ve `.meta/project.md` ile doğrulanır; bugünkü hedef `/Users/umitaydin/Documents/Studio-workspace-Project` olarak okunur
-- `/Users/umitaydin/Documents/MinaGrow/MinaPlay` varsa eski/ara çalışma izi veya karşılaştırma kaynağı olarak yorumlanır
+- kanonik V2 uygulama hedefi `.meta/plan.md` ve `.meta/project.md` ile doğrulanır; bugünkü hedef `/Users/umitaydin/Documents/MinaGrow/MinaPlay` olarak okunur
+- önceki `/Users/umitaydin/Documents/Studio-workspace-Project` hedefi artık aktif çalışma alanı olarak yorumlanmaz
 - kanonik ürün adı `MinaPlay`dir
 - Pofi, üründe dekoratif karakter değil davranışsal etkileşim sistemidir
 

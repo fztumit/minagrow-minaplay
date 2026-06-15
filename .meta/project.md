@@ -2,7 +2,7 @@
 name: project
 description: MinaPlay projesinin problemi, amacı, kapsamı, başarı ölçütleri ve temel bağlamını tanımlar.
 created: 2026-04-17
-updated: 2026-04-22
+updated: 2026-06-15
 ---
 
 # Proje
@@ -19,7 +19,7 @@ updated: 2026-04-22
 - Dil: Türkçe
 - Hedef cihaz: tablet ve telefon
 - Referans repo: `/Users/umitaydin/Documents/Konusu-Yorum`
-- Hedef ürün alanı: `/Users/umitaydin/Documents/Studio-workspace-Project`
+- Kanonik uygulama alanı: `/Users/umitaydin/Documents/MinaGrow/MinaPlay`
 
 ## Problem
 
@@ -180,8 +180,8 @@ Bu vizyon bugünkü PWA çekirdeğine erken yüklenmez; ürün hafızasında gel
 
 ### Referanslar ve Bağlantılar
 
-- mevcut çalışan repo: `/Users/umitaydin/Documents/Konusu-Yorum`
+- V1 çalışan referans repo: `/Users/umitaydin/Documents/Konusu-Yorum`
 - hedef repo kökü: `/Users/umitaydin/Documents/MinaGrow`
-- hedef uygulama alanı: `/Users/umitaydin/Documents/Studio-workspace-Project`
+- kanonik uygulama alanı: `/Users/umitaydin/Documents/MinaGrow/MinaPlay`
 - canlı sürüm: `https://minagrow-minaplay-production.up.railway.app/`
 - GitHub repo adı: `fztumit/minagrow-minaplay`

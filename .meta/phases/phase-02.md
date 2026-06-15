@@ -2,16 +2,16 @@
 name: phase-02
 description: MinaGrow/MinaPlay için V1 referansından MinaPlay V2 temiz ürün omurgasına geçiş fazını tanımlar.
 created: 2026-04-17
-updated: 2026-04-27
+updated: 2026-06-15
 ---
 
 # Phase 02 - V2 Temiz Ürün Omurgası
 
 ## Amaç
 
-Bu fazın amacı, V1 referansındaki işe yarayan davranış ve ürün derslerini kaybetmeden `/Users/umitaydin/Documents/Studio-workspace-Project` alanında yeni `MinaPlay V2` ürün omurgasını kurmaktır. V1 doğrudan taşınacak uygulama temeli değil; fikir, davranış ve örnekleme referansıdır.
+Bu fazın amacı, V1 referansındaki işe yarayan davranış ve ürün derslerini kaybetmeden `/Users/umitaydin/Documents/MinaGrow/MinaPlay` alanındaki `MinaPlay V2` ürün omurgasını geliştirmektir. V1 doğrudan taşınacak uygulama temeli değil; fikir, davranış ve örnekleme referansıdır.
 
-`/Users/umitaydin/Documents/MinaGrow/MinaPlay` altında görülen uygulama izi bu fazın kanonik geliştirme hedefi değildir. Bu alan eski/ara çalışma izi, karşılaştırma kaynağı veya geçici referans olarak ele alınır.
+`/Users/umitaydin/Documents/MinaGrow/MinaPlay` bu fazın kanonik geliştirme hedefidir. Önceki planda yer alan `/Users/umitaydin/Documents/Studio-workspace-Project` hedefi artık geçerli değildir.
 
 ## Kapsam
 
@@ -37,7 +37,7 @@ Hariç:
 - ürün davranışı korunur, UI ve uygulama omurgası temiz kurulur
 - `node_modules`, `dist`, `output`, `test-results` gibi üretilebilir çıktılar V2 kaynağı sayılmaz
 - asset yolları ve service worker cache davranışı V2'ye göre yeniden belirlenir
-- package scriptleri `Studio-workspace-Project` içinde doğrulanır
+- package scriptleri `MinaGrow/MinaPlay` içinde doğrulanır
 - legacy CRM dosyalarının ürün çekirdeğiyle ilişkisi ayrı karar olarak görünür tutulur
 
 ## İş Paketleri
@@ -56,11 +56,11 @@ Kapanış ölçütü:
 
 Amaç:
 
-- `Studio-workspace-Project` alanında yeni ana ekran, Dokun, Eşleme, Ayna, Uyku ve temel Parent panel omurgasını kurmak
+- `MinaGrow/MinaPlay` alanında ana ekran, Dokun, Eşleme, Ayna, Uyku ve temel Parent panel omurgasını geliştirmek
 
 Kapanış ölçütü:
 
-- `Studio-workspace-Project` içinde V2 install/build çalışabilecek duruma gelir
+- `MinaGrow/MinaPlay` içinde V2 install/build çalışabilecek durumda kalır
 
 ### Paket 03 - Kimlik Temizliği
 
@@ -76,7 +76,7 @@ Kapanış ölçütü:
 
 Amaç:
 
-- `Studio-workspace-Project` içinde build, lint, unit ve e2e doğrulamasını çalıştırmak
+- `MinaGrow/MinaPlay` içinde build, lint, unit ve e2e doğrulamasını çalıştırmak
 
 Kapanış ölçütü:
 
@@ -84,4 +84,4 @@ Kapanış ölçütü:
 
 ## Faz Kapanışı
 
-Bu faz, `Studio-workspace-Project` V2 MVP omurgasını çalıştırdığında ve doğrulama hattı bu hedefte anlamlı şekilde çalıştığında kapanır.
+Bu faz, `MinaGrow/MinaPlay` V2 MVP omurgası çalıştığında ve doğrulama hattı bu hedefte anlamlı şekilde çalıştığında kapanır.

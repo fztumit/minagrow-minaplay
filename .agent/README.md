@@ -2,7 +2,7 @@
 name: agent-readme
 description: MinaGrow içindeki agent alanının ne işe yaradığını ve alt yüzeylerin rolünü kısa biçimde açıklar.
 created: 2026-04-17
-updated: 2026-05-01
+updated: 2026-06-15
 ---
 
 # Agent Alanı
@@ -44,4 +44,4 @@ Hedef proje kökü:
 
 Bugünkü kanonik V2 uygulama workspace'i:
 
-- `/Users/umitaydin/Documents/Studio-workspace-Project`
+- `/Users/umitaydin/Documents/MinaGrow/MinaPlay`

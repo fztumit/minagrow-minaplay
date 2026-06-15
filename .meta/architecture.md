@@ -2,7 +2,7 @@
 name: architecture
 description: MinaPlay projesinin teknik omurgasını, ana bileşenlerini, veri akışını ve mimari yaklaşımını tanımlar.
 created: 2026-04-17
-updated: 2026-04-22
+updated: 2026-06-15
 ---
 
 # Mimari
@@ -20,7 +20,7 @@ Bugünkü yön şudur:
 - veri kalıcılığı ağırlıklı olarak tarayıcı `localStorage` içindedir
 - ses, kamera ve medya davranışı tarayıcı API'lerine yaslanır
 - deploy Railway üzerinde Dockerfile ile yapılır
-- V2 uygulama workspace'i `/Users/umitaydin/Documents/Studio-workspace-Project` içinde kurulacaktır
+- V2 uygulamasının kanonik çalışma alanı `/Users/umitaydin/Documents/MinaGrow/MinaPlay` klasörüdür
 
 ## Mimari İlkeler
 

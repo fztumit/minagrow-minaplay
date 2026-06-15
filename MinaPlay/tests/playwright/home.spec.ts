@@ -40,6 +40,72 @@ test('home opens with six calm modes and bonus ceee', async ({ page }) => {
   await expect(page.locator('.topbar-home')).toHaveCount(0);
 });
 
+test('mobile home keeps navigation cards and brand bar inside the viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+
+  const layout = await page.evaluate(() => {
+    const shell = document.querySelector<HTMLElement>('.app-shell');
+    const guardedElements = [
+      document.querySelector<HTMLElement>('.topbar'),
+      document.querySelector<HTMLElement>('.mode-grid'),
+      document.querySelector<HTMLElement>('.bonus-strip'),
+      ...document.querySelectorAll<HTMLElement>('.mode-card')
+    ].filter((element): element is HTMLElement => Boolean(element));
+
+    return {
+      horizontalOverflow: Boolean(shell && shell.scrollWidth > window.innerWidth + 1),
+      allInside: guardedElements.every((element) => {
+        const rect = element.getBoundingClientRect();
+        return rect.left >= 0 && rect.right <= window.innerWidth;
+      })
+    };
+  });
+
+  expect(layout).toEqual({ horizontalOverflow: false, allInside: true });
+});
+
+test('ceee mode toggles Pofi between hidden and found play states', async ({ page }) => {
+  await disableChildLock(page);
+  await page.goto('/');
+
+  await page.click('[data-view="peekaboo"]');
+  const surface = page.locator('[data-peekaboo-surface]');
+  const pofi = page.locator('#view-peekaboo [data-pofi-avatar]');
+  await expect(surface).toHaveAttribute('data-peekaboo-state', 'ready');
+  await expect(pofi).toHaveAttribute('data-pofi-state', 'peekaboo');
+  await expect(pofi).toHaveAttribute('data-pofi-role', 'play');
+
+  await page.click('[data-peekaboo-toggle]');
+  await expect(surface).toHaveAttribute('data-peekaboo-state', 'hidden');
+  await expect(pofi).toHaveAttribute('data-pofi-state', 'peekabooHidden');
+  await expect(pofi).toHaveAttribute('data-pofi-role', 'play');
+  await expect(pofi.locator('.pofi-hands')).toHaveAttribute('src', /pofi_hand_closed_v01\.png$/);
+
+  await page.click('[data-peekaboo-toggle]');
+  await expect(surface).toHaveAttribute('data-peekaboo-state', 'found');
+  await expect(pofi).toHaveAttribute('data-pofi-state', 'peekabooFound');
+  await expect(pofi).toHaveAttribute('data-pofi-role', 'affirm');
+  await expect(pofi.locator('.pofi-mouth')).toHaveAttribute('src', /open-smile-soft-v01\.png$/);
+  await expect(surface).toHaveAttribute('data-peekaboo-state', 'ready', { timeout: 3000 });
+  await expect(pofi).toHaveAttribute('data-pofi-state', 'peekaboo');
+});
+
+test('module navigation carries Pofi through a short transition bridge', async ({ page }) => {
+  await disableChildLock(page);
+  await page.goto('/');
+
+  await page.click('[data-view="touch"]');
+  await expect(page.locator('#view-touch')).toHaveClass(/active/);
+  await page.click('.bottom-nav button[data-view="match"]');
+
+  const bridge = page.locator('.pofi-transition-bridge');
+  await expect(bridge).toHaveCount(1);
+  await expect(bridge.locator('.pofi-body')).toHaveAttribute('src', /default-v01\.png$/);
+  await expect(page.locator('#view-match')).toHaveClass(/active/);
+  await expect(bridge).toHaveCount(0, { timeout: 1200 });
+});
+
 test('first run teaches parent secret gesture', async ({ page }) => {
   await page.goto('/');
 
@@ -150,7 +216,96 @@ test('touch module runs a single-target listen and touch round', async ({ page }
   await page.click(`#view-touch [data-touch-card-id="${targetId}"]`, { force: true });
   await expect(page.locator('#view-touch [data-touch-surface]')).toHaveAttribute('data-touch-state', 'success');
   await expect(page.locator('#view-touch [data-touch-surface]')).toHaveClass(/touch-speaking/);
-  await expect(page.locator(`#view-touch [data-touch-card-id="${targetId}"]`)).toHaveClass(/target-success/);
+  await expect(page.locator('#view-touch [data-touch-surface]')).toHaveAttribute('data-pofi-motion', 'affirm');
+});
+
+test('touch Pofi changes motion rhythm while focusing, listening and affirming', async ({ page }) => {
+  await page.goto('/');
+  await page.click('.mode-card[data-view="touch"]');
+
+  const surface = page.locator('#view-touch [data-touch-surface]');
+  const pofi = page.locator('#view-touch [data-pofi-avatar]');
+  await expect(surface).toHaveAttribute('data-pofi-motion', /focus|listen/, { timeout: 5000 });
+  await expect(surface).toHaveAttribute('data-pofi-motion', 'listen', { timeout: 5000 });
+
+  await surface.evaluate((element) => {
+    element.dataset.pofiMotion = 'speak';
+  });
+  await expect(pofi.locator('.pofi-body')).toHaveCSS('animation-name', 'touch-pofi-speak-body');
+
+  const targetId = await surface.getAttribute('data-touch-target-id');
+  expect(targetId).toBeTruthy();
+  await page.click(`#view-touch [data-touch-card-id="${targetId}"]`, { force: true });
+
+  await expect(surface).toHaveAttribute('data-pofi-motion', 'affirm');
+  await expect(pofi.locator('.pofi-effect')).toHaveCSS('animation-name', 'touch-pofi-affirm-glow');
+});
+
+test('touch target changes card position between consecutive rounds', async ({ page }) => {
+  await page.goto('/');
+  await page.click('.mode-card[data-view="touch"]');
+
+  const surface = page.locator('#view-touch [data-touch-surface]');
+  const targetIndexes: number[] = [];
+
+  for (let round = 0; round < 4; round += 1) {
+    await expect(surface).toHaveAttribute('data-touch-state', /targeting|waiting/, { timeout: 5000 });
+    const targetId = await surface.getAttribute('data-touch-target-id');
+    const visibleIds = await page
+      .locator('#view-touch [data-touch-card-id]')
+      .all()
+      .then(async (cards) => Promise.all(cards.map((card) => card.getAttribute('data-touch-card-id'))));
+    targetIndexes.push(visibleIds.indexOf(targetId));
+    await page.click(`#view-touch [data-touch-card-id="${targetId}"]`, { force: true });
+    await expect(surface).toHaveAttribute('data-touch-state', 'success');
+    await expect(surface).toHaveAttribute('data-touch-state', /attention|targeting|waiting/, { timeout: 5000 });
+  }
+
+  for (let index = 1; index < targetIndexes.length; index += 1) {
+    expect(targetIndexes[index]).not.toBe(targetIndexes[index - 1]);
+  }
+});
+
+test('five-card touch level keeps every card inside the play surface', async ({ page }) => {
+  test.setTimeout(75000);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      'minaplay_touch_progress_v1',
+      JSON.stringify({
+        su: { success: 4, fail: 0, hintLevels: {}, successLatencyMsTotal: 1000, successLatencySamples: 4, repeatNeeds: 0 }
+      })
+    );
+  });
+  await page.goto('/');
+  await page.click('.mode-card[data-view="touch"]');
+
+  const surface = page.locator('#view-touch [data-touch-surface]');
+  for (let round = 0; round < 16; round += 1) {
+    await expect(surface).toHaveAttribute('data-touch-state', /targeting|waiting/, { timeout: 5000 });
+    const targetId = await surface.getAttribute('data-touch-target-id');
+    await page.click(`#view-touch [data-touch-card-id="${targetId}"]`, { force: true });
+    await expect(surface).toHaveAttribute('data-touch-state', 'success');
+  }
+
+  await expect(surface).toHaveAttribute('data-touch-level', '3', { timeout: 5000 });
+  await expect(page.locator('#view-touch [data-touch-card-id]')).toHaveCount(5);
+  const layout = await page.evaluate(() => {
+    const playSurface = document.querySelector<HTMLElement>('#view-touch [data-touch-surface]');
+    const grid = document.querySelector<HTMLElement>('#view-touch [data-touch-card-grid]');
+    const cards = [...document.querySelectorAll<HTMLElement>('#view-touch [data-touch-card-id]')];
+    const surfaceRect = playSurface?.getBoundingClientRect();
+    return {
+      allCardsInside:
+        Boolean(surfaceRect) &&
+        cards.every((card) => {
+          const rect = card.getBoundingClientRect();
+          return rect.left >= surfaceRect!.left && rect.right <= surfaceRect!.right;
+        }),
+      gridOverflow: Boolean(grid && grid.scrollWidth > grid.clientWidth + 1)
+    };
+  });
+  expect(layout).toEqual({ allCardsInside: true, gridOverflow: false });
 });
 
 test('touch repeat is explicit and parent controlled', async ({ page }) => {
@@ -213,6 +368,33 @@ test('matching module escalates hints and records repeat needs', async ({ page }
   expect(progress.hintLevels['1']).toBeGreaterThanOrEqual(1);
   expect(progress.hintLevels['2']).toBeGreaterThanOrEqual(1);
   expect(progress.repeatNeeds).toBeGreaterThanOrEqual(2);
+});
+
+test('matching Pofi changes motion between waiting, redirect and success', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('minaplay_mastered_words_v1', JSON.stringify({ masteredWords: ['su', 'top'] }));
+  });
+  await page.goto('/');
+  await page.click('.mode-card[data-view="match"]');
+
+  const surface = page.locator('[data-match-surface]');
+  const pofi = page.locator('#view-match [data-pofi-avatar]');
+  await expect(surface).toHaveAttribute('data-match-pofi-motion', /focus|model|listen/);
+  await expect(surface).toHaveAttribute('data-match-pofi-motion', 'listen', { timeout: 5000 });
+  await expect(pofi.locator('.pofi-body')).toHaveCSS('animation-name', 'match-pofi-listen-body');
+
+  const targetId = await surface.getAttribute('data-match-target-id');
+  const wrongChoice = page.locator(`[data-match-choice]:not([data-match-choice="${targetId}"])`);
+  expect(await wrongChoice.count()).toBeGreaterThan(0);
+  await wrongChoice.first().click({ force: true });
+  await expect(surface).toHaveAttribute('data-match-pofi-motion', 'reassure');
+  await expect(pofi).toHaveAttribute('data-pofi-role', 'softRedirect');
+
+  await expect(surface).toHaveAttribute('data-match-pofi-motion', 'listen', { timeout: 3000 });
+  await page.click(`[data-match-choice="${targetId}"]`, { force: true });
+  await expect(surface).toHaveAttribute('data-match-pofi-motion', 'affirm');
+  await expect(pofi).toHaveAttribute('data-pofi-role', 'affirm');
+  await expect(pofi.locator('.pofi-effect')).toHaveCSS('animation-name', 'match-pofi-affirm-glow');
 });
 
 test('sentence module completes a short expression from context', async ({ page }) => {
@@ -288,6 +470,8 @@ test('sleep module shows moon scene and toggles sleeping Pofi', async ({ page })
 
   await page.click('[data-sleep-toggle]');
   await expect(page.locator('[data-sleep-surface]')).toHaveAttribute('data-sleep-running', 'true');
+  await expect(page.locator('#view-sleep .sleep-floating-pofi')).toHaveAttribute('data-pofi-state', 'sleep');
+  await expect(page.locator('#view-sleep .sleep-floating-pofi .pofi-eyes')).toHaveAttribute('src', /drowsy-v01\.png$/);
   await expect(page.locator('[data-sleep-label]')).toHaveText('Durdur');
   await expect(page.locator('#view-sleep .sleeping-pofi-pose')).toHaveCSS('opacity', '1', { timeout: 2000 });
   await expect(page.locator('.topbar')).toHaveCSS('opacity', '0');
@@ -302,6 +486,7 @@ test('sleep module shows moon scene and toggles sleeping Pofi', async ({ page })
   await page.waitForTimeout(1900);
   await page.mouse.up();
   await expect(page.locator('[data-sleep-surface]')).toHaveAttribute('data-sleep-running', 'false', { timeout: 2200 });
+  await expect(page.locator('#view-sleep .sleep-floating-pofi')).toHaveAttribute('data-pofi-state', 'sleepReady');
   await expect(page.locator('[data-sleep-label]')).toHaveText('Başlat');
 });
 
@@ -311,7 +496,8 @@ test('mirror module starts camera-safe imitation flow', async ({ page }) => {
   await page.click('.mode-card[data-view="mirror"]');
   await expect(page.locator('[data-mirror-surface]')).toHaveAttribute('data-mirror-state', /attention|exercise|waiting/);
   await expect(page.locator('[data-mirror-surface]')).toHaveAttribute('data-mirror-exercise', 'tongue-out');
-  await expect(page.locator('#view-mirror [data-pofi-avatar] .pofi-mouth')).toHaveAttribute('src', /tongue-out-v01\.png$/, { timeout: 3000 });
+  await expect(page.locator('[data-mirror-surface]')).toHaveAttribute('data-mirror-state', /exercise|waiting/, { timeout: 7000 });
+  await expect(page.locator('#view-mirror [data-pofi-avatar] .pofi-mouth')).toHaveAttribute('src', /tongue-out-v01\.png$/);
   await expect(page.locator('[data-mirror-video]')).toHaveCount(1);
   await expect(page.locator('[data-mirror-progress]')).toHaveCSS('--mirror-duration', '4200ms');
   await expect(page.locator('.mirror-actions')).toHaveCount(0);

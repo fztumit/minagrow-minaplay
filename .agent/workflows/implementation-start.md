@@ -2,7 +2,7 @@
 name: implementation-start
 description: MinaPlay içinde gerçek dosya veya kod üretimine geçmeden önce hangi bağlamın okunacağını, neyin netleştirileceğini ve implementasyona hangi eşiği geçince başlanacağını tanımlar.
 created: 2026-04-17
-updated: 2026-05-01
+updated: 2026-06-15
 ---
 
 # Implementation Start
@@ -95,8 +95,8 @@ Bugünkü çalışan referans:
 Hedef uygulama alanı:
 
 - `.meta/plan.md` ve `.meta/project.md` içindeki kanonik hedef okunur
-- bugünkü V2 hedefi: `/Users/umitaydin/Documents/Studio-workspace-Project`
-- `/Users/umitaydin/Documents/MinaGrow/MinaPlay` varsa eski/ara çalışma izi, karşılaştırma veya geçici referans olarak değerlendirilir
+- bugünkü V2 hedefi: `/Users/umitaydin/Documents/MinaGrow/MinaPlay`
+- önceki `/Users/umitaydin/Documents/Studio-workspace-Project` hedefi aktif çalışma alanı olarak değerlendirilmez
 
 ## Kayıt
 

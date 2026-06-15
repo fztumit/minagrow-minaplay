@@ -148,6 +148,33 @@ describe('SpeechStateMachine', () => {
     }
   });
 
+  test('moves the target to a different visible slot on consecutive rounds', () => {
+    const snapshots: SpeechMachineSnapshot[] = [];
+    const targetIndexes: number[] = [];
+    const machine = new SpeechStateMachine({
+      items: () => items,
+      onStateChange: (snapshot) => {
+        snapshots.push(snapshot);
+        if (snapshot.state === 'targeting' && snapshot.targetId) {
+          targetIndexes.push(snapshot.visibleItemIds.indexOf(snapshot.targetId));
+        }
+      }
+    });
+
+    machine.start();
+
+    for (let index = 0; index < 8; index += 1) {
+      vi.advanceTimersByTime(1800);
+      machine.submit(snapshots.at(-1)?.targetId ?? '');
+      vi.advanceTimersByTime(1200);
+    }
+
+    expect(targetIndexes.length).toBeGreaterThan(2);
+    for (let index = 1; index < targetIndexes.length; index += 1) {
+      expect(targetIndexes[index]).not.toBe(targetIndexes[index - 1]);
+    }
+  });
+
   test('progresses hint levels while keeping the target stable', () => {
     const snapshots: SpeechMachineSnapshot[] = [];
     const hints: number[] = [];
@@ -174,6 +201,31 @@ describe('SpeechStateMachine', () => {
     vi.advanceTimersByTime(3010);
     expect(snapshots.at(-1)?.hintLevel).toBe(3);
     expect(hints).toEqual([1, 2, 3]);
+  });
+
+  test('stops repeating hint audio after one complete hint sequence', () => {
+    const snapshots: SpeechMachineSnapshot[] = [];
+    const sounds: string[] = [];
+    const machine = new SpeechStateMachine({
+      items: () => items,
+      waitingMs: 1000,
+      hintStepMs: 500,
+      onStateChange: (snapshot) => snapshots.push(snapshot),
+      onSound: (event) => sounds.push(`${event.intent}:${event.item.id}`)
+    });
+
+    machine.start();
+    vi.advanceTimersByTime(1800);
+    const targetId = snapshots.at(-1)?.targetId;
+    expect(sounds).toEqual([`target:${targetId}`]);
+
+    vi.advanceTimersByTime(5000);
+    expect(sounds).toEqual([`target:${targetId}`, `hint:${targetId}`, `hint:${targetId}`]);
+    expect(snapshots.at(-1)?.state).toBe('waiting');
+
+    vi.advanceTimersByTime(30000);
+    expect(sounds).toEqual([`target:${targetId}`, `hint:${targetId}`, `hint:${targetId}`]);
+    expect(snapshots.at(-1)?.state).toBe('waiting');
   });
 
   test('uses adaptive weighting and overall success rate without skipping the calm flow', () => {

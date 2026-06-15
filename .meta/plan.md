@@ -2,7 +2,7 @@
 name: plan
 description: MinaPlay projesinin bugünkü yürütme yönünü, aktif odağını ve yakın çalışma sırasını tanımlar.
 created: 2026-04-17
-updated: 2026-04-27
+updated: 2026-06-15
 ---
 
 # Plan
@@ -11,16 +11,37 @@ updated: 2026-04-27
 
 Bugünkü aktif odak:
 
-`MinaPlay V2` için kanonik uygulama hedefi olan `/Users/umitaydin/Documents/Studio-workspace-Project` içinde temiz ürün omurgasını doğrulanabilir hale getirmek.
+`MinaPlay V2` için kanonik uygulama hedefi olan `/Users/umitaydin/Documents/MinaGrow/MinaPlay` içindeki çalışan ürün omurgasını kararlı, doğrulanabilir ve yayıma hazır hale getirmek.
 
-Bu odak, V1'i uygulama temeli olarak taşımayı bırakır. V1 yalnız fikir, davranış ve örnekleme referansı olarak kalır. V2 tamamen yeni bir ürün versiyonu olarak `Studio-workspace-Project` içinde kurulacaktır.
+Bu odak, V1'i uygulama temeli olarak taşımayı bırakır. V1 yalnız fikir, davranış ve örnekleme referansı olarak kalır. V2'nin kanonik kodu `MinaGrow/MinaPlay` içinde geliştirilir.
 
-`/Users/umitaydin/Documents/MinaGrow/MinaPlay` altında görülen uygulama izi kanonik geliştirme hedefi değildir. Bu alan ancak eski/ara çalışma izi, karşılaştırma veya geçici referans olarak yorumlanır.
+Önceki planda yer alan `/Users/umitaydin/Documents/Studio-workspace-Project` hedefi artık geçerli değildir. Bu klasör mevcut değildir ve aktif çalışma hedefi olarak kullanılmaz.
+
+## Faz 1 - Kanonik Hedef ve Stabilizasyon
+
+Durum:
+
+- tamamlandı
+
+Kapanan paketler:
+
+- 1-1: `/Users/umitaydin/Documents/MinaGrow/MinaPlay` kanonik uygulama hedefi olarak kesinleştirildi
+- 1-2: mevcut uygulama değişiklikleri ve test kapsamı tek paket olarak gözden geçirildi
+- 1-3: build, lint, unit ve e2e kalite hattı bağımsız olarak doğrulandı
+- 1-4: masaüstü, tablet ve telefon responsive kontrolleri tamamlandı; mobil taşmalar giderildi
+- 1-5: plan, worklog ve git kapanışı tamamlandı
+
+Kapanış sonucu:
+
+- plan, agent bağlamı ve çalışan kod aynı uygulama alanını işaret eder
+- ana uygulama kalite hattı kararlıdır
+- mobil ana ekran için yatay taşma regresyon testi vardır
+- Faz 1 değişiklikleri tek git kapanışında kayıt altına alınmıştır
 
 ## Bugünkü Kapanış Hedefi
 
-- aktif uygulama hedefi `/Users/umitaydin/Documents/Studio-workspace-Project` olarak korunacak
-- `Studio-workspace-Project` içinde bağımlılıklar kurulup build/lint/test/e2e hattı anlamlı hale getirilecek
+- aktif uygulama hedefi `/Users/umitaydin/Documents/MinaGrow/MinaPlay` olarak korunacak
+- `MinaPlay` içinde build/lint/test/e2e hattı kararlı tutulacak
 - V2 klasör ağacı `core`, `pofi`, `entities`, `features`, `services`, `shared`, `server` ayrımıyla gerçek uygulama içinde karşılık bulacak
 - Pofi Engine V2 için tek global instance, merkezi `pofi-root`, event temelli modül iletişimi ve idle timer kuralı uygulama omurgasına taşınacak
 - MVP çocuk yüzeyi Ana ekran, Dokun, Eşleme, Ayna, Uyku ve Ceee ekseninde kurulacak
@@ -184,11 +205,11 @@ Alınan kararlar:
 - mod ekranları üst yönlendirme, orta görev alanı, sağ alt Pofi ve alt kısa geri bildirim kalıbını paylaşır
 - Parent panel nötr renkli, az animasyonlu, düzenli ve yorum odaklı olmalıdır
 
-### 3. Studio Workspace Doğrulama
+### 3. Kanonik Uygulama Doğrulama
 
 Amaç:
 
-- `/Users/umitaydin/Documents/Studio-workspace-Project` içinde V2 uygulama omurgasını install/build/lint/test/e2e hattıyla doğrulanabilir hale getirmek
+- `/Users/umitaydin/Documents/MinaGrow/MinaPlay` içindeki V2 uygulama omurgasını install/build/lint/test/e2e hattıyla doğrulanabilir halde tutmak
 
 Kapanış ölçütü:
 
@@ -217,7 +238,7 @@ Amaç:
 
 Alınan kararlar:
 
-- uygulama workspace'i `/Users/umitaydin/Documents/Studio-workspace-Project` içinde kurulacaktır
+- kanonik uygulama workspace'i `/Users/umitaydin/Documents/MinaGrow/MinaPlay` içindedir
 - klasör ağacı `src/core`, `src/pofi`, `src/entities`, `src/features`, `src/services`, `src/shared`, `src/server` olarak ayrılır
 - `features` kullanıcıya görünen modül ve panel akışlarını taşır
 - `entities` çocuk, parent, therapist, content, progress, session ve plan gibi ürün varlıklarını taşır

@@ -1,5 +1,5 @@
-const CACHE_NAME = 'minaplay-assets-v2';
-const APP_SHELL = ['/', '/style.css', '/js/modules/main.js', '/assets/icons/app.png'];
+const CACHE_NAME = 'minaplay-assets-v6';
+const APP_SHELL = ['/', '/style.css?v=20260615-4', '/js/modules/main.js', '/assets/icons/app.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));

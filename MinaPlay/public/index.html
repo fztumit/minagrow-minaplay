@@ -11,7 +11,7 @@
     <meta name="theme-color" content="#eef7f4" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/assets/icons/app.png" type="image/png" />
-    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/style.css?v=20260615-4" />
   </head>
   <body>
     <div class="app-shell" data-active-view="home">
@@ -208,8 +208,10 @@
             <h2>Kısa sürpriz.</h2>
             <p>Bonus oyun, ana görevlerin yerine geçmez.</p>
           </div>
-          <div class="play-surface" data-module-surface>
-            <button class="object-tile wide" type="button" data-track-action="peekaboo-reveal">Ceee</button>
+          <div class="play-surface peekaboo-surface" data-module-surface data-peekaboo-surface data-peekaboo-state="ready">
+            <button class="object-tile wide" type="button" data-track-action="peekaboo-hide" data-peekaboo-toggle>
+              <span data-peekaboo-label>Pofi saklandı</span>
+            </button>
             <div
               class="surface-pofi pofi-avatar large"
               data-pofi-avatar
@@ -222,102 +224,139 @@
         <section class="view parent-panel" id="view-parent" data-view-panel="parent" aria-label="Ebeveyn paneli">
           <p class="eyebrow">Ebeveyn paneli</p>
           <h2>Bugünün yumuşak özeti</h2>
-          <div class="analysis-grid">
-            <article>
-              <span>Oturum</span>
-              <strong id="metric-sessions">0</strong>
-            </article>
-            <article>
-              <span>Doğru</span>
-              <strong id="metric-correct">0</strong>
-            </article>
-            <article>
-              <span>Yönlendirme</span>
-              <strong id="metric-soft">0</strong>
-            </article>
-            <article>
-              <span>Tekrar</span>
-              <strong id="metric-repeats">0</strong>
-            </article>
+          <div class="parent-dashboard">
+            <section class="parent-overview" aria-label="Bugünün özeti">
+              <div class="parent-section-heading">
+                <div>
+                  <p class="eyebrow">Doğru analiz</p>
+                  <h3>Bugün ne oldu?</h3>
+                </div>
+              </div>
+              <div class="analysis-grid">
+                <article>
+                  <span>Oturum</span>
+                  <strong id="metric-sessions">0</strong>
+                </article>
+                <article>
+                  <span>Doğru</span>
+                  <strong id="metric-correct">0</strong>
+                </article>
+                <article>
+                  <span>Yönlendirme</span>
+                  <strong id="metric-soft">0</strong>
+                </article>
+                <article>
+                  <span>Tekrar</span>
+                  <strong id="metric-repeats">0</strong>
+                </article>
+              </div>
+              <div class="module-log" id="module-log" aria-live="polite"></div>
+            </section>
+
+            <div class="parent-learning-column">
+              <div class="parent-section-heading parent-column-heading">
+                <div>
+                  <p class="eyebrow">Öğrenme takibi</p>
+                  <h3>Çocuk nerede?</h3>
+                </div>
+              </div>
+              <section class="parent-touch-progress" aria-labelledby="touch-progress-title">
+                <div class="parent-section-heading">
+                  <div>
+                    <p class="eyebrow">Dokun öğrenme</p>
+                    <h3 id="touch-progress-title">Kelime bazlı ilerleme</h3>
+                  </div>
+                </div>
+                <div class="touch-progress-table" data-touch-progress-table></div>
+              </section>
+              <section class="parent-touch-progress" aria-labelledby="match-progress-title">
+                <div class="parent-section-heading">
+                  <div>
+                    <p class="eyebrow">Eşleme öğrenme</p>
+                    <h3 id="match-progress-title">Kavram genelleme izi</h3>
+                  </div>
+                </div>
+                <div class="touch-progress-table" data-match-progress-table></div>
+              </section>
+            </div>
+
+            <div class="parent-side-column">
+              <div class="parent-section-heading parent-column-heading">
+                <div>
+                  <p class="eyebrow">Güvenli kullanım</p>
+                  <h3>Tablet kontrolü</h3>
+                </div>
+              </div>
+              <section class="parent-safety-settings" aria-labelledby="child-lock-title">
+                <div class="parent-section-heading">
+                  <div>
+                    <p class="eyebrow">Tablet güvenli kullanım</p>
+                    <h3 id="child-lock-title">Çocuk kilidi</h3>
+                  </div>
+                </div>
+                <div class="safety-settings-card">
+                  <label class="safety-toggle">
+                    <input type="checkbox" data-child-lock-enabled />
+                    <span>
+                      Mod içindeyken çıkışı kilitle
+                      <small>Alt menü geçişleri kapanır; ebeveyn paneli gizli sol üst hareketle açılır.</small>
+                    </span>
+                  </label>
+                  <label class="safety-toggle">
+                    <input type="checkbox" data-child-lock-awake />
+                    <span>
+                      Ekranı açık tut
+                      <small>Destekleyen tabletlerde oyun sırasında ekranın uyumasını azaltır.</small>
+                    </span>
+                  </label>
+                  <label>
+                    Gizli dokunma
+                    <input type="number" min="2" max="6" step="1" data-parent-gesture-taps />
+                  </label>
+                  <label>
+                    Aşağı çekme (px)
+                    <input type="number" min="40" max="180" step="10" data-parent-gesture-pull />
+                  </label>
+                  <button class="soft-admin-button" type="button" data-parent-gesture-save>Girişi kaydet</button>
+                </div>
+                <p class="safety-parent-status" data-child-lock-status aria-live="polite"></p>
+              </section>
+            </div>
+
+            <div class="parent-admin-column">
+              <div class="parent-section-heading parent-column-heading">
+                <div>
+                  <p class="eyebrow">Kolay düzenleme</p>
+                  <h3>İçerik ve tekrar</h3>
+                </div>
+              </div>
+              <section class="parent-touch-settings" aria-labelledby="touch-cards-title">
+                <div class="parent-section-heading">
+                  <div>
+                    <p class="eyebrow">Dokun kartları</p>
+                    <h3 id="touch-cards-title">Kart ve ahenkli tekrar ayarları</h3>
+                  </div>
+                  <button class="soft-admin-button" type="button" data-touch-card-add>Kart ekle</button>
+                </div>
+                <div class="repeat-settings-card">
+                  <label>
+                    Süre (sn)
+                    <input type="number" min="5" max="180" step="5" data-touch-repeat-duration />
+                  </label>
+                  <label>
+                    Tekrar sayısı
+                    <input type="number" min="1" max="60" step="1" data-touch-repeat-count />
+                  </label>
+                  <button class="soft-admin-button" type="button" data-touch-repeat-save>Tekrarı kaydet</button>
+                </div>
+                <p class="recording-guide">
+                  Aynı kelimeyi farklı ritim ve tonlarla kaydedin: Baba, Bab-ba, Ba Ba, Baaa Baaa, Baaa Ba, Ba Baaa.
+                </p>
+                <div class="touch-card-editor" data-touch-card-editor></div>
+                <p class="touch-parent-status" data-touch-parent-status aria-live="polite"></p>
+              </section>
+            </div>
           </div>
-          <div class="module-log" id="module-log" aria-live="polite"></div>
-          <section class="parent-safety-settings" aria-labelledby="child-lock-title">
-            <div class="parent-section-heading">
-              <div>
-                <p class="eyebrow">Tablet güvenli kullanım</p>
-                <h3 id="child-lock-title">Çocuk kilidi</h3>
-              </div>
-            </div>
-            <div class="safety-settings-card">
-              <label class="safety-toggle">
-                <input type="checkbox" data-child-lock-enabled />
-                <span>
-                  Mod içindeyken çıkışı kilitle
-                  <small>Alt menü geçişleri kapanır; ebeveyn paneli gizli sol üst hareketle açılır.</small>
-                </span>
-              </label>
-              <label class="safety-toggle">
-                <input type="checkbox" data-child-lock-awake />
-                <span>
-                  Ekranı açık tut
-                  <small>Destekleyen tabletlerde oyun sırasında ekranın uyumasını azaltır.</small>
-                </span>
-              </label>
-              <label>
-                Gizli dokunma
-                <input type="number" min="2" max="6" step="1" data-parent-gesture-taps />
-              </label>
-              <label>
-                Aşağı çekme (px)
-                <input type="number" min="40" max="180" step="10" data-parent-gesture-pull />
-              </label>
-              <button class="soft-admin-button" type="button" data-parent-gesture-save>Girişi kaydet</button>
-            </div>
-            <p class="safety-parent-status" data-child-lock-status aria-live="polite"></p>
-          </section>
-          <section class="parent-touch-progress" aria-labelledby="touch-progress-title">
-            <div class="parent-section-heading">
-              <div>
-                <p class="eyebrow">Dokun öğrenme</p>
-                <h3 id="touch-progress-title">Kelime bazlı ilerleme</h3>
-              </div>
-            </div>
-            <div class="touch-progress-table" data-touch-progress-table></div>
-          </section>
-          <section class="parent-touch-progress" aria-labelledby="match-progress-title">
-            <div class="parent-section-heading">
-              <div>
-                <p class="eyebrow">Eşleme öğrenme</p>
-                <h3 id="match-progress-title">Kavram genelleme izi</h3>
-              </div>
-            </div>
-            <div class="touch-progress-table" data-match-progress-table></div>
-          </section>
-          <section class="parent-touch-settings" aria-labelledby="touch-cards-title">
-            <div class="parent-section-heading">
-              <div>
-                <p class="eyebrow">Dokun kartları</p>
-                <h3 id="touch-cards-title">Kart ve ahenkli tekrar ayarları</h3>
-              </div>
-              <button class="soft-admin-button" type="button" data-touch-card-add>Kart ekle</button>
-            </div>
-            <div class="repeat-settings-card">
-              <label>
-                Süre (sn)
-                <input type="number" min="5" max="180" step="5" data-touch-repeat-duration />
-              </label>
-              <label>
-                Tekrar sayısı
-                <input type="number" min="1" max="60" step="1" data-touch-repeat-count />
-              </label>
-              <button class="soft-admin-button" type="button" data-touch-repeat-save>Tekrarı kaydet</button>
-            </div>
-            <p class="recording-guide">
-              Aynı kelimeyi farklı ritim ve tonlarla kaydedin: Baba, Bab-ba, Ba Ba, Baaa Baaa, Baaa Ba, Ba Baaa.
-            </p>
-            <div class="touch-card-editor" data-touch-card-editor></div>
-            <p class="touch-parent-status" data-touch-parent-status aria-live="polite"></p>
-          </section>
         </section>
       </main>
 

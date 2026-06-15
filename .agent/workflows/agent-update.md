@@ -2,7 +2,7 @@
 name: agent-update
 description: MinaPlay içindeki agent omurgasının nasıl değerlendirileceğini, nasıl güçlendirileceğini ve ne zaman güncelleneceğini tanımlar.
 created: 2026-04-17
-updated: 2026-05-01
+updated: 2026-06-15
 ---
 
 # Agent Update
@@ -69,7 +69,7 @@ Agent omurgası güncellenirken uygulama hedefi dosya isimlerinden veya eski kla
 3. `.meta/architecture.md`
 4. ilgili `.meta/phases/phase-xx.md`
 
-Bugünkü kanonik V2 uygulama hedefi `/Users/umitaydin/Documents/Studio-workspace-Project` olarak okunur. `/Users/umitaydin/Documents/MinaGrow/MinaPlay` altında görülen izler, meta aksi yönde güncellenmedikçe kanonik geliştirme hedefi sayılmaz.
+Bugünkü kanonik V2 uygulama hedefi `/Users/umitaydin/Documents/MinaGrow/MinaPlay` olarak okunur. Önceki `/Users/umitaydin/Documents/Studio-workspace-Project` hedefi, meta yeniden değiştirilmedikçe aktif geliştirme alanı sayılmaz.
 
 ## Kısa Kural
 

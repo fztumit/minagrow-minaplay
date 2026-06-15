@@ -80,6 +80,8 @@ export class SpeechStateMachine {
   private level: 1 | 2 | 3 = 1;
   private correctCount = 0;
   private lastTargetIds: string[] = [];
+  private lastTargetVisibleIndex = -1;
+  private hintSequenceComplete = false;
   private timer: number | undefined;
   private readonly waitingMs: number;
   private readonly hintStepMs: number;
@@ -96,6 +98,8 @@ export class SpeechStateMachine {
     this.correctCount = 0;
     this.level = 1;
     this.lastTargetIds = [];
+    this.lastTargetVisibleIndex = -1;
+    this.hintSequenceComplete = false;
     this.hintLevel = undefined;
     this.roundStartedAt = 0;
     this.enterIdle(true);
@@ -168,6 +172,7 @@ export class SpeechStateMachine {
 
     this.target = this.pickTarget(items);
     this.visibleItemIds = this.pickVisibleItemIds(items, this.target);
+    this.hintSequenceComplete = false;
     this.hintLevel = undefined;
     this.enterAttention();
   }
@@ -197,7 +202,9 @@ export class SpeechStateMachine {
     this.state = 'waiting';
     this.hintLevel = undefined;
     this.emit();
-    this.timer = window.setTimeout(() => this.enterHint(1), this.waitingMs);
+    if (!this.hintSequenceComplete) {
+      this.timer = window.setTimeout(() => this.enterHint(1), this.waitingMs);
+    }
   }
 
   private enterSuccess(): void {
@@ -236,10 +243,19 @@ export class SpeechStateMachine {
     this.emit();
     this.options.onHint?.({ item: this.target, hintLevel: level });
     this.options.onPrompt?.({ kind: 'hint', item: this.target, text: this.promptFor('hint', this.target, level), hintLevel: level });
-    void this.options.onSound?.({ intent: 'hint', item: this.target, phrase: this.target.label, style: 'gentle' });
+    if (level === 1 || level === 3) {
+      void this.options.onSound?.({ intent: 'hint', item: this.target, phrase: this.target.label, style: 'gentle' });
+    }
     const nextLevel = Math.min(4, level + 1) as 1 | 2 | 3 | 4;
     this.timer = window.setTimeout(
-      () => (level < 4 ? this.enterHint(nextLevel) : this.enterWaiting()),
+      () => {
+        if (level < 4) {
+          this.enterHint(nextLevel);
+          return;
+        }
+        this.hintSequenceComplete = true;
+        this.enterWaiting();
+      },
       level < 4 ? this.hintStepMs : HINT_MS
     );
   }
@@ -271,7 +287,14 @@ export class SpeechStateMachine {
   private pickVisibleItemIds(items: SpeechItem[], target: SpeechItem): string[] {
     const count = Math.min(LEVEL_COUNTS[this.level], items.length);
     const distractors = this.shuffle(items.filter((item) => item.id !== target.id)).slice(0, Math.max(0, count - 1));
-    return this.shuffle([target, ...distractors]).map((item) => item.id);
+    const availableIndexes = Array.from({ length: count }, (_, index) => index).filter(
+      (index) => count === 1 || index !== this.lastTargetVisibleIndex
+    );
+    const targetIndex = this.pickOne(availableIndexes.length > 0 ? availableIndexes : [0]);
+    const visible = [...distractors];
+    visible.splice(targetIndex, 0, target);
+    this.lastTargetVisibleIndex = targetIndex;
+    return visible.map((item) => item.id);
   }
 
   private levelForCorrectCount(count: number): 1 | 2 | 3 {
@@ -344,7 +367,7 @@ export class SpeechStateMachine {
     return hintLevel && hintLevel >= 4 ? `${item.label} burada. Bu karta dokun 😊` : `${item.label} burada 😊`;
   }
 
-  private pickOne(items: SpeechItem[]): SpeechItem {
+  private pickOne<T>(items: T[]): T {
     return items[Math.floor(Math.random() * items.length)] ?? items[0];
   }
 
@@ -364,7 +387,12 @@ export class SpeechStateMachine {
   }
 
   private shuffle(items: SpeechItem[]): SpeechItem[] {
-    return [...items].sort(() => Math.random() - 0.5);
+    const shuffled = [...items];
+    for (let index = shuffled.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+    }
+    return shuffled;
   }
 
   private clearTimer(): void {
