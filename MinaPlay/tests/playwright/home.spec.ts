@@ -154,6 +154,9 @@ test('parent panel records simple module activity', async ({ page }) => {
   await expect(page.locator('#view-parent')).toHaveClass(/active/);
   await expect(page.locator('#metric-sessions')).toHaveText('1');
   await expect(page.locator('#metric-correct')).toHaveText('1');
+  await expect(page.locator('[data-parent-guidance] .parent-guidance-card')).toHaveCount(3);
+  await expect(page.locator('[data-parent-guidance]')).toContainText('Bugünkü ritim');
+  await expect(page.locator('[data-parent-guidance]')).toContainText('Sonraki sakin adım');
 });
 
 test('MinaPlay logo returns modules to home', async ({ page }) => {
@@ -566,6 +569,7 @@ test('parent panel shows touch word progress rows', async ({ page }) => {
   await expect(page.locator('[data-touch-progress-table]')).toContainText('Son 5: 4/5');
   await expect(page.locator('[data-touch-progress-table]')).toContainText('3 seri');
   await expect(page.locator('[data-touch-progress-table]')).toContainText('Öğrenildi');
+  await expect(page.locator('[data-parent-guidance]')).toContainText('Su');
 });
 
 test('parent panel shows matching mastery and saves Ayna and Uyku preferences', async ({ page }) => {

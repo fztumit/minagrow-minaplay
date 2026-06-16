@@ -86,10 +86,31 @@ Faz 3 sonucu:
 - kart görseli büyüdüğünde yerel kayıt kapasitesi riski sessiz kalmaz
 - build, lint, 28 unit test ve 28 Playwright e2e testi başarılıdır
 
+## Faz 4 - Parent Panel Yorumlu Rehberlik
+
+Durum:
+
+- tamamlandı
+
+Kapanan paketler:
+
+- 4-1: Parent panelde günlük metriklerin altına yorumlu rehberlik kartları eklendi
+- 4-2: mevcut local-first analitik, Dokun ilerlemesi ve Eşleme ilerlemesinden tekrar odağı çıkarılır hale geldi
+- 4-3: ebeveyn için bugünkü ritim, tekrar odağı ve sıradaki sakin adım metinleri üretildi
+- 4-4: yorum üretimi saf helper olarak unit test kapsamına alındı
+- 4-5: Parent panel rehberlik kartları Playwright e2e regresyonuna eklendi
+
+Faz 4 sonucu:
+
+- Parent panel yalnız sayı göstermez; kısa yorum ve uygulanabilir sonraki adım verir
+- yeni veri deposu veya bulut varsayımı açılmadan local-first özetlerden rehberlik üretilir
+- çocuk yüzeyi ve MVP mod kapsamı büyütülmeden ebeveyn güveni güçlendirilir
+- build, lint, 29 unit test ve 28 Playwright e2e testi başarılıdır
+
 ## Bugünkü Kapanış Hedefi
 
 - aktif uygulama hedefi `/Users/umitaydin/Documents/MinaGrow/MinaPlay` olarak korunur
-- Faz 1, Faz 2 ve Faz 3 kapanışları git kaydıyla doğrulanmış kabul edilir
+- Faz 1, Faz 2, Faz 3 ve Faz 4 kapanışları git kaydıyla doğrulanmış kabul edilir
 - `MinaPlay` içinde build/lint/test/e2e hattı kararlı tutulur
 - sonraki aktif faz/paket, bu sertleştirilmiş MVP tabanı üstüne yeni tek kapanış hedefi olarak belirlenir
 - yeni iş açılırken çocuk yüzeyi kapsamı büyütülmeden önce Parent panel, Pofi state ve local-first veri sınırları korunur

@@ -132,6 +132,13 @@ interface AnalyticsState {
   };
 }
 
+interface ParentGuidanceCard {
+  title: string;
+  value: string;
+  note: string;
+  tone: 'steady' | 'repeat' | 'next';
+}
+
 interface TouchVoiceVariation {
   id: string;
   label: string;
@@ -1379,6 +1386,111 @@ export function createInitialModuleStats(): ModuleStats {
     actions: 0,
     correct: 0,
     softRedirects: 0
+  };
+}
+
+export function createParentGuidanceCards(
+  state: AnalyticsState,
+  touchState: TouchProgressState = {},
+  matchState: MatchProgressState = {},
+  labels: Record<string, string> = {}
+): ParentGuidanceCard[] {
+  const modules = Object.entries(state.modules);
+  const totals = modules.reduce(
+    (acc, [_name, stats]) => {
+      acc.correct += stats.correct;
+      acc.soft += stats.softRedirects;
+      acc.opens += stats.opens;
+      return acc;
+    },
+    { correct: 0, soft: 0, opens: 0 }
+  );
+  const mostOpenedModule = modules.sort((a, b) => b[1].opens - a[1].opens)[0];
+  const supportTarget = strongestSupportTarget(touchState, matchState, labels);
+  const masteredTouchCount = Object.values(touchState).filter((entry) => isMastered(entry)).length;
+  const masteredMatchCount = Object.values(matchState).filter((entry) => isMatchMastered(entry)).length;
+  const masteredCount = masteredTouchCount + masteredMatchCount;
+
+  const rhythm =
+    state.sessions === 0
+      ? {
+          value: 'Henüz oyun yok',
+          note: 'Bugün için Dokun ya da Eşleme ile iki dakikalık kısa bir başlangıç yeterli.'
+        }
+      : {
+          value: `${state.sessions} oturum`,
+          note:
+            totals.soft > totals.correct && totals.soft > 0
+              ? 'Bugün yönlendirme ihtiyacı doğru denemeden fazla. Tempo kısa ve tanıdık kalsın.'
+              : `${parentModuleLabel(mostOpenedModule?.[0] ?? 'touch')} bugün en çok açılan alan. Akış sakin görünüyor.`
+        };
+
+  const repeat =
+    supportTarget.score > 0
+      ? {
+          value: supportTarget.label,
+          note: `${supportTarget.reason}. Aynı kartı kısa aralıklarla ve yumuşak sesle tekrar etmek iyi olur.`
+        }
+      : {
+          value: masteredCount > 0 ? `${masteredCount} güçlü iz` : 'İlk izler hazırlanıyor',
+          note:
+            masteredCount > 0
+              ? 'Öğrenilen kartları Eşleme içinde farklı görsellerle pekiştirmek için uygun zaman.'
+              : 'Henüz özel tekrar odağı yok. İki tanıdık kartla sakin başlangıç yapılabilir.'
+        };
+
+  const next =
+    supportTarget.score > 0
+      ? {
+          value: '2 kısa tur',
+          note: `${supportTarget.label} için Dokun'da dinle-dokun, sonra Eşleme'de bir genelleme turu deneyin.`
+        }
+      : state.sessions > 0
+        ? {
+            value: 'Akışı koru',
+            note: 'Bugünkü ritim yeterli. Yeni kart eklemeden aynı kelimeleri kısa tekrarlarla kapatın.'
+          }
+        : {
+            value: 'Dokun ile başla',
+            note: 'Baba ve su gibi tanıdık iki kartla kısa bir tur açmak yeterli.'
+          };
+
+  return [
+    { title: 'Bugünkü ritim', value: rhythm.value, note: rhythm.note, tone: 'steady' },
+    { title: 'Tekrar odağı', value: repeat.value, note: repeat.note, tone: 'repeat' },
+    { title: 'Sonraki sakin adım', value: next.value, note: next.note, tone: 'next' }
+  ];
+}
+
+function strongestSupportTarget(
+  touchState: TouchProgressState,
+  matchState: MatchProgressState,
+  labels: Record<string, string>
+): { id: string; label: string; score: number; reason: string } {
+  const touchCandidates = Object.entries(touchState).map(([id, entry]) => {
+    const hintCount = Object.values(entry.hintLevels).reduce((sum, count) => sum + count, 0);
+    return {
+      id,
+      label: labels[id] ?? id,
+      score: entry.fail + entry.repeatNeeds + hintCount,
+      reason: `${entry.fail} yönlendirme ve ${entry.repeatNeeds} tekrar ihtiyacı`
+    };
+  });
+  const matchCandidates = Object.entries(matchState).map(([id, entry]) => {
+    const hintCount = Object.values(entry.hintLevels).reduce((sum, count) => sum + count, 0);
+    return {
+      id,
+      label: labels[id] ?? id,
+      score: entry.fail + entry.repeatNeeds + hintCount,
+      reason: `${entry.fail} eşleme yönlendirmesi ve ${entry.repeatNeeds} tekrar ihtiyacı`
+    };
+  });
+
+  return [...touchCandidates, ...matchCandidates].sort((a, b) => b.score - a.score)[0] ?? {
+    id: '',
+    label: '',
+    score: 0,
+    reason: ''
   };
 }
 
@@ -5371,6 +5483,28 @@ function renderParentMetrics(): void {
       `<p><strong>Dokun öğrenme</strong>: ipucu kullanımı ${hintSummary || '0'}, ortalama doğru dokunma ${averageLatency} ms, tekrar ihtiyacı ${state.touch.repeatNeeds}.</p>`
     );
   }
+
+  renderParentGuidance(state);
+}
+
+function renderParentGuidance(state: AnalyticsState): void {
+  const grid = document.querySelector<HTMLElement>('[data-parent-guidance]');
+  if (!grid) {
+    return;
+  }
+
+  const labels = Object.fromEntries(touchSettings.cards.map((card) => [card.id, card.word]));
+  const cards = createParentGuidanceCards(state, touchProgress, matchProgress, labels);
+  grid.innerHTML = cards
+    .map(
+      (card) => `
+        <article class="parent-guidance-card" data-tone="${card.tone}">
+          <span>${card.title}</span>
+          <strong>${card.value}</strong>
+          <small>${card.note}</small>
+        </article>`
+    )
+    .join('');
 }
 
 async function renderDeviceStatus(): Promise<void> {

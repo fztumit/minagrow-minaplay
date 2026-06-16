@@ -3332,7 +3332,8 @@ h2 {
 }
 
 .analysis-grid article,
-.module-log {
+.module-log,
+.parent-guidance {
   padding: 18px;
   border: 1px solid rgba(70, 67, 79, 0.1);
   border-radius: 8px;
@@ -3372,6 +3373,59 @@ h2 {
 
 .parent-overview .module-log {
   min-height: 118px;
+}
+
+.parent-guidance {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+  background: rgba(255, 253, 250, 0.78);
+}
+
+.parent-guidance-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.parent-guidance-card {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px;
+  color: #6d6480;
+  font-size: 0.9rem;
+  font-weight: 850;
+  background: rgba(247, 245, 250, 0.76);
+  border: 1px solid rgba(82, 64, 101, 0.08);
+  border-radius: 18px;
+}
+
+.parent-guidance-card strong {
+  color: #4d3670;
+  font-size: 1.06rem;
+}
+
+.parent-guidance-card span,
+.parent-guidance-card small {
+  overflow-wrap: anywhere;
+}
+
+.parent-guidance-card small {
+  color: #7b728a;
+  line-height: 1.42;
+}
+
+.parent-guidance-card[data-tone="steady"] {
+  background: rgba(241, 255, 239, 0.8);
+}
+
+.parent-guidance-card[data-tone="repeat"] {
+  background: rgba(255, 248, 228, 0.9);
+}
+
+.parent-guidance-card[data-tone="next"] {
+  background: rgba(237, 246, 255, 0.84);
 }
 
 .bottom-nav {
@@ -3485,6 +3539,10 @@ h2 {
   }
 
   .parent-learning-column {
+    grid-template-columns: 1fr;
+  }
+
+  .parent-guidance-grid {
     grid-template-columns: 1fr;
   }
 
