@@ -4810,6 +4810,48 @@ h2 {
   overflow-wrap: anywhere;
 }
 
+.device-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.device-status-chip {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 13px;
+  color: #6d6480;
+  font-size: 0.82rem;
+  font-weight: 850;
+  background: rgba(255, 253, 250, 0.84);
+  border: 1px solid rgba(82, 64, 101, 0.08);
+  border-radius: 18px;
+}
+
+.device-status-chip strong {
+  color: #4d3670;
+  font-size: 0.98rem;
+}
+
+.device-status-chip span {
+  overflow-wrap: anywhere;
+}
+
+.device-status-chip small {
+  color: #7b728a;
+  line-height: 1.35;
+}
+
+.device-status-chip[data-status="ready"] {
+  background: rgba(241, 255, 239, 0.84);
+}
+
+.device-status-chip[data-status="fallback"] {
+  background: rgba(255, 248, 228, 0.9);
+}
+
 .parent-section-heading,
 .repeat-settings-card,
 .safety-settings-card {

@@ -2,7 +2,7 @@
 name: plan
 description: MinaPlay projesinin bugünkü yürütme yönünü, aktif odağını ve yakın çalışma sırasını tanımlar.
 created: 2026-04-17
-updated: 2026-06-15
+updated: 2026-06-16
 ---
 
 # Plan
@@ -64,17 +64,35 @@ Faz 2 sonucu:
 - MVP aktif çocuk yüzeyi kapsamı dar ve tutarlıdır
 - build, lint, 26 unit test ve 27 Playwright e2e testi başarılıdır
 
+## Faz 3 - Ürün Sertleştirme
+
+Durum:
+
+- tamamlandı
+
+Kapanan paketler:
+
+- 3-1: PWA service worker cache listesi gerçek client module graph ile hizalandı; offline fallback sayfası eklendi
+- 3-2: Parent panelde çevrimdışı durum, kamera desteği, ses/TTS desteği ve yerel kayıt kullanımı görünür hale geldi
+- 3-3: Dokun kart görselleri için localStorage kota riski ebeveyne anlaşılır uyarıyla aktarılır hale geldi
+- 3-4: Parent panel local-first sınırı açık metne bağlandı; bulut hesabı/senkron varsayımı yapılmadığı görünür oldu
+- 3-5: PWA cache manifesti ve Parent panel cihaz durumu unit/e2e regresyon kapsamına alındı
+
+Faz 3 sonucu:
+
+- uygulama kabuğu `/offline.html` ile sakin bir çevrimdışı geri dönüş taşır
+- service worker ana shell, stylesheet, client modülleri ve PWA ikonunu cache kapsamına alır
+- Parent panel cihaz izinlerini ve fallback davranışlarını çocuk yüzeyine taşmadan gösterir
+- kart görseli büyüdüğünde yerel kayıt kapasitesi riski sessiz kalmaz
+- build, lint, 28 unit test ve 28 Playwright e2e testi başarılıdır
+
 ## Bugünkü Kapanış Hedefi
 
-- aktif uygulama hedefi `/Users/umitaydin/Documents/MinaGrow/MinaPlay` olarak korunacak
-- `MinaPlay` içinde build/lint/test/e2e hattı kararlı tutulacak
-- sonraki aktif faz/paket, Faz 2 üstüne yeni tek kapanış hedefi olarak belirlenecek
-- V2 klasör ağacı `core`, `pofi`, `entities`, `features`, `services`, `shared`, `server` ayrımıyla gerçek uygulama içinde karşılık bulacak
-- Pofi Engine V2 için tek global instance, merkezi `pofi-root`, event temelli modül iletişimi ve idle timer kuralı uygulama omurgasına taşınacak
-- MVP çocuk yüzeyi Ana ekran, Dokun, Eşleme, Ayna, Uyku ve Ceee ekseninde kurulacak
-- Parent Panel MVP kelime/nesne istatistikleri, günlük özet, öğrenildi kuralı ve set seçimiyle sınırlı tutulacak
-- V1 davranışları yalnız seçici referans olarak okunacak; eski UI, CSS, legacy servisler ve doğrudan kopya yaklaşımı taşınmayacak
-- doğrulama sonuçları ve açık kalan kırıklar `.meta/worklog.md` içine kısa kayıt olarak işlenecek
+- aktif uygulama hedefi `/Users/umitaydin/Documents/MinaGrow/MinaPlay` olarak korunur
+- Faz 1, Faz 2 ve Faz 3 kapanışları git kaydıyla doğrulanmış kabul edilir
+- `MinaPlay` içinde build/lint/test/e2e hattı kararlı tutulur
+- sonraki aktif faz/paket, bu sertleştirilmiş MVP tabanı üstüne yeni tek kapanış hedefi olarak belirlenir
+- yeni iş açılırken çocuk yüzeyi kapsamı büyütülmeden önce Parent panel, Pofi state ve local-first veri sınırları korunur
 
 ## Kanonik Ürün Yönü
 

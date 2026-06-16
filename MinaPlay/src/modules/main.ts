@@ -316,6 +316,7 @@ const TOUCH_DB_STORE = 'touchSettings';
 const TOUCH_DB_VERSION = 1;
 const TOUCH_MAX_GIF_BYTES = 3_200_000;
 const TOUCH_MAX_IMAGE_EDGE = 720;
+const TOUCH_SETTINGS_STORAGE_WARNING_BYTES = 4_500_000;
 const TOUCH_DEFAULT_LEARNING_GOALS: Record<string, string> = {
   su: 'ihtiyaç ifade etme',
   baba: 'yakın kişiyi tanıma',
@@ -1849,6 +1850,7 @@ function activateView(view: ViewName): void {
     renderMatchProgressTable();
     renderChildLockSettings();
     renderMvpModuleSettings();
+    void renderDeviceStatus();
   }
   trackViewOpen(view);
   renderParentMetrics();
@@ -4968,8 +4970,20 @@ async function writeTouchSettings(): Promise<void> {
     cards: touchSettings.cards,
     repeat: { ...touchSettings.repeat, enabled: false }
   };
+  const serializedPayload = JSON.stringify(payload);
 
-  localStorage.setItem(TOUCH_SETTINGS_KEY, JSON.stringify(payload));
+  try {
+    localStorage.setItem(TOUCH_SETTINGS_KEY, serializedPayload);
+    if (storageByteLength(serializedPayload) > TOUCH_SETTINGS_STORAGE_WARNING_BYTES) {
+      setTouchParentStatus('Yerel kayıt alanı dolmaya yaklaştı. Büyük görselleri azaltmak iyi olur.');
+    }
+  } catch (error) {
+    if (isStorageQuotaError(error)) {
+      setTouchParentStatus('Cihazın yerel kayıt alanı dolu olabilir. Daha küçük görseller deneyin.');
+    } else {
+      console.warn('Touch settings localStorage write failed:', error);
+    }
+  }
 
   if (!('indexedDB' in window)) {
     return;
@@ -4986,6 +5000,20 @@ async function writeTouchSettings(): Promise<void> {
   } catch {
     // localStorage fallback above is enough for older browsers.
   }
+}
+
+function storageByteLength(value: string): number {
+  if ('TextEncoder' in window) {
+    return new TextEncoder().encode(value).byteLength;
+  }
+  return value.length;
+}
+
+function isStorageQuotaError(error: unknown): boolean {
+  if (!(error instanceof DOMException)) {
+    return false;
+  }
+  return error.name === 'QuotaExceededError' || error.name === 'NS_ERROR_DOM_QUOTA_REACHED' || error.code === 22 || error.code === 1014;
 }
 
 function normalizeTouchSettings(stored?: TouchSettingsState): TouchSettingsState {
@@ -5345,6 +5373,65 @@ function renderParentMetrics(): void {
   }
 }
 
+async function renderDeviceStatus(): Promise<void> {
+  const grid = document.querySelector<HTMLElement>('[data-device-status]');
+  const note = document.querySelector<HTMLElement>('[data-device-status-note]');
+  if (!grid) {
+    return;
+  }
+
+  const estimate = await navigator.storage?.estimate?.().catch(() => undefined);
+  const usage = estimate?.usage ?? 0;
+  const quota = estimate?.quota ?? 0;
+  const usagePercent = quota > 0 ? Math.round((usage / quota) * 100) : 0;
+  const usageText = quota > 0 ? `%${usagePercent} kullanım` : 'Tarayıcı yönetiyor';
+  const cameraReady = Boolean(navigator.mediaDevices && 'getUserMedia' in navigator.mediaDevices);
+  const audioReady = 'speechSynthesis' in window && Boolean(window.AudioContext);
+
+  const rows = [
+    {
+      label: 'Çevrimdışı',
+      value: navigator.onLine ? 'Çevrimiçi' : 'Çevrimdışı mod',
+      note: 'Servis worker destekliyse uygulama kabuğu saklanır.',
+      status: navigator.onLine ? 'ready' : 'fallback'
+    },
+    {
+      label: 'Kamera',
+      value: cameraReady ? 'Hazır' : 'Metinle devam',
+      note: 'Ayna kamera yoksa Pofi model gösterir.',
+      status: cameraReady ? 'ready' : 'fallback'
+    },
+    {
+      label: 'Ses',
+      value: audioReady ? 'Hazır' : 'Yazı ve görsel destek',
+      note: 'TTS veya ses kapalıysa oyun akışı durmaz.',
+      status: audioReady ? 'ready' : 'fallback'
+    },
+    {
+      label: 'Yerel kayıt',
+      value: usageText,
+      note: 'Kartlar, ilerleme ve ebeveyn tercihleri bu cihazda kalır.',
+      status: usagePercent > 85 ? 'fallback' : 'ready'
+    }
+  ];
+
+  grid.innerHTML = rows
+    .map(
+      (row) => `
+        <article class="device-status-chip" data-status="${row.status}">
+          <span>${row.label}</span>
+          <strong>${row.value}</strong>
+          <small>${row.note}</small>
+        </article>`
+    )
+    .join('');
+
+  if (note) {
+    note.textContent =
+      'Parent panel local-first çalışır: oyun kayıtları, modül tercihleri ve kart düzenlemeleri bu cihazda tutulur; bulut hesabı yoktur.';
+  }
+}
+
 function parentModuleLabel(name: string): string {
   const labels: Record<string, string> = {
     touch: 'Dokun',
@@ -5682,6 +5769,13 @@ function boot(): void {
     void syncScreenWakeLock();
   });
 
+  window.addEventListener('online', () => {
+    void renderDeviceStatus();
+  });
+  window.addEventListener('offline', () => {
+    void renderDeviceStatus();
+  });
+
   PRIMARY_VIEWS.forEach((view) => {
     document.querySelector<HTMLButtonElement>(`.bottom-nav button[data-view="${view}"]`)?.classList.toggle('active', false);
   });
@@ -5699,6 +5793,7 @@ function boot(): void {
   syncChildLockMode();
   showParentSecretIntroIfNeeded();
   renderParentMetrics();
+  void renderDeviceStatus();
   renderTouchProgressTable();
   renderMatchProgressTable();
   renderMvpModuleSettings();

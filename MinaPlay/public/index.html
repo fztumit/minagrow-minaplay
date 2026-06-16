@@ -11,7 +11,7 @@
     <meta name="theme-color" content="#eef7f4" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/assets/icons/app.png" type="image/png" />
-    <link rel="stylesheet" href="/style.css?v=20260615-5" />
+    <link rel="stylesheet" href="/style.css?v=20260616-1" />
   </head>
   <body>
     <div class="app-shell" data-active-view="home">
@@ -363,6 +363,18 @@
                   <button class="soft-admin-button" type="button" data-sleep-settings-save>Uyku tercihini kaydet</button>
                 </div>
                 <p class="safety-parent-status" data-module-settings-status aria-live="polite"></p>
+              </section>
+              <section class="parent-safety-settings" aria-labelledby="device-status-title">
+                <div class="parent-section-heading">
+                  <div>
+                    <p class="eyebrow">Yerel çalışma</p>
+                    <h3 id="device-status-title">Offline ve izinler</h3>
+                  </div>
+                </div>
+                <div class="device-status-grid" data-device-status aria-live="polite"></div>
+                <p class="safety-parent-status" data-device-status-note>
+                  Veriler bu cihazda saklanır; internet kesilirse kayıt ve oyun yüzeyi yerel çalışmaya devam eder.
+                </p>
               </section>
             </div>
 

@@ -1,5 +1,16 @@
-const CACHE_NAME = 'minaplay-assets-v7';
-const APP_SHELL = ['/', '/style.css?v=20260615-5', '/js/modules/main.js', '/assets/icons/app.png'];
+const CACHE_NAME = 'minaplay-assets-v8';
+const APP_SHELL = [
+  '/',
+  '/offline.html',
+  '/style.css?v=20260616-1',
+  '/js/modules/main.js',
+  '/js/modules/touch-learning.js',
+  '/js/modules/match-learning.js',
+  '/js/modules/sentence-learning.js',
+  '/js/modules/mvp-settings.js',
+  '/js/modules/speech/index.js',
+  '/assets/icons/app.png'
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
@@ -20,5 +31,26 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  event.respondWith(fetch(event.request).catch(() => caches.match(event.request).then((cached) => cached ?? caches.match('/'))));
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        }
+        return response;
+      })
+      .catch(async () => {
+        const cached = await caches.match(event.request);
+        if (cached) {
+          return cached;
+        }
+
+        if (event.request.mode === 'navigate' || event.request.destination === 'document') {
+          return (await caches.match('/')) ?? (await caches.match('/offline.html'));
+        }
+
+        return Response.error();
+      })
+  );
 });

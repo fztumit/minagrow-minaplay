@@ -2,7 +2,7 @@
 name: worklog
 description: MinaGrow/MinaPlay için iş kayıtlarını, karar izlerini ve kapanan çalışma adımlarını kronolojik akışta tutar.
 created: 2026-04-17
-updated: 2026-06-15
+updated: 2026-06-16
 ---
 
 # Worklog
@@ -51,3 +51,4 @@ Bu dosya, `MinaGrow` üst bağlamındaki `MinaPlay` meta omurgasının yürütme
 - 2026-06-15 | Faz kapanışı | Kanonik hedef ve stabilizasyon fazının git kaydı | Faz 1 içindeki hedef hizalaması, uygulama incelemesi, kalite hattı, responsive kontroller, yeni object kart assetleri ve regresyon testleri tek kapanış paketi olarak plan/worklog yüzeyine işlendi ve git kaydına hazırlandı | Faz 1 Paket 5 ve Faz 1 bütünü kapandı; sonraki çalışma kanonik `/Users/umitaydin/Documents/MinaGrow/MinaPlay` alanında yeni bir aktif hedefle başlayabilir
 - 2026-06-15 | Dokun MVP | Faz 2 Paket 1 Dokun modunun kanonik öğrenme kurallarıyla tamamlanması | Dokun bekleme ritmi 10/20/30 saniyeye çekildi; ilerleme kaydına son 5 deneme, ardışık doğru ve son çalışma zamanı eklendi; öğrenildi kuralı son 5 denemede 4 doğru ve 3 ardışık doğru şartına bağlandı; eski localStorage kayıtları için güvenli normalizasyon korundu; Parent panel yeni özetlerle ve kanonik durum diliyle güncellendi | Faz 2 Paket 1 kapandı; build ve lint hatasız, 7 unit dosyasında 23 test ve Parent panel regresyonu dahil 25 Playwright e2e senaryosu başarılı, Dokun masaüstü sahnesi tarayıcıda görsel olarak doğrulandı
 - 2026-06-16 | MVP modül kapanışı | Faz 2'nin MVP modülleriyle tamamlanması | Eşleme ilerleme modeli Dokun ile aynı son 5 deneme, ardışık doğru ve öğrenildi kuralına çekildi; Eşleme ipucu ritmi 10/20/30 saniyeye hizalandı; Ayna egzersiz sırası ve Uyku ses/süre/volume tercihleri Parent panelden local-first yönetilebilir oldu; Ceee otomatik yumuşak saklanma/devam döngüsü kazandı; Cümle ve Hikaye gelecek mod olarak kodda korunup MVP çocuk menüsünden gizlendi; PWA cache sürümü yenilendi | Faz 2 kapandı; build ve lint hatasız, 8 unit dosyasında 26 test ve 27 Playwright e2e senaryosu başarılı, masaüstü ve telefon MVP ana ekranında yatay taşma görülmedi
+- 2026-06-16 | Ürün sertleştirme | Faz 3'ün PWA/offline ve local-first görünürlük paketiyle tamamlanması | Service worker cache listesi ana shell, stylesheet, client modülleri ve PWA ikonuyla hizalandı; sakin `/offline.html` fallback sayfası eklendi; Parent panel çevrimdışı, kamera, ses/TTS ve yerel kayıt durumunu gösterir hale geldi; Dokun kart ayarlarında localStorage kota riski yakalanıp ebeveyne anlaşılır uyarı verildi; PWA cache manifesti unit testle, Parent panel cihaz durumu e2e testle korumaya alındı | Faz 3 kapandı; build ve lint hatasız, 9 unit dosyasında 28 test ve 28 Playwright e2e senaryosu başarılı; canlı tarayıcı DOM kontrolünde cihaz durum kartları üretildi ve yatay taşma görülmedi

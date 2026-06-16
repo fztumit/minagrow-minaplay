@@ -624,6 +624,20 @@ test('parent panel shows matching mastery and saves Ayna and Uyku preferences', 
   await expect(page.locator('[data-sleep-surface]')).toHaveAttribute('data-sleep-duration', '20');
 });
 
+test('parent panel shows local-first device and offline readiness', async ({ page }) => {
+  await disableChildLock(page);
+  await page.goto('/');
+
+  await openParentBySecretGesture(page);
+  await expect(page.locator('#view-parent')).toHaveClass(/active/);
+  await expect(page.locator('[data-device-status] .device-status-chip')).toHaveCount(4);
+  await expect(page.locator('[data-device-status]')).toContainText('Çevrimdışı');
+  await expect(page.locator('[data-device-status]')).toContainText('Kamera');
+  await expect(page.locator('[data-device-status]')).toContainText('Ses');
+  await expect(page.locator('[data-device-status]')).toContainText('Yerel kayıt');
+  await expect(page.locator('[data-device-status-note]')).toContainText('local-first');
+});
+
 test('module surfaces render stateful layered Pofi parts', async ({ page }) => {
   await disableChildLock(page);
   await page.goto('/');
