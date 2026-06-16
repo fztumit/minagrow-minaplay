@@ -12,11 +12,17 @@ export interface MatchProgressEntry {
   latencyMsTotal: number;
   latencySamples: number;
   repeatNeeds: number;
+  consecutiveCorrectCount: number;
+  recentResults: boolean[];
+  lastPracticedAt: number;
 }
 
 export type MatchProgressState = Record<string, MatchProgressEntry>;
 
 export const MATCH_PROGRESS_KEY = 'minaplay_match_progress_v1';
+export const MATCH_MASTERY_RECENT_WINDOW = 5;
+export const MATCH_MASTERY_RECENT_CORRECT_THRESHOLD = 4;
+export const MATCH_MASTERY_STREAK_THRESHOLD = 3;
 
 export function createEmptyMatchProgressEntry(): MatchProgressEntry {
   return {
@@ -28,7 +34,10 @@ export function createEmptyMatchProgressEntry(): MatchProgressEntry {
     conceptGeneralizationSuccess: 0,
     latencyMsTotal: 0,
     latencySamples: 0,
-    repeatNeeds: 0
+    repeatNeeds: 0,
+    consecutiveCorrectCount: 0,
+    recentResults: [],
+    lastPracticedAt: 0
   };
 }
 
@@ -51,7 +60,10 @@ export function normalizeMatchProgress(raw: unknown): MatchProgressState {
       conceptGeneralizationSuccess: safeCount(entry.conceptGeneralizationSuccess),
       latencyMsTotal: safeCount(entry.latencyMsTotal),
       latencySamples: safeCount(entry.latencySamples),
-      repeatNeeds: safeCount(entry.repeatNeeds)
+      repeatNeeds: safeCount(entry.repeatNeeds),
+      consecutiveCorrectCount: safeCount(entry.consecutiveCorrectCount),
+      recentResults: normalizeRecentResults(entry.recentResults),
+      lastPracticedAt: safeCount(entry.lastPracticedAt)
     };
     return state;
   }, {});
@@ -69,6 +81,38 @@ export function matchSuccessRate(entry: Pick<MatchProgressEntry, 'success' | 'fa
 
   const total = entry.success + entry.fail;
   return total > 0 ? entry.success / total : 0;
+}
+
+export function registerMatchAttempt(
+  entry: MatchProgressEntry,
+  correct: boolean,
+  practicedAt = Date.now()
+): MatchProgressEntry {
+  if (correct) {
+    entry.success += 1;
+    entry.consecutiveCorrectCount += 1;
+  } else {
+    entry.fail += 1;
+    entry.repeatNeeds += 1;
+    entry.consecutiveCorrectCount = 0;
+  }
+
+  entry.recentResults = [...entry.recentResults, correct].slice(-MATCH_MASTERY_RECENT_WINDOW);
+  entry.lastPracticedAt = safeCount(practicedAt);
+  return entry;
+}
+
+export function isMatchMastered(entry: MatchProgressEntry | undefined): boolean {
+  if (!entry) {
+    return false;
+  }
+
+  const recentResults = entry.recentResults.slice(-MATCH_MASTERY_RECENT_WINDOW);
+  return (
+    recentResults.length === MATCH_MASTERY_RECENT_WINDOW &&
+    recentResults.filter(Boolean).length >= MATCH_MASTERY_RECENT_CORRECT_THRESHOLD &&
+    entry.consecutiveCorrectCount >= MATCH_MASTERY_STREAK_THRESHOLD
+  );
 }
 
 export function matchLevelForProgress(entry: MatchProgressEntry | undefined): MatchLevel {
@@ -126,4 +170,10 @@ function normalizeHintLevels(value: unknown): Record<number, number> {
     }
     return levels;
   }, {});
+}
+
+function normalizeRecentResults(value: unknown): boolean[] {
+  return Array.isArray(value)
+    ? value.filter((result): result is boolean => typeof result === 'boolean').slice(-MATCH_MASTERY_RECENT_WINDOW)
+    : [];
 }

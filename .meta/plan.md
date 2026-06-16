@@ -42,26 +42,33 @@ Kapanış sonucu:
 
 Durum:
 
-- devam ediyor
+- tamamlandı
 
 Kapanan paketler:
 
 - 2-1: Dokun modunun öğrenme kaydı, dikkat ritmi ve Parent panel görünürlüğü kanonik MVP kurallarıyla tamamlandı
+- 2-2: Eşleme modunun öğrenildi kuralı, son 5 deneme, ardışık doğru ve Parent panel görünürlüğü Dokun ile hizalandı
+- 2-3: Ayna egzersiz sırası ve Uyku ses/süre/volume tercihleri Parent panelden yönetilebilir hale geldi
+- 2-4: Ceee otomatik, düşük uyarımlı saklanma/devam döngüsüyle tamamlandı
+- 2-5: MVP çocuk yüzeyinde aktif modlar Dokun, Eşleme, Ayna, Uyku ve Ceee olarak daraltıldı; Cümle/Hikaye gelecek mod olarak kodda korunup menüden gizlendi
 
-Faz 2-1 sonucu:
+Faz 2 sonucu:
 
 - Dokun tepkisizlik akışı 10, 20 ve 30 saniyelik sakin ipucu ritmini kullanır
-- her kelime için son 5 deneme, ardışık doğru sayısı ve son çalışma zamanı kaydedilir
-- öğrenildi durumu son 5 denemede en az 4 doğru ve en az 3 ardışık doğru kuralıyla hesaplanır
+- Dokun ve Eşleme için son 5 deneme, ardışık doğru sayısı ve son çalışma zamanı kaydedilir
+- Dokun ve Eşleme öğrenildi durumu son 5 denemede en az 4 doğru ve en az 3 ardışık doğru kuralıyla hesaplanır
 - eski localStorage kayıtları yeni alanlara güvenli varsayılanlarla taşınır
-- Parent panel son 5 özetini, doğru serisini ve öğrenildi durumunu gösterir
-- build, lint, 23 unit test ve 25 Playwright e2e testi başarılıdır
+- Parent panel Dokun/Eşleme son 5 özetini, doğru serisini ve öğrenildi durumunu gösterir
+- Ayna ve Uyku temel ebeveyn tercihleri local-first kalıcılıkla yönetilir
+- Ceee otomatik yumuşak devam davranışı taşır
+- MVP aktif çocuk yüzeyi kapsamı dar ve tutarlıdır
+- build, lint, 26 unit test ve 27 Playwright e2e testi başarılıdır
 
 ## Bugünkü Kapanış Hedefi
 
 - aktif uygulama hedefi `/Users/umitaydin/Documents/MinaGrow/MinaPlay` olarak korunacak
 - `MinaPlay` içinde build/lint/test/e2e hattı kararlı tutulacak
-- Faz 2 içinde sıradaki tek aktif modül paketi belirlenerek yürütülecek
+- sonraki aktif faz/paket, Faz 2 üstüne yeni tek kapanış hedefi olarak belirlenecek
 - V2 klasör ağacı `core`, `pofi`, `entities`, `features`, `services`, `shared`, `server` ayrımıyla gerçek uygulama içinde karşılık bulacak
 - Pofi Engine V2 için tek global instance, merkezi `pofi-root`, event temelli modül iletişimi ve idle timer kuralı uygulama omurgasına taşınacak
 - MVP çocuk yüzeyi Ana ekran, Dokun, Eşleme, Ayna, Uyku ve Ceee ekseninde kurulacak

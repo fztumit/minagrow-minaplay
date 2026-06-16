@@ -28,14 +28,24 @@ async function openParentBySecretGesture(page: Page, taps = 3, pull = 100) {
   await page.mouse.up();
 }
 
-test('home opens with six calm modes and bonus ceee', async ({ page }) => {
+async function revealFutureMode(page: Page, view: 'sentence' | 'story') {
+  await page.locator(`.mode-card[data-view="${view}"]`).evaluate((element) => {
+    element.removeAttribute('hidden');
+    element.removeAttribute('aria-hidden');
+  });
+}
+
+test('home opens with the five active MVP modes', async ({ page }) => {
   await page.goto('/');
 
   await expect(page.locator('#view-home')).toHaveClass(/active/);
   await expect(page.locator('.mode-card')).toHaveCount(6);
-  await expect(page.locator('.mode-card[data-view="sentence"]')).toContainText('İfade');
+  await expect(page.locator('.mode-card:visible')).toHaveCount(4);
+  await expect(page.locator('.mode-card[data-view="sentence"]')).toBeHidden();
+  await expect(page.locator('.mode-card[data-view="story"]')).toBeHidden();
   await expect(page.locator('.bonus-strip')).toContainText('Ceee');
   await expect(page.locator('.bottom-nav button')).toHaveCount(6);
+  await expect(page.locator('.bottom-nav button:not([hidden])')).toHaveCount(4);
   await expect(page.locator('[data-open-parent]')).toHaveCount(0);
   await expect(page.locator('.topbar-home')).toHaveCount(0);
 });
@@ -91,6 +101,19 @@ test('ceee mode toggles Pofi between hidden and found play states', async ({ pag
   await expect(pofi).toHaveAttribute('data-pofi-state', 'peekaboo');
 });
 
+test('ceee continues softly when the child does not interact', async ({ page }) => {
+  await disableChildLock(page);
+  await page.goto('/');
+
+  await page.click('[data-view="peekaboo"]');
+  const surface = page.locator('[data-peekaboo-surface]');
+  await expect(surface).toHaveAttribute('data-peekaboo-state', 'hidden', { timeout: 8000 });
+  const firstPosition = await surface.getAttribute('data-peekaboo-position');
+  await expect(surface).toHaveAttribute('data-peekaboo-state', 'ready', { timeout: 8000 });
+  await expect(surface).toHaveAttribute('data-peekaboo-state', 'hidden', { timeout: 8000 });
+  expect(await surface.getAttribute('data-peekaboo-position')).not.toBe(firstPosition);
+});
+
 test('module navigation carries Pofi through a short transition bridge', async ({ page }) => {
   await disableChildLock(page);
   await page.goto('/');
@@ -137,7 +160,7 @@ test('MinaPlay logo returns modules to home', async ({ page }) => {
   await disableChildLock(page);
   await page.goto('/');
 
-  for (const view of ['touch', 'match', 'sentence', 'story', 'mirror', 'sleep', 'peekaboo']) {
+  for (const view of ['touch', 'match', 'mirror', 'sleep', 'peekaboo']) {
     await page.click(`[data-view="${view}"]`);
     await expect(page.locator(`#view-${view}`)).toHaveClass(/active/);
 
@@ -151,7 +174,7 @@ test('active bottom nav button returns to home', async ({ page }) => {
   await disableChildLock(page);
   await page.goto('/');
 
-  for (const view of ['touch', 'match', 'sentence', 'story', 'mirror', 'sleep']) {
+  for (const view of ['touch', 'match', 'mirror', 'sleep']) {
     await page.click(`.mode-card[data-view="${view}"]`);
     await expect(page.locator(`#view-${view}`)).toHaveClass(/active/);
 
@@ -357,9 +380,11 @@ test('matching module escalates hints and records repeat needs', async ({ page }
   await page.goto('/');
 
   await page.click('.mode-card[data-view="match"]');
-  await expect(page.locator('[data-match-surface]')).toHaveAttribute('data-match-state', 'hint', { timeout: 7000 });
+  await expect(page.locator('[data-match-surface]')).toHaveAttribute('data-match-state', 'waiting', { timeout: 4000 });
+  await page.click('[data-match-pofi-trigger]');
+  await expect(page.locator('[data-match-surface]')).toHaveAttribute('data-match-state', 'hint');
   await expect(page.locator('[data-match-surface]')).toHaveAttribute('data-match-hint-level', '1');
-  await expect(page.locator('[data-match-surface]')).toHaveAttribute('data-match-hint-level', '2', { timeout: 4000 });
+  await expect(page.locator('[data-match-surface]')).toHaveAttribute('data-match-hint-level', '2', { timeout: 11000 });
   const targetId = await page.locator('[data-match-surface]').getAttribute('data-match-target-id');
   const wrongChoice = page.locator(`[data-match-choice]:not([data-match-choice="${targetId}"])`).first();
   await wrongChoice.click({ force: true });
@@ -403,6 +428,7 @@ test('sentence module completes a short expression from context', async ({ page 
   });
   await page.goto('/');
 
+  await revealFutureMode(page, 'sentence');
   await page.click('.mode-card[data-view="sentence"]');
   await expect(page.locator('[data-sentence-surface]')).toHaveAttribute('data-sentence-state', /context|waiting/);
   await expect(page.locator('[data-sentence-surface]')).toHaveAttribute('data-sentence-mode', 'learn');
@@ -426,6 +452,7 @@ test('sentence module completes a short expression from context', async ({ page 
 test('sentence module offers a select and speak needs board', async ({ page }) => {
   await page.goto('/');
 
+  await revealFutureMode(page, 'sentence');
   await page.click('.mode-card[data-view="sentence"]');
   await page.click('.sentence-mode-button[data-sentence-mode="board"]');
   await expect(page.locator('[data-sentence-surface]')).toHaveAttribute('data-sentence-mode', 'board');
@@ -444,6 +471,7 @@ test('sentence module offers a select and speak needs board', async ({ page }) =
 test('story module narrates and opens an interaction point', async ({ page }) => {
   await page.goto('/');
 
+  await revealFutureMode(page, 'story');
   await page.click('.mode-card[data-view="story"]');
   await expect(page.locator('[data-story-surface]')).toHaveAttribute('data-story-state', /attention|narration/);
   await expect(page.locator('[data-story-scene] .story-scene-image, [data-story-scene] .story-object')).toHaveCount(1);
@@ -538,6 +566,62 @@ test('parent panel shows touch word progress rows', async ({ page }) => {
   await expect(page.locator('[data-touch-progress-table]')).toContainText('Son 5: 4/5');
   await expect(page.locator('[data-touch-progress-table]')).toContainText('3 seri');
   await expect(page.locator('[data-touch-progress-table]')).toContainText('Öğrenildi');
+});
+
+test('parent panel shows matching mastery and saves Ayna and Uyku preferences', async ({ page }) => {
+  await disableChildLock(page);
+  await page.addInitScript(() => {
+    localStorage.setItem('minaplay_mastered_words_v1', JSON.stringify({ masteredWords: ['su'] }));
+    localStorage.setItem(
+      'minaplay_match_progress_v1',
+      JSON.stringify({
+        su: {
+          success: 4,
+          fail: 1,
+          hintUsed: 1,
+          hintLevels: { 1: 1 },
+          sameImageSuccess: 2,
+          conceptGeneralizationSuccess: 2,
+          latencyMsTotal: 1600,
+          latencySamples: 4,
+          repeatNeeds: 1,
+          consecutiveCorrectCount: 3,
+          recentResults: [false, true, true, true, true],
+          lastPracticedAt: Date.now()
+        }
+      })
+    );
+  });
+  await page.goto('/');
+
+  await openParentBySecretGesture(page);
+  await expect(page.locator('[data-match-progress-table]')).toContainText('Son 5: 4/5');
+  await expect(page.locator('[data-match-progress-table]')).toContainText('3 seri');
+  await expect(page.locator('[data-match-progress-table]')).toContainText('Öğrenildi');
+
+  await page.selectOption('[data-mirror-plan-preset]', 'mouth-first');
+  await page.click('[data-mirror-plan-save]');
+  await page.selectOption('[data-sleep-sound-setting]', 'ocean');
+  await page.selectOption('[data-sleep-duration-setting]', '20');
+  await page.fill('[data-sleep-volume]', '80');
+  await page.click('[data-sleep-settings-save]');
+  await expect(page.locator('[data-module-settings-status]')).toContainText('Uyku sesi');
+
+  const saved = await page.evaluate(() => ({
+    mirror: JSON.parse(localStorage.getItem('minaplay_mirror_plan_v1') ?? '{}'),
+    sleep: JSON.parse(localStorage.getItem('minaplay_sleep_settings_v1') ?? '{}')
+  }));
+  expect(saved.mirror).toEqual({ preset: 'mouth-first' });
+  expect(saved.sleep).toEqual({ sound: 'ocean', durationMinutes: 20, volume: 0.8 });
+
+  await page.click('.brand-home');
+  await page.click('.mode-card[data-view="mirror"]');
+  await expect(page.locator('[data-mirror-surface]')).toHaveAttribute('data-mirror-exercise', 'open-mouth');
+
+  await page.click('.brand-home');
+  await page.click('.mode-card[data-view="sleep"]');
+  await expect(page.locator('[data-sleep-surface]')).toHaveAttribute('data-sleep-sound', 'ocean');
+  await expect(page.locator('[data-sleep-surface]')).toHaveAttribute('data-sleep-duration', '20');
 });
 
 test('module surfaces render stateful layered Pofi parts', async ({ page }) => {

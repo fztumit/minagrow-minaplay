@@ -15,16 +15,29 @@ import {
 } from './touch-learning.js';
 import {
   MATCH_PROGRESS_KEY,
+  isMatchMastered,
   matchChoiceCount,
   matchLevelForProgress,
   matchProgressEntry,
   matchTargetWeight,
   normalizeMatchProgress,
+  registerMatchAttempt,
   type MatchLevel,
   type MatchMode,
   type MatchProgressState,
   type MatchState
 } from './match-learning.js';
+import {
+  DEFAULT_MIRROR_PLAN,
+  DEFAULT_SLEEP_SETTINGS,
+  MIRROR_PLAN_KEY,
+  SLEEP_SETTINGS_KEY,
+  mirrorExerciseOrder,
+  normalizeMirrorPlan,
+  normalizeSleepSettings,
+  type MirrorPlanSettings,
+  type SleepSettings
+} from './mvp-settings.js';
 import {
   SENTENCE_PROGRESS_KEY,
   normalizeSentenceProgress,
@@ -269,11 +282,13 @@ const POFI_PARTS_ROOT = '/assets/pofi/parts';
 const TOUCH_ACTIVE_MS = 900;
 const MATCH_ATTENTION_MS = 620;
 const MATCH_TARGETING_MS = 780;
-const MATCH_WAITING_MS = 5000;
-const MATCH_HINT_STEP_MS = 3000;
+const MATCH_WAITING_MS = 10_000;
+const MATCH_HINT_STEP_MS = 10_000;
 const MATCH_SUCCESS_MS = 900;
 const MATCH_RETRY_MS = 1000;
 const MATCH_FATIGUE_WRONG_STREAK = 2;
+const PEEKABOO_AUTO_HIDE_MS = 5500;
+const PEEKABOO_AUTO_REVEAL_MS = 6500;
 const SENTENCE_CONTEXT_MS = 900;
 const SENTENCE_HINT_LEVEL_1_MS = 5000;
 const SENTENCE_HINT_STEP_MS = 3000;
@@ -1278,9 +1293,12 @@ let pofiExpressionTimer: number | undefined;
 let pofiHandTimer: number | undefined;
 let peekabooState: PeekabooState = 'ready';
 let peekabooReturnTimer: number | undefined;
+let peekabooAutoTimer: number | undefined;
+let peekabooPositionIndex = 0;
 let touchRepeatTimer: number | undefined;
 let touchActiveTimer: number | undefined;
 let touchAffirmTimer: number | undefined;
+let touchIdleRecoveryTimer: number | undefined;
 let touchAffirmUntil = 0;
 let touchVariationIndex = 0;
 let touchAudioUnlocked = false;
@@ -1328,6 +1346,7 @@ let lastStorySpeechKind: 'attention' | 'narration' | 'interaction' | 'success' |
 let sleepAudioContext: AudioContext | undefined;
 let sleepMusicNodes: Array<OscillatorNode | GainNode> = [];
 let sleepMelodyTimer: number | undefined;
+let sleepAutoStopTimer: number | undefined;
 let sleepMusicRunning = false;
 let storyFlowToken = 0;
 let mirrorState: MirrorState = 'idle';
@@ -1336,6 +1355,8 @@ let mirrorTimer: number | undefined;
 let mirrorFlowToken = 0;
 let mirrorCameraStream: MediaStream | undefined;
 let mirrorCameraRequested = false;
+let mirrorPlanSettings: MirrorPlanSettings = { ...DEFAULT_MIRROR_PLAN };
+let sleepSettings: SleepSettings = { ...DEFAULT_SLEEP_SETTINGS };
 let childLockSettings: ChildLockSettings = { enabled: true, keepAwake: true, parentTapCount: 3, parentPullDistance: 80, introSeen: false };
 let sleepLongPressTimer: number | undefined;
 let wakeLockSentinel: WakeLockSentinelLike | undefined;
@@ -1534,6 +1555,30 @@ function readMatchProgress(): MatchProgressState {
   }
 }
 
+function readMirrorPlanSettings(): MirrorPlanSettings {
+  try {
+    return normalizeMirrorPlan(JSON.parse(localStorage.getItem(MIRROR_PLAN_KEY) ?? '{}'));
+  } catch {
+    return { ...DEFAULT_MIRROR_PLAN };
+  }
+}
+
+function writeMirrorPlanSettings(): void {
+  localStorage.setItem(MIRROR_PLAN_KEY, JSON.stringify(mirrorPlanSettings));
+}
+
+function readSleepSettings(): SleepSettings {
+  try {
+    return normalizeSleepSettings(JSON.parse(localStorage.getItem(SLEEP_SETTINGS_KEY) ?? '{}'));
+  } catch {
+    return { ...DEFAULT_SLEEP_SETTINGS };
+  }
+}
+
+function writeSleepSettings(): void {
+  localStorage.setItem(SLEEP_SETTINGS_KEY, JSON.stringify(sleepSettings));
+}
+
 function writeMatchProgress(): void {
   localStorage.setItem(MATCH_PROGRESS_KEY, JSON.stringify(matchProgress));
   renderMatchProgressTable();
@@ -1665,6 +1710,9 @@ function renderMatchProgressTable(): void {
       const repeatNeeds = entry?.repeatNeeds ?? 0;
       const latency = entry && entry.latencySamples > 0 ? Math.round(entry.latencyMsTotal / entry.latencySamples) : 0;
       const level = matchLevelForProgress(entry);
+      const recentCorrectCount = entry?.recentResults.filter(Boolean).length ?? 0;
+      const recentSummary = entry?.recentResults.length ? `${recentCorrectCount}/${entry.recentResults.length}` : '-';
+      const mastered = isMatchMastered(entry);
       return `<article class="touch-progress-row">
         <strong>${card.word}</strong>
         <span>${level}. seviye</span>
@@ -1676,9 +1724,31 @@ function renderMatchProgressTable(): void {
         <span>${sameImage} aynı görsel</span>
         <span>${hints} ipucu</span>
         <span>${repeatNeeds} tekrar</span>
+        <span>Son 5: ${recentSummary}</span>
+        <span>${entry?.consecutiveCorrectCount ?? 0} seri</span>
+        <span>${mastered ? 'Öğrenildi' : 'Çalışılıyor'}</span>
       </article>`;
     })
     .join('');
+}
+
+function renderMvpModuleSettings(): void {
+  const mirrorPreset = document.querySelector<HTMLSelectElement>('[data-mirror-plan-preset]');
+  const sleepSound = document.querySelector<HTMLSelectElement>('[data-sleep-sound-setting]');
+  const sleepDuration = document.querySelector<HTMLSelectElement>('[data-sleep-duration-setting]');
+  const sleepVolume = document.querySelector<HTMLInputElement>('[data-sleep-volume]');
+  if (mirrorPreset) {
+    mirrorPreset.value = mirrorPlanSettings.preset;
+  }
+  if (sleepSound) {
+    sleepSound.value = sleepSettings.sound;
+  }
+  if (sleepDuration) {
+    sleepDuration.value = String(sleepSettings.durationMinutes);
+  }
+  if (sleepVolume) {
+    sleepVolume.value = String(Math.round(sleepSettings.volume * 100));
+  }
 }
 
 function ensureModule(state: AnalyticsState, view: string): ModuleStats {
@@ -1778,6 +1848,7 @@ function activateView(view: ViewName): void {
     renderTouchProgressTable();
     renderMatchProgressTable();
     renderChildLockSettings();
+    renderMvpModuleSettings();
   }
   trackViewOpen(view);
   renderParentMetrics();
@@ -1790,10 +1861,15 @@ function syncPeekabooMode(view: ViewName): void {
     window.clearTimeout(peekabooReturnTimer);
     peekabooReturnTimer = undefined;
   }
+  if (peekabooAutoTimer) {
+    window.clearTimeout(peekabooAutoTimer);
+    peekabooAutoTimer = undefined;
+  }
 
   if (view === 'peekaboo') {
     peekabooState = 'ready';
     renderPeekabooMode();
+    schedulePeekabooHide();
   }
 }
 
@@ -1806,11 +1882,13 @@ function renderPeekabooMode(): void {
   }
 
   surface.dataset.peekabooState = peekabooState;
+  surface.dataset.peekabooPosition = ['left', 'center', 'right'][peekabooPositionIndex % 3];
   button.dataset.trackAction = peekabooState === 'hidden' ? 'peekaboo-found' : 'peekaboo-hide';
   label.textContent = peekabooState === 'hidden' ? 'Pofi bulundu' : 'Pofi saklandı';
 }
 
 function handlePeekabooToggle(button: HTMLElement): void {
+  clearPeekabooAutoTimer();
   if (peekabooState === 'hidden') {
     peekabooState = 'found';
     renderPeekabooMode();
@@ -1822,6 +1900,7 @@ function handlePeekabooToggle(button: HTMLElement): void {
       renderPeekabooMode();
       if (document.querySelector<HTMLElement>('#view-peekaboo')?.classList.contains('active')) {
         setPofiBaseState('peekaboo');
+        schedulePeekabooHide();
       }
     }, 1000);
     return;
@@ -1831,6 +1910,43 @@ function handlePeekabooToggle(button: HTMLElement): void {
   renderPeekabooMode();
   trackAction('peekaboo-hide', button);
   setPofiBaseState('peekabooHidden');
+  schedulePeekabooReveal();
+}
+
+function clearPeekabooAutoTimer(): void {
+  if (peekabooAutoTimer) {
+    window.clearTimeout(peekabooAutoTimer);
+    peekabooAutoTimer = undefined;
+  }
+}
+
+function schedulePeekabooHide(): void {
+  clearPeekabooAutoTimer();
+  peekabooAutoTimer = window.setTimeout(() => {
+    peekabooAutoTimer = undefined;
+    if (!document.querySelector<HTMLElement>('#view-peekaboo')?.classList.contains('active')) {
+      return;
+    }
+    peekabooPositionIndex = (peekabooPositionIndex + 1) % 3;
+    peekabooState = 'hidden';
+    setPofiBaseState('peekabooHidden');
+    renderPeekabooMode();
+    schedulePeekabooReveal();
+  }, PEEKABOO_AUTO_HIDE_MS);
+}
+
+function schedulePeekabooReveal(): void {
+  clearPeekabooAutoTimer();
+  peekabooAutoTimer = window.setTimeout(() => {
+    peekabooAutoTimer = undefined;
+    if (!document.querySelector<HTMLElement>('#view-peekaboo')?.classList.contains('active')) {
+      return;
+    }
+    peekabooState = 'ready';
+    setPofiBaseState('peekaboo');
+    renderPeekabooMode();
+    schedulePeekabooHide();
+  }, PEEKABOO_AUTO_REVEAL_MS);
 }
 
 function openParentWithUnlock(): void {
@@ -3634,7 +3750,9 @@ function clearMirrorTimer(): void {
 }
 
 function currentMirrorExercise(): MirrorExercise {
-  return MIRROR_EXERCISES[mirrorExerciseIndex % MIRROR_EXERCISES.length] ?? MIRROR_EXERCISES[0];
+  const order = mirrorExerciseOrder(mirrorPlanSettings);
+  const exerciseId = order[mirrorExerciseIndex % order.length];
+  return MIRROR_EXERCISES.find((exercise) => exercise.id === exerciseId) ?? MIRROR_EXERCISES[0];
 }
 
 function startMirrorSession(): void {
@@ -3800,6 +3918,8 @@ function renderSleepMode(): void {
   }
 
   surface.dataset.sleepRunning = String(sleepMusicRunning);
+  surface.dataset.sleepSound = sleepSettings.sound;
+  surface.dataset.sleepDuration = String(sleepSettings.durationMinutes);
   toggle.setAttribute('aria-pressed', String(sleepMusicRunning));
   toggle.setAttribute('aria-label', sleepMusicRunning ? 'Uyku müziğini durdur' : 'Uyku müziğini başlat');
   label.textContent = sleepMusicRunning ? 'Durdur' : 'Başlat';
@@ -3838,6 +3958,7 @@ function startSleepMusic(): void {
   sleepMusicRunning = true;
   sleepMusicNodes = [];
   const context = sleepAudioContext;
+  const profile = sleepSoundProfile();
   const master = context.createGain();
   const padGain = context.createGain();
   const lowPad = context.createOscillator();
@@ -3845,12 +3966,12 @@ function startSleepMusic(): void {
   const now = context.currentTime;
 
   master.gain.setValueAtTime(0.0001, now);
-  master.gain.exponentialRampToValueAtTime(0.055, now + 1.4);
-  padGain.gain.setValueAtTime(0.18, now);
-  lowPad.type = 'sine';
-  highPad.type = 'sine';
-  lowPad.frequency.setValueAtTime(196, now);
-  highPad.frequency.setValueAtTime(294, now);
+  master.gain.exponentialRampToValueAtTime(0.1 * sleepSettings.volume, now + 1.4);
+  padGain.gain.setValueAtTime(profile.padGain, now);
+  lowPad.type = profile.wave;
+  highPad.type = profile.wave;
+  lowPad.frequency.setValueAtTime(profile.lowFrequency, now);
+  highPad.frequency.setValueAtTime(profile.highFrequency, now);
   lowPad.connect(padGain);
   highPad.connect(padGain);
   padGain.connect(master);
@@ -3859,6 +3980,12 @@ function startSleepMusic(): void {
   highPad.start(now + 0.08);
   sleepMusicNodes = [master, padGain, lowPad, highPad];
   scheduleSleepMelody();
+  if (sleepSettings.durationMinutes > 0) {
+    sleepAutoStopTimer = window.setTimeout(() => {
+      sleepAutoStopTimer = undefined;
+      void stopSleepMusic();
+    }, sleepSettings.durationMinutes * 60_000);
+  }
   renderSleepMode();
 }
 
@@ -3873,15 +4000,16 @@ function scheduleSleepMelody(): void {
     return;
   }
 
-  const notes = [392, 330, 294, 262, 294, 330];
+  const profile = sleepSoundProfile();
+  const notes = profile.notes;
   notes.forEach((frequency, index) => {
     const start = context.currentTime + index * 0.72;
     const oscillator = context.createOscillator();
     const gain = context.createGain();
-    oscillator.type = 'sine';
+    oscillator.type = profile.wave;
     oscillator.frequency.setValueAtTime(frequency, start);
     gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(0.018, start + 0.18);
+    gain.gain.exponentialRampToValueAtTime(profile.noteGain, start + 0.18);
     gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.68);
     oscillator.connect(gain);
     gain.connect(master);
@@ -3889,13 +4017,17 @@ function scheduleSleepMelody(): void {
     oscillator.stop(start + 0.74);
   });
 
-  sleepMelodyTimer = window.setTimeout(scheduleSleepMelody, 5200);
+  sleepMelodyTimer = window.setTimeout(scheduleSleepMelody, profile.repeatMs);
 }
 
 async function stopSleepMusic(): Promise<void> {
   if (sleepMelodyTimer) {
     window.clearTimeout(sleepMelodyTimer);
     sleepMelodyTimer = undefined;
+  }
+  if (sleepAutoStopTimer) {
+    window.clearTimeout(sleepAutoStopTimer);
+    sleepAutoStopTimer = undefined;
   }
 
   if (!sleepMusicRunning && !sleepAudioContext) {
@@ -3920,20 +4052,59 @@ async function stopSleepMusic(): Promise<void> {
   renderSleepMode();
 }
 
+function sleepSoundProfile(): {
+  wave: OscillatorType;
+  lowFrequency: number;
+  highFrequency: number;
+  padGain: number;
+  noteGain: number;
+  repeatMs: number;
+  notes: number[];
+} {
+  if (sleepSettings.sound === 'ocean') {
+    return {
+      wave: 'sine',
+      lowFrequency: 110,
+      highFrequency: 165,
+      padGain: 0.16,
+      noteGain: 0.01,
+      repeatMs: 7200,
+      notes: [220, 196, 174, 196]
+    };
+  }
+  if (sleepSettings.sound === 'white') {
+    return {
+      wave: 'triangle',
+      lowFrequency: 92,
+      highFrequency: 138,
+      padGain: 0.12,
+      noteGain: 0.006,
+      repeatMs: 8400,
+      notes: [138, 146, 138, 130]
+    };
+  }
+  return {
+    wave: 'sine',
+    lowFrequency: 196,
+    highFrequency: 294,
+    padGain: 0.18,
+    noteGain: 0.018,
+    repeatMs: 5200,
+    notes: [392, 330, 294, 262, 294, 330]
+  };
+}
+
 function recordMatchAttempt(targetId: string, correct: boolean, mode: MatchMode, latencyMs: number): void {
   const entry = matchProgressEntry(matchProgress, targetId);
+  registerMatchAttempt(entry, correct);
   if (correct) {
-    entry.success += 1;
-    entry.latencyMsTotal += latencyMs;
+    entry.latencyMsTotal += Math.max(0, latencyMs);
     entry.latencySamples += 1;
     if (mode === 'concept') {
       entry.conceptGeneralizationSuccess += 1;
     } else {
       entry.sameImageSuccess += 1;
     }
-  } else {
-    entry.fail += 1;
-    entry.repeatNeeds += 1;
   }
   writeMatchProgress();
 }
@@ -4546,6 +4717,10 @@ function touchPromptText(
 }
 
 function handleTouchSpeechState(snapshot: SpeechMachineSnapshot): void {
+  if (touchIdleRecoveryTimer) {
+    window.clearTimeout(touchIdleRecoveryTimer);
+    touchIdleRecoveryTimer = undefined;
+  }
   if (snapshot.state === 'success' && lastTouchSpeechState !== 'success') {
     touchSuccessCount += 1;
   }
@@ -4563,6 +4738,14 @@ function handleTouchSpeechState(snapshot: SpeechMachineSnapshot): void {
   renderTouchCards();
   if (snapshot.prompt) {
     setTouchStatus(snapshot.prompt);
+  }
+  if (snapshot.state === 'idle' && document.querySelector<HTMLElement>('.app-shell')?.dataset.activeView === 'touch') {
+    touchIdleRecoveryTimer = window.setTimeout(() => {
+      touchIdleRecoveryTimer = undefined;
+      if (touchSpeechSnapshot?.state === 'idle' && document.querySelector<HTMLElement>('.app-shell')?.dataset.activeView === 'touch') {
+        touchSpeechMachine?.nudge();
+      }
+    }, 700);
   }
 }
 
@@ -4663,6 +4846,10 @@ function stopTouchRitual(): void {
   lastTouchSpeechState = undefined;
   stopTouchRepeat();
 
+  if (touchIdleRecoveryTimer) {
+    window.clearTimeout(touchIdleRecoveryTimer);
+    touchIdleRecoveryTimer = undefined;
+  }
   if (touchActiveTimer) {
     window.clearTimeout(touchActiveTimer);
     touchActiveTimer = undefined;
@@ -5465,6 +5652,32 @@ function boot(): void {
 
   document.querySelector<HTMLElement>('[data-parent-secret-accept]')?.addEventListener('click', acceptParentSecretIntro);
 
+  document.querySelector<HTMLElement>('[data-mirror-plan-save]')?.addEventListener('click', () => {
+    const preset = document.querySelector<HTMLSelectElement>('[data-mirror-plan-preset]')?.value;
+    mirrorPlanSettings = normalizeMirrorPlan({ preset });
+    mirrorExerciseIndex = 0;
+    writeMirrorPlanSettings();
+    renderMvpModuleSettings();
+    const status = document.querySelector<HTMLElement>('[data-module-settings-status]');
+    if (status) {
+      status.textContent = 'Ayna egzersiz sırası kaydedildi.';
+    }
+  });
+
+  document.querySelector<HTMLElement>('[data-sleep-settings-save]')?.addEventListener('click', () => {
+    const sound = document.querySelector<HTMLSelectElement>('[data-sleep-sound-setting]')?.value;
+    const durationMinutes = Number(document.querySelector<HTMLSelectElement>('[data-sleep-duration-setting]')?.value);
+    const volume = Number(document.querySelector<HTMLInputElement>('[data-sleep-volume]')?.value) / 100;
+    sleepSettings = normalizeSleepSettings({ sound, durationMinutes, volume });
+    writeSleepSettings();
+    renderMvpModuleSettings();
+    renderSleepMode();
+    const status = document.querySelector<HTMLElement>('[data-module-settings-status]');
+    if (status) {
+      status.textContent = 'Uyku sesi ve süresi kaydedildi.';
+    }
+  });
+
   document.addEventListener('visibilitychange', () => {
     void syncScreenWakeLock();
   });
@@ -5478,6 +5691,8 @@ function boot(): void {
   touchProgress = readTouchProgress();
   touchMastery = readTouchMastery();
   matchProgress = readMatchProgress();
+  mirrorPlanSettings = readMirrorPlanSettings();
+  sleepSettings = readSleepSettings();
   sentenceProgress = readSentenceProgress();
   publishTouchMasteryForMatching();
   renderPofiAvatars();
@@ -5486,6 +5701,7 @@ function boot(): void {
   renderParentMetrics();
   renderTouchProgressTable();
   renderMatchProgressTable();
+  renderMvpModuleSettings();
   renderMatchingGame();
   renderSentenceGame();
   renderStory();

@@ -11,7 +11,7 @@
     <meta name="theme-color" content="#eef7f4" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/assets/icons/app.png" type="image/png" />
-    <link rel="stylesheet" href="/style.css?v=20260615-4" />
+    <link rel="stylesheet" href="/style.css?v=20260615-5" />
   </head>
   <body>
     <div class="app-shell" data-active-view="home">
@@ -44,14 +44,14 @@
               <span class="mode-title">Eşleme</span>
             </button>
 
-            <button class="mode-card sentence" type="button" data-view="sentence">
+            <button class="mode-card sentence" type="button" data-view="sentence" hidden aria-hidden="true">
               <span class="mode-art">
                 <img class="mode-icon" src="/assets/icons/home/sentence.png" alt="" />
               </span>
               <span class="mode-title">İfade</span>
             </button>
 
-            <button class="mode-card story" type="button" data-view="story">
+            <button class="mode-card story" type="button" data-view="story" hidden aria-hidden="true">
               <span class="mode-art">
                 <img class="mode-icon" src="/assets/icons/home/story.png" alt="" />
               </span>
@@ -321,6 +321,49 @@
                 </div>
                 <p class="safety-parent-status" data-child-lock-status aria-live="polite"></p>
               </section>
+              <section class="parent-safety-settings" aria-labelledby="module-settings-title">
+                <div class="parent-section-heading">
+                  <div>
+                    <p class="eyebrow">Modül planı</p>
+                    <h3 id="module-settings-title">Ayna ve Uyku tercihleri</h3>
+                  </div>
+                </div>
+                <div class="safety-settings-card module-settings-card">
+                  <label>
+                    Ayna sırası
+                    <select data-mirror-plan-preset>
+                      <option value="balanced">Dengeli sıra</option>
+                      <option value="mouth-first">Ağız ve dudak önce</option>
+                      <option value="tongue-first">Dil egzersizleri önce</option>
+                    </select>
+                  </label>
+                  <button class="soft-admin-button" type="button" data-mirror-plan-save>Ayna planını kaydet</button>
+                  <label>
+                    Uyku sesi
+                    <select data-sleep-sound-setting>
+                      <option value="lullaby">Yumuşak ninni</option>
+                      <option value="ocean">Okyanus</option>
+                      <option value="white">Beyaz gürültü</option>
+                    </select>
+                  </label>
+                  <label>
+                    Uyku süresi
+                    <select data-sleep-duration-setting>
+                      <option value="0">Sınırsız</option>
+                      <option value="5">5 dakika</option>
+                      <option value="10">10 dakika</option>
+                      <option value="20">20 dakika</option>
+                      <option value="30">30 dakika</option>
+                    </select>
+                  </label>
+                  <label>
+                    Ses seviyesi
+                    <input type="range" min="20" max="100" step="5" data-sleep-volume />
+                  </label>
+                  <button class="soft-admin-button" type="button" data-sleep-settings-save>Uyku tercihini kaydet</button>
+                </div>
+                <p class="safety-parent-status" data-module-settings-status aria-live="polite"></p>
+              </section>
             </div>
 
             <div class="parent-admin-column">
@@ -369,11 +412,11 @@
           <img class="bottom-nav-icon" src="/assets/icons/home/match.png" alt="" />
           <span>Eşleme</span>
         </button>
-        <button type="button" data-view="sentence">
+        <button type="button" data-view="sentence" hidden aria-hidden="true">
           <img class="bottom-nav-icon" src="/assets/icons/home/sentence.png" alt="" />
           <span>İfade</span>
         </button>
-        <button type="button" data-view="story">
+        <button type="button" data-view="story" hidden aria-hidden="true">
           <img class="bottom-nav-icon" src="/assets/icons/home/story.png" alt="" />
           <span>Hikaye</span>
         </button>

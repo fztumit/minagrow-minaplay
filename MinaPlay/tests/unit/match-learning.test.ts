@@ -1,10 +1,13 @@
 import { describe, expect, test } from 'vitest';
 import {
+  createEmptyMatchProgressEntry,
+  isMatchMastered,
   matchChoiceCount,
   matchLevelForProgress,
   matchSuccessRate,
   matchTargetWeight,
-  normalizeMatchProgress
+  normalizeMatchProgress,
+  registerMatchAttempt
 } from '../../src/modules/match-learning';
 
 describe('match learning helpers', () => {
@@ -26,13 +29,15 @@ describe('match learning helpers', () => {
     expect(progress.top.hintUsed).toBe(2);
     expect(progress.top.hintLevels[2]).toBe(1);
     expect(progress.top.repeatNeeds).toBe(1);
+    expect(progress.top.recentResults).toEqual([]);
+    expect(progress.top.consecutiveCorrectCount).toBe(0);
     expect(matchSuccessRate(progress.top)).toBe(0.8);
   });
 
   test('raises level and choice count as concept success improves', () => {
-    const early = { success: 1, fail: 1, hintUsed: 0, hintLevels: {}, sameImageSuccess: 1, conceptGeneralizationSuccess: 0, latencyMsTotal: 0, latencySamples: 0, repeatNeeds: 0 };
-    const growing = { success: 4, fail: 1, hintUsed: 0, hintLevels: {}, sameImageSuccess: 2, conceptGeneralizationSuccess: 2, latencyMsTotal: 0, latencySamples: 0, repeatNeeds: 0 };
-    const strong = { success: 8, fail: 1, hintUsed: 0, hintLevels: {}, sameImageSuccess: 2, conceptGeneralizationSuccess: 6, latencyMsTotal: 0, latencySamples: 0, repeatNeeds: 0 };
+    const early = progressEntry({ success: 1, fail: 1, sameImageSuccess: 1 });
+    const growing = progressEntry({ success: 4, fail: 1, sameImageSuccess: 2, conceptGeneralizationSuccess: 2 });
+    const strong = progressEntry({ success: 8, fail: 1, sameImageSuccess: 2, conceptGeneralizationSuccess: 6 });
 
     expect(matchLevelForProgress(early)).toBe(1);
     expect(matchLevelForProgress(growing)).toBe(2);
@@ -41,9 +46,32 @@ describe('match learning helpers', () => {
   });
 
   test('weights weaker targets higher', () => {
-    const weak = { success: 1, fail: 3, hintUsed: 2, hintLevels: { 2: 1 }, sameImageSuccess: 1, conceptGeneralizationSuccess: 0, latencyMsTotal: 0, latencySamples: 0, repeatNeeds: 2 };
-    const strong = { success: 8, fail: 1, hintUsed: 0, hintLevels: {}, sameImageSuccess: 2, conceptGeneralizationSuccess: 6, latencyMsTotal: 0, latencySamples: 0, repeatNeeds: 0 };
+    const weak = progressEntry({ success: 1, fail: 3, hintUsed: 2, hintLevels: { 2: 1 }, sameImageSuccess: 1, repeatNeeds: 2 });
+    const strong = progressEntry({ success: 8, fail: 1, sameImageSuccess: 2, conceptGeneralizationSuccess: 6 });
 
     expect(matchTargetWeight(weak)).toBeGreaterThan(matchTargetWeight(strong));
   });
+
+  test('records recent accuracy and requires a three-answer streak for mastery', () => {
+    const entry = createEmptyMatchProgressEntry();
+
+    registerMatchAttempt(entry, false, 100);
+    registerMatchAttempt(entry, true, 200);
+    registerMatchAttempt(entry, true, 300);
+    registerMatchAttempt(entry, true, 400);
+    registerMatchAttempt(entry, true, 500);
+
+    expect(entry.recentResults).toEqual([false, true, true, true, true]);
+    expect(entry.consecutiveCorrectCount).toBe(4);
+    expect(entry.lastPracticedAt).toBe(500);
+    expect(isMatchMastered(entry)).toBe(true);
+
+    registerMatchAttempt(entry, false, 600);
+    expect(entry.consecutiveCorrectCount).toBe(0);
+    expect(isMatchMastered(entry)).toBe(false);
+  });
 });
+
+function progressEntry(overrides: Partial<ReturnType<typeof createEmptyMatchProgressEntry>>) {
+  return { ...createEmptyMatchProgressEntry(), ...overrides };
+}
