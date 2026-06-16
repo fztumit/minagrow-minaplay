@@ -28,14 +28,20 @@ import {
   type MatchState
 } from './match-learning.js';
 import {
+  DEFAULT_MODULE_VISIBILITY,
   DEFAULT_MIRROR_PLAN,
   DEFAULT_SLEEP_SETTINGS,
   MIRROR_PLAN_KEY,
+  MODULE_VISIBILITY_KEY,
+  MVP_MODULE_IDS,
   SLEEP_SETTINGS_KEY,
   mirrorExerciseOrder,
+  normalizeModuleVisibility,
   normalizeMirrorPlan,
   normalizeSleepSettings,
+  type ModuleVisibilitySettings,
   type MirrorPlanSettings,
+  type MvpModuleId,
   type SleepSettings
 } from './mvp-settings.js';
 import {
@@ -284,6 +290,13 @@ interface StorySession {
 
 const STORAGE_KEY = 'minaplay_analytics_v1';
 const PRIMARY_VIEWS: ViewName[] = ['touch', 'match', 'sentence', 'story', 'mirror', 'sleep'];
+const MODULE_VISIBILITY_LABELS: Record<MvpModuleId, string> = {
+  touch: 'Dokun',
+  match: 'Eşleme',
+  mirror: 'Ayna',
+  sleep: 'Uyku',
+  peekaboo: 'Ceee'
+};
 
 const POFI_PARTS_ROOT = '/assets/pofi/parts';
 const TOUCH_ACTIVE_MS = 900;
@@ -1365,6 +1378,7 @@ let mirrorCameraStream: MediaStream | undefined;
 let mirrorCameraRequested = false;
 let mirrorPlanSettings: MirrorPlanSettings = { ...DEFAULT_MIRROR_PLAN };
 let sleepSettings: SleepSettings = { ...DEFAULT_SLEEP_SETTINGS };
+let moduleVisibilitySettings: ModuleVisibilitySettings = { ...DEFAULT_MODULE_VISIBILITY };
 let childLockSettings: ChildLockSettings = { enabled: true, keepAwake: true, parentTapCount: 3, parentPullDistance: 80, introSeen: false };
 let sleepLongPressTimer: number | undefined;
 let wakeLockSentinel: WakeLockSentinelLike | undefined;
@@ -1692,6 +1706,18 @@ function writeSleepSettings(): void {
   localStorage.setItem(SLEEP_SETTINGS_KEY, JSON.stringify(sleepSettings));
 }
 
+function readModuleVisibilitySettings(): ModuleVisibilitySettings {
+  try {
+    return normalizeModuleVisibility(JSON.parse(localStorage.getItem(MODULE_VISIBILITY_KEY) ?? '{}'));
+  } catch {
+    return { ...DEFAULT_MODULE_VISIBILITY };
+  }
+}
+
+function writeModuleVisibilitySettings(): void {
+  localStorage.setItem(MODULE_VISIBILITY_KEY, JSON.stringify(moduleVisibilitySettings));
+}
+
 function writeMatchProgress(): void {
   localStorage.setItem(MATCH_PROGRESS_KEY, JSON.stringify(matchProgress));
   renderMatchProgressTable();
@@ -1850,6 +1876,10 @@ function renderMvpModuleSettings(): void {
   const sleepSound = document.querySelector<HTMLSelectElement>('[data-sleep-sound-setting]');
   const sleepDuration = document.querySelector<HTMLSelectElement>('[data-sleep-duration-setting]');
   const sleepVolume = document.querySelector<HTMLInputElement>('[data-sleep-volume]');
+  document.querySelectorAll<HTMLInputElement>('[data-module-visibility]').forEach((input) => {
+    const moduleId = input.dataset.moduleVisibility as MvpModuleId | undefined;
+    input.checked = Boolean(moduleId && moduleVisibilitySettings[moduleId]);
+  });
   if (mirrorPreset) {
     mirrorPreset.value = mirrorPlanSettings.preset;
   }
@@ -1861,6 +1891,41 @@ function renderMvpModuleSettings(): void {
   }
   if (sleepVolume) {
     sleepVolume.value = String(Math.round(sleepSettings.volume * 100));
+  }
+}
+
+function syncModuleVisibility(): void {
+  MVP_MODULE_IDS.forEach((moduleId) => {
+    const isVisible = moduleVisibilitySettings[moduleId];
+    document.querySelectorAll<HTMLElement>(`[data-view="${moduleId}"]`).forEach((element) => {
+      element.toggleAttribute('hidden', !isVisible);
+      element.setAttribute('aria-hidden', String(!isVisible));
+    });
+  });
+}
+
+function isModuleVisible(view: ViewName): boolean {
+  return (MVP_MODULE_IDS as string[]).includes(view) ? moduleVisibilitySettings[view as MvpModuleId] : true;
+}
+
+function saveModuleVisibilitySettingsFromPanel(): void {
+  const rawSettings = Object.fromEntries(
+    MVP_MODULE_IDS.map((moduleId) => [
+      moduleId,
+      document.querySelector<HTMLInputElement>(`[data-module-visibility="${moduleId}"]`)?.checked ?? moduleVisibilitySettings[moduleId]
+    ])
+  );
+  moduleVisibilitySettings = normalizeModuleVisibility(rawSettings);
+  writeModuleVisibilitySettings();
+  syncModuleVisibility();
+  renderMvpModuleSettings();
+
+  const enabledLabels = MVP_MODULE_IDS.filter((moduleId) => moduleVisibilitySettings[moduleId]).map(
+    (moduleId) => MODULE_VISIBILITY_LABELS[moduleId]
+  );
+  const status = document.querySelector<HTMLElement>('[data-module-settings-status]');
+  if (status) {
+    status.textContent = `Görünen çocuk modları: ${enabledLabels.join(', ')}. En az bir mod açık kalır.`;
   }
 }
 
@@ -1917,6 +1982,11 @@ function trackAction(action: string, _sourceElement?: HTMLElement): void {
 }
 
 function activateView(view: ViewName): void {
+  if (!isModuleVisible(view)) {
+    activateView('home');
+    return;
+  }
+
   const transition = beginPofiViewTransition();
   const shell = document.querySelector<HTMLElement>('.app-shell');
   shell?.classList.add('view-transitioning');
@@ -5733,6 +5803,9 @@ function boot(): void {
 
     if (viewTrigger?.dataset.view) {
       const requestedView = viewTrigger.dataset.view as ViewName;
+      if (!isModuleVisible(requestedView)) {
+        return;
+      }
       const activeView = document.querySelector<HTMLElement>('.app-shell')?.dataset.activeView;
       const isBottomNavTrigger = Boolean(viewTrigger.closest('.bottom-nav'));
       const isBrandHomeTrigger = viewTrigger.classList.contains('brand-home') && requestedView === 'home';
@@ -5873,6 +5946,8 @@ function boot(): void {
 
   document.querySelector<HTMLElement>('[data-parent-secret-accept]')?.addEventListener('click', acceptParentSecretIntro);
 
+  document.querySelector<HTMLElement>('[data-module-visibility-save]')?.addEventListener('click', saveModuleVisibilitySettingsFromPanel);
+
   document.querySelector<HTMLElement>('[data-mirror-plan-save]')?.addEventListener('click', () => {
     const preset = document.querySelector<HTMLSelectElement>('[data-mirror-plan-preset]')?.value;
     mirrorPlanSettings = normalizeMirrorPlan({ preset });
@@ -5921,9 +5996,11 @@ function boot(): void {
   matchProgress = readMatchProgress();
   mirrorPlanSettings = readMirrorPlanSettings();
   sleepSettings = readSleepSettings();
+  moduleVisibilitySettings = readModuleVisibilitySettings();
   sentenceProgress = readSentenceProgress();
   publishTouchMasteryForMatching();
   renderPofiAvatars();
+  syncModuleVisibility();
   syncChildLockMode();
   showParentSecretIntroIfNeeded();
   renderParentMetrics();

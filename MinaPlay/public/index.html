@@ -334,10 +334,46 @@
                 <div class="parent-section-heading">
                   <div>
                     <p class="eyebrow">Modül planı</p>
-                    <h3 id="module-settings-title">Ayna ve Uyku tercihleri</h3>
+                    <h3 id="module-settings-title">Modül ve tercih kontrolü</h3>
                   </div>
                 </div>
                 <div class="safety-settings-card module-settings-card">
+                  <label class="safety-toggle">
+                    <input type="checkbox" data-module-visibility="touch" />
+                    <span>
+                      Dokun görünür
+                      <small>Kelime ve nesne dokunma pratiğini ana ekranda tutar.</small>
+                    </span>
+                  </label>
+                  <label class="safety-toggle">
+                    <input type="checkbox" data-module-visibility="match" />
+                    <span>
+                      Eşleme görünür
+                      <small>Öğrenilen kelimeleri farklı görsellerle pekiştirir.</small>
+                    </span>
+                  </label>
+                  <label class="safety-toggle">
+                    <input type="checkbox" data-module-visibility="mirror" />
+                    <span>
+                      Ayna görünür
+                      <small>Taklit ve ağız-dil egzersizlerini ana ekranda gösterir.</small>
+                    </span>
+                  </label>
+                  <label class="safety-toggle">
+                    <input type="checkbox" data-module-visibility="sleep" />
+                    <span>
+                      Uyku görünür
+                      <small>Sakin uyku yüzeyini ana ekranda gösterir.</small>
+                    </span>
+                  </label>
+                  <label class="safety-toggle">
+                    <input type="checkbox" data-module-visibility="peekaboo" />
+                    <span>
+                      Ceee görünür
+                      <small>Kısa dikkat oyunu ana ekranda açık kalır.</small>
+                    </span>
+                  </label>
+                  <button class="soft-admin-button" type="button" data-module-visibility-save>Mod görünürlüğünü kaydet</button>
                   <label>
                     Ayna sırası
                     <select data-mirror-plan-preset>

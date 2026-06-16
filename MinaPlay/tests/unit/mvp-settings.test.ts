@@ -1,8 +1,10 @@
 import { describe, expect, test } from 'vitest';
 import {
+  DEFAULT_MODULE_VISIBILITY,
   DEFAULT_MIRROR_PLAN,
   DEFAULT_SLEEP_SETTINGS,
   mirrorExerciseOrder,
+  normalizeModuleVisibility,
   normalizeMirrorPlan,
   normalizeSleepSettings
 } from '../../src/modules/mvp-settings';
@@ -23,6 +25,30 @@ describe('MVP parent settings', () => {
     expect(normalizeSleepSettings({ sound: 'invalid', durationMinutes: 7, volume: 4 })).toEqual({
       ...DEFAULT_SLEEP_SETTINGS,
       volume: 1
+    });
+  });
+
+  test('normalizes module visibility and keeps at least one child mode active', () => {
+    expect(normalizeModuleVisibility({ touch: false, match: true, unknown: true })).toEqual({
+      ...DEFAULT_MODULE_VISIBILITY,
+      touch: false,
+      match: true
+    });
+
+    expect(
+      normalizeModuleVisibility({
+        touch: false,
+        match: false,
+        mirror: false,
+        sleep: false,
+        peekaboo: false
+      })
+    ).toEqual({
+      touch: true,
+      match: false,
+      mirror: false,
+      sleep: false,
+      peekaboo: false
     });
   });
 });

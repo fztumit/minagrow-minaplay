@@ -349,7 +349,8 @@ h2 {
 }
 
 .mode-card[hidden],
-.bottom-nav button[hidden] {
+.bottom-nav button[hidden],
+.bonus-button[hidden] {
   display: none !important;
 }
 

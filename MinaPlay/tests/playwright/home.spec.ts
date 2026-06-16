@@ -628,6 +628,33 @@ test('parent panel shows matching mastery and saves Ayna and Uyku preferences', 
   await expect(page.locator('[data-sleep-surface]')).toHaveAttribute('data-sleep-duration', '20');
 });
 
+test('parent panel controls visible child modules safely', async ({ page }) => {
+  await disableChildLock(page);
+  await page.goto('/');
+
+  await openParentBySecretGesture(page);
+  await page.locator('[data-module-visibility="sleep"]').setChecked(false);
+  await page.locator('[data-module-visibility="peekaboo"]').setChecked(false);
+  await page.click('[data-module-visibility-save]');
+  await expect(page.locator('[data-module-settings-status]')).toContainText('Dokun');
+
+  await page.click('.brand-home');
+  await expect(page.locator('.mode-card[data-view="sleep"]')).toBeHidden();
+  await expect(page.locator('.bonus-cee')).toBeHidden();
+  await expect(page.locator('.bottom-nav button[data-view="sleep"]')).toBeHidden();
+
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('minaplay_module_visibility_v1') ?? '{}'));
+  expect(saved.sleep).toBe(false);
+  expect(saved.peekaboo).toBe(false);
+
+  await openParentBySecretGesture(page);
+  for (const moduleId of ['touch', 'match', 'mirror', 'sleep', 'peekaboo']) {
+    await page.locator(`[data-module-visibility="${moduleId}"]`).setChecked(false);
+  }
+  await page.click('[data-module-visibility-save]');
+  await expect(page.locator('[data-module-visibility="touch"]')).toBeChecked();
+});
+
 test('parent panel shows local-first device and offline readiness', async ({ page }) => {
   await disableChildLock(page);
   await page.goto('/');

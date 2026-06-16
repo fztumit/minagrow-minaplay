@@ -107,10 +107,32 @@ Faz 4 sonucu:
 - çocuk yüzeyi ve MVP mod kapsamı büyütülmeden ebeveyn güveni güçlendirilir
 - build, lint, 29 unit test ve 28 Playwright e2e testi başarılıdır
 
+## Faz 5 - Parent Panel Kontrol Katmanı
+
+Durum:
+
+- tamamlandı
+
+Kapanan paketler:
+
+- 5-1: Parent panelde aktif MVP modlarının görünürlüğünü yöneten kontrol alanı eklendi
+- 5-2: Dokun, Eşleme, Ayna, Uyku ve Ceee görünürlüğü local-first `minaplay_module_visibility_v1` kaydına bağlandı
+- 5-3: ebeveyn tüm modları kapatsa bile en az bir çocuk modu açık kalacak güvenlik kuralı eklendi
+- 5-4: ana ekran kartları, alt navigasyon ve Ceee bonus girişinin görünürlüğü aynı ayardan senkronlanır hale geldi
+- 5-5: mod görünürlüğü normalizasyonu ve Parent panel kontrol davranışı unit/e2e regresyon kapsamına alındı
+
+Faz 5 sonucu:
+
+- Parent panel çocuk yüzeyindeki aktif MVP modlarını yerel olarak açıp kapatabilir
+- gizlenen modlar ana ekranda, alt navigasyonda ve doğrudan geçiş denemelerinde çocuk yüzeyinden uzak tutulur
+- çocuk yüzeyi yeni modla büyütülmeden ebeveyn kontrol katmanı güçlendirilir
+- build, lint, 30 unit test ve 29 Playwright e2e testi başarılıdır
+- canlı tarayıcı DOM kontrolünde mod görünürlüğü kontrolleri ve yatay taşmasız ana ekran doğrulanmıştır
+
 ## Bugünkü Kapanış Hedefi
 
 - aktif uygulama hedefi `/Users/umitaydin/Documents/MinaGrow/MinaPlay` olarak korunur
-- Faz 1, Faz 2, Faz 3 ve Faz 4 kapanışları git kaydıyla doğrulanmış kabul edilir
+- Faz 1, Faz 2, Faz 3, Faz 4 ve Faz 5 kapanışları git kaydıyla doğrulanmış kabul edilir
 - `MinaPlay` içinde build/lint/test/e2e hattı kararlı tutulur
 - sonraki aktif faz/paket, bu sertleştirilmiş MVP tabanı üstüne yeni tek kapanış hedefi olarak belirlenir
 - yeni iş açılırken çocuk yüzeyi kapsamı büyütülmeden önce Parent panel, Pofi state ve local-first veri sınırları korunur
