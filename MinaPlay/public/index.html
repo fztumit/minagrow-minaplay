@@ -454,6 +454,18 @@
                 </div>
                 <div class="repeat-settings-card">
                   <label>
+                    Odak kelime
+                    <select data-touch-repeat-focus></select>
+                  </label>
+                  <label>
+                    Tekrar tarzı
+                    <select data-touch-repeat-style>
+                      <option value="melodic">Melodik ve değişken</option>
+                      <option value="playful">Oyunlu ve canlı</option>
+                      <option value="gentle">Sakin ve aralıklı</option>
+                    </select>
+                  </label>
+                  <label>
                     Süre (sn)
                     <input type="number" min="5" max="180" step="5" data-touch-repeat-duration />
                   </label>
@@ -461,10 +473,18 @@
                     Tekrar sayısı
                     <input type="number" min="1" max="60" step="1" data-touch-repeat-count />
                   </label>
+                  <label>
+                    Video / çekim linki
+                    <input type="url" placeholder="https://..." data-touch-repeat-resource />
+                  </label>
+                  <label>
+                    Çekim notu
+                    <textarea rows="2" placeholder="Baba kelimesi için kısa, gülümseyen bir tekrar videosu..." data-touch-repeat-note></textarea>
+                  </label>
                   <button class="soft-admin-button" type="button" data-touch-repeat-save>Tekrarı kaydet</button>
                 </div>
                 <p class="recording-guide">
-                  Aynı kelimeyi farklı ritim ve tonlarla kaydedin: Baba, Bab-ba, Ba Ba, Baaa Baaa, Baaa Ba, Ba Baaa.
+                  Aynı kelimeyi farklı ritim ve tonlarla kaydedin: Baba, Bab-ba, Ba Ba, Baaa Baaa, Baaa Ba, Ba Baaa. İsterseniz kısa video çekimi veya güvenli içerik linkini not olarak saklayın.
                 </p>
                 <div class="touch-card-editor" data-touch-card-editor></div>
                 <p class="touch-parent-status" data-touch-parent-status aria-live="polite"></p>

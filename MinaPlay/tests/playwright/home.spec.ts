@@ -335,8 +335,40 @@ test('touch repeat is explicit and parent controlled', async ({ page }) => {
   await expect(page.locator('#view-touch [data-touch-repeat-toggle]')).toHaveCount(0);
 
   await openParentBySecretGesture(page);
+  await expect(page.locator('[data-touch-repeat-focus]')).toHaveValue('baba');
+  await expect(page.locator('[data-touch-repeat-style]')).toHaveValue('melodic');
   await expect(page.locator('[data-touch-repeat-duration]')).toHaveValue('30');
   await expect(page.locator('[data-touch-repeat-count]')).toHaveValue('8');
+  await page.selectOption('[data-touch-repeat-focus]', 'baba');
+  await page.selectOption('[data-touch-repeat-style]', 'playful');
+  await page.fill('[data-touch-repeat-resource]', 'https://example.com/baba-tekrar.mp4');
+  await page.fill('[data-touch-repeat-note]', 'Baba kelimesi için kısa gülümseyen tekrar videosu.');
+  await page.click('[data-touch-repeat-save]');
+  await expect(page.locator('[data-touch-parent-status]')).toContainText('Baba');
+
+  const settings = await page.evaluate(async () => {
+    const local = localStorage.getItem('minaplay_touch_settings_v1');
+    if (local) {
+      return JSON.parse(local);
+    }
+    const request = indexedDB.open('minaplay_touch_cards_v1', 1);
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      request.addEventListener('success', () => resolve(request.result));
+      request.addEventListener('error', () => reject(request.error));
+    });
+    const transaction = db.transaction('touchSettings', 'readonly');
+    const get = transaction.objectStore('touchSettings').get('current');
+    return await new Promise((resolve, reject) => {
+      get.addEventListener('success', () => resolve(get.result));
+      get.addEventListener('error', () => reject(get.error));
+    });
+  });
+  expect(settings.repeat).toMatchObject({
+    focusCardId: 'baba',
+    style: 'playful',
+    resourceUrl: 'https://example.com/baba-tekrar.mp4',
+    note: 'Baba kelimesi için kısa gülümseyen tekrar videosu.'
+  });
   await expect(page.locator('[data-touch-card-editor] [data-touch-card-admin]')).toHaveCount(5);
   await expect(page.locator('[data-touch-card-image]').first()).toHaveAttribute('accept', 'image/png,image/jpeg,image/gif');
 });

@@ -154,6 +154,7 @@ interface TouchVoiceVariation {
 
 type TouchSoundIntent = 'pofi' | 'word' | 'repeat';
 type TouchSoundSource = 'user' | 'default';
+type TouchRepeatStyle = 'gentle' | 'melodic' | 'playful';
 
 interface TouchCard {
   id: string;
@@ -169,10 +170,14 @@ interface TouchCard {
 
 interface TouchRepeatSettings {
   enabled: boolean;
+  focusCardId: string;
+  style: TouchRepeatStyle;
   maxDurationSeconds: number;
   maxRepeats: number;
   minIntervalMs: number;
   maxIntervalMs: number;
+  resourceUrl: string;
+  note: string;
 }
 
 interface TouchSettingsState {
@@ -348,10 +353,14 @@ const TOUCH_DEFAULT_LEARNING_GOALS: Record<string, string> = {
 };
 const TOUCH_DEFAULT_REPEAT_SETTINGS: TouchRepeatSettings = {
   enabled: false,
+  focusCardId: 'baba',
+  style: 'melodic',
   maxDurationSeconds: 30,
   maxRepeats: 8,
   minIntervalMs: 1800,
-  maxIntervalMs: 3200
+  maxIntervalMs: 3200,
+  resourceUrl: '',
+  note: ''
 };
 
 const DEFAULT_TOUCH_CARDS: TouchCard[] = [
@@ -2645,6 +2654,15 @@ function selectedTouchCard(): TouchCard {
   );
 }
 
+function repeatFocusCard(): TouchCard {
+  const enabled = enabledTouchCards();
+  return (
+    enabled.find((card) => card.id === touchSettings.repeat.focusCardId) ??
+    touchSettings.cards.find((card) => card.id === touchSettings.repeat.focusCardId) ??
+    selectedTouchCard()
+  );
+}
+
 function nextTouchVariation(card: TouchCard, rhythm: TouchVoiceVariation['rhythm'] = 'normal'): TouchVoiceVariation {
   const variations = card.variations.length > 0 ? card.variations : createDefaultVariations(card.id, card.word);
   const pool = variations.length > 1 ? variations.filter((variation) => variation.id !== lastTouchVariationId) : variations;
@@ -4813,17 +4831,27 @@ function runTouchRepeatCue(): void {
   }
 
   touchRepeatCount += 1;
-  void handleTouchCardPlayback(selectedTouchCard(), 'repeat');
+  const card = repeatFocusCard();
+  selectedTouchCardId = card.id;
+  void handleTouchCardPlayback(card, 'repeat', touchSettings.repeat.style);
   renderTouchRepeatState();
 
-  const card = selectedTouchCard();
-  const adaptiveInterval = adaptiveRepeatInterval(
-    touchProgress[card.id],
-    touchSettings.repeat.minIntervalMs,
-    touchSettings.repeat.maxIntervalMs
-  );
+  const adaptiveInterval = touchRepeatInterval(card, touchRepeatCount);
   trackTouchAnalyticsDetail('repeat', card.id, { intervalMs: adaptiveInterval });
   touchRepeatTimer = window.setTimeout(runTouchRepeatCue, adaptiveInterval);
+}
+
+function touchRepeatInterval(card: TouchCard, count: number): number {
+  const baseInterval = adaptiveRepeatInterval(touchProgress[card.id], touchSettings.repeat.minIntervalMs, touchSettings.repeat.maxIntervalMs);
+  if (touchSettings.repeat.style === 'gentle') {
+    return Math.min(touchSettings.repeat.maxIntervalMs + 1200, Math.max(baseInterval, 3200));
+  }
+  if (touchSettings.repeat.style === 'playful') {
+    const playfulSteps = [1200, 1800, 1400, 2200];
+    return playfulSteps[(count - 1) % playfulSteps.length] ?? baseInterval;
+  }
+  const melodicSteps = [1400, 1900, 2400, 1600, 2200];
+  return melodicSteps[(count - 1) % melodicSteps.length] ?? baseInterval;
 }
 
 function renderTouchRepeatState(): void {
@@ -4831,10 +4859,10 @@ function renderTouchRepeatState(): void {
   const status = document.querySelector<HTMLElement>('[data-touch-repeat-status]');
   if (toggle) {
     toggle.classList.toggle('active', touchRepeatActive);
-    toggle.textContent = touchRepeatActive ? 'Ahenkli tekrar açık' : 'Ahenkli tekrar';
+    toggle.textContent = touchRepeatActive ? `${repeatFocusCard().label} tekrarı açık` : 'Ahenkli tekrar';
   }
   if (status) {
-    status.textContent = touchRepeatActive ? `${touchRepeatCount}/${touchSettings.repeat.maxRepeats}` : 'Kapalı';
+    status.textContent = touchRepeatActive ? `${repeatFocusCard().label} ${touchRepeatCount}/${touchSettings.repeat.maxRepeats}` : 'Kapalı';
   }
 }
 
@@ -5071,13 +5099,24 @@ function syncTouchRitual(view: ViewName): void {
   }
 }
 
-async function handleTouchCardPlayback(card: TouchCard, intent: TouchSoundIntent): Promise<void> {
-  const variation = nextTouchVariation(card);
+async function handleTouchCardPlayback(card: TouchCard, intent: TouchSoundIntent, rhythm: TouchVoiceVariation['rhythm'] = 'normal'): Promise<void> {
+  const variation = nextTouchVariation(card, rhythm);
   activeTouchWeather = TOUCH_WEATHER_EFFECTS[randomBetween(0, TOUCH_WEATHER_EFFECTS.length - 1)];
   renderTouchSelection(variation, true);
-  setTouchStatus(`${card.label}: ${variation.label}`);
+  const repeatPrefix = intent === 'repeat' ? touchRepeatStatusPrefix() : card.label;
+  setTouchStatus(`${repeatPrefix}: ${variation.label}`);
   showPofiReaction(intent === 'repeat' ? 'waiting' : touchSuccessPofiState());
   await playTouchCardSound(card, intent, intent === 'pofi' ? 0.9 : 0.78);
+}
+
+function touchRepeatStatusPrefix(): string {
+  if (touchSettings.repeat.style === 'playful') {
+    return 'Oyunlu tekrar';
+  }
+  if (touchSettings.repeat.style === 'gentle') {
+    return 'Sakin tekrar';
+  }
+  return 'Melodik tekrar';
 }
 
 function handleTouchCardPress(cardId: string, element?: HTMLElement): void {
@@ -5221,8 +5260,32 @@ function normalizeTouchSettings(stored?: TouchSettingsState): TouchSettingsState
 
   return {
     cards: normalizedCards.sort((a, b) => a.order - b.order).map((card, order) => ({ ...card, order })),
-    repeat: { ...TOUCH_DEFAULT_REPEAT_SETTINGS, ...stored.repeat, enabled: false }
+    repeat: normalizeTouchRepeatSettings(stored.repeat, normalizedCards)
   };
+}
+
+function normalizeTouchRepeatSettings(stored: Partial<TouchRepeatSettings> | undefined, cards: TouchCard[]): TouchRepeatSettings {
+  const focusCardId = cards.some((card) => card.id === stored?.focusCardId)
+    ? String(stored?.focusCardId)
+    : cards.find((card) => card.id === TOUCH_DEFAULT_REPEAT_SETTINGS.focusCardId)?.id ?? cards[0]?.id ?? TOUCH_DEFAULT_REPEAT_SETTINGS.focusCardId;
+
+  return {
+    ...TOUCH_DEFAULT_REPEAT_SETTINGS,
+    ...stored,
+    enabled: false,
+    focusCardId,
+    style: isTouchRepeatStyle(stored?.style) ? stored.style : TOUCH_DEFAULT_REPEAT_SETTINGS.style,
+    maxDurationSeconds: clampNumber(Number(stored?.maxDurationSeconds), 5, 180, TOUCH_DEFAULT_REPEAT_SETTINGS.maxDurationSeconds),
+    maxRepeats: clampNumber(Number(stored?.maxRepeats), 1, 60, TOUCH_DEFAULT_REPEAT_SETTINGS.maxRepeats),
+    minIntervalMs: clampNumber(Number(stored?.minIntervalMs), 900, 5000, TOUCH_DEFAULT_REPEAT_SETTINGS.minIntervalMs),
+    maxIntervalMs: clampNumber(Number(stored?.maxIntervalMs), 1200, 8000, TOUCH_DEFAULT_REPEAT_SETTINGS.maxIntervalMs),
+    resourceUrl: typeof stored?.resourceUrl === 'string' ? stored.resourceUrl : '',
+    note: typeof stored?.note === 'string' ? stored.note : ''
+  };
+}
+
+function isTouchRepeatStyle(value: unknown): value is TouchRepeatStyle {
+  return value === 'gentle' || value === 'melodic' || value === 'playful';
 }
 
 async function initializeTouchSettings(): Promise<void> {
@@ -5240,13 +5303,31 @@ async function initializeTouchSettings(): Promise<void> {
 
 function renderParentTouchSettings(): void {
   const editor = document.querySelector<HTMLElement>('[data-touch-card-editor]');
+  const focus = document.querySelector<HTMLSelectElement>('[data-touch-repeat-focus]');
+  const style = document.querySelector<HTMLSelectElement>('[data-touch-repeat-style]');
   const duration = document.querySelector<HTMLInputElement>('[data-touch-repeat-duration]');
   const repeats = document.querySelector<HTMLInputElement>('[data-touch-repeat-count]');
+  const resource = document.querySelector<HTMLInputElement>('[data-touch-repeat-resource]');
+  const note = document.querySelector<HTMLTextAreaElement>('[data-touch-repeat-note]');
+  if (focus) {
+    focus.innerHTML = enabledTouchCards()
+      .map((card) => `<option value="${card.id}" ${card.id === touchSettings.repeat.focusCardId ? 'selected' : ''}>${card.label}</option>`)
+      .join('');
+  }
+  if (style) {
+    style.value = touchSettings.repeat.style;
+  }
   if (duration) {
     duration.value = String(touchSettings.repeat.maxDurationSeconds);
   }
   if (repeats) {
     repeats.value = String(touchSettings.repeat.maxRepeats);
+  }
+  if (resource) {
+    resource.value = touchSettings.repeat.resourceUrl;
+  }
+  if (note) {
+    note.value = touchSettings.repeat.note;
   }
   if (!editor) {
     return;
@@ -5439,13 +5520,27 @@ async function resizeTouchImage(file: File): Promise<string> {
 }
 
 function saveRepeatSettingsFromPanel(): void {
+  const focus = document.querySelector<HTMLSelectElement>('[data-touch-repeat-focus]');
+  const style = document.querySelector<HTMLSelectElement>('[data-touch-repeat-style]');
   const duration = document.querySelector<HTMLInputElement>('[data-touch-repeat-duration]');
   const repeats = document.querySelector<HTMLInputElement>('[data-touch-repeat-count]');
-  touchSettings.repeat.maxDurationSeconds = clampNumber(Number(duration?.value), 5, 180, TOUCH_DEFAULT_REPEAT_SETTINGS.maxDurationSeconds);
-  touchSettings.repeat.maxRepeats = clampNumber(Number(repeats?.value), 1, 60, TOUCH_DEFAULT_REPEAT_SETTINGS.maxRepeats);
+  const resource = document.querySelector<HTMLInputElement>('[data-touch-repeat-resource]');
+  const note = document.querySelector<HTMLTextAreaElement>('[data-touch-repeat-note]');
+  touchSettings.repeat = normalizeTouchRepeatSettings(
+    {
+      ...touchSettings.repeat,
+      focusCardId: focus?.value,
+      style: style?.value as TouchRepeatStyle | undefined,
+      maxDurationSeconds: Number(duration?.value),
+      maxRepeats: Number(repeats?.value),
+      resourceUrl: resource?.value.trim() ?? '',
+      note: note?.value.trim() ?? ''
+    },
+    touchSettings.cards
+  );
   renderTouchRepeatState();
   renderParentTouchSettings();
-  setTouchParentStatus('Ahenkli tekrar ayarları kaydedildi.');
+  setTouchParentStatus(`${repeatFocusCard().label} için ${touchRepeatStatusPrefix().toLowerCase()} ayarları kaydedildi.`);
   void writeTouchSettings();
 }
 

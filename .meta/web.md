@@ -88,6 +88,9 @@ Rol:
 - hedef dışı dokunuş başarısızlık hissi yaratmaz
 - ses çalabilir, Pofi yumuşak yönlendirmeye devam eder
 - yağmur, kar, rüzgar, dolu, şimşek/yıldırım, pus ve gökkuşağı gibi efektler düşük uyarımlı kalır
+- ebeveyn belirli bir kelimeyi, örneğin Baba, odak tekrar olarak seçebilir
+- odak tekrar düz döngü gibi hissettirilmez; melodik, oyunlu veya sakin ritimlerle çeşitlendirilir
+- ebeveyn video/çekim linki ve çekim notunu saklayabilir, ancak büyük medya yükleme/oynatma ayrı güvenli medya paketi olarak ele alınır
 - Pofi hedefleri karışık sırayla yönlendirebilir
 - yönlendirme dağılımı dengeli olmalıdır; bir kart aşırı fazla, başka kart çok az çalıştırılmaz
 - doğru dokunuşta Pofi güler veya olumlu emojiyle onay verir ve sesli geri bildirim verir
