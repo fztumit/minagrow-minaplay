@@ -5674,6 +5674,30 @@ function renderParentGuidance(state: AnalyticsState): void {
     .join('');
 }
 
+function setParentTab(tab: 'today' | 'edit' | 'control', focusSelector?: string): void {
+  document.querySelectorAll<HTMLButtonElement>('[data-parent-tab]').forEach((button) => {
+    const isActive = button.dataset.parentTab === tab;
+    button.classList.toggle('active', isActive);
+    button.setAttribute('aria-selected', String(isActive));
+  });
+
+  document.querySelectorAll<HTMLElement>('[data-parent-tab-section]').forEach((section) => {
+    section.toggleAttribute('hidden', section.dataset.parentTabSection !== tab);
+  });
+
+  if (focusSelector) {
+    window.setTimeout(() => {
+      const target = document.querySelector<HTMLElement>(focusSelector);
+      target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      target?.focus({ preventScroll: true });
+    }, 80);
+  }
+}
+
+function isParentTab(value: string | undefined): value is 'today' | 'edit' | 'control' {
+  return value === 'today' || value === 'edit' || value === 'control';
+}
+
 async function renderDeviceStatus(): Promise<void> {
   const grid = document.querySelector<HTMLElement>('[data-device-status]');
   const note = document.querySelector<HTMLElement>('[data-device-status-note]');
@@ -5972,6 +5996,22 @@ function boot(): void {
       const action = button.dataset.trackAction ?? 'action';
       showActionCue(button, action);
       trackAction(action, button);
+    });
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('[data-parent-tab]').forEach((button) => {
+    button.addEventListener('click', () => {
+      if (isParentTab(button.dataset.parentTab)) {
+        setParentTab(button.dataset.parentTab);
+      }
+    });
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('[data-parent-tab-target]').forEach((button) => {
+    button.addEventListener('click', () => {
+      if (isParentTab(button.dataset.parentTabTarget)) {
+        setParentTab(button.dataset.parentTabTarget, button.dataset.parentFocusTarget);
+      }
     });
   });
 

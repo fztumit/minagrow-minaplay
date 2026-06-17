@@ -146,10 +146,11 @@ Kapanan paketler:
 
 - 6-1: İfade ve Hikaye ana ekran/alt navigasyon yüzeyinde aktif hale getirildi
 - 6-2: Dokun modunda ebeveynin belirli bir kelimeyi odak tekrar olarak seçebilmesi sağlandı
+- 6-3: Parent panel Bugün, Düzenle ve Kontrol sekmelerine ayrılarak sadeleştirildi
 
 Aktif paket:
 
-- 6-3: Dokun odak tekrarını sıkıcı olmayan melodik/oyunlu/sakin ritimlerle ve ebeveynin video/link notlarıyla güçlendirmek
+- 6-4: Parent panelde detay tabloları ve ayar yoğunluğunu daha da azaltmak için açılır detay davranışlarını güçlendirmek
 
 Faz 6 ara sonucu:
 
@@ -157,6 +158,8 @@ Faz 6 ara sonucu:
 - Dokun tekrarının varsayılan odağı Baba kelimesidir
 - ebeveyn tekrar tarzını melodik, oyunlu veya sakin olarak seçebilir
 - ebeveyn video/çekim linki ve çekim notunu yerel ayar olarak saklayabilir
+- Parent panel ilk açılışta Bugün özetini, yorumlu öneriyi ve üç hızlı aksiyonu gösterir
+- düzenleme işleri Düzenle sekmesine, güvenlik ve cihaz işleri Kontrol sekmesine taşınmıştır
 - video dosyası yükleme veya oynatma bu pakette açılmamıştır; güvenli medya yönetimi sonraki ayrı paket olarak ele alınır
 
 ## Bugünkü Kapanış Hedefi
@@ -167,6 +170,7 @@ Faz 6 ara sonucu:
 - sonraki aktif faz/paket, bu sertleştirilmiş MVP tabanı üstüne yeni tek kapanış hedefi olarak belirlenir
 - yeni iş açılırken çocuk yüzeyi kapsamı büyütülmeden önce Parent panel, Pofi state ve local-first veri sınırları korunur
 - Dokun tekrarında odak kelime, ritim çeşidi ve ebeveynin ek içerik notları local-first sınırda tutulur
+- Parent panel yeni işlerinde ilk ekran sade kalır; detay ve ayarlar ilgili sekme veya açılır alan arkasında tutulur
 
 ## Kanonik Ürün Yönü
 

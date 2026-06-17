@@ -28,6 +28,10 @@ async function openParentBySecretGesture(page: Page, taps = 3, pull = 100) {
   await page.mouse.up();
 }
 
+async function openParentTab(page: Page, tab: 'Bugün' | 'Düzenle' | 'Kontrol') {
+  await page.getByRole('tab', { name: tab }).click();
+}
+
 test('home opens with the active child modes', async ({ page }) => {
   await page.goto('/');
 
@@ -145,11 +149,13 @@ test('parent panel records simple module activity', async ({ page }) => {
   await openParentBySecretGesture(page);
 
   await expect(page.locator('#view-parent')).toHaveClass(/active/);
+  await expect(page.getByRole('tab', { name: 'Bugün' })).toHaveAttribute('aria-selected', 'true');
   await expect(page.locator('#metric-sessions')).toHaveText('1');
   await expect(page.locator('#metric-correct')).toHaveText('1');
   await expect(page.locator('[data-parent-guidance] .parent-guidance-card')).toHaveCount(3);
   await expect(page.locator('[data-parent-guidance]')).toContainText('Bugünkü ritim');
   await expect(page.locator('[data-parent-guidance]')).toContainText('Sonraki sakin adım');
+  await expect(page.locator('.parent-action-card')).toHaveCount(3);
 });
 
 test('MinaPlay logo returns modules to home', async ({ page }) => {
@@ -191,6 +197,7 @@ test('child lock blocks module exits and opens parent with secret gesture', asyn
 
   await openParentBySecretGesture(page);
   await expect(page.locator('#view-parent')).toHaveClass(/active/);
+  await openParentTab(page, 'Kontrol');
   await expect(page.locator('[data-child-lock-enabled]')).toBeChecked();
   await expect(page.locator('[data-child-lock-awake]')).toBeChecked();
 });
@@ -199,6 +206,7 @@ test('parent secret gesture can be updated', async ({ page }) => {
   await page.goto('/');
 
   await openParentBySecretGesture(page);
+  await openParentTab(page, 'Kontrol');
   await page.fill('[data-parent-gesture-taps]', '4');
   await page.fill('[data-parent-gesture-pull]', '120');
   await page.click('[data-parent-gesture-save]');
@@ -335,6 +343,7 @@ test('touch repeat is explicit and parent controlled', async ({ page }) => {
   await expect(page.locator('#view-touch [data-touch-repeat-toggle]')).toHaveCount(0);
 
   await openParentBySecretGesture(page);
+  await openParentTab(page, 'Düzenle');
   await expect(page.locator('[data-touch-repeat-focus]')).toHaveValue('baba');
   await expect(page.locator('[data-touch-repeat-style]')).toHaveValue('melodic');
   await expect(page.locator('[data-touch-repeat-duration]')).toHaveValue('30');
@@ -583,8 +592,7 @@ test('parent panel shows touch word progress rows', async ({ page }) => {
   await page.goto('/');
 
   await openParentBySecretGesture(page);
-  await expect(page.locator('[data-child-lock-enabled]')).toBeChecked();
-  await expect(page.locator('[data-child-lock-awake]')).toBeChecked();
+  await openParentTab(page, 'Düzenle');
   await expect(page.locator('[data-touch-progress-table] .touch-progress-row')).toHaveCount(5);
   await expect(page.locator('[data-touch-progress-table]')).toContainText('Su');
   await expect(page.locator('[data-touch-progress-table]')).toContainText('4 doğru');
@@ -621,10 +629,12 @@ test('parent panel shows matching mastery and saves Ayna and Uyku preferences', 
   await page.goto('/');
 
   await openParentBySecretGesture(page);
+  await openParentTab(page, 'Düzenle');
   await expect(page.locator('[data-match-progress-table]')).toContainText('Son 5: 4/5');
   await expect(page.locator('[data-match-progress-table]')).toContainText('3 seri');
   await expect(page.locator('[data-match-progress-table]')).toContainText('Öğrenildi');
 
+  await openParentTab(page, 'Kontrol');
   await page.selectOption('[data-mirror-plan-preset]', 'mouth-first');
   await page.click('[data-mirror-plan-save]');
   await page.selectOption('[data-sleep-sound-setting]', 'ocean');
@@ -655,6 +665,7 @@ test('parent panel controls visible child modules safely', async ({ page }) => {
   await page.goto('/');
 
   await openParentBySecretGesture(page);
+  await openParentTab(page, 'Kontrol');
   await page.locator('[data-module-visibility="sleep"]').setChecked(false);
   await page.locator('[data-module-visibility="peekaboo"]').setChecked(false);
   await page.click('[data-module-visibility-save]');
@@ -670,6 +681,7 @@ test('parent panel controls visible child modules safely', async ({ page }) => {
   expect(saved.peekaboo).toBe(false);
 
   await openParentBySecretGesture(page);
+  await openParentTab(page, 'Kontrol');
   for (const moduleId of ['touch', 'match', 'sentence', 'story', 'mirror', 'sleep', 'peekaboo']) {
     await page.locator(`[data-module-visibility="${moduleId}"]`).setChecked(false);
   }
@@ -682,6 +694,7 @@ test('parent panel shows local-first device and offline readiness', async ({ pag
   await page.goto('/');
 
   await openParentBySecretGesture(page);
+  await openParentTab(page, 'Kontrol');
   await expect(page.locator('#view-parent')).toHaveClass(/active/);
   await expect(page.locator('[data-device-status] .device-status-chip')).toHaveCount(4);
   await expect(page.locator('[data-device-status]')).toContainText('Çevrimdışı');

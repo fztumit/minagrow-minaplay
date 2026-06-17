@@ -271,6 +271,9 @@ Rol:
 - güçlü olabilir ama çocuk yüzeyini boğmaz
 - ileride terapist/eğitimci araçları ayrı katmanlarda büyüyebilir
 - ebeveyn 5 saniyede ilerleme, tekrar ihtiyacı ve kayıt durumunu anlayabilmelidir
+- ilk açılış Bugün sekmesidir; ebeveyn önce özet, yorumlu öneri ve hızlı aksiyonları görür
+- Düzenle sekmesi kelime/kart/tekrar ve öğrenme detayları içindir
+- Kontrol sekmesi çocuk kilidi, mod görünürlüğü, cihaz durumu, Ayna ve Uyku tercihleri içindir
 - panel destekleyici ve yönlendirici dil kullanır; başarısız, yetersiz, eksik gibi yargılayıcı ifadeler kullanılmaz
 - panel çocuk ekranından daha sade, daha ciddi ve daha az renkli ayrılır; teknik veya korkutucu görünmez
 - Parent Panel MVP kelime/nesne bazlı deneme, doğru sayısı, ardışık doğru sayısı, son 5 deneme, öğrenildi durumu ve günlük kısa özet gösterir

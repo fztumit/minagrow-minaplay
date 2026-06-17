@@ -224,8 +224,13 @@
         <section class="view parent-panel" id="view-parent" data-view-panel="parent" aria-label="Ebeveyn paneli">
           <p class="eyebrow">Ebeveyn paneli</p>
           <h2>Bugünün yumuşak özeti</h2>
+          <div class="parent-tabs" role="tablist" aria-label="Ebeveyn panel bölümleri">
+            <button class="parent-tab active" type="button" role="tab" data-parent-tab="today" aria-selected="true">Bugün</button>
+            <button class="parent-tab" type="button" role="tab" data-parent-tab="edit" aria-selected="false">Düzenle</button>
+            <button class="parent-tab" type="button" role="tab" data-parent-tab="control" aria-selected="false">Kontrol</button>
+          </div>
           <div class="parent-dashboard">
-            <section class="parent-overview" aria-label="Bugünün özeti">
+            <section class="parent-overview" data-parent-tab-section="today" aria-label="Bugünün özeti">
               <div class="parent-section-heading">
                 <div>
                   <p class="eyebrow">Doğru analiz</p>
@@ -260,9 +265,29 @@
                 </div>
                 <div class="parent-guidance-grid" data-parent-guidance aria-live="polite"></div>
               </section>
+              <section class="parent-quick-actions" aria-labelledby="parent-quick-actions-title">
+                <div>
+                  <p class="eyebrow">Hızlı aksiyon</p>
+                  <h3 id="parent-quick-actions-title">Şimdi ne yapmak istersin?</h3>
+                </div>
+                <div class="parent-action-grid">
+                  <button class="parent-action-card" type="button" data-parent-tab-target="edit" data-parent-focus-target="[data-touch-repeat-focus]">
+                    <strong>Baba tekrarını ayarla</strong>
+                    <span>Odak kelime, ritim, video/link notu.</span>
+                  </button>
+                  <button class="parent-action-card" type="button" data-parent-tab-target="edit" data-parent-focus-target="[data-touch-card-add]">
+                    <strong>Kelimeleri düzenle</strong>
+                    <span>Kart ekle, görsel değiştir, aktifliği seç.</span>
+                  </button>
+                  <button class="parent-action-card" type="button" data-parent-tab-target="control" data-parent-focus-target="[data-module-visibility-save]">
+                    <strong>Çocuk ekranını ayarla</strong>
+                    <span>Modları, kilidi ve uyku tercihlerini düzenle.</span>
+                  </button>
+                </div>
+              </section>
             </section>
 
-            <div class="parent-learning-column">
+            <div class="parent-learning-column" data-parent-tab-section="edit" hidden>
               <div class="parent-section-heading parent-column-heading">
                 <div>
                   <p class="eyebrow">Öğrenme takibi</p>
@@ -289,7 +314,7 @@
               </section>
             </div>
 
-            <div class="parent-side-column">
+            <div class="parent-side-column" data-parent-tab-section="control" hidden>
               <div class="parent-section-heading parent-column-heading">
                 <div>
                   <p class="eyebrow">Güvenli kullanım</p>
@@ -437,7 +462,7 @@
               </section>
             </div>
 
-            <div class="parent-admin-column">
+            <div class="parent-admin-column" data-parent-tab-section="edit" hidden>
               <div class="parent-section-heading parent-column-heading">
                 <div>
                   <p class="eyebrow">Kolay düzenleme</p>
