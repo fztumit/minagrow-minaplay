@@ -129,6 +129,19 @@ Faz 5 sonucu:
 - build, lint, 30 unit test ve 29 Playwright e2e testi başarılıdır
 - canlı tarayıcı DOM kontrolünde mod görünürlüğü kontrolleri ve yatay taşmasız ana ekran doğrulanmıştır
 
+## Faz 6 - İfade ve Hikaye Aktivasyonu
+
+Durum:
+
+- aktif uygulama kararı alındı
+
+Karar:
+
+- `view-sentence` çocuk yüzeyinde kullanıcıya **İfade** adıyla aktif gösterilir
+- `view-story` çocuk yüzeyinde **Hikaye** adıyla aktif gösterilir
+- Ceee ana mod değil, bonus/kısa dikkat oyunu olarak kalır
+- Parent panel mod görünürlüğü kontrolü İfade ve Hikaye modlarını da kapsar
+
 ## Bugünkü Kapanış Hedefi
 
 - aktif uygulama hedefi `/Users/umitaydin/Documents/MinaGrow/MinaPlay` olarak korunur
@@ -165,6 +178,8 @@ Aktif MVP modları:
 - Ana ekran
 - Dokun: `view-touch`
 - Eşleme: `view-match`
+- İfade: `view-sentence`
+- Hikaye: `view-story`
 - Ayna: `view-mirror`
 - Uyku: `view-sleep`
 - Ceee: `view-peekaboo`
@@ -172,8 +187,6 @@ Aktif MVP modları:
 
 MVP dışı veya pasif modlar:
 
-- Cümle: `view-sentence`
-- Hikaye: `view-story`
 - gelişmiş ebeveyn analizleri
 
 MVP sürecinde yeni mod eklemek, mevcut modları büyütmek veya kapsamı genişletmek yerine stabilite, tutarlılık ve kullanıcı hissi öncelenir.
@@ -184,7 +197,7 @@ Ana modlar:
 
 - Dokun: `view-touch`
 - Eşleme: `view-match`
-- Cümle: `view-sentence`
+- İfade: `view-sentence`
 - Hikaye: `view-story`
 - Ayna: `view-mirror`
 - Uyku: `view-sleep`
@@ -339,12 +352,12 @@ Alınan kararlar:
 
 Amaç:
 
-- Ana ekran, Dokun, Eşleme, Ayna, Uyku ve Ceee için çocuk akışını, Pofi davranışını ve Parent panel kayıtlarını uygulamaya hazır hale getirmek
+- Ana ekran, Dokun, Eşleme, İfade, Hikaye, Ayna, Uyku ve Ceee için çocuk akışını, Pofi davranışını ve Parent panel kayıtlarını uygulamaya hazır hale getirmek
 
 Alınan kararlar:
 
-- ana ekranda aktif alanlar Dokun, Eşleme, Ayna, Uyku ve Ceee'dir
-- Cümle ve Hikaye MVP'de gizli veya "yakında" durumunda kalır
+- ana ekranda aktif ana modlar Dokun, Eşleme, İfade, Hikaye, Ayna ve Uyku'dur
+- Ceee bonus/kısa dikkat oyunu olarak altta görünür kalır
 - Dokun modunda hedefler dengeli dağıtılır; 30 saniye tepkisizlik Pofi dikkat akışını tetikler
 - Dokun modunda Pofi aktif kartın üst alanına bağlanır; yalnız aktif kart animasyon taşır
 - Eşleme modunda sol hedef ve sağda 3 seçenek kullanılır

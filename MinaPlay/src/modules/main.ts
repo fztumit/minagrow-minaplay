@@ -293,6 +293,8 @@ const PRIMARY_VIEWS: ViewName[] = ['touch', 'match', 'sentence', 'story', 'mirro
 const MODULE_VISIBILITY_LABELS: Record<MvpModuleId, string> = {
   touch: 'Dokun',
   match: 'Eşleme',
+  sentence: 'İfade',
+  story: 'Hikaye',
   mirror: 'Ayna',
   sleep: 'Uyku',
   peekaboo: 'Ceee'

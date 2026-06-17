@@ -33,7 +33,7 @@ Ana parçalar:
 - Parent panel
 - PWA manifest ve service worker davranışı
 
-V2 ana ekranı MVP sürecinde yalnız aktif çekirdek alanlara odaklanır. Tablet düzeni ilk 4 aktif kart için 2x2 grid olarak akar; beşinci aktif alan Ceee geniş kart olarak altta yer alır. Mobil portre düzen kartları küçültmez; tek kolon listeye dönüştürür. Mobil yatay düzende alan genişliğine göre 2-3 kolon kullanılabilir. MVP'de aktif alanlar Ana Ekran, Dokun, Eşleme, Ayna, Uyku ve Ceee'dir. Cümle ve Hikaye hazır olsa bile gizli veya "yakında" durumunda tutulabilir. Pofi kartlarda ve sahnede rehberdir; gerektiğinde büyüyebilir, dikkat çekebilir ve sonra geri çekilir.
+V2 ana ekranı MVP sürecinde aktif çekirdek alanlara odaklanır. Tablet düzeni aktif kartları dengeli grid olarak taşır; Ceee geniş bonus kart olarak altta yer alır. Mobil portre düzen kartları küçültmez; tek kolon listeye dönüştürür. Mobil yatay düzende alan genişliğine göre 2-3 kolon kullanılabilir. MVP'de aktif alanlar Ana Ekran, Dokun, Eşleme, İfade, Hikaye, Ayna, Uyku ve Ceee'dir. Pofi kartlarda ve sahnede rehberdir; gerektiğinde büyüyebilir, dikkat çekebilir ve sonra geri çekilir.
 
 ## Bilgi Mimarisi
 
@@ -41,7 +41,7 @@ Ana view eşleşmeleri:
 
 - Dokun Dinle / Touch & Listen: `view-touch`
 - Eşleme / Match: `view-match`
-- Cümle / Sentence: `view-sentence`
+- İfade / Sentence: `view-sentence`
 - Hikaye / Story: `view-story`
 - Ayna / Mirror: `view-mirror`
 - Uyku / Sleep: `view-sleep`
@@ -53,6 +53,8 @@ MVP aktif view'leri:
 - Ana ekran
 - `view-touch`
 - `view-match`
+- `view-sentence`
+- `view-story`
 - `view-mirror`
 - `view-sleep`
 - `view-peekaboo`
@@ -60,14 +62,12 @@ MVP aktif view'leri:
 
 MVP dışı veya pasif view'ler:
 
-- `view-sentence`
-- `view-story`
 - gelişmiş ebeveyn analizleri
 
 ## Ana Kullanım Akışı
 
 1. Çocuk veya ebeveyn uygulamayı açar.
-2. Ana ekranda MVP aktif alanları görünür; Cümle ve Hikaye akışı bölmeyecek şekilde pasif veya gizli tutulur.
+2. Ana ekranda MVP aktif alanları görünür; İfade ve Hikaye ana modlar arasında yer alır, Ceee ise bonus/kısa dikkat oyunu olarak altta kalır.
 3. Pofi mevcut bağlama uygun tek aktif state ile rehberlik eder.
 4. Çocuk seçtiği aktif modda dokunur, eşler, taklit eder, sakinleşir veya Ceee oynar.
 5. Yanlış veya hedef dışı etkileşim cezalandırılmaz; Pofi yumuşak yönlendirme yapar.
@@ -116,7 +116,7 @@ Not:
 - bir nesne için MVP öğrenildi kuralı son 5 denemede en az 4 doğru ve ardışık doğru sayısının en az 3 olmasıdır
 - öğrenilen nesne için Parent panel ebeveyne yeni kart/nesne ekleme uyarısı verebilir
 
-### Cümle
+### İfade
 
 Rol:
 

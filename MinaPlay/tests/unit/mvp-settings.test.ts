@@ -39,6 +39,8 @@ describe('MVP parent settings', () => {
       normalizeModuleVisibility({
         touch: false,
         match: false,
+        sentence: false,
+        story: false,
         mirror: false,
         sleep: false,
         peekaboo: false
@@ -46,6 +48,8 @@ describe('MVP parent settings', () => {
     ).toEqual({
       touch: true,
       match: false,
+      sentence: false,
+      story: false,
       mirror: false,
       sleep: false,
       peekaboo: false

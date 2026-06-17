@@ -28,24 +28,17 @@ async function openParentBySecretGesture(page: Page, taps = 3, pull = 100) {
   await page.mouse.up();
 }
 
-async function revealFutureMode(page: Page, view: 'sentence' | 'story') {
-  await page.locator(`.mode-card[data-view="${view}"]`).evaluate((element) => {
-    element.removeAttribute('hidden');
-    element.removeAttribute('aria-hidden');
-  });
-}
-
-test('home opens with the five active MVP modes', async ({ page }) => {
+test('home opens with the active child modes', async ({ page }) => {
   await page.goto('/');
 
   await expect(page.locator('#view-home')).toHaveClass(/active/);
   await expect(page.locator('.mode-card')).toHaveCount(6);
-  await expect(page.locator('.mode-card:visible')).toHaveCount(4);
-  await expect(page.locator('.mode-card[data-view="sentence"]')).toBeHidden();
-  await expect(page.locator('.mode-card[data-view="story"]')).toBeHidden();
+  await expect(page.locator('.mode-card:visible')).toHaveCount(6);
+  await expect(page.locator('.mode-card[data-view="sentence"]')).toBeVisible();
+  await expect(page.locator('.mode-card[data-view="story"]')).toBeVisible();
   await expect(page.locator('.bonus-strip')).toContainText('Ceee');
   await expect(page.locator('.bottom-nav button')).toHaveCount(6);
-  await expect(page.locator('.bottom-nav button:not([hidden])')).toHaveCount(4);
+  await expect(page.locator('.bottom-nav button:not([hidden])')).toHaveCount(6);
   await expect(page.locator('[data-open-parent]')).toHaveCount(0);
   await expect(page.locator('.topbar-home')).toHaveCount(0);
 });
@@ -163,7 +156,7 @@ test('MinaPlay logo returns modules to home', async ({ page }) => {
   await disableChildLock(page);
   await page.goto('/');
 
-  for (const view of ['touch', 'match', 'mirror', 'sleep', 'peekaboo']) {
+  for (const view of ['touch', 'match', 'sentence', 'story', 'mirror', 'sleep', 'peekaboo']) {
     await page.click(`[data-view="${view}"]`);
     await expect(page.locator(`#view-${view}`)).toHaveClass(/active/);
 
@@ -177,7 +170,7 @@ test('active bottom nav button returns to home', async ({ page }) => {
   await disableChildLock(page);
   await page.goto('/');
 
-  for (const view of ['touch', 'match', 'mirror', 'sleep']) {
+  for (const view of ['touch', 'match', 'sentence', 'story', 'mirror', 'sleep']) {
     await page.click(`.mode-card[data-view="${view}"]`);
     await expect(page.locator(`#view-${view}`)).toHaveClass(/active/);
 
@@ -431,7 +424,6 @@ test('sentence module completes a short expression from context', async ({ page 
   });
   await page.goto('/');
 
-  await revealFutureMode(page, 'sentence');
   await page.click('.mode-card[data-view="sentence"]');
   await expect(page.locator('[data-sentence-surface]')).toHaveAttribute('data-sentence-state', /context|waiting/);
   await expect(page.locator('[data-sentence-surface]')).toHaveAttribute('data-sentence-mode', 'learn');
@@ -455,7 +447,6 @@ test('sentence module completes a short expression from context', async ({ page 
 test('sentence module offers a select and speak needs board', async ({ page }) => {
   await page.goto('/');
 
-  await revealFutureMode(page, 'sentence');
   await page.click('.mode-card[data-view="sentence"]');
   await page.click('.sentence-mode-button[data-sentence-mode="board"]');
   await expect(page.locator('[data-sentence-surface]')).toHaveAttribute('data-sentence-mode', 'board');
@@ -474,7 +465,6 @@ test('sentence module offers a select and speak needs board', async ({ page }) =
 test('story module narrates and opens an interaction point', async ({ page }) => {
   await page.goto('/');
 
-  await revealFutureMode(page, 'story');
   await page.click('.mode-card[data-view="story"]');
   await expect(page.locator('[data-story-surface]')).toHaveAttribute('data-story-state', /attention|narration/);
   await expect(page.locator('[data-story-scene] .story-scene-image, [data-story-scene] .story-object')).toHaveCount(1);
@@ -648,7 +638,7 @@ test('parent panel controls visible child modules safely', async ({ page }) => {
   expect(saved.peekaboo).toBe(false);
 
   await openParentBySecretGesture(page);
-  for (const moduleId of ['touch', 'match', 'mirror', 'sleep', 'peekaboo']) {
+  for (const moduleId of ['touch', 'match', 'sentence', 'story', 'mirror', 'sleep', 'peekaboo']) {
     await page.locator(`[data-module-visibility="${moduleId}"]`).setChecked(false);
   }
   await page.click('[data-module-visibility-save]');

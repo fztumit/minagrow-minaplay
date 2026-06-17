@@ -1,6 +1,6 @@
 export type MirrorPlanPreset = 'balanced' | 'mouth-first' | 'tongue-first';
 export type SleepSoundPreset = 'lullaby' | 'ocean' | 'white';
-export type MvpModuleId = 'touch' | 'match' | 'mirror' | 'sleep' | 'peekaboo';
+export type MvpModuleId = 'touch' | 'match' | 'sentence' | 'story' | 'mirror' | 'sleep' | 'peekaboo';
 
 export interface MirrorPlanSettings {
   preset: MirrorPlanPreset;
@@ -17,7 +17,7 @@ export type ModuleVisibilitySettings = Record<MvpModuleId, boolean>;
 export const MIRROR_PLAN_KEY = 'minaplay_mirror_plan_v1';
 export const SLEEP_SETTINGS_KEY = 'minaplay_sleep_settings_v1';
 export const MODULE_VISIBILITY_KEY = 'minaplay_module_visibility_v1';
-export const MVP_MODULE_IDS: MvpModuleId[] = ['touch', 'match', 'mirror', 'sleep', 'peekaboo'];
+export const MVP_MODULE_IDS: MvpModuleId[] = ['touch', 'match', 'sentence', 'story', 'mirror', 'sleep', 'peekaboo'];
 
 export const DEFAULT_MIRROR_PLAN: MirrorPlanSettings = {
   preset: 'balanced'
@@ -32,6 +32,8 @@ export const DEFAULT_SLEEP_SETTINGS: SleepSettings = {
 export const DEFAULT_MODULE_VISIBILITY: ModuleVisibilitySettings = {
   touch: true,
   match: true,
+  sentence: true,
+  story: true,
   mirror: true,
   sleep: true,
   peekaboo: true

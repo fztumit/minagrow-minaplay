@@ -44,14 +44,14 @@
               <span class="mode-title">Eşleme</span>
             </button>
 
-            <button class="mode-card sentence" type="button" data-view="sentence" hidden aria-hidden="true">
+            <button class="mode-card sentence" type="button" data-view="sentence">
               <span class="mode-art">
                 <img class="mode-icon" src="/assets/icons/home/sentence.png" alt="" />
               </span>
               <span class="mode-title">İfade</span>
             </button>
 
-            <button class="mode-card story" type="button" data-view="story" hidden aria-hidden="true">
+            <button class="mode-card story" type="button" data-view="story">
               <span class="mode-art">
                 <img class="mode-icon" src="/assets/icons/home/story.png" alt="" />
               </span>
@@ -353,6 +353,20 @@
                     </span>
                   </label>
                   <label class="safety-toggle">
+                    <input type="checkbox" data-module-visibility="sentence" />
+                    <span>
+                      İfade görünür
+                      <small>İhtiyaç cümlelerini öğrenme ve seç-söyle panosunu ana ekranda gösterir.</small>
+                    </span>
+                  </label>
+                  <label class="safety-toggle">
+                    <input type="checkbox" data-module-visibility="story" />
+                    <span>
+                      Hikaye görünür
+                      <small>Kısa anlatı ve etkileşim noktalarını ana ekranda gösterir.</small>
+                    </span>
+                  </label>
+                  <label class="safety-toggle">
                     <input type="checkbox" data-module-visibility="mirror" />
                     <span>
                       Ayna görünür
@@ -469,11 +483,11 @@
           <img class="bottom-nav-icon" src="/assets/icons/home/match.png" alt="" />
           <span>Eşleme</span>
         </button>
-        <button type="button" data-view="sentence" hidden aria-hidden="true">
+        <button type="button" data-view="sentence">
           <img class="bottom-nav-icon" src="/assets/icons/home/sentence.png" alt="" />
           <span>İfade</span>
         </button>
-        <button type="button" data-view="story" hidden aria-hidden="true">
+        <button type="button" data-view="story">
           <img class="bottom-nav-icon" src="/assets/icons/home/story.png" alt="" />
           <span>Hikaye</span>
         </button>
