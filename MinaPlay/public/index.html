@@ -11,7 +11,7 @@
     <meta name="theme-color" content="#eef7f4" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/assets/icons/app.png" type="image/png" />
-    <link rel="stylesheet" href="/style.css?v=20260616-1" />
+    <link rel="stylesheet" href="/style.css?v=20260617-2" />
   </head>
   <body>
     <div class="app-shell" data-active-view="home">
@@ -222,14 +222,30 @@
         </section>
 
         <section class="view parent-panel" id="view-parent" data-view-panel="parent" aria-label="Ebeveyn paneli">
-          <p class="eyebrow">Ebeveyn paneli</p>
-          <h2>Bugünün yumuşak özeti</h2>
-          <div class="parent-tabs" role="tablist" aria-label="Ebeveyn panel bölümleri">
-            <button class="parent-tab active" type="button" role="tab" data-parent-tab="today" aria-selected="true">Bugün</button>
-            <button class="parent-tab" type="button" role="tab" data-parent-tab="edit" aria-selected="false">Düzenle</button>
-            <button class="parent-tab" type="button" role="tab" data-parent-tab="control" aria-selected="false">Kontrol</button>
-          </div>
-          <div class="parent-dashboard">
+          <div class="parent-shell">
+            <aside class="parent-rail" aria-label="Ebeveyn panel menüsü">
+              <div class="parent-rail-brand">MinaPlay</div>
+              <div class="parent-tabs" role="tablist" aria-label="Ebeveyn panel bölümleri">
+                <button class="parent-tab active" type="button" role="tab" data-parent-tab="today" aria-selected="true">Bugün</button>
+                <button class="parent-tab" type="button" role="tab" data-parent-tab="edit" aria-selected="false">Düzenle</button>
+                <button class="parent-tab" type="button" role="tab" data-parent-tab="control" aria-selected="false">Kontrol</button>
+              </div>
+              <div class="parent-profile-mini">
+                <span class="parent-profile-avatar" aria-hidden="true">M</span>
+                <strong>Mina</strong>
+                <small>3 yaş 2 ay</small>
+              </div>
+            </aside>
+            <div class="parent-main">
+              <div class="parent-hero">
+                <div>
+                  <p class="eyebrow">Ebeveyn paneli</p>
+                  <h2>Merhaba! 👋</h2>
+                  <span>MinaPlay ile çocuğunuzun öğrenme yolculuğunu birlikte yönetelim.</span>
+                </div>
+                <button class="parent-settings-pill" type="button" data-parent-tab-target="control" data-parent-focus-target="[data-module-visibility-save]">Ayarlar</button>
+              </div>
+              <div class="parent-dashboard">
             <section class="parent-overview" data-parent-tab-section="today" aria-label="Bugünün özeti">
               <div class="parent-section-heading">
                 <div>
@@ -255,7 +271,13 @@
                   <strong id="metric-repeats">0</strong>
                 </article>
               </div>
-              <div class="module-log" id="module-log" aria-live="polite"></div>
+              <details class="parent-detail-drawer">
+                <summary>
+                  <span>Detayları göster</span>
+                  <small>İstatistikler, oturum geçmişi ve daha fazlası</small>
+                </summary>
+                <div class="module-log" id="module-log" aria-live="polite"></div>
+              </details>
               <section class="parent-guidance" aria-labelledby="parent-guidance-title">
                 <div class="parent-section-heading">
                   <div>
@@ -514,6 +536,8 @@
                 <div class="touch-card-editor" data-touch-card-editor></div>
                 <p class="touch-parent-status" data-touch-parent-status aria-live="polite"></p>
               </section>
+            </div>
+              </div>
             </div>
           </div>
         </section>
