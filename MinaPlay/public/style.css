@@ -1015,7 +1015,7 @@ h2 {
 }
 
 .match-target {
-  z-index: 7;
+  z-index: 5;
   grid-column: 1;
   grid-row: 1;
   display: grid;
@@ -1063,7 +1063,7 @@ h2 {
 }
 
 .match-choice-grid {
-  z-index: 3;
+  z-index: 4;
   box-sizing: border-box;
   grid-column: 1 / -1;
   grid-row: 2;
@@ -1072,11 +1072,11 @@ h2 {
   gap: clamp(14px, 2vw, 26px);
   width: min(100%, 980px);
   margin: 0 auto;
-  padding: 8px clamp(10px, 2vw, 22px) 18px;
+  padding: clamp(18px, 2.8vw, 34px) clamp(10px, 2vw, 22px) 18px;
   overflow-x: auto;
   overflow-y: visible;
   scrollbar-width: none;
-  transform: translateY(-16px);
+  transform: translateY(clamp(24px, 3vw, 36px));
   -webkit-overflow-scrolling: touch;
   mask-image: linear-gradient(90deg, transparent 0, #000 4%, #000 96%, transparent 100%);
 }
@@ -1138,7 +1138,7 @@ h2 {
 
 .match-pofi-button {
   position: absolute;
-  z-index: 6;
+  z-index: 12;
   top: var(--match-pofi-top);
   left: var(--match-pofi-left);
   display: grid;
@@ -3851,6 +3851,11 @@ h2 {
   transition: opacity 180ms ease, transform 180ms ease;
 }
 
+.app-shell[data-active-view="match"] .bottom-nav {
+  opacity: 0.28;
+  transform: translateY(104px) scale(0.96);
+}
+
 .app-shell[data-active-view="sentence"] .bottom-nav {
   opacity: 0.36;
   transform: translateY(92px) scale(0.96);
@@ -3858,8 +3863,8 @@ h2 {
 
 .app-shell[data-active-view="match"] .bottom-nav:hover,
 .app-shell[data-active-view="match"] .bottom-nav:focus-within {
-  opacity: 0.78;
-  transform: translateY(0) scale(1);
+  opacity: 0.58;
+  transform: translateY(78px) scale(0.97);
 }
 
 .app-shell[data-active-view="sentence"] .bottom-nav:hover,
@@ -6636,7 +6641,7 @@ h2 {
   }
 
   #view-match .match-choice-grid {
-    transform: translateY(-30px);
+    transform: translateY(28px);
   }
 
   #view-sentence .sentence-choice-grid {
@@ -6710,7 +6715,7 @@ h2 {
 
   #view-match .match-pofi-button {
     position: absolute;
-    z-index: 6;
+    z-index: 12;
     top: var(--match-pofi-top);
     left: var(--match-pofi-left);
     width: clamp(300px, 38vw, 420px);
@@ -6724,7 +6729,7 @@ h2 {
 
   #view-match .match-target {
     position: absolute;
-    top: clamp(112px, 20dvh, 166px);
+    top: clamp(128px, 22dvh, 184px);
     left: 50%;
     width: min(32vw, 208px);
     height: min(32vw, 208px);
@@ -6749,7 +6754,7 @@ h2 {
 
   #view-match .match-choice-grid {
     position: absolute;
-    bottom: 0;
+    bottom: clamp(8px, 2dvh, 18px);
     left: 50%;
     justify-content: center;
     width: min(100%, 780px);
@@ -6884,7 +6889,7 @@ h2 {
 
   #view-match .match-pofi-button {
     position: absolute;
-    z-index: 6;
+    z-index: 12;
     top: var(--match-pofi-top);
     left: var(--match-pofi-left);
     width: clamp(160px, 44vw, 210px);
