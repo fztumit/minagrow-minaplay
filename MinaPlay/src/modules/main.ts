@@ -280,6 +280,8 @@ interface StoryStep {
   text: string;
   cardIds?: string[];
   actionSymbol?: string;
+  actionImage?: string;
+  actionAlt?: string;
   sceneImage?: string;
   sceneAlt?: string;
   effect?: StoryEffect;
@@ -362,14 +364,16 @@ const TOUCH_DEFAULT_LEARNING_GOALS: Record<string, string> = {
   elma: 'istek ve seçim belirtme'
 };
 const OBJECT_ASSET_ROOT = '/assets/cards/objects';
+const PEOPLE_ASSET_ROOT = '/assets/cards/people';
+const ACTION_ASSET_ROOT = '/assets/cards/actions';
 const TOUCH_OBJECT_ASSETS: Record<string, string> = {
   su: `${OBJECT_ASSET_ROOT}/water.png`,
-  baba: `${OBJECT_ASSET_ROOT}/dad.png`,
+  baba: `${PEOPLE_ASSET_ROOT}/dad.png`,
   top: `${OBJECT_ASSET_ROOT}/ball.png`,
   araba: `${OBJECT_ASSET_ROOT}/car.png`,
   elma: `${OBJECT_ASSET_ROOT}/apple.png`,
-  anne: `${OBJECT_ASSET_ROOT}/mom.png`,
-  bebek: `${OBJECT_ASSET_ROOT}/baby.png`,
+  anne: `${PEOPLE_ASSET_ROOT}/mom.png`,
+  bebek: `${PEOPLE_ASSET_ROOT}/baby.png`,
   kedi: `${OBJECT_ASSET_ROOT}/cat.png`,
   kopek: `${OBJECT_ASSET_ROOT}/dog.png`,
   mama: `${OBJECT_ASSET_ROOT}/mama.png`
@@ -678,13 +682,14 @@ const STORY_LIBRARY: StoryDefinition[] = [
       { id: 'look', kind: 'attention', text: 'Bak', cardIds: ['top'], effect: 'sparkle', pauseMs: STORY_ATTENTION_MS },
       { id: 'ball-exists', kind: 'narration', text: 'Top var', cardIds: ['top'], effect: 'pop' },
       { id: 'ball-floor', kind: 'narration', text: 'Top yerde', cardIds: ['top'], actionSymbol: '↓', effect: 'pop' },
-      { id: 'baba-comes', kind: 'narration', text: 'Baba geldi', cardIds: ['baba'], effect: 'step' },
+      { id: 'baba-comes', kind: 'narration', text: 'Baba geldi', cardIds: ['baba'], actionImage: `${ACTION_ASSET_ROOT}/come.png`, actionAlt: 'Gelme eylemi', effect: 'step' },
       {
         id: 'who-throws',
         kind: 'interaction',
         text: 'Topu kim atacak?',
         cardIds: ['top'],
-        actionSymbol: '↷',
+        actionImage: `${ACTION_ASSET_ROOT}/give.png`,
+        actionAlt: 'Topu verme eylemi',
         effect: 'pop',
         successText: 'Evet. Baba top attı.',
         fallbackText: 'Baba top attı.',
@@ -693,8 +698,8 @@ const STORY_LIBRARY: StoryDefinition[] = [
           { id: 'top', cardId: 'top', correct: false, symbol: '•', label: 'Top' }
         ]
       },
-      { id: 'baba-throw', kind: 'narration', text: 'Baba top attı', cardIds: ['baba', 'top'], actionSymbol: '↷', effect: 'pop' },
-      { id: 'repeat', kind: 'repeat', text: 'Hadi söyle. Top attı', cardIds: ['top'], actionSymbol: '↷', effect: 'chime', pauseMs: STORY_REPEAT_MS },
+      { id: 'baba-throw', kind: 'narration', text: 'Baba top attı', cardIds: ['baba', 'top'], actionImage: `${ACTION_ASSET_ROOT}/give.png`, actionAlt: 'Top atma eylemi', effect: 'pop' },
+      { id: 'repeat', kind: 'repeat', text: 'Hadi söyle. Top attı', cardIds: ['top'], actionImage: `${ACTION_ASSET_ROOT}/say.png`, actionAlt: 'Söyleme eylemi', effect: 'chime', pauseMs: STORY_REPEAT_MS },
       { id: 'done', kind: 'closure', text: 'Bitti', cardIds: ['top'], actionSymbol: '✓', effect: 'sparkle' }
     ]
   },
@@ -3871,7 +3876,11 @@ function storySceneMarkup(step: StoryStep): string {
   const sceneImage = step.sceneImage
     ? `<span class="story-scene-image-wrap"><img class="story-scene-image" src="${step.sceneImage}" alt="${step.sceneAlt ?? step.text}" decoding="async" draggable="false"></span>`
     : '';
-  const action = step.actionSymbol ? `<span class="story-action-symbol" aria-hidden="true">${step.actionSymbol}</span>` : '';
+  const action = step.actionImage
+    ? `<span class="story-action-image-wrap"><img class="story-action-image" src="${step.actionImage}" alt="${step.actionAlt ?? step.text}" decoding="async" draggable="false"></span>`
+    : step.actionSymbol
+      ? `<span class="story-action-symbol" aria-hidden="true">${step.actionSymbol}</span>`
+      : '';
   return `<div class="story-object-row">${sceneImage}${visuals}${action}</div>`;
 }
 
