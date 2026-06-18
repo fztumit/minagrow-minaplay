@@ -361,7 +361,7 @@ const TOUCH_DEFAULT_LEARNING_GOALS: Record<string, string> = {
   araba: 'nesne ve hareket ilişkisi',
   elma: 'istek ve seçim belirtme'
 };
-const OBJECT_ASSET_ROOT = '/assets/object';
+const OBJECT_ASSET_ROOT = '/assets/cards/objects';
 const TOUCH_OBJECT_ASSETS: Record<string, string> = {
   su: `${OBJECT_ASSET_ROOT}/water.png`,
   baba: `${OBJECT_ASSET_ROOT}/dad.png`,
@@ -419,7 +419,7 @@ const SENTENCE_PROMPTS: SentencePrompt[] = [
         context: 'Su istiyorum.',
         detail: 'su isteyen çocuk ve bardak',
         cue: 'water',
-        image: '/assets/sentence/water-request.png',
+        image: '/assets/cards/sentences/water-request.png',
         alt: 'Su isteyen çocuk ve su bardağı'
       },
       {
@@ -427,7 +427,7 @@ const SENTENCE_PROMPTS: SentencePrompt[] = [
         context: 'Su içelim.',
         detail: 'su içen çocuk',
         cue: 'water',
-        image: '/assets/sentence/water-drink.png',
+        image: '/assets/cards/sentences/water-drink.png',
         alt: 'Su içen çocuk'
       }
     ]
@@ -447,7 +447,7 @@ const SENTENCE_PROMPTS: SentencePrompt[] = [
         context: 'Yemek istiyorum.',
         detail: 'yemek isteyen çocuk ve tabak',
         cue: 'food',
-        image: '/assets/sentence/food-request.png',
+        image: '/assets/cards/sentences/food-request.png',
         alt: 'Yemek isteyen çocuk ve yemek tabağı'
       },
       {
@@ -455,7 +455,7 @@ const SENTENCE_PROMPTS: SentencePrompt[] = [
         context: 'Yemek yiyelim.',
         detail: 'yemek yiyen çocuk',
         cue: 'food',
-        image: '/assets/sentence/food-eat.png',
+        image: '/assets/cards/sentences/food-eat.png',
         alt: 'Yemek yiyen çocuk'
       }
     ]
@@ -475,7 +475,7 @@ const SENTENCE_PROMPTS: SentencePrompt[] = [
         context: 'Tuvalet.',
         detail: 'tuvalet ihtiyacını anlatan çocuk',
         cue: 'toilet',
-        image: '/assets/sentence/toilet-need.png',
+        image: '/assets/cards/sentences/toilet-need.png',
         alt: 'Tuvalet ihtiyacını anlatan çocuk'
       }
     ]
@@ -495,7 +495,7 @@ const SENTENCE_PROMPTS: SentencePrompt[] = [
         context: 'Uykum var.',
         detail: 'uykusu gelen çocuk',
         cue: 'sleep',
-        image: '/assets/sentence/sleepy-child.png',
+        image: '/assets/cards/sentences/sleepy-child.png',
         alt: 'Uykusu gelen çocuk'
       }
     ]
@@ -515,7 +515,7 @@ const SENTENCE_PROMPTS: SentencePrompt[] = [
         context: 'Acıdı.',
         detail: 'canı acıyan çocuk',
         cue: 'pain',
-        image: '/assets/sentence/pain-child.png',
+        image: '/assets/cards/sentences/pain-child.png',
         alt: 'Canı acıyan çocuk'
       }
     ]
@@ -535,7 +535,7 @@ const SENTENCE_PROMPTS: SentencePrompt[] = [
         context: 'Üşüdüm.',
         detail: 'üşüyen çocuk ve mont',
         cue: 'cold',
-        image: '/assets/sentence/cold-child.png',
+        image: '/assets/cards/sentences/cold-child.png',
         alt: 'Üşüyen çocuk ve mont'
       }
     ]
@@ -555,7 +555,7 @@ const SENTENCE_PROMPTS: SentencePrompt[] = [
         context: 'Sıcak oldu.',
         detail: 'sıcaklayan çocuk ve serinleme',
         cue: 'hot',
-        image: '/assets/sentence/hot-child.png',
+        image: '/assets/cards/sentences/hot-child.png',
         alt: 'Sıcaklayan çocuk'
       }
     ]
@@ -575,7 +575,7 @@ const SENTENCE_PROMPTS: SentencePrompt[] = [
         context: 'Anne gel.',
         detail: 'annesini çağıran çocuk',
         cue: 'caregiver',
-        image: '/assets/sentence/mother-come.png',
+        image: '/assets/cards/sentences/mother-come.png',
         alt: 'Annesini çağıran çocuk'
       }
     ]
@@ -595,7 +595,7 @@ const SENTENCE_PROMPTS: SentencePrompt[] = [
         context: 'Baba gel.',
         detail: 'babasını çağıran çocuk',
         cue: 'caregiver',
-        image: '/assets/sentence/father-come.png',
+        image: '/assets/cards/sentences/father-come.png',
         alt: 'Babasını çağıran çocuk'
       }
     ]
@@ -615,7 +615,7 @@ const SENTENCE_PROMPTS: SentencePrompt[] = [
         context: 'Yardım et.',
         detail: 'yardım isteyen çocuk',
         cue: 'help',
-        image: '/assets/sentence/help-child.png',
+        image: '/assets/cards/sentences/help-child.png',
         alt: 'Yardım isteyen çocuk'
       }
     ]
@@ -635,7 +635,7 @@ const SENTENCE_PROMPTS: SentencePrompt[] = [
         context: 'Gezmek istiyorum.',
         detail: 'dışarı çıkmak isteyen çocuk',
         cue: 'walk',
-        image: '/assets/sentence/walk-request.png',
+        image: '/assets/cards/sentences/walk-request.png',
         alt: 'Gezmek isteyen çocuk'
       }
     ]
@@ -648,26 +648,26 @@ const STORY_LIBRARY: StoryDefinition[] = [
     title: 'Küçük Su Molası',
     theme: 'need',
     steps: [
-      { id: 'look', kind: 'attention', text: 'Bak', sceneImage: '/assets/sentence/water-request.png', sceneAlt: 'Su isteyen çocuk', effect: 'sparkle', pauseMs: STORY_ATTENTION_MS },
-      { id: 'child-thirsty', kind: 'narration', text: 'Çocuk susadı', sceneImage: '/assets/sentence/water-request.png', sceneAlt: 'Su isteyen çocuk', effect: 'water' },
-      { id: 'water-request', kind: 'narration', text: 'Su istiyorum', sceneImage: '/assets/sentence/water-request.png', sceneAlt: 'Su isteyen çocuk', effect: 'chime' },
+      { id: 'look', kind: 'attention', text: 'Bak', sceneImage: '/assets/cards/sentences/water-request.png', sceneAlt: 'Su isteyen çocuk', effect: 'sparkle', pauseMs: STORY_ATTENTION_MS },
+      { id: 'child-thirsty', kind: 'narration', text: 'Çocuk susadı', sceneImage: '/assets/cards/sentences/water-request.png', sceneAlt: 'Su isteyen çocuk', effect: 'water' },
+      { id: 'water-request', kind: 'narration', text: 'Su istiyorum', sceneImage: '/assets/cards/sentences/water-request.png', sceneAlt: 'Su isteyen çocuk', effect: 'chime' },
       {
         id: 'what-needed',
         kind: 'interaction',
         text: 'Ne istiyor?',
-        sceneImage: '/assets/sentence/water-request.png',
+        sceneImage: '/assets/cards/sentences/water-request.png',
         sceneAlt: 'Su isteyen çocuk',
         effect: 'water',
         successText: 'Evet. Su istiyorum.',
         fallbackText: 'Su istiyorum.',
         choices: [
-          { id: 'su', label: 'Su', correct: true, symbol: '✓', image: '/assets/sentence/water-drink.png', alt: 'Su içen çocuk' },
-          { id: 'yemek', label: 'Yemek', correct: false, symbol: '•', image: '/assets/sentence/food-request.png', alt: 'Yemek isteyen çocuk' }
+          { id: 'su', label: 'Su', correct: true, symbol: '✓', image: '/assets/cards/sentences/water-drink.png', alt: 'Su içen çocuk' },
+          { id: 'yemek', label: 'Yemek', correct: false, symbol: '•', image: '/assets/cards/sentences/food-request.png', alt: 'Yemek isteyen çocuk' }
         ]
       },
-      { id: 'water-drink', kind: 'narration', text: 'Su içti', sceneImage: '/assets/sentence/water-drink.png', sceneAlt: 'Su içen çocuk', effect: 'water' },
-      { id: 'repeat-water', kind: 'repeat', text: 'Hadi söyle. Su istiyorum', sceneImage: '/assets/sentence/water-request.png', sceneAlt: 'Su isteyen çocuk', effect: 'chime', pauseMs: STORY_REPEAT_MS },
-      { id: 'done', kind: 'closure', text: 'Oh, iyi oldu', sceneImage: '/assets/sentence/water-drink.png', sceneAlt: 'Su içen çocuk', effect: 'sparkle' }
+      { id: 'water-drink', kind: 'narration', text: 'Su içti', sceneImage: '/assets/cards/sentences/water-drink.png', sceneAlt: 'Su içen çocuk', effect: 'water' },
+      { id: 'repeat-water', kind: 'repeat', text: 'Hadi söyle. Su istiyorum', sceneImage: '/assets/cards/sentences/water-request.png', sceneAlt: 'Su isteyen çocuk', effect: 'chime', pauseMs: STORY_REPEAT_MS },
+      { id: 'done', kind: 'closure', text: 'Oh, iyi oldu', sceneImage: '/assets/cards/sentences/water-drink.png', sceneAlt: 'Su içen çocuk', effect: 'sparkle' }
     ]
   },
   {
@@ -703,26 +703,26 @@ const STORY_LIBRARY: StoryDefinition[] = [
     title: 'Mont Giyelim',
     theme: 'comfort',
     steps: [
-      { id: 'look', kind: 'attention', text: 'Bak', sceneImage: '/assets/sentence/cold-child.png', sceneAlt: 'Üşüyen çocuk', effect: 'sparkle', pauseMs: STORY_ATTENTION_MS },
-      { id: 'cold', kind: 'narration', text: 'Çocuk üşüdü', sceneImage: '/assets/sentence/cold-child.png', sceneAlt: 'Üşüyen çocuk', effect: 'warm' },
-      { id: 'say-cold', kind: 'narration', text: 'Üşüdüm', sceneImage: '/assets/sentence/cold-child.png', sceneAlt: 'Üşüyen çocuk', effect: 'chime' },
+      { id: 'look', kind: 'attention', text: 'Bak', sceneImage: '/assets/cards/sentences/cold-child.png', sceneAlt: 'Üşüyen çocuk', effect: 'sparkle', pauseMs: STORY_ATTENTION_MS },
+      { id: 'cold', kind: 'narration', text: 'Çocuk üşüdü', sceneImage: '/assets/cards/sentences/cold-child.png', sceneAlt: 'Üşüyen çocuk', effect: 'warm' },
+      { id: 'say-cold', kind: 'narration', text: 'Üşüdüm', sceneImage: '/assets/cards/sentences/cold-child.png', sceneAlt: 'Üşüyen çocuk', effect: 'chime' },
       {
         id: 'what-say',
         kind: 'interaction',
         text: 'Ne söyleyelim?',
-        sceneImage: '/assets/sentence/cold-child.png',
+        sceneImage: '/assets/cards/sentences/cold-child.png',
         sceneAlt: 'Üşüyen çocuk',
         effect: 'warm',
         successText: 'Evet. Üşüdüm.',
         fallbackText: 'Üşüdüm.',
         choices: [
-          { id: 'cold', label: 'Üşüdüm', correct: true, symbol: '✓', image: '/assets/sentence/cold-child.png', alt: 'Üşüyen çocuk' },
-          { id: 'hot', label: 'Sıcak oldu', correct: false, symbol: '•', image: '/assets/sentence/hot-child.png', alt: 'Sıcaklayan çocuk' }
+          { id: 'cold', label: 'Üşüdüm', correct: true, symbol: '✓', image: '/assets/cards/sentences/cold-child.png', alt: 'Üşüyen çocuk' },
+          { id: 'hot', label: 'Sıcak oldu', correct: false, symbol: '•', image: '/assets/cards/sentences/hot-child.png', alt: 'Sıcaklayan çocuk' }
         ]
       },
-      { id: 'coat', kind: 'narration', text: 'Mont geldi', sceneImage: '/assets/sentence/cold-child.png', sceneAlt: 'Üşüyen çocuk', effect: 'warm' },
-      { id: 'repeat-cold', kind: 'repeat', text: 'Hadi söyle. Üşüdüm', sceneImage: '/assets/sentence/cold-child.png', sceneAlt: 'Üşüyen çocuk', effect: 'chime', pauseMs: STORY_REPEAT_MS },
-      { id: 'warm-done', kind: 'closure', text: 'Şimdi iyi', sceneImage: '/assets/sentence/cold-child.png', sceneAlt: 'Üşüyen çocuk', effect: 'sparkle' }
+      { id: 'coat', kind: 'narration', text: 'Mont geldi', sceneImage: '/assets/cards/sentences/cold-child.png', sceneAlt: 'Üşüyen çocuk', effect: 'warm' },
+      { id: 'repeat-cold', kind: 'repeat', text: 'Hadi söyle. Üşüdüm', sceneImage: '/assets/cards/sentences/cold-child.png', sceneAlt: 'Üşüyen çocuk', effect: 'chime', pauseMs: STORY_REPEAT_MS },
+      { id: 'warm-done', kind: 'closure', text: 'Şimdi iyi', sceneImage: '/assets/cards/sentences/cold-child.png', sceneAlt: 'Üşüyen çocuk', effect: 'sparkle' }
     ]
   },
   {
@@ -730,12 +730,12 @@ const STORY_LIBRARY: StoryDefinition[] = [
     title: 'Yemek Zamanı',
     theme: 'need',
     steps: [
-      { id: 'look', kind: 'attention', text: 'Bak', sceneImage: '/assets/sentence/food-request.png', sceneAlt: 'Yemek isteyen çocuk', effect: 'sparkle', pauseMs: STORY_ATTENTION_MS },
-      { id: 'hungry', kind: 'narration', text: 'Çocuk acıktı', sceneImage: '/assets/sentence/food-request.png', sceneAlt: 'Yemek isteyen çocuk', effect: 'chime' },
-      { id: 'food-request', kind: 'narration', text: 'Yemek istiyorum', sceneImage: '/assets/sentence/food-request.png', sceneAlt: 'Yemek isteyen çocuk', effect: 'chime' },
-      { id: 'food-eat', kind: 'narration', text: 'Yemek geldi', sceneImage: '/assets/sentence/food-eat.png', sceneAlt: 'Yemek yiyen çocuk', effect: 'pop' },
-      { id: 'repeat-food', kind: 'repeat', text: 'Hadi söyle. Yemek istiyorum', sceneImage: '/assets/sentence/food-request.png', sceneAlt: 'Yemek isteyen çocuk', effect: 'chime', pauseMs: STORY_REPEAT_MS },
-      { id: 'done', kind: 'closure', text: 'Afiyet olsun', sceneImage: '/assets/sentence/food-eat.png', sceneAlt: 'Yemek yiyen çocuk', effect: 'sparkle' }
+      { id: 'look', kind: 'attention', text: 'Bak', sceneImage: '/assets/cards/sentences/food-request.png', sceneAlt: 'Yemek isteyen çocuk', effect: 'sparkle', pauseMs: STORY_ATTENTION_MS },
+      { id: 'hungry', kind: 'narration', text: 'Çocuk acıktı', sceneImage: '/assets/cards/sentences/food-request.png', sceneAlt: 'Yemek isteyen çocuk', effect: 'chime' },
+      { id: 'food-request', kind: 'narration', text: 'Yemek istiyorum', sceneImage: '/assets/cards/sentences/food-request.png', sceneAlt: 'Yemek isteyen çocuk', effect: 'chime' },
+      { id: 'food-eat', kind: 'narration', text: 'Yemek geldi', sceneImage: '/assets/cards/sentences/food-eat.png', sceneAlt: 'Yemek yiyen çocuk', effect: 'pop' },
+      { id: 'repeat-food', kind: 'repeat', text: 'Hadi söyle. Yemek istiyorum', sceneImage: '/assets/cards/sentences/food-request.png', sceneAlt: 'Yemek isteyen çocuk', effect: 'chime', pauseMs: STORY_REPEAT_MS },
+      { id: 'done', kind: 'closure', text: 'Afiyet olsun', sceneImage: '/assets/cards/sentences/food-eat.png', sceneAlt: 'Yemek yiyen çocuk', effect: 'sparkle' }
     ]
   },
   {
@@ -743,12 +743,12 @@ const STORY_LIBRARY: StoryDefinition[] = [
     title: 'Uyku Bulutu',
     theme: 'sleep',
     steps: [
-      { id: 'look', kind: 'attention', text: 'Bak', sceneImage: '/assets/sentence/sleepy-child.png', sceneAlt: 'Uykusu gelen çocuk', effect: 'sparkle', pauseMs: STORY_ATTENTION_MS },
-      { id: 'sleepy', kind: 'narration', text: 'Uykum var', sceneImage: '/assets/sentence/sleepy-child.png', sceneAlt: 'Uykusu gelen çocuk', effect: 'sleep' },
-      { id: 'soft', kind: 'narration', text: 'Yastık yumuşak', sceneImage: '/assets/sentence/sleepy-child.png', sceneAlt: 'Uykusu gelen çocuk', effect: 'sleep' },
-      { id: 'quiet', kind: 'narration', text: 'Pofi sessiz', sceneImage: '/assets/sentence/sleepy-child.png', sceneAlt: 'Uykusu gelen çocuk', effect: 'sleep' },
-      { id: 'repeat-sleep', kind: 'repeat', text: 'Hadi söyle. Uykum var', sceneImage: '/assets/sentence/sleepy-child.png', sceneAlt: 'Uykusu gelen çocuk', effect: 'chime', pauseMs: STORY_REPEAT_MS },
-      { id: 'good-night', kind: 'closure', text: 'İyi uykular', sceneImage: '/assets/sentence/sleepy-child.png', sceneAlt: 'Uykusu gelen çocuk', effect: 'sleep' }
+      { id: 'look', kind: 'attention', text: 'Bak', sceneImage: '/assets/cards/sentences/sleepy-child.png', sceneAlt: 'Uykusu gelen çocuk', effect: 'sparkle', pauseMs: STORY_ATTENTION_MS },
+      { id: 'sleepy', kind: 'narration', text: 'Uykum var', sceneImage: '/assets/cards/sentences/sleepy-child.png', sceneAlt: 'Uykusu gelen çocuk', effect: 'sleep' },
+      { id: 'soft', kind: 'narration', text: 'Yastık yumuşak', sceneImage: '/assets/cards/sentences/sleepy-child.png', sceneAlt: 'Uykusu gelen çocuk', effect: 'sleep' },
+      { id: 'quiet', kind: 'narration', text: 'Pofi sessiz', sceneImage: '/assets/cards/sentences/sleepy-child.png', sceneAlt: 'Uykusu gelen çocuk', effect: 'sleep' },
+      { id: 'repeat-sleep', kind: 'repeat', text: 'Hadi söyle. Uykum var', sceneImage: '/assets/cards/sentences/sleepy-child.png', sceneAlt: 'Uykusu gelen çocuk', effect: 'chime', pauseMs: STORY_REPEAT_MS },
+      { id: 'good-night', kind: 'closure', text: 'İyi uykular', sceneImage: '/assets/cards/sentences/sleepy-child.png', sceneAlt: 'Uykusu gelen çocuk', effect: 'sleep' }
     ]
   }
 ];
@@ -3283,7 +3283,7 @@ function chooseSentenceScene(prompt: SentencePrompt): SentenceScene {
             context: prompt.phrase,
             detail: prompt.shortLabel,
             cue: 'help' as const,
-            image: '/assets/sentence/help-child.png',
+            image: '/assets/cards/sentences/help-child.png',
             alt: prompt.phrase
           }
         ];

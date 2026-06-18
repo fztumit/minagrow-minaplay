@@ -15,9 +15,9 @@ describe('PWA offline shell', () => {
     expect(serviceWorker).toContain("'/js/modules/sentence-learning.js'");
     expect(serviceWorker).toContain("'/js/modules/mvp-settings.js'");
     expect(serviceWorker).toContain("'/js/modules/speech/index.js'");
-    expect(serviceWorker).toContain("'/assets/object/water.png'");
-    expect(serviceWorker).toContain("'/assets/object/dad.png'");
-    expect(serviceWorker).toContain("'/assets/object/apple.png'");
+    expect(serviceWorker).toContain("'/assets/cards/objects/water.png'");
+    expect(serviceWorker).toContain("'/assets/cards/objects/dad.png'");
+    expect(serviceWorker).toContain("'/assets/cards/objects/apple.png'");
     expect(serviceWorker).toContain("await caches.match('/offline.html')");
   });
 

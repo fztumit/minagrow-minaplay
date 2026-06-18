@@ -1,8 +1,8 @@
-const CACHE_NAME = 'minaplay-assets-v9';
+const CACHE_NAME = 'minaplay-assets-v10';
 const APP_SHELL = [
   '/',
   '/offline.html',
-  '/style.css?v=20260616-1',
+  '/style.css?v=20260618-2',
   '/js/modules/main.js',
   '/js/modules/touch-learning.js',
   '/js/modules/match-learning.js',
@@ -10,16 +10,16 @@ const APP_SHELL = [
   '/js/modules/mvp-settings.js',
   '/js/modules/speech/index.js',
   '/assets/icons/app.png',
-  '/assets/object/apple.png',
-  '/assets/object/baby.png',
-  '/assets/object/ball.png',
-  '/assets/object/car.png',
-  '/assets/object/cat.png',
-  '/assets/object/dad.png',
-  '/assets/object/dog.png',
-  '/assets/object/mama.png',
-  '/assets/object/mom.png',
-  '/assets/object/water.png'
+  '/assets/cards/objects/apple.png',
+  '/assets/cards/objects/baby.png',
+  '/assets/cards/objects/ball.png',
+  '/assets/cards/objects/car.png',
+  '/assets/cards/objects/cat.png',
+  '/assets/cards/objects/dad.png',
+  '/assets/cards/objects/dog.png',
+  '/assets/cards/objects/mama.png',
+  '/assets/cards/objects/mom.png',
+  '/assets/cards/objects/water.png'
 ];
 
 self.addEventListener('install', (event) => {
