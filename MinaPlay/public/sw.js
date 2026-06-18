@@ -1,4 +1,4 @@
-const CACHE_NAME = 'minaplay-assets-v8';
+const CACHE_NAME = 'minaplay-assets-v9';
 const APP_SHELL = [
   '/',
   '/offline.html',
@@ -9,7 +9,17 @@ const APP_SHELL = [
   '/js/modules/sentence-learning.js',
   '/js/modules/mvp-settings.js',
   '/js/modules/speech/index.js',
-  '/assets/icons/app.png'
+  '/assets/icons/app.png',
+  '/assets/object/apple.png',
+  '/assets/object/baby.png',
+  '/assets/object/ball.png',
+  '/assets/object/car.png',
+  '/assets/object/cat.png',
+  '/assets/object/dad.png',
+  '/assets/object/dog.png',
+  '/assets/object/mama.png',
+  '/assets/object/mom.png',
+  '/assets/object/water.png'
 ];
 
 self.addEventListener('install', (event) => {

@@ -361,6 +361,19 @@ const TOUCH_DEFAULT_LEARNING_GOALS: Record<string, string> = {
   araba: 'nesne ve hareket ilişkisi',
   elma: 'istek ve seçim belirtme'
 };
+const OBJECT_ASSET_ROOT = '/assets/object';
+const TOUCH_OBJECT_ASSETS: Record<string, string> = {
+  su: `${OBJECT_ASSET_ROOT}/water.png`,
+  baba: `${OBJECT_ASSET_ROOT}/dad.png`,
+  top: `${OBJECT_ASSET_ROOT}/ball.png`,
+  araba: `${OBJECT_ASSET_ROOT}/car.png`,
+  elma: `${OBJECT_ASSET_ROOT}/apple.png`,
+  anne: `${OBJECT_ASSET_ROOT}/mom.png`,
+  bebek: `${OBJECT_ASSET_ROOT}/baby.png`,
+  kedi: `${OBJECT_ASSET_ROOT}/cat.png`,
+  kopek: `${OBJECT_ASSET_ROOT}/dog.png`,
+  mama: `${OBJECT_ASSET_ROOT}/mama.png`
+};
 const TOUCH_DEFAULT_REPEAT_SETTINGS: TouchRepeatSettings = {
   enabled: false,
   focusCardId: 'baba',
@@ -374,11 +387,11 @@ const TOUCH_DEFAULT_REPEAT_SETTINGS: TouchRepeatSettings = {
 };
 
 const DEFAULT_TOUCH_CARDS: TouchCard[] = [
-  createDefaultTouchCard('su', 'Su', 'Su', 0, 'water'),
-  createDefaultTouchCard('baba', 'Baba', 'Baba', 1, 'father'),
-  createDefaultTouchCard('top', 'Top', 'Top', 2, 'ball'),
-  createDefaultTouchCard('araba', 'Araba', 'Araba', 3, 'car'),
-  createDefaultTouchCard('elma', 'Elma', 'Elma', 4, 'apple')
+  createDefaultTouchCard('su', 'Su', 'Su', 0),
+  createDefaultTouchCard('baba', 'Baba', 'Baba', 1),
+  createDefaultTouchCard('top', 'Top', 'Top', 2),
+  createDefaultTouchCard('araba', 'Araba', 'Araba', 3),
+  createDefaultTouchCard('elma', 'Elma', 'Elma', 4)
 ];
 
 const MIRROR_EXERCISES: MirrorExercise[] = [
@@ -2619,8 +2632,8 @@ function cloneDefaultTouchSettings(): TouchSettingsState {
   };
 }
 
-function createDefaultTouchCard(id: string, label: string, word: string, order: number, visual: string): TouchCard {
-  const image = createTouchCardImage(label, visual);
+function createDefaultTouchCard(id: string, label: string, word: string, order: number): TouchCard {
+  const image = touchObjectAssetFor(id);
   return {
     id,
     label,
@@ -2652,27 +2665,20 @@ function createDefaultVariations(cardId: string, word: string): TouchVoiceVariat
   }));
 }
 
-function createTouchCardImage(label: string, visual: string): string {
-  void label;
-  return `toy:${visual}`;
+function touchObjectAssetFor(id: string): string {
+  return TOUCH_OBJECT_ASSETS[id.toLowerCase()] ?? TOUCH_OBJECT_ASSETS.top;
 }
 
-function defaultToyVisualForCard(card: TouchCard): string | undefined {
-  const defaultVisuals: Record<string, string> = {
-    su: 'water',
-    baba: 'father',
-    top: 'ball',
-    araba: 'car',
-    elma: 'apple'
-  };
-  return defaultVisuals[card.id.toLowerCase()];
+function normalizeTouchImageSource(card: Pick<TouchCard, 'id' | 'image'>): string {
+  if (!card.image || card.image.startsWith('toy:') || card.image.startsWith('data:image/svg+xml')) {
+    return touchObjectAssetFor(card.id);
+  }
+  return card.image;
 }
 
 function touchCardImageSource(card: TouchCard): string {
   const image = touchRoundImages[card.id] ?? card.image;
-  return image.startsWith('data:image/svg+xml')
-    ? createTouchCardImage(card.label, defaultToyVisualForCard(card) ?? 'ball')
-    : image;
+  return normalizeTouchImageSource({ id: card.id, image });
 }
 
 function chooseTouchRoundImage(card: TouchCard): string {
@@ -2692,18 +2698,7 @@ function normalizedTouchImages(card: TouchCard): string[] {
 
 function touchCardVisualMarkup(card: TouchCard): string {
   const image = touchCardImageSource(card);
-  if (!image.startsWith('toy:')) {
-    return `<img src="${image}" alt="" loading="lazy" />`;
-  }
-
-  const visual = image.replace('toy:', '');
-  return `<span class="touch-toy touch-toy-${visual}" aria-hidden="true">
-    <span class="toy-shadow"></span>
-    <span class="toy-part toy-main"></span>
-    <span class="toy-part toy-accent"></span>
-    <span class="toy-part toy-detail"></span>
-    <span class="toy-part toy-gloss"></span>
-  </span>`;
+  return `<img src="${image}" alt="" loading="lazy" />`;
 }
 
 function touchCardVisualMarkupForImage(card: TouchCard, image: string): string {
@@ -5337,18 +5332,22 @@ function normalizeTouchSettings(stored?: TouchSettingsState): TouchSettingsState
     return defaults;
   }
 
-  const normalizedCards = stored.cards.map((card, index) => ({
-    ...card,
-    id: card.id || `card-${Date.now()}-${index}`,
-    label: card.label || card.word || 'Kart',
-    word: card.word || card.label || 'Kart',
-    learningGoal: card.learningGoal || TOUCH_DEFAULT_LEARNING_GOALS[card.id] || 'kavramı tanıma',
-    image: card.image || createTouchCardImage(card.label || 'Kart', 'ball'),
-    images: card.images?.length ? card.images : [card.image || createTouchCardImage(card.label || 'Kart', 'ball')],
-    enabled: card.enabled !== false,
-    order: Number.isFinite(card.order) ? card.order : index,
-    variations: card.variations?.length ? card.variations : createDefaultVariations(card.id || `card-${index}`, card.word || card.label || 'Kart')
-  }));
+  const normalizedCards = stored.cards.map((card, index) => {
+    const id = card.id || `card-${Date.now()}-${index}`;
+    const image = normalizeTouchImageSource({ id, image: card.image });
+    return {
+      ...card,
+      id,
+      label: card.label || card.word || 'Kart',
+      word: card.word || card.label || 'Kart',
+      learningGoal: card.learningGoal || TOUCH_DEFAULT_LEARNING_GOALS[id] || 'kavramı tanıma',
+      image,
+      images: (card.images?.length ? card.images : [image]).map((source) => normalizeTouchImageSource({ id, image: source })),
+      enabled: card.enabled !== false,
+      order: Number.isFinite(card.order) ? card.order : index,
+      variations: card.variations?.length ? card.variations : createDefaultVariations(id, card.word || card.label || 'Kart')
+    };
+  });
 
   return {
     cards: normalizedCards.sort((a, b) => a.order - b.order).map((card, order) => ({ ...card, order })),
@@ -5484,8 +5483,8 @@ function addTouchCard(): void {
     label: 'Yeni kart',
     word: 'Yeni',
     learningGoal: 'kavramı tanıma',
-    image: createTouchCardImage('Yeni', 'ball'),
-    images: [createTouchCardImage('Yeni', 'ball')],
+    image: touchObjectAssetFor('top'),
+    images: [touchObjectAssetFor('top')],
     enabled: true,
     order: touchSettings.cards.length,
     variations: createDefaultVariations(id, 'Yeni')
