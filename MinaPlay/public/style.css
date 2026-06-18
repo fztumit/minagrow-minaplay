@@ -3403,9 +3403,9 @@ h2 {
 .parent-hero h2 {
   margin: 0;
   color: #10163e;
-  font-size: clamp(2.25rem, 4vw, 4.5rem);
-  line-height: 0.95;
-  letter-spacing: -0.07em;
+  font-size: clamp(2.15rem, 3.55vw, 4rem);
+  line-height: 1.04;
+  letter-spacing: -0.025em;
 }
 
 .parent-hero span {
