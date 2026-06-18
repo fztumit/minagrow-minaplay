@@ -145,6 +145,16 @@ interface ParentGuidanceCard {
   tone: 'steady' | 'repeat' | 'next';
 }
 
+interface ParentInsight {
+  title: string;
+  note: string;
+  focusLabel: string;
+  stageLabel: string;
+  comprehensionLabel: string;
+  planTitle: string;
+  steps: [string, string, string];
+}
+
 interface TouchVoiceVariation {
   id: string;
   label: string;
@@ -1487,6 +1497,75 @@ export function createParentGuidanceCards(
   ];
 }
 
+export function createParentInsight(
+  state: AnalyticsState,
+  touchState: TouchProgressState = {},
+  matchState: MatchProgressState = {},
+  labels: Record<string, string> = {}
+): ParentInsight {
+  const supportTarget = strongestSupportTarget(touchState, matchState, labels);
+  const focusId = supportTarget.id || strongestProgressTarget(touchState, matchState, labels) || Object.keys(labels)[0] || 'baba';
+  const focusLabel = labels[focusId] ?? focusId;
+  const touchEntry = touchState[focusId];
+  const matchEntry = matchState[focusId];
+  const touchMastered = isMastered(touchEntry);
+  const matchMastered = isMatchMastered(matchEntry);
+  const attempts = (touchEntry?.success ?? 0) + (touchEntry?.fail ?? 0) + (matchEntry?.success ?? 0) + (matchEntry?.fail ?? 0);
+  const successes = (touchEntry?.success ?? 0) + (matchEntry?.success ?? 0);
+  const rate = attempts > 0 ? successes / attempts : 0;
+  const bestStreak = Math.max(touchEntry?.consecutiveCorrectCount ?? 0, matchEntry?.consecutiveCorrectCount ?? 0);
+  const stageLabel =
+    matchMastered || (matchEntry?.conceptGeneralizationSuccess ?? 0) >= 2
+      ? 'Genelleme'
+      : touchMastered
+        ? 'Seçimi güçlü'
+        : successes > 0
+          ? 'Tanıma başladı'
+          : state.sessions > 0
+            ? 'Duyma ve yönelme'
+            : 'Başlangıç';
+  const comprehensionLabel =
+    matchMastered || touchMastered
+      ? 'Yüksek anlaşılma'
+      : rate >= 0.65 && bestStreak >= 2
+        ? 'Orta-yüksek'
+        : supportTarget.score > 0
+          ? 'Destekle artıyor'
+          : attempts > 0
+            ? 'Yeni şekilleniyor'
+            : 'Henüz veri yok';
+  const title =
+    state.sessions === 0
+      ? 'Bugün kısa başlangıç yeterli.'
+      : supportTarget.score >= 3
+        ? `${focusLabel} tekrar ile güçlenir.`
+        : matchMastered || touchMastered
+          ? `${focusLabel} pekişiyor.`
+          : 'Bugünkü akış stabil.';
+  const note =
+    state.sessions === 0
+      ? 'İlk hedef uzun çalışma değil, çocuğun tanıdık iki kartla oyuna sakin girmesi.'
+      : supportTarget.score > 0
+        ? 'Yönlendirme ihtiyacı başarısızlık değil; aynı kelimeyi kısa, melodik ve aralıklı vermek gelişimi destekler.'
+        : 'Yeni kart eklemeden önce tanıdık kelimelerle kısa tekrarlar anlaşılmayı korur.';
+
+  return {
+    title,
+    note,
+    focusLabel,
+    stageLabel,
+    comprehensionLabel,
+    planTitle: `${focusLabel} için 3 dakika`,
+    steps: [
+      `${focusLabel} kelimesini 6-8 kez melodik ve farklı tonlarla dinletin.`,
+      `Dokun'da ${focusLabel} için kısa bir dinle-dokun turu açın.`,
+      touchMastered || matchMastered
+        ? `Eşleme'de ${focusLabel} için farklı görselle bir genelleme turu deneyin.`
+        : 'Zorlanırsa süreyi uzatmayın; küçük bir ara verip aynı kartla kapatın.'
+    ]
+  };
+}
+
 function strongestSupportTarget(
   touchState: TouchProgressState,
   matchState: MatchProgressState,
@@ -1517,6 +1596,19 @@ function strongestSupportTarget(
     score: 0,
     reason: ''
   };
+}
+
+function strongestProgressTarget(
+  touchState: TouchProgressState,
+  matchState: MatchProgressState,
+  labels: Record<string, string>
+): string {
+  return [...new Set([...Object.keys(labels), ...Object.keys(touchState), ...Object.keys(matchState)])]
+    .map((id) => ({
+      id,
+      score: (touchState[id]?.success ?? 0) + (matchState[id]?.success ?? 0) + (isMastered(touchState[id]) ? 3 : 0) + (isMatchMastered(matchState[id]) ? 4 : 0)
+    }))
+    .sort((a, b) => b.score - a.score)[0]?.id ?? '';
 }
 
 function readAnalytics(): AnalyticsState {
@@ -5651,7 +5743,34 @@ function renderParentMetrics(): void {
     );
   }
 
+  renderParentInsight(state);
   renderParentGuidance(state);
+}
+
+function renderParentInsight(state: AnalyticsState): void {
+  const container = document.querySelector<HTMLElement>('[data-parent-insight]');
+  if (!container) {
+    return;
+  }
+
+  const labels = Object.fromEntries(touchSettings.cards.map((card) => [card.id, card.word]));
+  const insight = createParentInsight(state, touchProgress, matchProgress, labels);
+  container.innerHTML = `
+    <article class="parent-insight-main">
+      <strong>${insight.title}</strong>
+      <p>${insight.note}</p>
+      <div class="parent-insight-tags" aria-label="Gelişim ve anlaşılma özeti">
+        <span>Odak: ${insight.focusLabel}</span>
+        <span>Basamak: ${insight.stageLabel}</span>
+        <span>Anlaşılma: ${insight.comprehensionLabel}</span>
+      </div>
+    </article>
+    <article class="parent-insight-plan">
+      <strong>${insight.planTitle}</strong>
+      <ol>
+        ${insight.steps.map((step) => `<li>${step}</li>`).join('')}
+      </ol>
+    </article>`;
 }
 
 function renderParentGuidance(state: AnalyticsState): void {

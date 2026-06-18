@@ -3457,6 +3457,7 @@ h2 {
 
 .parent-overview[data-parent-tab-section="today"] > .parent-section-heading,
 .parent-overview[data-parent-tab-section="today"] > .analysis-grid,
+.parent-overview[data-parent-tab-section="today"] > .parent-insight,
 .parent-overview[data-parent-tab-section="today"] > .parent-guidance,
 .parent-overview[data-parent-tab-section="today"] > .parent-detail-drawer {
   grid-column: 1;
@@ -3520,6 +3521,7 @@ h2 {
 
 .analysis-grid article,
 .module-log,
+.parent-insight,
 .parent-guidance {
   padding: 22px;
   border: 1px solid rgba(70, 67, 79, 0.08);
@@ -3562,6 +3564,72 @@ h2 {
 
 .parent-overview .module-log {
   min-height: 118px;
+}
+
+.parent-insight {
+  display: grid;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(255, 248, 228, 0.92), rgba(237, 246, 255, 0.86));
+  border-color: rgba(255, 179, 93, 0.2);
+}
+
+.parent-insight-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(240px, 0.8fr);
+  gap: 14px;
+}
+
+.parent-insight-main,
+.parent-insight-plan {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(82, 64, 101, 0.08);
+  border-radius: 20px;
+}
+
+.parent-insight-main strong,
+.parent-insight-plan strong {
+  color: #4d3670;
+  font-size: clamp(1.15rem, 1.8vw, 1.55rem);
+  line-height: 1.15;
+}
+
+.parent-insight-main p,
+.parent-insight-plan p {
+  margin: 0;
+  color: #6d6480;
+  font-weight: 850;
+  line-height: 1.42;
+}
+
+.parent-insight-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.parent-insight-tags span,
+.parent-insight-plan li {
+  color: #514669;
+  font-size: 0.86rem;
+  font-weight: 900;
+  line-height: 1.32;
+}
+
+.parent-insight-tags span {
+  padding: 7px 10px;
+  background: rgba(124, 92, 217, 0.1);
+  border-radius: 999px;
+}
+
+.parent-insight-plan ol {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 18px;
 }
 
 .parent-guidance {
@@ -3862,6 +3930,10 @@ h2 {
     grid-template-columns: 1fr;
   }
 
+  .parent-insight-body {
+    grid-template-columns: 1fr;
+  }
+
   .parent-action-grid {
     width: 100%;
     grid-template-columns: 1fr;
@@ -3882,6 +3954,7 @@ h2 {
 
   .parent-overview[data-parent-tab-section="today"] > .parent-section-heading,
   .parent-overview[data-parent-tab-section="today"] > .analysis-grid,
+  .parent-overview[data-parent-tab-section="today"] > .parent-insight,
   .parent-overview[data-parent-tab-section="today"] > .parent-guidance,
   .parent-overview[data-parent-tab-section="today"] > .parent-detail-drawer,
   .parent-overview[data-parent-tab-section="today"] > .parent-quick-actions {

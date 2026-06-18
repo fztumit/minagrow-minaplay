@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialModuleStats, createParentGuidanceCards } from '../../src/modules/main';
+import { createInitialModuleStats, createParentGuidanceCards, createParentInsight } from '../../src/modules/main';
 
 describe('analytics baseline', () => {
   it('starts module stats from a calm zero state', () => {
@@ -41,5 +41,74 @@ describe('analytics baseline', () => {
     expect(cards[0]).toMatchObject({ title: 'Bugünkü ritim', value: '2 oturum', tone: 'steady' });
     expect(cards[1]).toMatchObject({ title: 'Tekrar odağı', value: 'Su', tone: 'repeat' });
     expect(cards[2].note).toContain("Dokun'da");
+  });
+
+  it('summarizes parent insight as development stage and a short home plan', () => {
+    const insight = createParentInsight(
+      {
+        sessions: 2,
+        repeats: 1,
+        modules: {
+          touch: { opens: 2, actions: 5, correct: 1, softRedirects: 3 }
+        }
+      },
+      {
+        baba: {
+          success: 1,
+          fail: 3,
+          hintLevels: { 1: 2 },
+          successLatencyMsTotal: 800,
+          successLatencySamples: 1,
+          repeatNeeds: 2,
+          consecutiveCorrectCount: 0,
+          recentResults: [false, false, true],
+          lastPracticedAt: 1
+        }
+      },
+      {},
+      { baba: 'Baba' }
+    );
+
+    expect(insight).toMatchObject({
+      focusLabel: 'Baba',
+      stageLabel: 'Tanıma başladı',
+      comprehensionLabel: 'Destekle artıyor',
+      planTitle: 'Baba için 3 dakika'
+    });
+    expect(insight.steps[0]).toContain('6-8 kez');
+  });
+
+  it('marks generalized mastered words as high comprehension', () => {
+    const insight = createParentInsight(
+      {
+        sessions: 3,
+        repeats: 0,
+        modules: {
+          match: { opens: 2, actions: 6, correct: 5, softRedirects: 0 }
+        }
+      },
+      {},
+      {
+        su: {
+          success: 5,
+          fail: 0,
+          hintUsed: 0,
+          hintLevels: {},
+          sameImageSuccess: 2,
+          conceptGeneralizationSuccess: 3,
+          latencyMsTotal: 1200,
+          latencySamples: 5,
+          repeatNeeds: 0,
+          consecutiveCorrectCount: 5,
+          recentResults: [true, true, true, true, true],
+          lastPracticedAt: 1
+        }
+      },
+      { su: 'Su' }
+    );
+
+    expect(insight.stageLabel).toBe('Genelleme');
+    expect(insight.comprehensionLabel).toBe('Yüksek anlaşılma');
+    expect(insight.steps[2]).toContain("Eşleme'de");
   });
 });

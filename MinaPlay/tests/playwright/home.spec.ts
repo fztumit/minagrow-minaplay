@@ -152,6 +152,9 @@ test('parent panel records simple module activity', async ({ page }) => {
   await expect(page.getByRole('tab', { name: 'Bugün' })).toHaveAttribute('aria-selected', 'true');
   await expect(page.locator('#metric-sessions')).toHaveText('1');
   await expect(page.locator('#metric-correct')).toHaveText('1');
+  await expect(page.locator('[data-parent-insight]')).toContainText('Bugünkü akış stabil');
+  await expect(page.locator('[data-parent-insight]')).toContainText('Anlaşılma');
+  await expect(page.locator('[data-parent-insight]')).toContainText('3 dakika');
   await expect(page.locator('[data-parent-guidance] .parent-guidance-card')).toHaveCount(3);
   await expect(page.locator('[data-parent-guidance]')).toContainText('Bugünkü ritim');
   await expect(page.locator('[data-parent-guidance]')).toContainText('Sonraki sakin adım');
