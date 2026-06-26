@@ -829,16 +829,23 @@ test('sleep module shows moon scene and toggles sleeping Pofi', async ({ page })
   await expect(page.locator('.bottom-nav')).toHaveCSS('opacity', '0');
   await expect(page.locator('[data-sleep-toggle]')).toHaveCSS('opacity', '0');
 
-  await page.click('[data-sleep-surface]', { position: { x: 20, y: 20 } });
+  await page.click('[data-sleep-surface]', { position: { x: 160, y: 160 } });
   await expect(page.locator('[data-sleep-surface]')).toHaveAttribute('data-sleep-running', 'true');
 
-  await page.mouse.move(20, 20);
+  await page.click('.brand-home', { force: true });
+  await expect(page.locator('#view-sleep')).toHaveClass(/active/);
+  await expect(page.locator('[data-sleep-surface]')).toHaveAttribute('data-sleep-running', 'true');
+
+  await page.mouse.move(160, 160);
   await page.mouse.down();
   await page.waitForTimeout(1900);
   await page.mouse.up();
-  await expect(page.locator('[data-sleep-surface]')).toHaveAttribute('data-sleep-running', 'false', { timeout: 2200 });
-  await expect(page.locator('#view-sleep .sleep-floating-pofi')).toHaveAttribute('data-pofi-state', 'sleepReady');
-  await expect(page.locator('[data-sleep-label]')).toHaveText('Başlat');
+  await expect(page.locator('[data-sleep-surface]')).toHaveAttribute('data-sleep-running', 'true');
+
+  await openParentBySecretGesture(page);
+  await expect(page.locator('#view-parent')).toHaveClass(/active/);
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-active-view', 'parent');
+  await expect(page.locator('[data-sleep-surface]')).toHaveAttribute('data-sleep-running', 'false');
 });
 
 test('mirror module starts camera-safe imitation flow', async ({ page }) => {

@@ -424,7 +424,6 @@ const TOUCH_SETTINGS_KEY = 'minaplay_touch_settings_v1';
 const TOUCH_REPEAT_MEDIA_KEY = 'minaplay_touch_repeat_media_v1';
 const CHILD_LOCK_SETTINGS_KEY = 'minaplay_child_lock_settings_v1';
 const CHILD_PROFILE_KEY = 'minaplay_child_profile_v1';
-const CHILD_LOCK_LONG_PRESS_MS = 1800;
 const PARENT_GESTURE_ZONE_PX = 112;
 const PARENT_GESTURE_RESET_MS = 1700;
 const TOUCH_DB_NAME = 'minaplay_touch_cards_v1';
@@ -1626,7 +1625,6 @@ let mirrorPlanSettings: MirrorPlanSettings = { ...DEFAULT_MIRROR_PLAN };
 let sleepSettings: SleepSettings = { ...DEFAULT_SLEEP_SETTINGS };
 let moduleVisibilitySettings: ModuleVisibilitySettings = { ...DEFAULT_MODULE_VISIBILITY };
 let childLockSettings: ChildLockSettings = { enabled: true, keepAwake: true, parentTapCount: 3, parentPullDistance: 80, introSeen: false };
-let sleepLongPressTimer: number | undefined;
 let wakeLockSentinel: WakeLockSentinelLike | undefined;
 let wakeLockRequestInFlight = false;
 let parentGestureTapCount = 0;
@@ -2842,24 +2840,6 @@ function playPeekabooSyllableTone(): void {
 
 function openParentWithUnlock(): void {
   activateView('parent');
-}
-
-function startSleepLongPressStop(): void {
-  if (!sleepMusicRunning) {
-    return;
-  }
-  window.clearTimeout(sleepLongPressTimer);
-  sleepLongPressTimer = window.setTimeout(() => {
-    sleepLongPressTimer = undefined;
-    void stopSleepMusic();
-  }, CHILD_LOCK_LONG_PRESS_MS);
-}
-
-function clearSleepLongPressStop(): void {
-  if (sleepLongPressTimer) {
-    window.clearTimeout(sleepLongPressTimer);
-    sleepLongPressTimer = undefined;
-  }
 }
 
 function showParentSecretIntroIfNeeded(): void {
@@ -7372,6 +7352,9 @@ function boot(): void {
       const activeView = document.querySelector<HTMLElement>('.app-shell')?.dataset.activeView;
       const isBottomNavTrigger = Boolean(viewTrigger.closest('.bottom-nav'));
       const isBrandHomeTrigger = viewTrigger.classList.contains('brand-home') && requestedView === 'home';
+      if (activeView === 'sleep' && sleepMusicRunning && requestedView !== 'sleep') {
+        return;
+      }
       if (shouldLockChildNavigation(activeView) && !isBrandHomeTrigger) {
         return;
       }
@@ -7483,15 +7466,6 @@ function boot(): void {
     }
     void stopSleepMusic();
   });
-  sleepSurface?.addEventListener('pointerdown', () => {
-    if (childLockSettings.enabled) {
-      startSleepLongPressStop();
-    }
-  });
-  sleepSurface?.addEventListener('pointerup', clearSleepLongPressStop);
-  sleepSurface?.addEventListener('pointercancel', clearSleepLongPressStop);
-  sleepSurface?.addEventListener('pointerleave', clearSleepLongPressStop);
-
   const parentGestureZone = document.querySelector<HTMLElement>('[data-parent-gesture-zone]');
   parentGestureZone?.addEventListener('pointerdown', (event) => {
     parentGestureZone.setPointerCapture(event.pointerId);
