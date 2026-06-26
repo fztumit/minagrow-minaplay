@@ -160,7 +160,7 @@ Pofi anlatıcı veya rehber rolündedir.
 
 Rol:
 
-- Pofi'nin yüz, ağız ve dil egzersizini göstermesi
+- Pofi'nin güvenli ağız hareketi, dudak ve yüz ifadesi egzersizini göstermesi
 - çocuğun kamera aynasıyla kendini izleyip taklit etmesi
 
 İlke:
@@ -179,7 +179,7 @@ Akış:
 Çalışma grupları:
 
 - duygu durumu, mimik ve emoji taklidi
-- dil egzersizleri
+- ses/ağız açıklığı egzersizleri
 - dudak egzersizleri
 - yüz egzersizleri
 

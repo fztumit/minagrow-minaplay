@@ -2,7 +2,7 @@
 name: minaplay-assets
 description: MinaPlay runtime asset klasorlerinin rol ayrimini tanimlar.
 created: 2026-04-27
-updated: 2026-05-08
+updated: 2026-06-26
 ---
 
 # Assets
@@ -25,7 +25,7 @@ Bu klasor yalniz uygulamada dogrudan servis edilecek final assetleri tasir.
 ## Isimlendirme
 
 - Runtime yolunda `pofi_emoji` kullanilmaz; Pofi artik davranissal bir karakter sistemidir.
-- Tam pozlar sade isim alir: `happy.png`, `playful.png`, `sleeping.png`, `tongue.png`.
+- Tam pozlar sade isim alir: `happy.png`, `playful.png`, `sleeping.png`.
 - Parca assetleri kategori klasoru icinde okunur: `eyes/open-v01.png`, `mouth/smile-v01.png`.
 - Surumlu varyasyonlarda `-v01`, `-v02` son eki korunur.
 - Modul gorselleri Ingilizce rota adlariyla tutulur: `touch.png`, `matching.png`, `mirror.png`, `sleep.png`.

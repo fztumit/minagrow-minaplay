@@ -1,4 +1,4 @@
-const CACHE_NAME = 'minaplay-assets-v34';
+const CACHE_NAME = 'minaplay-assets-v35';
 const APP_SHELL = [
   '/',
   '/offline.html',
@@ -160,15 +160,9 @@ const APP_SHELL = [
   '/assets/pofi/parts/mouth/sound-o-v01.png',
   '/assets/pofi/parts/mouth/sound-u-v01.png',
   '/assets/pofi/parts/mouth/talk-small-v01.png',
-  '/assets/pofi/parts/mouth/tongue-down-v01.png',
-  '/assets/pofi/parts/mouth/tongue-left-v01.png',
-  '/assets/pofi/parts/mouth/tongue-out-v01.png',
-  '/assets/pofi/parts/mouth/tongue-right-v01.png',
-  '/assets/pofi/parts/mouth/tongue-up-v01.png',
   '/assets/pofi/poses/happy.png',
   '/assets/pofi/poses/playful.png',
   '/assets/pofi/poses/sleeping.png',
-  '/assets/pofi/poses/tongue.png',
   '/assets/sleep/moon.png',
   '/sounds/peekaboo/pofi_ceee_01.wav',
   '/sounds/peekaboo/pofi_ceee_02.wav',

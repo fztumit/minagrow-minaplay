@@ -187,7 +187,7 @@ V2'de modüller `src/features` altında yaşar. Bugünkü dosya örnekleri V1 re
 
 - Dosya: `src/modules/mirror/index.ts`
 - View: `view-mirror`
-- Rol: Pofi'nin ağız, dil ve yüz egzersizini göstermesi; çocuğun kamera aynasında taklit etmesi
+- Rol: Pofi'nin güvenli ağız hareketi, dudak ve yüz ifadesi egzersizini göstermesi; çocuğun kamera aynasında taklit etmesi
 - İlke: katı algılama yoktur, zaman bazlı ödül vardır
 
 ### Uyku

@@ -11,8 +11,10 @@ import {
 
 describe('MVP parent settings', () => {
   test('normalizes mirror presets and returns a stable exercise order', () => {
-    expect(normalizeMirrorPlan({ preset: 'tongue-first' })).toEqual({ preset: 'tongue-first' });
-    expect(mirrorExerciseOrder({ preset: 'mouth-first' }).slice(0, 3)).toEqual(['open-mouth', 'pucker', 'teeth']);
+    expect(normalizeMirrorPlan({ preset: 'expression-first' })).toEqual({ preset: 'expression-first' });
+    expect(normalizeMirrorPlan({ preset: 'tongue-first' })).toEqual({ preset: 'expression-first' });
+    expect(mirrorExerciseOrder({ preset: 'mouth-first' }).slice(0, 3)).toEqual(['open-mouth', 'closed-mouth', 'pucker']);
+    expect(mirrorExerciseOrder({ preset: 'expression-first' }).slice(0, 2)).toEqual(['smile', 'surprised-face']);
     expect(normalizeMirrorPlan({ preset: 'unknown' })).toEqual(DEFAULT_MIRROR_PLAN);
   });
 

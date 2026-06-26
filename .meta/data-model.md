@@ -211,7 +211,7 @@ Ayna modundaki egzersiz sırasını ve çalışma grubunu temsil eder.
 Gruplar:
 
 - `emotion`: duygu durumu, mimik ve emoji taklidi
-- `tongue`: dil egzersizleri
+- `mouth`: güvenli ağız açıklığı ve ses egzersizleri
 - `lip`: dudak egzersizleri
 - `face`: yüz egzersizleri
 

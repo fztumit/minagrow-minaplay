@@ -846,16 +846,16 @@ test('mirror module starts camera-safe imitation flow', async ({ page }) => {
 
   await page.click('.mode-card[data-view="mirror"]');
   await expect(page.locator('[data-mirror-surface]')).toHaveAttribute('data-mirror-state', /attention|exercise|waiting/);
-  await expect(page.locator('[data-mirror-surface]')).toHaveAttribute('data-mirror-exercise', 'tongue-out');
+  await expect(page.locator('[data-mirror-surface]')).toHaveAttribute('data-mirror-exercise', 'open-mouth');
   await expect(page.locator('[data-mirror-surface]')).toHaveAttribute('data-mirror-state', /exercise|waiting/, { timeout: 7000 });
-  await expect(page.locator('#view-mirror [data-pofi-avatar] .pofi-mouth')).toHaveAttribute('src', /tongue-out-v01\.png$/);
+  await expect(page.locator('#view-mirror [data-pofi-avatar] .pofi-mouth')).toHaveAttribute('src', /open-vertical-big-v01\.png$/);
   await expect(page.locator('[data-mirror-video]')).toHaveCount(1);
-  await expect(page.locator('[data-mirror-progress]')).toHaveCSS('--mirror-duration', '4200ms');
+  await expect(page.locator('[data-mirror-progress]')).toHaveCSS('--mirror-duration', '3900ms');
   await expect(page.locator('.mirror-actions')).toHaveCount(0);
   await expect(page.locator('[data-mirror-next]')).toHaveCount(0);
 
   await page.click('[data-mirror-repeat]');
-  await expect(page.locator('[data-mirror-surface]')).toHaveAttribute('data-mirror-exercise', 'tongue-out');
+  await expect(page.locator('[data-mirror-surface]')).toHaveAttribute('data-mirror-exercise', 'open-mouth');
 });
 
 test('parent panel shows touch word progress rows', async ({ page }) => {
@@ -924,7 +924,7 @@ test('parent panel shows matching mastery and saves Ayna and Uyku preferences', 
   await expect(page.locator('[data-match-progress-table]')).toContainText('Öğrenildi');
 
   await openParentTab(page, 'Kontrol');
-  await openParentBlock(page, 'Ağız ve taklit sırası');
+  await openParentBlock(page, 'Ağız, mimik ve taklit sırası');
   await page.selectOption('[data-mirror-plan-preset]', 'mouth-first');
   await page.click('[data-mirror-plan-save]');
   await openParentBlock(page, 'Ses ve süre');
@@ -1005,10 +1005,10 @@ test('module surfaces render stateful layered Pofi parts', async ({ page }) => {
   await page.click('.mode-card[data-view="mirror"]');
 
   const mirrorPofi = page.locator('#view-mirror [data-pofi-avatar]');
-  await expect(mirrorPofi).toHaveAttribute('data-pofi-state', /mirrorAttention|mirrorTongueOut/);
+  await expect(mirrorPofi).toHaveAttribute('data-pofi-state', /mirrorAttention|mirrorOpenMouth/);
   await expect(mirrorPofi.locator('img')).toHaveCount(6);
   await expect(mirrorPofi.locator('.pofi-body')).toHaveAttribute('src', /default-v01\.png$/);
-  await expect(mirrorPofi.locator('.pofi-mouth')).toHaveAttribute('src', /open-smile-soft-v01\.png|tongue-out-v01\.png$/);
+  await expect(mirrorPofi.locator('.pofi-mouth')).toHaveAttribute('src', /open-smile-soft-v01\.png|open-vertical-big-v01\.png$/);
 
   await page.click('.brand-home');
   await page.click('.mode-card[data-view="touch"]');

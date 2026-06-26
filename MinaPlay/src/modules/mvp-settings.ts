@@ -1,4 +1,4 @@
-export type MirrorPlanPreset = 'balanced' | 'mouth-first' | 'tongue-first';
+export type MirrorPlanPreset = 'balanced' | 'mouth-first' | 'expression-first';
 export type SleepSoundPreset = 'lullaby' | 'ocean' | 'white';
 export type MvpModuleId = 'touch' | 'match' | 'sentence' | 'story' | 'mirror' | 'sleep' | 'peekaboo';
 
@@ -40,13 +40,18 @@ export const DEFAULT_MODULE_VISIBILITY: ModuleVisibilitySettings = {
 };
 
 const MIRROR_ORDERS: Record<MirrorPlanPreset, string[]> = {
-  balanced: ['tongue-out', 'open-mouth', 'pucker', 'teeth', 'tongue-left', 'tongue-right'],
-  'mouth-first': ['open-mouth', 'pucker', 'teeth', 'tongue-out', 'tongue-left', 'tongue-right'],
-  'tongue-first': ['tongue-out', 'tongue-left', 'tongue-right', 'open-mouth', 'pucker', 'teeth']
+  balanced: ['open-mouth', 'smile', 'pucker', 'sound-a', 'sound-o', 'closed-mouth', 'teeth', 'surprised-face'],
+  'mouth-first': ['open-mouth', 'closed-mouth', 'pucker', 'sound-a', 'sound-o', 'teeth', 'smile', 'surprised-face'],
+  'expression-first': ['smile', 'surprised-face', 'open-mouth', 'pucker', 'sound-a', 'sound-o', 'closed-mouth', 'teeth']
 };
 
 export function normalizeMirrorPlan(raw: unknown): MirrorPlanSettings {
-  const preset = isRecord(raw) && isMirrorPreset(raw.preset) ? raw.preset : DEFAULT_MIRROR_PLAN.preset;
+  const preset =
+    isRecord(raw) && raw.preset === 'tongue-first'
+      ? 'expression-first'
+      : isRecord(raw) && isMirrorPreset(raw.preset)
+        ? raw.preset
+        : DEFAULT_MIRROR_PLAN.preset;
   return { preset };
 }
 
@@ -87,7 +92,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isMirrorPreset(value: unknown): value is MirrorPlanPreset {
-  return value === 'balanced' || value === 'mouth-first' || value === 'tongue-first';
+  return value === 'balanced' || value === 'mouth-first' || value === 'expression-first';
 }
 
 function isSleepSound(value: unknown): value is SleepSoundPreset {

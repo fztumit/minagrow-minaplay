@@ -437,7 +437,7 @@ Alınan kararlar:
 - Eşleme modunda sol hedef ve sağda 3 seçenek kullanılır
 - Eşleme modunda Pofi solda bekler; 5-10 saniye sonra doğru kartı yumuşak biçimde hatırlatır
 - bir nesne için öğrenildi kuralı son 5 denemede en az 4 doğru ve ardışık doğru sayısının en az 3 olmasıdır
-- Ayna modunda duygu/mimik, dil, dudak ve yüz egzersizleri Parent panel sırasına göre ilerler
+- Ayna modunda güvenli ağız hareketleri, dudak çalışmaları, mimik ve yüz ifadesi egzersizleri Parent panel sırasına göre ilerler
 - Ayna modunda Pofi solda büyük ve erişilebilir görünür; sağda ayna alanı bulunur
 - kamera varsa ölçüm yapılabilir, kamera yoksa görsel anlatım ve süre/tekrar akışı çalışır
 - Uyku modunda ses, süre ve kayıt ebeveyn tarafından belirlenir; touch lock ve özel çıkış gesture'ı kullanılır

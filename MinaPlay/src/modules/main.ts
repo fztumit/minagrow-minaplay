@@ -94,12 +94,14 @@ type PofiState =
   | 'storyContinue'
   | 'sleepReady'
   | 'mirrorAttention'
-  | 'mirrorTongueOut'
-  | 'mirrorTongueLeft'
-  | 'mirrorTongueRight'
   | 'mirrorOpenMouth'
+  | 'mirrorSmile'
   | 'mirrorPucker'
   | 'mirrorTeeth'
+  | 'mirrorSoundA'
+  | 'mirrorSoundO'
+  | 'mirrorClosedMouth'
+  | 'mirrorSurprise'
   | 'mirrorSuccess'
   | 'tryAgain';
 type PofiMood = PofiState | 'attention' | 'blink' | 'settle' | 'sleepBlink';
@@ -266,7 +268,7 @@ type SentenceState = 'attention' | 'context' | 'waiting' | 'hint' | 'success' | 
 type SentenceCue = 'water' | 'food' | 'toilet' | 'sleep' | 'pain' | 'cold' | 'hot' | 'caregiver' | 'help' | 'walk';
 type SentenceMode = 'learn' | 'board';
 type MirrorState = 'idle' | 'attention' | 'exercise' | 'camera' | 'waiting' | 'success' | 'transition';
-type MirrorExerciseId = 'tongue-out' | 'open-mouth' | 'pucker' | 'teeth' | 'tongue-left' | 'tongue-right';
+type MirrorExerciseId = 'open-mouth' | 'smile' | 'pucker' | 'teeth' | 'sound-a' | 'sound-o' | 'closed-mouth' | 'surprised-face';
 
 type StoryState = 'idle' | 'attention' | 'narration' | 'interaction' | 'waiting' | 'success' | 'continue' | 'closure';
 type StoryStepKind = 'attention' | 'narration' | 'interaction' | 'repeat' | 'closure';
@@ -386,11 +388,11 @@ const PEEKABOO_COVER_MAX_MS = 7000;
 const PEEKABOO_REVEAL_MS = 850;
 const PEEKABOO_CELEBRATE_MS = 1050;
 const PEEKABOO_VOICE_CLIPS = [
-  { src: '/sounds/peekaboo/pofi_ceee_01.wav', text: 'Ceeeeee! Buradayım!' },
-  { src: '/sounds/peekaboo/pofi_ceee_02.wav', text: 'Ceeeeee! Bana bak!' },
-  { src: '/sounds/peekaboo/pofi_ceee_03.wav', text: 'Ceeeeee! İşte geldim!' },
-  { src: '/sounds/peekaboo/pofi_ceee_04.wav', text: 'Ceeeeee! Beni buldun!' },
-  { src: '/sounds/peekaboo/pofi_ceee_05.wav', text: 'Ceeeeee! Harikasın!' }
+  { src: '/sounds/peekaboo/pofi_ceee_01.wav', text: 'Ceeee!' },
+  { src: '/sounds/peekaboo/pofi_ceee_02.wav', text: 'Ceee!' },
+  { src: '/sounds/peekaboo/pofi_ceee_03.wav', text: 'Ceeee!' },
+  { src: '/sounds/peekaboo/pofi_ceee_04.wav', text: 'Ceee!' },
+  { src: '/sounds/peekaboo/pofi_ceee_05.wav', text: 'Ceeee!' }
 ] as const;
 const PEEKABOO_SEARCH_TEMPLATES = [
   (name: string) => `${name} nerede?`,
@@ -558,12 +560,14 @@ const DEFAULT_TOUCH_CARDS: TouchCard[] = [
 ];
 
 const MIRROR_EXERCISES: MirrorExercise[] = [
-  { id: 'tongue-out', command: 'Dil çıkar', success: 'Harika', pofiState: 'mirrorTongueOut', durationMs: 4200, level: 1 },
   { id: 'open-mouth', command: 'Ağzını aç', success: 'Harika', pofiState: 'mirrorOpenMouth', durationMs: 3900, level: 1 },
-  { id: 'pucker', command: 'Dudak büz', success: 'Çok güzel', pofiState: 'mirrorPucker', durationMs: 3900, level: 1 },
-  { id: 'teeth', command: 'Diş göster', success: 'Harika', pofiState: 'mirrorTeeth', durationMs: 4200, level: 1 },
-  { id: 'tongue-left', command: 'Dil sola', success: 'Çok güzel', pofiState: 'mirrorTongueLeft', durationMs: 4500, level: 2 },
-  { id: 'tongue-right', command: 'Dil sağa', success: 'Harika', pofiState: 'mirrorTongueRight', durationMs: 4500, level: 2 }
+  { id: 'smile', command: 'Gülümse', success: 'Çok güzel', pofiState: 'mirrorSmile', durationMs: 3600, level: 1 },
+  { id: 'pucker', command: 'Dudaklarını büz', success: 'Harika', pofiState: 'mirrorPucker', durationMs: 3900, level: 1 },
+  { id: 'sound-a', command: 'A sesi yap', success: 'Çok güzel', pofiState: 'mirrorSoundA', durationMs: 3900, level: 1 },
+  { id: 'sound-o', command: 'O sesi yap', success: 'Harika', pofiState: 'mirrorSoundO', durationMs: 3900, level: 1 },
+  { id: 'closed-mouth', command: 'Dudaklarını kapat', success: 'Çok güzel', pofiState: 'mirrorClosedMouth', durationMs: 3600, level: 1 },
+  { id: 'teeth', command: 'Dişlerini göster', success: 'Harika', pofiState: 'mirrorTeeth', durationMs: 4200, level: 2 },
+  { id: 'surprised-face', command: 'Şaşırmış yüz yap', success: 'Çok güzel', pofiState: 'mirrorSurprise', durationMs: 3900, level: 2 }
 ];
 
 const SENTENCE_PROMPTS: SentencePrompt[] = [
@@ -1052,7 +1056,7 @@ const POFI_EXPRESSIONS: Record<PofiMood, PofiExpression> = {
       body: POFI_STABLE_BODY,
       eyes: 'open-v01.png',
       eyebrows: POFI_HAPPY_EYEBROWS,
-      mouth: 'tongue-out-v01.png',
+      mouth: 'open-smile-soft-v01.png',
       hands: 'pofi_hand_touch_v01.png',
       effect: POFI_WARMTH_EFFECT
     }
@@ -1067,43 +1071,13 @@ const POFI_EXPRESSIONS: Record<PofiMood, PofiExpression> = {
       effect: POFI_WARMTH_EFFECT
     }
   },
-  mirrorTongueOut: {
+  mirrorSmile: {
     role: 'model',
     parts: {
       body: POFI_STABLE_BODY,
-      eyes: 'open-v01.png',
+      eyes: 'happy-v01.png',
       eyebrows: POFI_HAPPY_EYEBROWS,
-      mouth: 'tongue-out-v01.png',
-      effect: POFI_WARMTH_EFFECT
-    }
-  },
-  mirrorTongueLeft: {
-    role: 'model',
-    parts: {
-      body: POFI_STABLE_BODY,
-      eyes: 'open-v01.png',
-      eyebrows: POFI_HAPPY_EYEBROWS,
-      mouth: 'tongue-left-v01.png',
-      effect: POFI_WARMTH_EFFECT
-    }
-  },
-  mirrorTongueRight: {
-    role: 'model',
-    parts: {
-      body: POFI_STABLE_BODY,
-      eyes: 'open-v01.png',
-      eyebrows: POFI_HAPPY_EYEBROWS,
-      mouth: 'tongue-right-v01.png',
-      effect: POFI_WARMTH_EFFECT
-    }
-  },
-  mirrorOpenMouth: {
-    role: 'model',
-    parts: {
-      body: POFI_STABLE_BODY,
-      eyes: 'surprised-v01.png',
-      eyebrows: POFI_HAPPY_EYEBROWS,
-      mouth: 'open-vertical-big-v01.png',
+      mouth: 'smile-v01.png',
       effect: POFI_WARMTH_EFFECT
     }
   },
@@ -1124,6 +1098,56 @@ const POFI_EXPRESSIONS: Record<PofiMood, PofiExpression> = {
       eyes: 'happy-v01.png',
       eyebrows: POFI_HAPPY_EYEBROWS,
       mouth: 'grimace-soft-v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
+  mirrorOpenMouth: {
+    role: 'model',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'surprised-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'open-vertical-big-v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
+  mirrorSoundA: {
+    role: 'model',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'wide-soft-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'sound-a-v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
+  mirrorSoundO: {
+    role: 'model',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'wide-soft-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'sound-o-v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
+  mirrorClosedMouth: {
+    role: 'model',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'open-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'closed-v01.png',
+      effect: POFI_WARMTH_EFFECT
+    }
+  },
+  mirrorSurprise: {
+    role: 'model',
+    parts: {
+      body: POFI_STABLE_BODY,
+      eyes: 'surprised-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'open-o-v01.png',
       effect: POFI_WARMTH_EFFECT
     }
   },

@@ -35,9 +35,9 @@ const baseInstructions = [
   'Net ve anlaşılır Türkçe konuş.',
   'Gülümseyerek konuşuyormuş hissi ver; güven veren ve neşeli ol.',
   'Arka plan müziği, efekt, yankı kullanma.',
-  'Ceeee kısmı yaklaşık 1 saniye sürsün; ilk hece merak uyandırsın, son heceler yükselerek gelsin.',
-  'Sonraki cümleyi hızlı ve neşeli oku.',
-  'Toplam süre yaklaşık 1.5-2 saniye olsun.',
+  'Ceeee kısmı yaklaşık 1 saniye sürsün; ilk hece merak uyandırsın, son heceler yumuşak yükselsin.',
+  'Ek açıklama cümlesi kurma; yalnız verilen kısa metni oku.',
+  'Toplam süre yaklaşık 0.8-1.4 saniye olsun.',
   'Çizgi film repliği gibi değil, gerçek bir oyun arkadaşı gibi oku.',
   'Korku, şaşkınlık veya yüksek ses baskısı oluşturma; yüzlerce tekrar dinlenebilir olsun.'
 ].join(' ');
