@@ -5005,6 +5005,17 @@ function sleepSoundProfile(): {
       notes: [138, 146, 138, 130]
     };
   }
+  if (sleepSettings.sound === 'pispis') {
+    return {
+      wave: 'sine',
+      lowFrequency: 147,
+      highFrequency: 220,
+      padGain: 0.14,
+      noteGain: 0.012,
+      repeatMs: 9200,
+      notes: [294, 330, 370, 330, 294, 247, 262, 294]
+    };
+  }
   return {
     wave: 'sine',
     lowFrequency: 196,
