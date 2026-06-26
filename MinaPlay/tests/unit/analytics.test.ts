@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialModuleStats, createParentGuidanceCards, createParentInsight } from '../../src/modules/main';
+import { createInitialModuleStats, createParentGuidanceCards, createParentInsight, createParentTodaySummary } from '../../src/modules/main';
 
 describe('analytics baseline', () => {
   it('starts module stats from a calm zero state', () => {
@@ -38,9 +38,43 @@ describe('analytics baseline', () => {
     );
 
     expect(cards).toHaveLength(3);
-    expect(cards[0]).toMatchObject({ title: 'Bugünkü ritim', value: '2 oturum', tone: 'steady' });
+    expect(cards[0]).toMatchObject({ title: 'Bugünkü ritim', value: 'Kısa temas', tone: 'steady' });
     expect(cards[1]).toMatchObject({ title: 'Tekrar odağı', value: 'Su', tone: 'repeat' });
     expect(cards[2].note).toContain("Dokun'da");
+  });
+
+  it('summarizes played games, independence balance, learned words and a parent plan', () => {
+    const summary = createParentTodaySummary(
+      {
+        sessions: 3,
+        repeats: 2,
+        modules: {
+          touch: { opens: 2, actions: 5, correct: 4, softRedirects: 1 },
+          match: { opens: 1, actions: 2, correct: 1, softRedirects: 0 }
+        }
+      },
+      {
+        su: {
+          success: 4,
+          fail: 0,
+          hintLevels: {},
+          successLatencyMsTotal: 1100,
+          successLatencySamples: 4,
+          repeatNeeds: 0,
+          consecutiveCorrectCount: 4,
+          recentResults: [true, true, true, true, true],
+          lastPracticedAt: 1
+        }
+      },
+      {},
+      { su: 'Su' }
+    );
+
+    expect(summary.modules[0]).toMatchObject({ label: 'Dokun', opens: 2, independent: 4, supported: 1 });
+    expect(summary.supportSummary).toContain('83% bağımsız deneme');
+    expect(summary.learnedWords).toContain('Su');
+    expect(summary.recommendedWords[0]).toMatchObject({ label: 'Su', level: 'Seviye 1' });
+    expect(summary.plan).toHaveLength(3);
   });
 
   it('summarizes parent insight as development stage and a short home plan', () => {
@@ -73,9 +107,9 @@ describe('analytics baseline', () => {
       focusLabel: 'Baba',
       stageLabel: 'Tanıma başladı',
       comprehensionLabel: 'Destekle artıyor',
-      planTitle: 'Baba için 3 dakika'
+      planTitle: 'Baba için rehberli 3 dakika'
     });
-    expect(insight.steps[0]).toContain('6-8 kez');
+    expect(insight.steps[0]).toContain('4-6 kez');
   });
 
   it('marks generalized mastered words as high comprehension', () => {

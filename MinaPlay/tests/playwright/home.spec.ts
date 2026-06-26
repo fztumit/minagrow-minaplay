@@ -1,7 +1,15 @@
 import { expect, test, type Page } from '@playwright/test';
 
+declare global {
+  interface Window {
+    __spokenTexts?: string[];
+  }
+}
+
 const CHILD_LOCK_SETTINGS_KEY = 'minaplay_child_lock_settings_v1';
+const CHILD_PROFILE_KEY = 'minaplay_child_profile_v1';
 const DEFAULT_CHILD_LOCK_SETTINGS = { enabled: true, keepAwake: true, parentTapCount: 3, parentPullDistance: 80, introSeen: true };
+const DEFAULT_TOUCH_CARD_COUNT = 33;
 
 test.beforeEach(async ({ page }, testInfo) => {
   if (testInfo.title === 'first run teaches parent secret gesture') {
@@ -30,6 +38,12 @@ async function openParentBySecretGesture(page: Page, taps = 3, pull = 100) {
 
 async function openParentTab(page: Page, tab: 'Bugün' | 'Düzenle' | 'Kontrol') {
   await page.getByRole('tab', { name: tab }).click();
+}
+
+async function openParentBlock(page: Page, title: string) {
+  await page.locator('details.parent-work-block').filter({ hasText: title }).first().evaluate((block) => {
+    (block as HTMLDetailsElement).open = true;
+  });
 }
 
 test('home opens with the active child modes', async ({ page }) => {
@@ -72,8 +86,66 @@ test('mobile home keeps navigation cards and brand bar inside the viewport', asy
   expect(layout).toEqual({ horizontalOverflow: false, allInside: true });
 });
 
-test('ceee mode toggles Pofi between hidden and found play states', async ({ page }) => {
+test('ceee mode plays a simple Pofi peekaboo loop', async ({ page }) => {
   await disableChildLock(page);
+  await page.addInitScript(() => {
+    const playedSources: string[] = [];
+    const spokenTexts: string[] = [];
+    class TestAudio {
+      public volume = 1;
+      public currentTime = 0;
+      public preload = '';
+      public duration = 1.2;
+      public currentSrc: string;
+      private listeners = new Map<string, Array<() => void>>();
+
+      constructor(public src = '') {
+        this.currentSrc = src;
+      }
+
+      addEventListener(type: string, listener: () => void) {
+        this.listeners.set(type, [...(this.listeners.get(type) ?? []), listener]);
+      }
+
+      removeEventListener(type: string, listener: () => void) {
+        this.listeners.set(type, (this.listeners.get(type) ?? []).filter((entry) => entry !== listener));
+      }
+
+      load() {
+        setTimeout(() => {
+          for (const listener of this.listeners.get('canplaythrough') ?? []) {
+            listener();
+          }
+        }, 0);
+      }
+
+      pause() {}
+
+      play() {
+        playedSources.push(this.src);
+        setTimeout(() => {
+          for (const listener of this.listeners.get('ended') ?? []) {
+            listener();
+          }
+        }, 0);
+        return Promise.resolve();
+      }
+    }
+
+    Object.defineProperty(window, 'Audio', { value: TestAudio });
+    Object.defineProperty(window, '__peekabooPlayedSources', { value: playedSources });
+    Object.defineProperty(window, '__spokenTexts', { value: spokenTexts });
+    Object.defineProperty(window, 'speechSynthesis', {
+      value: {
+        speak: (utterance: SpeechSynthesisUtterance) => {
+          spokenTexts.push(utterance.text);
+        },
+        cancel: () => {
+          spokenTexts.push('__cancel__');
+        }
+      }
+    });
+  });
   await page.goto('/');
 
   await page.click('[data-view="peekaboo"]');
@@ -84,16 +156,29 @@ test('ceee mode toggles Pofi between hidden and found play states', async ({ pag
   await expect(pofi).toHaveAttribute('data-pofi-role', 'play');
 
   await page.click('[data-peekaboo-toggle]');
-  await expect(surface).toHaveAttribute('data-peekaboo-state', 'hidden');
+  await expect(surface).toHaveAttribute('data-peekaboo-state', 'cover');
+  await expect(pofi).toHaveCSS('animation-name', 'peekaboo-pofi-sky-drift');
   await expect(pofi).toHaveAttribute('data-pofi-state', 'peekabooHidden');
   await expect(pofi).toHaveAttribute('data-pofi-role', 'play');
   await expect(pofi.locator('.pofi-hands')).toHaveAttribute('src', /pofi_hand_closed_v01\.png$/);
+  await expect(page.locator('[data-peekaboo-hint]')).toContainText('Mina nerede?');
+  await expect.poll(() => page.evaluate(() => window.__spokenTexts ?? [])).toContain('Mina nerede?');
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __peekabooPlayedSources: string[] }).__peekabooPlayedSources.length)).toBe(0);
 
-  await page.click('[data-peekaboo-toggle]');
-  await expect(surface).toHaveAttribute('data-peekaboo-state', 'found');
-  await expect(pofi).toHaveAttribute('data-pofi-state', 'peekabooFound');
-  await expect(pofi).toHaveAttribute('data-pofi-role', 'affirm');
-  await expect(pofi.locator('.pofi-mouth')).toHaveAttribute('src', /open-smile-soft-v01\.png$/);
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() =>
+          (window as unknown as { __peekabooPlayedSources: string[] }).__peekabooPlayedSources.some((source) =>
+            source.endsWith('/sounds/peekaboo/pofi_ceee_01.wav')
+          )
+        ),
+      { timeout: 9000 }
+    )
+    .toBe(true);
+  await expect.poll(() => page.evaluate(() => window.__spokenTexts ?? [])).toContain('__cancel__');
+  await expect(surface).toHaveAttribute('data-peekaboo-state', /reveal|celebrate|ready/);
+  await expect(surface).toHaveAttribute('data-peekaboo-celebration', 'sparkle');
   await expect(surface).toHaveAttribute('data-peekaboo-state', 'ready', { timeout: 3000 });
   await expect(pofi).toHaveAttribute('data-pofi-state', 'peekaboo');
 });
@@ -104,11 +189,9 @@ test('ceee continues softly when the child does not interact', async ({ page }) 
 
   await page.click('[data-view="peekaboo"]');
   const surface = page.locator('[data-peekaboo-surface]');
-  await expect(surface).toHaveAttribute('data-peekaboo-state', 'hidden', { timeout: 8000 });
-  const firstPosition = await surface.getAttribute('data-peekaboo-position');
-  await expect(surface).toHaveAttribute('data-peekaboo-state', 'ready', { timeout: 8000 });
-  await expect(surface).toHaveAttribute('data-peekaboo-state', 'hidden', { timeout: 8000 });
-  expect(await surface.getAttribute('data-peekaboo-position')).not.toBe(firstPosition);
+  await expect(surface).toHaveAttribute('data-peekaboo-state', 'cover', { timeout: 5000 });
+  await expect(surface).toHaveAttribute('data-peekaboo-state', 'celebrate', { timeout: 9000 });
+  await expect(surface).toHaveAttribute('data-peekaboo-state', 'ready', { timeout: 4000 });
 });
 
 test('module navigation carries Pofi through a short transition bridge', async ({ page }) => {
@@ -150,11 +233,16 @@ test('parent panel records simple module activity', async ({ page }) => {
 
   await expect(page.locator('#view-parent')).toHaveClass(/active/);
   await expect(page.getByRole('tab', { name: 'Bugün' })).toHaveAttribute('aria-selected', 'true');
-  await expect(page.locator('#metric-sessions')).toHaveText('1');
+  await expect(page.locator('#metric-sessions')).toHaveText('Kısa temas');
   await expect(page.locator('#metric-correct')).toHaveText('1');
-  await expect(page.locator('[data-parent-insight]')).toContainText('Bugünkü akış stabil');
+  await expect(page.locator('[data-parent-insight]')).toContainText('Bugün tanıma pratiği önde');
   await expect(page.locator('[data-parent-insight]')).toContainText('Anlaşılma');
-  await expect(page.locator('[data-parent-insight]')).toContainText('3 dakika');
+  await expect(page.locator('[data-parent-insight]')).toContainText('rehberli 3 dakika');
+  await expect(page.locator('[data-parent-today-summary]')).toContainText('Bölüm ağırlığı');
+  await expect(page.locator('[data-parent-today-summary]')).toContainText('Bağımsızlık dengesi');
+  await expect(page.locator('[data-parent-today-summary]')).toContainText('Önerilen kelimeler');
+  await expect(page.locator('[data-parent-today-summary]')).toContainText('Ev çalışması');
+  await expect(page.locator('[data-parent-today-summary]')).toContainText('Dokun');
   await expect(page.locator('[data-parent-guidance] .parent-guidance-card')).toHaveCount(3);
   await expect(page.locator('[data-parent-guidance]')).toContainText('Bugünkü ritim');
   await expect(page.locator('[data-parent-guidance]')).toContainText('Sonraki sakin adım');
@@ -201,6 +289,7 @@ test('child lock blocks module exits and opens parent with secret gesture', asyn
   await openParentBySecretGesture(page);
   await expect(page.locator('#view-parent')).toHaveClass(/active/);
   await openParentTab(page, 'Kontrol');
+  await openParentBlock(page, 'Çocuk kilidi');
   await expect(page.locator('[data-child-lock-enabled]')).toBeChecked();
   await expect(page.locator('[data-child-lock-awake]')).toBeChecked();
 });
@@ -210,6 +299,7 @@ test('parent secret gesture can be updated', async ({ page }) => {
 
   await openParentBySecretGesture(page);
   await openParentTab(page, 'Kontrol');
+  await openParentBlock(page, 'Çocuk kilidi');
   await page.fill('[data-parent-gesture-taps]', '4');
   await page.fill('[data-parent-gesture-pull]', '120');
   await page.click('[data-parent-gesture-save]');
@@ -222,6 +312,26 @@ test('parent secret gesture can be updated', async ({ page }) => {
   const saved = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? '{}'), CHILD_LOCK_SETTINGS_KEY);
   expect(saved.parentTapCount).toBe(4);
   expect(saved.parentPullDistance).toBe(120);
+});
+
+test('parent panel updates the child name used by Ceee prompts', async ({ page }) => {
+  await page.goto('/');
+
+  await openParentBySecretGesture(page);
+  await openParentTab(page, 'Kontrol');
+  await page.fill('[data-child-profile-name]', 'Ali');
+  await page.click('[data-child-profile-save]');
+  await expect(page.locator('[data-child-profile-status]')).toContainText('Ali adı kaydedildi');
+  await expect(page.locator('[data-parent-profile-name]')).toHaveText('Ali');
+  await expect(page.locator('[data-parent-profile-initial]')).toHaveText('A');
+
+  await page.click('.brand-home');
+  await page.click('[data-view="peekaboo"]');
+  await page.click('[data-peekaboo-toggle]');
+  await expect(page.locator('[data-peekaboo-hint]')).toContainText('Ali nerede?');
+
+  const saved = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? '{}'), CHILD_PROFILE_KEY);
+  expect(saved.name).toBe('Ali');
 });
 
 test('touch module runs a single-target listen and touch round', async ({ page }) => {
@@ -296,6 +406,155 @@ test('touch target changes card position between consecutive rounds', async ({ p
   }
 });
 
+test('touch uses Turkish speech fallback when a new card has no recorded audio', async ({ page }) => {
+  await page.addInitScript(() => {
+    const cardIds = [
+      'su',
+      'baba',
+      'top',
+      'araba',
+      'elma',
+      'anne',
+      'bebek',
+      'kedi',
+      'kopek',
+      'mama',
+      'bardak',
+      'tabak',
+      'kasik',
+      'yatak',
+      'tuvalet',
+      'mont',
+      'ayakkabi',
+      'corap',
+      'pantolon',
+      'sapka',
+      'gozluk',
+      'canta',
+      'kitap',
+      'kalem',
+      'telefon',
+      'kapi',
+      'pencere',
+      'anahtar',
+      'kilit',
+      'masa',
+      'sandalye',
+      'lamba',
+      'oyuncak'
+    ];
+    localStorage.setItem(
+      'minaplay_touch_settings_v1',
+      JSON.stringify({
+        cards: cardIds.map((id, order) => ({
+          id,
+          label: id === 'mont' ? 'Mont' : id,
+          word: id === 'mont' ? 'Mont' : id,
+          image: id === 'mont' ? '/assets/cards/objects/coat.png' : `/assets/cards/objects/${id}.png`,
+          images: [id === 'mont' ? '/assets/cards/objects/coat.png' : `/assets/cards/objects/${id}.png`],
+          learningGoal: 'kavramı tanıma',
+          enabled: id === 'mont',
+          order,
+          variations:
+            id === 'mont'
+              ? [
+                  { id: 'mont-1', label: 'Mont', text: 'Mont', rhythm: 'normal' },
+                  { id: 'mont-2', label: 'Mont Mont', text: 'Mont Mont', rhythm: 'ritim-2' },
+                  { id: 'mont-3', label: 'M-o-n-t', text: 'M-o-n-t', rhythm: 'ritim-3' }
+                ]
+              : [{ id: `${id}-1`, label: id, text: id, rhythm: 'normal' }]
+        })),
+        repeat: { enabled: false, focusCardId: 'mont', style: 'melodic', maxDurationSeconds: 30, maxRepeats: 8, minIntervalMs: 1800, maxIntervalMs: 3200, resourceUrl: '', note: '' }
+      })
+    );
+
+    window.__spokenTexts = [];
+    class SilentMissingAudio {
+      public currentSrc = '';
+      public duration = 0;
+      public volume = 1;
+      public currentTime = 0;
+      public preload = '';
+      private listeners = new Map<string, Array<() => void>>();
+
+      constructor(public src = '') {
+        this.currentSrc = src;
+      }
+
+      addEventListener(type: string, listener: () => void) {
+        this.listeners.set(type, [...(this.listeners.get(type) ?? []), listener]);
+      }
+
+      removeEventListener(type: string, listener: () => void) {
+        this.listeners.set(type, (this.listeners.get(type) ?? []).filter((entry) => entry !== listener));
+      }
+
+      load() {
+        setTimeout(() => {
+          for (const listener of this.listeners.get('error') ?? []) {
+            listener();
+          }
+        }, 0);
+      }
+
+      pause() {}
+
+      play() {
+        return Promise.reject(new Error('missing audio'));
+      }
+    }
+    Object.defineProperty(window, 'Audio', { value: SilentMissingAudio });
+    Object.defineProperty(window, 'speechSynthesis', {
+      value: {
+        speak: (utterance: SpeechSynthesisUtterance) => {
+          window.__spokenTexts.push(utterance.text);
+          setTimeout(() => utterance.dispatchEvent(new Event('end')), 0);
+        }
+      }
+    });
+  });
+
+  await page.goto('/offline.html');
+  await page.evaluate(async () => {
+    const settings = localStorage.getItem('minaplay_touch_settings_v1');
+    if (!settings) {
+      throw new Error('Missing touch settings seed');
+    }
+    const request = indexedDB.open('minaplay_touch_cards_v1', 1);
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      request.addEventListener('upgradeneeded', () => {
+        if (!request.result.objectStoreNames.contains('touchSettings')) {
+          request.result.createObjectStore('touchSettings');
+        }
+      });
+      request.addEventListener('success', () => resolve(request.result));
+      request.addEventListener('error', () => reject(request.error));
+    });
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction('touchSettings', 'readwrite');
+      transaction.objectStore('touchSettings').put(JSON.parse(settings), 'minaplay_touch_settings_v1');
+      transaction.addEventListener('complete', () => resolve());
+      transaction.addEventListener('error', () => reject(transaction.error));
+    });
+    db.close();
+  });
+
+  await page.goto('/');
+  await page.click('.mode-card[data-view="touch"]');
+  await expect(page.locator('#view-touch [data-touch-card-id="mont"]')).toBeVisible();
+  await page.evaluate(() => {
+    window.__spokenTexts = [];
+  });
+  await page.locator('#view-touch [data-touch-card-id="mont"]').dispatchEvent('click');
+
+  await expect
+    .poll(() => page.evaluate(() => window.__spokenTexts ?? []), { timeout: 5000 })
+    .toContain('Mont');
+  const spokenTexts = await page.evaluate(() => window.__spokenTexts ?? []);
+  expect(spokenTexts).not.toContain('Mont Mont');
+  expect(spokenTexts).not.toContain('M-o-n-t');
+});
+
 test('five-card touch level keeps every card inside the play surface', async ({ page }) => {
   test.setTimeout(75000);
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -351,12 +610,23 @@ test('touch repeat is explicit and parent controlled', async ({ page }) => {
   await expect(page.locator('[data-touch-repeat-style]')).toHaveValue('melodic');
   await expect(page.locator('[data-touch-repeat-duration]')).toHaveValue('30');
   await expect(page.locator('[data-touch-repeat-count]')).toHaveValue('8');
+  await expect(page.locator('[data-touch-repeat-record="audio"]')).toBeVisible();
+  await expect(page.locator('[data-touch-repeat-record="video"]')).toBeVisible();
+  await expect(page.locator('[data-touch-repeat-resource]')).toBeDisabled();
+  await expect(page.locator('[data-touch-repeat-use-parent-audio]')).toBeDisabled();
+  await page.fill('[data-touch-media-vault-pass]', 'guvenli123');
+  await page.click('[data-touch-media-vault-unlock]');
+  await expect(page.locator('[data-touch-parent-status]')).toContainText('Medya kasası');
+  await expect(page.locator('[data-touch-repeat-resource]')).toBeEnabled();
+  await expect(page.locator('[data-touch-repeat-use-parent-audio]')).toBeEnabled();
   await page.selectOption('[data-touch-repeat-focus]', 'baba');
   await page.selectOption('[data-touch-repeat-style]', 'playful');
+  await page.locator('[data-touch-repeat-use-parent-audio]').setChecked(true);
   await page.fill('[data-touch-repeat-resource]', 'https://example.com/baba-tekrar.mp4');
   await page.fill('[data-touch-repeat-note]', 'Baba kelimesi için kısa gülümseyen tekrar videosu.');
   await page.click('[data-touch-repeat-save]');
   await expect(page.locator('[data-touch-parent-status]')).toContainText('Baba');
+  await expect(page.locator('[data-touch-repeat-media-preview]')).toContainText('https://example.com/baba-tekrar.mp4');
 
   const settings = await page.evaluate(async () => {
     const local = localStorage.getItem('minaplay_touch_settings_v1');
@@ -378,10 +648,26 @@ test('touch repeat is explicit and parent controlled', async ({ page }) => {
   expect(settings.repeat).toMatchObject({
     focusCardId: 'baba',
     style: 'playful',
-    resourceUrl: 'https://example.com/baba-tekrar.mp4',
-    note: 'Baba kelimesi için kısa gülümseyen tekrar videosu.'
+    resourceUrl: '',
+    note: 'Baba kelimesi için kısa gülümseyen tekrar videosu.',
+    useParentAudio: true
   });
-  await expect(page.locator('[data-touch-card-editor] [data-touch-card-admin]')).toHaveCount(5);
+  const encryptedMedia = await page.evaluate(async () => {
+    const request = indexedDB.open('minaplay_touch_cards_v1', 1);
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      request.addEventListener('success', () => resolve(request.result));
+      request.addEventListener('error', () => reject(request.error));
+    });
+    const transaction = db.transaction('touchSettings', 'readonly');
+    const get = transaction.objectStore('touchSettings').get('minaplay_touch_repeat_media_v1');
+    return await new Promise((resolve, reject) => {
+      get.addEventListener('success', () => resolve(get.result));
+      get.addEventListener('error', () => reject(get.error));
+    });
+  });
+  expect(JSON.stringify(encryptedMedia)).not.toContain('baba-tekrar');
+  expect(encryptedMedia).toMatchObject({ version: 1 });
+  await expect(page.locator('[data-touch-card-editor] [data-touch-card-admin]')).toHaveCount(DEFAULT_TOUCH_CARD_COUNT);
   await expect(page.locator('[data-touch-card-image]').first()).toHaveAttribute('accept', 'image/png,image/jpeg,image/gif');
 });
 
@@ -526,7 +812,7 @@ test('sleep module shows moon scene and toggles sleeping Pofi', async ({ page })
 
   await page.click('.mode-card[data-view="sleep"]');
   await expect(page.locator('[data-sleep-surface]')).toHaveAttribute('data-sleep-running', 'false');
-  await expect(page.locator('#view-sleep .sleep-moon')).toHaveAttribute('src', /assets\/sleep\/moon\.png$/);
+  await expect(page.locator('#view-sleep .sleep-moon')).toHaveAttribute('src', /assets\/sleep\/moon\.png(?:\?v=[\w-]+)?$/);
   await expect(page.locator('#view-sleep .sleep-floating-pofi')).toBeVisible();
   await expect(page.locator('#view-sleep .sleep-floating-pofi')).toHaveAttribute('data-pofi-state', 'sleepReady');
   await expect(page.locator('#view-sleep .sleep-floating-pofi .pofi-eyes')).toHaveAttribute('src', /half-open-v01\.png$/);
@@ -596,7 +882,7 @@ test('parent panel shows touch word progress rows', async ({ page }) => {
 
   await openParentBySecretGesture(page);
   await openParentTab(page, 'Düzenle');
-  await expect(page.locator('[data-touch-progress-table] .touch-progress-row')).toHaveCount(5);
+  await expect(page.locator('[data-touch-progress-table] .touch-progress-row')).toHaveCount(DEFAULT_TOUCH_CARD_COUNT);
   await expect(page.locator('[data-touch-progress-table]')).toContainText('Su');
   await expect(page.locator('[data-touch-progress-table]')).toContainText('4 doğru');
   await expect(page.locator('[data-touch-progress-table]')).toContainText('Son 5: 4/5');
@@ -638,8 +924,10 @@ test('parent panel shows matching mastery and saves Ayna and Uyku preferences', 
   await expect(page.locator('[data-match-progress-table]')).toContainText('Öğrenildi');
 
   await openParentTab(page, 'Kontrol');
+  await openParentBlock(page, 'Ağız ve taklit sırası');
   await page.selectOption('[data-mirror-plan-preset]', 'mouth-first');
   await page.click('[data-mirror-plan-save]');
+  await openParentBlock(page, 'Ses ve süre');
   await page.selectOption('[data-sleep-sound-setting]', 'ocean');
   await page.selectOption('[data-sleep-duration-setting]', '20');
   await page.fill('[data-sleep-volume]', '80');
@@ -669,6 +957,7 @@ test('parent panel controls visible child modules safely', async ({ page }) => {
 
   await openParentBySecretGesture(page);
   await openParentTab(page, 'Kontrol');
+  await openParentBlock(page, 'Mod görünürlüğü');
   await page.locator('[data-module-visibility="sleep"]').setChecked(false);
   await page.locator('[data-module-visibility="peekaboo"]').setChecked(false);
   await page.click('[data-module-visibility-save]');
@@ -685,6 +974,7 @@ test('parent panel controls visible child modules safely', async ({ page }) => {
 
   await openParentBySecretGesture(page);
   await openParentTab(page, 'Kontrol');
+  await openParentBlock(page, 'Mod görünürlüğü');
   for (const moduleId of ['touch', 'match', 'sentence', 'story', 'mirror', 'sleep', 'peekaboo']) {
     await page.locator(`[data-module-visibility="${moduleId}"]`).setChecked(false);
   }
@@ -698,6 +988,7 @@ test('parent panel shows local-first device and offline readiness', async ({ pag
 
   await openParentBySecretGesture(page);
   await openParentTab(page, 'Kontrol');
+  await openParentBlock(page, 'Offline ve izinler');
   await expect(page.locator('#view-parent')).toHaveClass(/active/);
   await expect(page.locator('[data-device-status] .device-status-chip')).toHaveCount(4);
   await expect(page.locator('[data-device-status]')).toContainText('Çevrimdışı');

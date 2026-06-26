@@ -106,7 +106,9 @@ type PofiMood = PofiState | 'attention' | 'blink' | 'settle' | 'sleepBlink';
 type PofiParts = { body: string; eyes: string; mouth: string; hands?: string; eyebrows?: string; effect?: string };
 type PofiPartFolder = 'body' | 'eyes' | 'mouth' | 'hands' | 'eyebrows' | 'effects';
 type PofiRole = 'welcome' | 'idle' | 'guide' | 'attention' | 'model' | 'affirm' | 'celebrate' | 'softRedirect' | 'sleep' | 'play' | 'wait';
-type PeekabooState = 'ready' | 'hidden' | 'found';
+type PeekabooState = 'ready' | 'cover' | 'reveal' | 'celebrate';
+type PeekabooCelebration = 'sparkle' | 'pop' | 'halo' | 'confetti' | 'bounce' | 'big';
+type PeekabooMotion = 'float' | 'swoop' | 'peek';
 type TouchPofiMotion = 'idle' | 'focus' | 'listen' | 'speak' | 'affirm' | 'reassure';
 type MatchPofiMotion = 'focus' | 'model' | 'listen' | 'guide' | 'affirm' | 'reassure';
 
@@ -155,6 +157,32 @@ interface ParentInsight {
   steps: [string, string, string];
 }
 
+interface ParentTodaySummary {
+  modules: ParentModuleSummary[];
+  supportSummary: string;
+  independenceRate: number;
+  supportRate: number;
+  learnedWords: string[];
+  recommendedWords: ParentWordRecommendation[];
+  plan: string[];
+}
+
+interface ParentModuleSummary {
+  label: string;
+  opens: number;
+  actions: number;
+  independent: number;
+  supported: number;
+  activityRate: number;
+}
+
+interface ParentWordRecommendation {
+  label: string;
+  level: string;
+  reason: string;
+  priority: number;
+}
+
 interface TouchVoiceVariation {
   id: string;
   label: string;
@@ -188,6 +216,27 @@ interface TouchRepeatSettings {
   maxIntervalMs: number;
   resourceUrl: string;
   note: string;
+  useParentAudio: boolean;
+}
+
+interface TouchRepeatMediaEntry {
+  externalUrl: string;
+  audioDataUrl: string;
+  audioMimeType: string;
+  audioUpdatedAt: string;
+  videoDataUrl: string;
+  videoMimeType: string;
+  videoUpdatedAt: string;
+}
+
+type TouchRepeatMediaLibrary = Record<string, TouchRepeatMediaEntry>;
+type TouchRepeatMediaKind = 'audio' | 'video';
+
+interface EncryptedTouchRepeatMediaVault {
+  version: 1;
+  salt: string;
+  iv: string;
+  data: string;
 }
 
 interface TouchSettingsState {
@@ -223,6 +272,7 @@ type StoryState = 'idle' | 'attention' | 'narration' | 'interaction' | 'waiting'
 type StoryStepKind = 'attention' | 'narration' | 'interaction' | 'repeat' | 'closure';
 type StoryEffect = 'sparkle' | 'water' | 'chime' | 'step' | 'warm' | 'sleep' | 'pop';
 type ChildLockSettings = { enabled: boolean; keepAwake: boolean; parentTapCount: number; parentPullDistance: number; introSeen: boolean };
+type ChildProfile = { name: string };
 type WakeLockSentinelLike = { release: () => Promise<void>; addEventListener: (type: 'release', listener: () => void) => void };
 type NavigatorWithWakeLock = Navigator & { wakeLock?: { request: (type: 'screen') => Promise<WakeLockSentinelLike> } };
 
@@ -319,15 +369,38 @@ const MODULE_VISIBILITY_LABELS: Record<MvpModuleId, string> = {
 
 const POFI_PARTS_ROOT = '/assets/pofi/parts';
 const TOUCH_ACTIVE_MS = 900;
-const MATCH_ATTENTION_MS = 620;
-const MATCH_TARGETING_MS = 780;
+const MATCH_ATTENTION_MS = 950;
+const MATCH_TARGETING_MS = 1200;
 const MATCH_WAITING_MS = 10_000;
 const MATCH_HINT_STEP_MS = 10_000;
-const MATCH_SUCCESS_MS = 900;
-const MATCH_RETRY_MS = 1000;
+const MATCH_SUCCESS_MS = 1200;
+const MATCH_RETRY_MS = 1350;
+const MATCH_POFI_MIN_HOLD_MS = 820;
 const MATCH_FATIGUE_WRONG_STREAK = 2;
-const PEEKABOO_AUTO_HIDE_MS = 5500;
-const PEEKABOO_AUTO_REVEAL_MS = 6500;
+const PEEKABOO_IDLE_MS = 2600;
+const PEEKABOO_CALM_IDLE_MIN_MS = 4200;
+const PEEKABOO_CALM_IDLE_MAX_MS = 6200;
+const PEEKABOO_CALM_EVERY = 3;
+const PEEKABOO_COVER_MIN_MS = 5000;
+const PEEKABOO_COVER_MAX_MS = 7000;
+const PEEKABOO_REVEAL_MS = 850;
+const PEEKABOO_CELEBRATE_MS = 1050;
+const PEEKABOO_VOICE_CLIPS = [
+  { src: '/sounds/peekaboo/pofi_ceee_01.wav', text: 'Ceeeeee! Buradayım!' },
+  { src: '/sounds/peekaboo/pofi_ceee_02.wav', text: 'Ceeeeee! Bana bak!' },
+  { src: '/sounds/peekaboo/pofi_ceee_03.wav', text: 'Ceeeeee! İşte geldim!' },
+  { src: '/sounds/peekaboo/pofi_ceee_04.wav', text: 'Ceeeeee! Beni buldun!' },
+  { src: '/sounds/peekaboo/pofi_ceee_05.wav', text: 'Ceeeeee! Harikasın!' }
+] as const;
+const PEEKABOO_SEARCH_TEMPLATES = [
+  (name: string) => `${name} nerede?`,
+  (name: string) => `Haniymiş ${name}?`,
+  (name: string) => `${name} yok.`,
+  (name: string) => `${name} nerede saklandı?`
+] as const;
+const PEEKABOO_MOTIONS: PeekabooMotion[] = ['float', 'swoop', 'peek'];
+const PEEKABOO_CELEBRATIONS: PeekabooCelebration[] = ['sparkle', 'pop', 'halo', 'confetti', 'bounce'];
+const PEEKABOO_BIG_CELEBRATION_EVERY = 6;
 const SENTENCE_CONTEXT_MS = 900;
 const SENTENCE_HINT_LEVEL_1_MS = 5000;
 const SENTENCE_HINT_STEP_MS = 3000;
@@ -346,7 +419,9 @@ const SPEECH_MIN_DURATION_MS = 900;
 const SPEECH_MAX_DURATION_MS = 5200;
 const AUDIO_FALLBACK_DURATION_MS = 2200;
 const TOUCH_SETTINGS_KEY = 'minaplay_touch_settings_v1';
+const TOUCH_REPEAT_MEDIA_KEY = 'minaplay_touch_repeat_media_v1';
 const CHILD_LOCK_SETTINGS_KEY = 'minaplay_child_lock_settings_v1';
+const CHILD_PROFILE_KEY = 'minaplay_child_profile_v1';
 const CHILD_LOCK_LONG_PRESS_MS = 1800;
 const PARENT_GESTURE_ZONE_PX = 112;
 const PARENT_GESTURE_RESET_MS = 1700;
@@ -356,12 +431,44 @@ const TOUCH_DB_VERSION = 1;
 const TOUCH_MAX_GIF_BYTES = 3_200_000;
 const TOUCH_MAX_IMAGE_EDGE = 720;
 const TOUCH_SETTINGS_STORAGE_WARNING_BYTES = 4_500_000;
+const TOUCH_REPEAT_AUDIO_MAX_MS = 10_000;
+const TOUCH_REPEAT_VIDEO_MAX_MS = 12_000;
+const TOUCH_REPEAT_MEDIA_VAULT_VERSION = 1;
+const TOUCH_REPEAT_MEDIA_KDF_ITERATIONS = 180_000;
 const TOUCH_DEFAULT_LEARNING_GOALS: Record<string, string> = {
   su: 'ihtiyaç ifade etme',
   baba: 'yakın kişiyi tanıma',
   top: 'oyun başlatma',
   araba: 'nesne ve hareket ilişkisi',
-  elma: 'istek ve seçim belirtme'
+  elma: 'istek ve seçim belirtme',
+  anne: 'yakın kişiyi tanıma',
+  bebek: 'yakın kişiyi tanıma',
+  kedi: 'canlıyı tanıma',
+  kopek: 'canlıyı tanıma',
+  mama: 'beslenme ihtiyacını tanıma',
+  bardak: 'günlük nesneyi tanıma',
+  tabak: 'günlük nesneyi tanıma',
+  kasik: 'günlük nesneyi tanıma',
+  yatak: 'uyku rutini nesnesini tanıma',
+  tuvalet: 'öz bakım ihtiyacını tanıma',
+  mont: 'giyinme nesnesini tanıma',
+  ayakkabi: 'giyinme nesnesini tanıma',
+  corap: 'giyinme nesnesini tanıma',
+  pantolon: 'giyinme nesnesini tanıma',
+  sapka: 'giyinme nesnesini tanıma',
+  gozluk: 'aksesuarı tanıma',
+  canta: 'günlük nesneyi tanıma',
+  kitap: 'öğrenme nesnesini tanıma',
+  kalem: 'öğrenme nesnesini tanıma',
+  telefon: 'günlük nesneyi tanıma',
+  kapi: 'ev nesnesini tanıma',
+  pencere: 'ev nesnesini tanıma',
+  anahtar: 'ev nesnesini tanıma',
+  kilit: 'ev nesnesini tanıma',
+  masa: 'ev nesnesini tanıma',
+  sandalye: 'ev nesnesini tanıma',
+  lamba: 'ev nesnesini tanıma',
+  oyuncak: 'oyun nesnesini tanıma'
 };
 const OBJECT_ASSET_ROOT = '/assets/cards/objects';
 const PEOPLE_ASSET_ROOT = '/assets/cards/people';
@@ -376,7 +483,30 @@ const TOUCH_OBJECT_ASSETS: Record<string, string> = {
   bebek: `${PEOPLE_ASSET_ROOT}/baby.png`,
   kedi: `${OBJECT_ASSET_ROOT}/cat.png`,
   kopek: `${OBJECT_ASSET_ROOT}/dog.png`,
-  mama: `${OBJECT_ASSET_ROOT}/mama.png`
+  mama: `${OBJECT_ASSET_ROOT}/mama.png`,
+  bardak: `${OBJECT_ASSET_ROOT}/glass.png`,
+  tabak: `${OBJECT_ASSET_ROOT}/plate.png`,
+  kasik: `${OBJECT_ASSET_ROOT}/spoon.png`,
+  yatak: `${OBJECT_ASSET_ROOT}/bed.png`,
+  tuvalet: `${OBJECT_ASSET_ROOT}/toilet.png`,
+  mont: `${OBJECT_ASSET_ROOT}/coat.png`,
+  ayakkabi: `${OBJECT_ASSET_ROOT}/shoes.png`,
+  corap: `${OBJECT_ASSET_ROOT}/socks.png`,
+  pantolon: `${OBJECT_ASSET_ROOT}/pants.png`,
+  sapka: `${OBJECT_ASSET_ROOT}/hat.png`,
+  gozluk: `${OBJECT_ASSET_ROOT}/glasses.png`,
+  canta: `${OBJECT_ASSET_ROOT}/bag.png`,
+  kitap: `${OBJECT_ASSET_ROOT}/book.png`,
+  kalem: `${OBJECT_ASSET_ROOT}/pencil.png`,
+  telefon: `${OBJECT_ASSET_ROOT}/phone.png`,
+  kapi: `${OBJECT_ASSET_ROOT}/door.png`,
+  pencere: `${OBJECT_ASSET_ROOT}/window.png`,
+  anahtar: `${OBJECT_ASSET_ROOT}/key.png`,
+  kilit: `${OBJECT_ASSET_ROOT}/lock.png`,
+  masa: `${OBJECT_ASSET_ROOT}/table.png`,
+  sandalye: `${OBJECT_ASSET_ROOT}/chair.png`,
+  lamba: `${OBJECT_ASSET_ROOT}/lamp.png`,
+  oyuncak: `${OBJECT_ASSET_ROOT}/toy.png`
 };
 const TOUCH_DEFAULT_REPEAT_SETTINGS: TouchRepeatSettings = {
   enabled: false,
@@ -387,7 +517,8 @@ const TOUCH_DEFAULT_REPEAT_SETTINGS: TouchRepeatSettings = {
   minIntervalMs: 1800,
   maxIntervalMs: 3200,
   resourceUrl: '',
-  note: ''
+  note: '',
+  useParentAudio: false
 };
 
 const DEFAULT_TOUCH_CARDS: TouchCard[] = [
@@ -395,7 +526,35 @@ const DEFAULT_TOUCH_CARDS: TouchCard[] = [
   createDefaultTouchCard('baba', 'Baba', 'Baba', 1),
   createDefaultTouchCard('top', 'Top', 'Top', 2),
   createDefaultTouchCard('araba', 'Araba', 'Araba', 3),
-  createDefaultTouchCard('elma', 'Elma', 'Elma', 4)
+  createDefaultTouchCard('elma', 'Elma', 'Elma', 4),
+  createDefaultTouchCard('anne', 'Anne', 'Anne', 5),
+  createDefaultTouchCard('bebek', 'Bebek', 'Bebek', 6),
+  createDefaultTouchCard('kedi', 'Kedi', 'Kedi', 7),
+  createDefaultTouchCard('kopek', 'Köpek', 'Köpek', 8),
+  createDefaultTouchCard('mama', 'Mama', 'Mama', 9),
+  createDefaultTouchCard('bardak', 'Bardak', 'Bardak', 10),
+  createDefaultTouchCard('tabak', 'Tabak', 'Tabak', 11),
+  createDefaultTouchCard('kasik', 'Kaşık', 'Kaşık', 12),
+  createDefaultTouchCard('yatak', 'Yatak', 'Yatak', 13),
+  createDefaultTouchCard('tuvalet', 'Tuvalet', 'Tuvalet', 14),
+  createDefaultTouchCard('mont', 'Mont', 'Mont', 15),
+  createDefaultTouchCard('ayakkabi', 'Ayakkabı', 'Ayakkabı', 16),
+  createDefaultTouchCard('corap', 'Çorap', 'Çorap', 17),
+  createDefaultTouchCard('pantolon', 'Pantolon', 'Pantolon', 18),
+  createDefaultTouchCard('sapka', 'Şapka', 'Şapka', 19),
+  createDefaultTouchCard('gozluk', 'Gözlük', 'Gözlük', 20),
+  createDefaultTouchCard('canta', 'Çanta', 'Çanta', 21),
+  createDefaultTouchCard('kitap', 'Kitap', 'Kitap', 22),
+  createDefaultTouchCard('kalem', 'Kalem', 'Kalem', 23),
+  createDefaultTouchCard('telefon', 'Telefon', 'Telefon', 24),
+  createDefaultTouchCard('kapi', 'Kapı', 'Kapı', 25),
+  createDefaultTouchCard('pencere', 'Pencere', 'Pencere', 26),
+  createDefaultTouchCard('anahtar', 'Anahtar', 'Anahtar', 27),
+  createDefaultTouchCard('kilit', 'Kilit', 'Kilit', 28),
+  createDefaultTouchCard('masa', 'Masa', 'Masa', 29),
+  createDefaultTouchCard('sandalye', 'Sandalye', 'Sandalye', 30),
+  createDefaultTouchCard('lamba', 'Lamba', 'Lamba', 31),
+  createDefaultTouchCard('oyuncak', 'Oyuncak', 'Oyuncak', 32)
 ];
 
 const MIRROR_EXERCISES: MirrorExercise[] = [
@@ -1002,10 +1161,9 @@ const POFI_EXPRESSIONS: Record<PofiMood, PofiExpression> = {
     role: 'play',
     parts: {
       body: POFI_STABLE_BODY,
-      eyes: 'wide-soft-v01.png',
+      eyes: 'happy-v01.png',
       eyebrows: POFI_HAPPY_EYEBROWS,
       mouth: 'smile-v01.png',
-      hands: 'pofi_hand_steer_left_v01.png',
       effect: POFI_WARMTH_EFFECT
     }
   },
@@ -1013,9 +1171,9 @@ const POFI_EXPRESSIONS: Record<PofiMood, PofiExpression> = {
     role: 'play',
     parts: {
       body: POFI_STABLE_BODY,
-      eyes: 'waiting-v01.png',
+      eyes: 'closed-soft-v01.png',
       eyebrows: POFI_HAPPY_EYEBROWS,
-      mouth: 'smile-soft-v01.png',
+      mouth: 'smile-v01.png',
       hands: 'pofi_hand_closed_v01.png',
       effect: POFI_WARMTH_EFFECT
     }
@@ -1027,7 +1185,6 @@ const POFI_EXPRESSIONS: Record<PofiMood, PofiExpression> = {
       eyes: 'happy-v01.png',
       eyebrows: POFI_HAPPY_EYEBROWS,
       mouth: 'open-smile-soft-v01.png',
-      hands: 'pofi_hand_open_v01.png',
       effect: POFI_WARMTH_EFFECT
     }
   },
@@ -1354,7 +1511,15 @@ let pofiHandTimer: number | undefined;
 let peekabooState: PeekabooState = 'ready';
 let peekabooReturnTimer: number | undefined;
 let peekabooAutoTimer: number | undefined;
-let peekabooPositionIndex = 0;
+let peekabooVoiceIndex = -1;
+let peekabooSearchPhraseIndex = -1;
+let peekabooCelebrationIndex = -1;
+let peekabooCelebrationCount = 0;
+let peekabooCelebration: PeekabooCelebration = 'sparkle';
+let peekabooMotionIndex = 0;
+let peekabooMotion: PeekabooMotion = 'float';
+let peekabooAutoCycleCount = 0;
+let childProfile: ChildProfile = { name: 'Mina' };
 let touchRepeatTimer: number | undefined;
 let touchActiveTimer: number | undefined;
 let touchAffirmTimer: number | undefined;
@@ -1369,6 +1534,21 @@ let lastTouchAudioSrc: string | undefined;
 let voiceQueue: Promise<void> = Promise.resolve();
 let lastTouchVariationId: string | undefined;
 let touchSettings: TouchSettingsState = cloneDefaultTouchSettings();
+let touchRepeatMediaLibrary: TouchRepeatMediaLibrary = {};
+let touchRepeatPendingPlainMediaLibrary: TouchRepeatMediaLibrary = {};
+let touchRepeatMediaVaultKey: CryptoKey | undefined;
+let touchRepeatMediaVaultSalt = '';
+let touchRepeatMediaVaultExists = false;
+let touchRepeatRecorder:
+  | {
+      cardId: string;
+      kind: TouchRepeatMediaKind;
+      recorder: MediaRecorder;
+      stream: MediaStream;
+      chunks: Blob[];
+      timeout: number;
+    }
+  | undefined;
 let selectedTouchCardId = 'baba';
 let activeTouchWeather: TouchWeatherEffect = 'rainbow';
 let touchRepeatActive = false;
@@ -1387,6 +1567,9 @@ let lastMatchTargetId: string | undefined;
 let matchProgress: MatchProgressState = {};
 let matchRound: MatchRound | undefined;
 let matchTimer: number | undefined;
+let matchPofiSettleTimer: number | undefined;
+let matchPofiLastChangeAt = 0;
+let matchPofiSettledState: PofiState | undefined;
 let matchCorrectStreak = 0;
 let matchWrongStreak = 0;
 let sentenceRound: SentenceRound | undefined;
@@ -1467,22 +1650,22 @@ export function createParentGuidanceCards(
   const rhythm =
     state.sessions === 0
       ? {
-          value: 'Henüz oyun yok',
-          note: 'Bugün için Dokun ya da Eşleme ile iki dakikalık kısa bir başlangıç yeterli.'
+          value: 'Kısa başlangıç',
+          note: 'Bugün için Dokun ya da Eşleme ile iki dakikalık tanıdık bir başlangıç yeterli.'
         }
       : {
-          value: `${state.sessions} oturum`,
+          value: parentSessionRhythmLabel(state.sessions),
           note:
             totals.soft > totals.correct && totals.soft > 0
-              ? 'Bugün yönlendirme ihtiyacı doğru denemeden fazla. Tempo kısa ve tanıdık kalsın.'
-              : `${parentModuleLabel(mostOpenedModule?.[0] ?? 'touch')} bugün en çok açılan alan. Akış sakin görünüyor.`
+              ? 'Destekli denemeler bağımsız denemeden fazla. Bugün süreyi kısa, kartları tanıdık tutun.'
+              : `${parentModuleLabel(mostOpenedModule?.[0] ?? 'touch')} bugün en çok açılan alan. İlgi bu yöne dönmüş görünüyor.`
         };
 
   const repeat =
     supportTarget.score > 0
       ? {
           value: supportTarget.label,
-          note: `${supportTarget.reason}. Aynı kartı kısa aralıklarla ve yumuşak sesle tekrar etmek iyi olur.`
+          note: `${supportTarget.reason}. Aynı kartı kısa, melodik ve aralıklı tekrar etmek iyi olur.`
         }
       : {
           value: masteredCount > 0 ? `${masteredCount} güçlü iz` : 'İlk izler hazırlanıyor',
@@ -1496,7 +1679,7 @@ export function createParentGuidanceCards(
     supportTarget.score > 0
       ? {
           value: '2 kısa tur',
-          note: `${supportTarget.label} için Dokun'da dinle-dokun, sonra Eşleme'de bir genelleme turu deneyin.`
+          note: `${supportTarget.label} için önce Dokun'da dinle-dokun, sonra Eşleme'de bir genelleme turu deneyin.`
         }
       : state.sessions > 0
         ? {
@@ -1559,13 +1742,13 @@ export function createParentInsight(
         ? `${focusLabel} tekrar ile güçlenir.`
         : matchMastered || touchMastered
           ? `${focusLabel} pekişiyor.`
-          : 'Bugünkü akış stabil.';
+          : 'Bugün tanıma pratiği önde.';
   const note =
     state.sessions === 0
       ? 'İlk hedef uzun çalışma değil, çocuğun tanıdık iki kartla oyuna sakin girmesi.'
       : supportTarget.score > 0
-        ? 'Yönlendirme ihtiyacı başarısızlık değil; aynı kelimeyi kısa, melodik ve aralıklı vermek gelişimi destekler.'
-        : 'Yeni kart eklemeden önce tanıdık kelimelerle kısa tekrarlar anlaşılmayı korur.';
+        ? `${focusLabel} için destek ihtiyacı görülüyor. Bu başarısızlık değil; öğretmen diliyle aynı hedefi kısa, net ve aralıklı sunma ihtiyacıdır.`
+        : 'Bugünkü veriler çocuğun tanıdık kartlarla daha rahat ilerlediğini gösteriyor. Yeni kart eklemeden önce kısa pekiştirme iyi olur.';
 
   return {
     title,
@@ -1573,15 +1756,174 @@ export function createParentInsight(
     focusLabel,
     stageLabel,
     comprehensionLabel,
-    planTitle: `${focusLabel} için 3 dakika`,
+    planTitle: `${focusLabel} için rehberli 3 dakika`,
     steps: [
-      `${focusLabel} kelimesini 6-8 kez melodik ve farklı tonlarla dinletin.`,
-      `Dokun'da ${focusLabel} için kısa bir dinle-dokun turu açın.`,
+      `${focusLabel} kelimesini 4-6 kez aynı yüz ifadesi ve sakin sesle dinletin.`,
+      `Sonra Dokun'da ${focusLabel} için tek hedefli kısa bir dinle-dokun turu açın.`,
       touchMastered || matchMastered
-        ? `Eşleme'de ${focusLabel} için farklı görselle bir genelleme turu deneyin.`
-        : 'Zorlanırsa süreyi uzatmayın; küçük bir ara verip aynı kartla kapatın.'
+        ? `Eşleme'de ${focusLabel} için farklı görselle genelleme deneyin.`
+        : 'Zorlanırsa yardım edin, süreyi uzatmayın; olumlu bir denemede kapatın.'
     ]
   };
+}
+
+export function createParentTodaySummary(
+  state: AnalyticsState,
+  touchState: TouchProgressState = {},
+  matchState: MatchProgressState = {},
+  labels: Record<string, string> = {}
+): ParentTodaySummary {
+  const modules = Object.entries(state.modules)
+    .filter(([, stats]) => stats.opens > 0 || stats.actions > 0)
+    .sort((a, b) => b[1].opens + b[1].actions - (a[1].opens + a[1].actions));
+  const totals = modules.reduce(
+    (acc, [, stats]) => {
+      acc.correct += stats.correct;
+      acc.soft += stats.softRedirects;
+      acc.actions += stats.actions;
+      return acc;
+    },
+    { correct: 0, soft: 0, actions: 0 }
+  );
+  const moduleSummaries = createParentModuleSummaries(modules);
+  const learnedWords = learnedWordLabels(touchState, matchState, labels);
+  const recommendedWords = createParentWordRecommendations(touchState, matchState, labels);
+  const insight = createParentInsight(state, touchState, matchState, labels);
+  const attemptTotal = totals.correct + totals.soft;
+  const independenceRate = attemptTotal > 0 ? Math.round((totals.correct / attemptTotal) * 100) : 0;
+  const supportRate = attemptTotal > 0 ? Math.round((totals.soft / attemptTotal) * 100) : 0;
+
+  return {
+    modules: moduleSummaries,
+    supportSummary:
+      totals.actions > 0 || attemptTotal > 0
+        ? `${independenceRate}% bağımsız deneme, ${supportRate}% destekle deneme. ${state.repeats} tekrar odağı oluştu.`
+        : 'Henüz bağımsız deneme verisi oluşmadı.',
+    independenceRate,
+    supportRate,
+    learnedWords,
+    recommendedWords,
+    plan: insight.steps
+  };
+}
+
+function createParentModuleSummaries(modules: Array<[string, ModuleStats]>): ParentModuleSummary[] {
+  const maxActivity = Math.max(1, ...modules.map(([, stats]) => stats.opens + stats.actions));
+  return modules.length > 0
+    ? modules.slice(0, 6).map(([name, stats]) => ({
+        label: parentModuleLabel(name),
+        opens: stats.opens,
+        actions: stats.actions,
+        independent: stats.correct,
+        supported: stats.softRedirects,
+        activityRate: Math.round(((stats.opens + stats.actions) / maxActivity) * 100)
+      }))
+    : [
+        {
+          label: 'Henüz oyun yok',
+          opens: 0,
+          actions: 0,
+          independent: 0,
+          supported: 0,
+          activityRate: 0
+        }
+      ];
+}
+
+function createParentWordRecommendations(
+  touchState: TouchProgressState,
+  matchState: MatchProgressState,
+  labels: Record<string, string>
+): ParentWordRecommendation[] {
+  const ids = new Set([...Object.keys(labels), ...Object.keys(touchState), ...Object.keys(matchState)]);
+  const recommendations = [...ids].map((id) => {
+    const touch = touchState[id];
+    const match = matchState[id];
+    const success = (touch?.success ?? 0) + (match?.success ?? 0);
+    const fail = (touch?.fail ?? 0) + (match?.fail ?? 0);
+    const repeatNeeds = (touch?.repeatNeeds ?? 0) + (match?.repeatNeeds ?? 0);
+    const generalization = match?.conceptGeneralizationSuccess ?? 0;
+    const mastered = isMastered(touch) || isMatchMastered(match);
+    const priority = parentWordBasePriority(id) + repeatNeeds * 4 + fail * 2 + success + (mastered ? -8 : 0);
+    const level = parentWordLevel(id);
+    const reason =
+      repeatNeeds > 0 || fail > 0
+        ? 'tekrar ve destek ihtiyacı var'
+        : mastered || generalization > 0
+          ? 'genelleme için hazır'
+          : success > 0
+            ? 'tanıma izi başladı'
+            : 'erken hedef kelime';
+    return {
+      label: labels[id] ?? id,
+      level,
+      reason,
+      priority
+    };
+  });
+
+  return recommendations
+    .sort((a, b) => b.priority - a.priority)
+    .slice(0, 5);
+}
+
+function parentWordLevel(id: string): string {
+  if (['anne', 'baba', 'su', 'mama', 'top'].includes(id)) {
+    return 'Seviye 1';
+  }
+  if (['elma', 'bardak', 'tabak', 'kasik', 'yatak', 'tuvalet', 'bebek'].includes(id)) {
+    return 'Seviye 2';
+  }
+  if (['araba', 'kitap', 'kapi', 'pencere', 'ayakkabi', 'mont', 'canta'].includes(id)) {
+    return 'Seviye 3';
+  }
+  return 'Seviye 4';
+}
+
+function parentWordBasePriority(id: string): number {
+  if (['anne', 'baba', 'su', 'mama'].includes(id)) {
+    return 24;
+  }
+  if (['top', 'elma', 'bardak', 'tuvalet', 'yatak'].includes(id)) {
+    return 18;
+  }
+  if (['araba', 'mont', 'ayakkabi', 'kapi', 'kitap'].includes(id)) {
+    return 12;
+  }
+  return 8;
+}
+
+function parentSessionRhythmLabel(sessions: number): string {
+  if (sessions <= 2) {
+    return 'Kısa temas';
+  }
+  if (sessions <= 8) {
+    return 'Dengeli gün';
+  }
+  if (sessions <= 24) {
+    return 'Yoğun pratik';
+  }
+  return 'Çok yoğun';
+}
+
+function learnedWordLabels(
+  touchState: TouchProgressState,
+  matchState: MatchProgressState,
+  labels: Record<string, string>
+): string[] {
+  const learnedIds = new Set<string>();
+  Object.entries(touchState).forEach(([id, entry]) => {
+    if (isMastered(entry)) {
+      learnedIds.add(id);
+    }
+  });
+  Object.entries(matchState).forEach(([id, entry]) => {
+    if (isMatchMastered(entry) || entry.conceptGeneralizationSuccess >= 2) {
+      learnedIds.add(id);
+    }
+  });
+
+  return [...learnedIds].map((id) => labels[id] ?? id).slice(0, 4);
 }
 
 function strongestSupportTarget(
@@ -1655,6 +1997,20 @@ function writeChildLockSettings(settings: ChildLockSettings): void {
   localStorage.setItem(CHILD_LOCK_SETTINGS_KEY, JSON.stringify(settings));
 }
 
+function readChildProfile(): ChildProfile {
+  try {
+    const raw = localStorage.getItem(CHILD_PROFILE_KEY);
+    const parsed = raw ? (JSON.parse(raw) as { name?: unknown }) : undefined;
+    return { name: sanitizeChildName(typeof parsed?.name === 'string' ? parsed.name : 'Mina') };
+  } catch {
+    return { name: 'Mina' };
+  }
+}
+
+function writeChildProfile(profile: ChildProfile): void {
+  localStorage.setItem(CHILD_PROFILE_KEY, JSON.stringify(profile));
+}
+
 function isChildMode(view: ViewName | string | undefined): boolean {
   return view === 'peekaboo' || PRIMARY_VIEWS.includes(view as ViewName);
 }
@@ -1685,6 +2041,39 @@ function renderChildLockSettings(): void {
     status.textContent = childLockSettings.enabled
       ? parentGestureGuideText()
       : 'Çocuk kilidi kapalı. Modlar arasında normal geçiş yapılabilir.';
+  }
+}
+
+function renderChildProfile(): void {
+  const name = sanitizeChildName(childProfile.name);
+  const input = document.querySelector<HTMLInputElement>('[data-child-profile-name]');
+  const nameLabels = document.querySelectorAll<HTMLElement>('[data-parent-profile-name]');
+  const initials = document.querySelectorAll<HTMLElement>('[data-parent-profile-initial]');
+
+  if (input && input.value !== name) {
+    input.value = name;
+  }
+
+  nameLabels.forEach((label) => {
+    label.textContent = name;
+  });
+
+  initials.forEach((initial) => {
+    initial.textContent = name.slice(0, 1).toLocaleUpperCase('tr-TR');
+  });
+}
+
+function saveChildProfileFromPanel(): void {
+  const input = document.querySelector<HTMLInputElement>('[data-child-profile-name]');
+  const status = document.querySelector<HTMLElement>('[data-child-profile-status]');
+  const name = sanitizeChildName(input?.value || childProfile.name || 'Mina');
+
+  childProfile = { name };
+  writeChildProfile(childProfile);
+  renderChildProfile();
+
+  if (status) {
+    status.textContent = `${name} adı kaydedildi. Ceee soruları artık bu isimle başlayacak.`;
   }
 }
 
@@ -2108,7 +2497,7 @@ function activateView(view: ViewName): void {
     return;
   }
 
-  const transition = beginPofiViewTransition();
+  const transition = view === 'parent' ? undefined : beginPofiViewTransition();
   const shell = document.querySelector<HTMLElement>('.app-shell');
   shell?.classList.add('view-transitioning');
 
@@ -2172,50 +2561,107 @@ function syncPeekabooMode(view: ViewName): void {
   }
 
   if (view === 'peekaboo') {
+    unlockTouchAudio();
     peekabooState = 'ready';
+    peekabooAutoCycleCount = 0;
     renderPeekabooMode();
-    schedulePeekabooHide();
+    schedulePeekabooRound();
   }
 }
 
 function renderPeekabooMode(): void {
   const surface = document.querySelector<HTMLElement>('[data-peekaboo-surface]');
-  const button = document.querySelector<HTMLButtonElement>('[data-peekaboo-toggle]');
   const label = document.querySelector<HTMLElement>('[data-peekaboo-label]');
-  if (!surface || !button || !label) {
+  const hint = document.querySelector<HTMLElement>('[data-peekaboo-hint]');
+  if (!surface || !label || !hint) {
     return;
   }
 
   surface.dataset.peekabooState = peekabooState;
-  surface.dataset.peekabooPosition = ['left', 'center', 'right'][peekabooPositionIndex % 3];
-  button.dataset.trackAction = peekabooState === 'hidden' ? 'peekaboo-found' : 'peekaboo-hide';
-  label.textContent = peekabooState === 'hidden' ? 'Pofi bulundu' : 'Pofi saklandı';
-}
+  delete surface.dataset.peekabooSpot;
+  surface.dataset.peekabooReward = String(peekabooState === 'celebrate');
+  surface.dataset.peekabooCelebration = peekabooCelebration;
+  surface.dataset.peekabooMotion = peekabooMotion;
 
-function handlePeekabooToggle(button: HTMLElement): void {
-  clearPeekabooAutoTimer();
-  if (peekabooState === 'hidden') {
-    peekabooState = 'found';
-    renderPeekabooMode();
-    trackAction('peekaboo-found', button);
-    setPofiBaseState('peekabooFound');
-    peekabooReturnTimer = window.setTimeout(() => {
-      peekabooReturnTimer = undefined;
-      peekabooState = 'ready';
-      renderPeekabooMode();
-      if (document.querySelector<HTMLElement>('#view-peekaboo')?.classList.contains('active')) {
-        setPofiBaseState('peekaboo');
-        schedulePeekabooHide();
-      }
-    }, 1000);
+  if (peekabooState === 'cover') {
+    label.textContent = 'Pofi saklandı';
+    hint.textContent = peekabooSearchText();
     return;
   }
 
-  peekabooState = 'hidden';
+  if (peekabooState === 'reveal' || peekabooState === 'celebrate') {
+    label.textContent = 'Ceee!';
+    hint.textContent = 'Pofi yüzünü açtı ve gülümsedi.';
+    return;
+  }
+
+  label.textContent = 'Pofi hazır';
+  hint.textContent = 'Ekrana dokun, ce-ee başlasın.';
+}
+
+function handlePeekabooToggle(button: HTMLElement): void {
+  startPeekabooRound(button);
+}
+
+function startPeekabooRound(sourceElement?: HTMLElement): void {
+  unlockTouchAudio();
+  clearPeekabooAutoTimer();
+  if (peekabooReturnTimer) {
+    window.clearTimeout(peekabooReturnTimer);
+    peekabooReturnTimer = undefined;
+  }
+
+  peekabooState = 'cover';
+  advancePeekabooMotion();
+  advancePeekabooSearchPhrase();
   renderPeekabooMode();
-  trackAction('peekaboo-hide', button);
+  trackAction('peekaboo-start', sourceElement);
   setPofiBaseState('peekabooHidden');
-  schedulePeekabooReveal();
+  playPeekabooSearchCue();
+  peekabooReturnTimer = window.setTimeout(() => {
+    peekabooReturnTimer = undefined;
+    revealPeekabooRound();
+  }, peekabooCoverDelayMs());
+}
+
+function revealPeekabooRound(): void {
+  if (!document.querySelector<HTMLElement>('#view-peekaboo')?.classList.contains('active')) {
+    return;
+  }
+  stopPeekabooSearchCue();
+  peekabooState = 'reveal';
+  renderPeekabooMode();
+  setPofiBaseState('peekabooFound');
+  playMatchStateTone('success');
+  void playPeekabooVoice();
+  peekabooReturnTimer = window.setTimeout(() => {
+    peekabooReturnTimer = undefined;
+    celebratePeekabooRound();
+  }, PEEKABOO_REVEAL_MS);
+}
+
+function celebratePeekabooRound(): void {
+  if (!document.querySelector<HTMLElement>('#view-peekaboo')?.classList.contains('active')) {
+    return;
+  }
+  peekabooState = 'celebrate';
+  advancePeekabooCelebration();
+  renderPeekabooMode();
+  setPofiBaseState('peekabooFound');
+  peekabooReturnTimer = window.setTimeout(() => {
+    peekabooReturnTimer = undefined;
+    resetPeekabooRound();
+  }, PEEKABOO_CELEBRATE_MS);
+}
+
+function resetPeekabooRound(): void {
+  if (!document.querySelector<HTMLElement>('#view-peekaboo')?.classList.contains('active')) {
+    return;
+  }
+  peekabooState = 'ready';
+  renderPeekabooMode();
+  setPofiBaseState('peekaboo');
+  schedulePeekabooRound();
 }
 
 function clearPeekabooAutoTimer(): void {
@@ -2225,33 +2671,149 @@ function clearPeekabooAutoTimer(): void {
   }
 }
 
-function schedulePeekabooHide(): void {
+function schedulePeekabooRound(): void {
   clearPeekabooAutoTimer();
+  const delay = peekabooAutoDelayMs();
   peekabooAutoTimer = window.setTimeout(() => {
     peekabooAutoTimer = undefined;
     if (!document.querySelector<HTMLElement>('#view-peekaboo')?.classList.contains('active')) {
       return;
     }
-    peekabooPositionIndex = (peekabooPositionIndex + 1) % 3;
-    peekabooState = 'hidden';
-    setPofiBaseState('peekabooHidden');
-    renderPeekabooMode();
-    schedulePeekabooReveal();
-  }, PEEKABOO_AUTO_HIDE_MS);
+    startPeekabooRound();
+  }, delay);
 }
 
-function schedulePeekabooReveal(): void {
-  clearPeekabooAutoTimer();
-  peekabooAutoTimer = window.setTimeout(() => {
-    peekabooAutoTimer = undefined;
-    if (!document.querySelector<HTMLElement>('#view-peekaboo')?.classList.contains('active')) {
-      return;
-    }
-    peekabooState = 'ready';
-    setPofiBaseState('peekaboo');
-    renderPeekabooMode();
-    schedulePeekabooHide();
-  }, PEEKABOO_AUTO_REVEAL_MS);
+function peekabooCoverDelayMs(): number {
+  return randomBetween(PEEKABOO_COVER_MIN_MS, PEEKABOO_COVER_MAX_MS);
+}
+
+function peekabooAutoDelayMs(): number {
+  peekabooAutoCycleCount += 1;
+  if (peekabooAutoCycleCount > 1 && peekabooAutoCycleCount % PEEKABOO_CALM_EVERY === 0) {
+    return randomBetween(PEEKABOO_CALM_IDLE_MIN_MS, PEEKABOO_CALM_IDLE_MAX_MS);
+  }
+
+  return PEEKABOO_IDLE_MS;
+}
+
+function advancePeekabooMotion(): void {
+  if (PEEKABOO_MOTIONS.length <= 1) {
+    return;
+  }
+
+  const nextIndex = randomBetween(0, PEEKABOO_MOTIONS.length - 2);
+  peekabooMotionIndex = nextIndex >= peekabooMotionIndex ? nextIndex + 1 : nextIndex;
+  peekabooMotion = PEEKABOO_MOTIONS[peekabooMotionIndex];
+}
+
+function advancePeekabooCelebration(): void {
+  peekabooCelebrationCount += 1;
+  if (peekabooCelebrationCount % PEEKABOO_BIG_CELEBRATION_EVERY === 0) {
+    peekabooCelebration = 'big';
+    return;
+  }
+
+  peekabooCelebrationIndex = (peekabooCelebrationIndex + 1) % PEEKABOO_CELEBRATIONS.length;
+  peekabooCelebration = PEEKABOO_CELEBRATIONS[peekabooCelebrationIndex];
+}
+
+function childDisplayName(): string {
+  return sanitizeChildName(childProfile.name || 'Mina');
+}
+
+function sanitizeChildName(name: string): string {
+  const cleaned = name.trim().replace(/\s+/g, ' ').split(' ')[0] ?? 'Mina';
+  return cleaned.slice(0, 18) || 'Mina';
+}
+
+function advancePeekabooSearchPhrase(): void {
+  peekabooSearchPhraseIndex = (peekabooSearchPhraseIndex + 1) % PEEKABOO_SEARCH_TEMPLATES.length;
+}
+
+function peekabooSearchText(): string {
+  const index = peekabooSearchPhraseIndex >= 0 ? peekabooSearchPhraseIndex : 0;
+  return PEEKABOO_SEARCH_TEMPLATES[index](childDisplayName());
+}
+
+function playPeekabooSearchCue(): void {
+  if (!('speechSynthesis' in window)) {
+    playSoftTouchTone();
+    return;
+  }
+
+  const utterance = new SpeechSynthesisUtterance(peekabooSearchText());
+  utterance.lang = 'tr-TR';
+  utterance.rate = randomBetween(80, 92) / 100;
+  utterance.pitch = randomBetween(118, 134) / 100;
+  utterance.volume = randomBetween(62, 72) / 100;
+  window.speechSynthesis.speak(utterance);
+}
+
+function stopPeekabooSearchCue(): void {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
+}
+
+function nextPeekabooVoiceClip(): (typeof PEEKABOO_VOICE_CLIPS)[number] {
+  peekabooVoiceIndex = (peekabooVoiceIndex + 1) % PEEKABOO_VOICE_CLIPS.length;
+  return PEEKABOO_VOICE_CLIPS[peekabooVoiceIndex];
+}
+
+function playPeekabooVoice(): Promise<void> {
+  const clip = nextPeekabooVoiceClip();
+  const profile = { rate: 0.92, pitch: 1.42, volume: 0.84 };
+  return playPeekabooRecording(clip, profile);
+}
+
+async function playPeekabooRecording(clip: (typeof PEEKABOO_VOICE_CLIPS)[number], profile: { rate: number; pitch: number; volume: number }): Promise<void> {
+  const audio = await loadAudioCandidate(clip.src);
+  if (audio) {
+    await enqueueAudioPlayback(audio, 0.94);
+    return;
+  }
+
+  playPeekabooSyllableTone();
+  await enqueueSpeechText(clip.text, profile);
+}
+
+function playPeekabooSyllableTone(): void {
+  const AudioContextConstructor = window.AudioContext;
+  if (!AudioContextConstructor || !touchAudioUnlocked) {
+    return;
+  }
+
+  const context = new AudioContextConstructor();
+  const gain = context.createGain();
+  gain.connect(context.destination);
+  gain.gain.setValueAtTime(0.0001, context.currentTime);
+
+  const now = context.currentTime;
+  const notes = [
+    { at: 0, start: 560, end: 650, duration: 0.18, gain: 0.018 },
+    { at: 0.22, start: 640, end: 720, duration: 0.2, gain: 0.014 },
+    { at: 0.48, start: 620, end: 700, duration: 0.22, gain: 0.012 }
+  ];
+
+  notes.forEach((note) => {
+    const oscillator = context.createOscillator();
+    const noteGain = context.createGain();
+    const start = now + note.at;
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(note.start, start);
+    oscillator.frequency.exponentialRampToValueAtTime(note.end, start + note.duration);
+    noteGain.gain.setValueAtTime(0.0001, start);
+    noteGain.gain.exponentialRampToValueAtTime(note.gain, start + 0.035);
+    noteGain.gain.exponentialRampToValueAtTime(0.0001, start + note.duration + 0.05);
+    oscillator.connect(noteGain);
+    noteGain.connect(gain);
+    oscillator.start(start);
+    oscillator.stop(start + note.duration + 0.07);
+  });
+
+  window.setTimeout(() => {
+    void context.close();
+  }, 900);
 }
 
 function openParentWithUnlock(): void {
@@ -2661,13 +3223,34 @@ function createDefaultVariations(cardId: string, word: string): TouchVoiceVariat
     araba: ['Araba', 'A-ra-ba', 'Aaa-raba', 'Ara-ba'],
     elma: ['Elma', 'El-ma', 'Eeelma', 'Elmaa']
   };
-  const texts = presets[lowerId] ?? [word, `${word} ${word}`, word.split('').join('-')];
+  const texts = presets[lowerId] ?? [word];
   return texts.map((text, index) => ({
     id: `${lowerId}-${index + 1}`,
     label: text,
     text,
     rhythm: index === 0 ? 'normal' : `ritim-${index + 1}`
   }));
+}
+
+function isLegacyGeneratedTouchVariation(variation: TouchVoiceVariation, word: string): boolean {
+  const normalizedWord = word.trim().toLocaleLowerCase('tr-TR');
+  const normalizedText = variation.text.trim().toLocaleLowerCase('tr-TR');
+  const repeatedWord = `${normalizedWord} ${normalizedWord}`;
+  const spelledWord = word
+    .trim()
+    .split('')
+    .join('-')
+    .toLocaleLowerCase('tr-TR');
+  return normalizedText === repeatedWord || normalizedText === spelledWord;
+}
+
+function normalizeTouchVariations(cardId: string, word: string, variations?: TouchVoiceVariation[]): TouchVoiceVariation[] {
+  if (!variations?.length) {
+    return createDefaultVariations(cardId, word);
+  }
+
+  const cleaned = variations.filter((variation) => !isLegacyGeneratedTouchVariation(variation, word));
+  return cleaned.length > 0 ? cleaned : createDefaultVariations(cardId, word);
 }
 
 function touchObjectAssetFor(id: string): string {
@@ -2812,11 +3395,46 @@ function clearMatchTimer(): void {
   }
 }
 
+function clearMatchPofiSettleTimer(): void {
+  if (matchPofiSettleTimer) {
+    window.clearTimeout(matchPofiSettleTimer);
+    matchPofiSettleTimer = undefined;
+  }
+}
+
+function applyMatchPofiState(state: PofiState): void {
+  matchPofiSettledState = state;
+  matchPofiLastChangeAt = Date.now();
+  setPofiBaseState(state);
+}
+
+function setMatchPofiState(state: PofiState, options: { immediate?: boolean } = {}): void {
+  clearMatchPofiSettleTimer();
+  if (matchPofiSettledState === state) {
+    return;
+  }
+
+  const elapsed = Date.now() - matchPofiLastChangeAt;
+  if (options.immediate || !matchPofiSettledState || elapsed >= MATCH_POFI_MIN_HOLD_MS) {
+    applyMatchPofiState(state);
+    return;
+  }
+
+  matchPofiSettleTimer = window.setTimeout(() => {
+    matchPofiSettleTimer = undefined;
+    if (!isMatchViewActive()) {
+      return;
+    }
+    applyMatchPofiState(state);
+  }, MATCH_POFI_MIN_HOLD_MS - elapsed);
+}
+
 function startMatchRound(): void {
   clearMatchTimer();
   const round = createMatchRound();
   if (!round) {
     matchRound = undefined;
+    clearMatchPofiSettleTimer();
     renderMatchingGame();
     return;
   }
@@ -2824,7 +3442,7 @@ function startMatchRound(): void {
   matchRound = round;
   matchTargetId = round.targetId;
   lastMatchTargetId = round.targetId;
-  setPofiBaseState('matchGuide');
+  setMatchPofiState('matchGuide', { immediate: true });
   renderMatchingGame();
   matchTimer = window.setTimeout(() => enterMatchState('targeting'), MATCH_ATTENTION_MS);
 }
@@ -2897,18 +3515,18 @@ function enterMatchState(state: MatchState, hintLevel: 0 | 1 | 2 | 3 | 4 = 0): v
   };
 
   if (state === 'targeting') {
-    setPofiBaseState('matchTargeting');
+    setMatchPofiState('matchTargeting');
     void playMatchTargetSound('targeting');
     matchTimer = window.setTimeout(() => enterMatchState('waiting'), MATCH_TARGETING_MS);
   }
 
   if (state === 'waiting') {
-    setPofiBaseState('matchWaiting');
+    setMatchPofiState('matchWaiting');
     matchTimer = window.setTimeout(() => enterMatchHint(1), MATCH_WAITING_MS);
   }
 
   if (state === 'hint') {
-    setPofiBaseState('matchHint');
+    setMatchPofiState('matchHint');
     recordMatchHint(matchRound.targetId, hintLevel);
     if (hintLevel === 1 || hintLevel === 3) {
       void playMatchTargetSound('hint');
@@ -2919,13 +3537,13 @@ function enterMatchState(state: MatchState, hintLevel: 0 | 1 | 2 | 3 | 4 = 0): v
   }
 
   if (state === 'success') {
-    setPofiBaseState('matchSuccess');
+    setMatchPofiState('matchSuccess', { immediate: true });
     playMatchStateTone('success');
     matchTimer = window.setTimeout(() => startMatchRound(), MATCH_SUCCESS_MS);
   }
 
   if (state === 'retry') {
-    setPofiBaseState('matchRetry');
+    setMatchPofiState('matchRetry', { immediate: true });
     playMatchStateTone('retry');
     matchTimer = window.setTimeout(() => enterMatchState('waiting'), MATCH_RETRY_MS);
   }
@@ -2941,7 +3559,7 @@ async function playMatchTargetSound(style: 'targeting' | 'hint' | 'success' = 't
   const card = touchSettings.cards.find((entry) => entry.id === matchRound?.targetId);
   if (card) {
     playMatchStateTone(style);
-    await playTouchCardSound(card, style === 'success' ? 'pofi' : 'word', style === 'hint' ? 0.66 : 0.76);
+    await playTouchCardSound(card, style === 'success' ? 'pofi' : 'word', style === 'hint' ? 0.66 : 0.76, card.label);
   }
 }
 
@@ -4805,8 +5423,23 @@ function enqueueAudioPlayback(audio: HTMLAudioElement, volume: number): Promise<
   );
 }
 
-async function playTouchCardSound(card: TouchCard, intent: TouchSoundIntent, volume: number): Promise<void> {
+function touchFallbackSpeechProfile(intent: TouchSoundIntent): { rate: number; pitch: number; volume: number } {
+  if (intent === 'repeat') {
+    return { rate: 0.72, pitch: 1.22, volume: 0.86 };
+  }
+  if (intent === 'pofi') {
+    return { rate: 0.78, pitch: 1.24, volume: 0.9 };
+  }
+  return { rate: 0.74, pitch: 1.18, volume: 0.84 };
+}
+
+async function playTouchCardSound(card: TouchCard, intent: TouchSoundIntent, volume: number, phrase = card.label): Promise<void> {
   if (!touchAudioUnlocked) {
+    return;
+  }
+
+  if (intent === 'repeat' && shouldUseParentRepeatAudio(card)) {
+    await enqueueAudioPlayback(new Audio(currentTouchRepeatMediaEntry().audioDataUrl), 0.72);
     return;
   }
 
@@ -4815,14 +5448,21 @@ async function playTouchCardSound(card: TouchCard, intent: TouchSoundIntent, vol
   const audio = selectTouchAudio(pool);
 
   if (!audio) {
-    enqueueVoiceTask(() => {
-      playSoftTouchTone();
-      return wait(420);
-    });
+    playSoftTouchTone();
+    await enqueueSpeechText(phrase || card.label || card.word, touchFallbackSpeechProfile(intent));
     return;
   }
 
   await enqueueAudioPlayback(audio, volume);
+}
+
+function shouldUseParentRepeatAudio(card: TouchCard): boolean {
+  return (
+    touchSettings.repeat.useParentAudio === true &&
+    touchRepeatMediaVaultUnlocked() &&
+    touchSettings.repeat.focusCardId === card.id &&
+    Boolean(currentTouchRepeatMediaEntry().audioDataUrl)
+  );
 }
 
 function playSoftTouchTone(): void {
@@ -5075,7 +5715,7 @@ async function handleTouchSpeechSound(event: SpeechSoundEvent): Promise<void> {
   const variation = touchVariationForSpeechSound(card, event);
   activeTouchWeather = TOUCH_WEATHER_EFFECTS[randomBetween(0, TOUCH_WEATHER_EFFECTS.length - 1)];
   renderTouchSelection(variation, true);
-  await playTouchCardSound(card, event.intent === 'success' ? 'pofi' : 'word', event.intent === 'success' ? 0.9 : 0.78);
+  await playTouchCardSound(card, event.intent === 'success' ? 'pofi' : 'word', event.intent === 'success' ? 0.9 : 0.78, variation.text);
 }
 
 function touchVariationForSpeechSound(card: TouchCard, event: SpeechSoundEvent): TouchVoiceVariation {
@@ -5202,7 +5842,7 @@ async function handleTouchCardPlayback(card: TouchCard, intent: TouchSoundIntent
   const repeatPrefix = intent === 'repeat' ? touchRepeatStatusPrefix() : card.label;
   setTouchStatus(`${repeatPrefix}: ${variation.label}`);
   showPofiReaction(intent === 'repeat' ? 'waiting' : touchSuccessPofiState());
-  await playTouchCardSound(card, intent, intent === 'pofi' ? 0.9 : 0.78);
+  await playTouchCardSound(card, intent, intent === 'pofi' ? 0.9 : 0.78, variation.text);
 }
 
 function touchRepeatStatusPrefix(): string {
@@ -5321,6 +5961,147 @@ async function writeTouchSettings(): Promise<void> {
   }
 }
 
+async function readRawTouchRepeatMediaPayload(): Promise<unknown> {
+  if (!('indexedDB' in window)) {
+    return undefined;
+  }
+
+  try {
+    const db = await openTouchDb();
+    return await new Promise<unknown>((resolve) => {
+      const transaction = db.transaction(TOUCH_DB_STORE, 'readonly');
+      const request = transaction.objectStore(TOUCH_DB_STORE).get(TOUCH_REPEAT_MEDIA_KEY);
+      request.addEventListener('success', () => resolve(request.result));
+      request.addEventListener('error', () => resolve(undefined));
+    });
+  } catch {
+    return undefined;
+  }
+}
+
+async function writeTouchRepeatMediaLibrary(): Promise<void> {
+  if (!('indexedDB' in window)) {
+    setTouchParentStatus('Bu tarayıcı yerel medya kaydını desteklemiyor.');
+    return;
+  }
+  if (!touchRepeatMediaVaultKey || !touchRepeatMediaVaultSalt) {
+    setTouchParentStatus('Önce medya kasasını açın.');
+    return;
+  }
+
+  try {
+    const db = await openTouchDb();
+    const payload = await encryptTouchRepeatMediaLibrary(touchRepeatMediaLibrary);
+    await new Promise<void>((resolve) => {
+      const transaction = db.transaction(TOUCH_DB_STORE, 'readwrite');
+      transaction.objectStore(TOUCH_DB_STORE).put(payload, TOUCH_REPEAT_MEDIA_KEY);
+      transaction.addEventListener('complete', () => resolve());
+      transaction.addEventListener('error', () => resolve());
+    });
+    touchRepeatMediaVaultExists = true;
+    touchRepeatPendingPlainMediaLibrary = {};
+  } catch {
+    setTouchParentStatus('Kayıt bu cihazda saklanamadı. Daha kısa kayıt deneyin.');
+  }
+}
+
+function isEncryptedTouchRepeatMediaVault(value: unknown): value is EncryptedTouchRepeatMediaVault {
+  const entry = value as Partial<EncryptedTouchRepeatMediaVault> | undefined;
+  return entry?.version === TOUCH_REPEAT_MEDIA_VAULT_VERSION && typeof entry.salt === 'string' && typeof entry.iv === 'string' && typeof entry.data === 'string';
+}
+
+function normalizeTouchRepeatMediaLibrary(value: unknown): TouchRepeatMediaLibrary {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(value as Record<string, Partial<TouchRepeatMediaEntry>>)
+      .filter(([cardId]) => touchSettings.cards.some((card) => card.id === cardId))
+      .map(([cardId, entry]) => [
+        cardId,
+        {
+          externalUrl: typeof entry.externalUrl === 'string' ? entry.externalUrl : '',
+          audioDataUrl: typeof entry.audioDataUrl === 'string' && entry.audioDataUrl.startsWith('data:audio/') ? entry.audioDataUrl : '',
+          audioMimeType: typeof entry.audioMimeType === 'string' ? entry.audioMimeType : '',
+          audioUpdatedAt: typeof entry.audioUpdatedAt === 'string' ? entry.audioUpdatedAt : '',
+          videoDataUrl: typeof entry.videoDataUrl === 'string' && entry.videoDataUrl.startsWith('data:video/') ? entry.videoDataUrl : '',
+          videoMimeType: typeof entry.videoMimeType === 'string' ? entry.videoMimeType : '',
+          videoUpdatedAt: typeof entry.videoUpdatedAt === 'string' ? entry.videoUpdatedAt : ''
+        }
+      ])
+  );
+}
+
+function touchRepeatMediaCryptoSupported(): boolean {
+  return Boolean(window.crypto?.subtle && window.crypto.getRandomValues);
+}
+
+async function deriveTouchRepeatMediaVaultKey(passphrase: string, saltBase64: string): Promise<CryptoKey> {
+  const encoder = new TextEncoder();
+  const salt = base64ToArrayBuffer(saltBase64);
+  const baseKey = await window.crypto.subtle.importKey('raw', encoder.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+  return window.crypto.subtle.deriveKey(
+    {
+      name: 'PBKDF2',
+      salt,
+      iterations: TOUCH_REPEAT_MEDIA_KDF_ITERATIONS,
+      hash: 'SHA-256'
+    },
+    baseKey,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+async function encryptTouchRepeatMediaLibrary(library: TouchRepeatMediaLibrary): Promise<EncryptedTouchRepeatMediaVault> {
+  if (!touchRepeatMediaVaultKey || !touchRepeatMediaVaultSalt) {
+    throw new Error('media-vault-locked');
+  }
+  const iv = window.crypto.getRandomValues(new Uint8Array(12));
+  const encoded = new TextEncoder().encode(JSON.stringify(library));
+  const encrypted = await window.crypto.subtle.encrypt({ name: 'AES-GCM', iv }, touchRepeatMediaVaultKey, encoded);
+  return {
+    version: TOUCH_REPEAT_MEDIA_VAULT_VERSION,
+    salt: touchRepeatMediaVaultSalt,
+    iv: arrayBufferToBase64(iv),
+    data: arrayBufferToBase64(new Uint8Array(encrypted))
+  };
+}
+
+async function decryptTouchRepeatMediaLibrary(payload: EncryptedTouchRepeatMediaVault, key: CryptoKey): Promise<TouchRepeatMediaLibrary> {
+  const decrypted = await window.crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: base64ToArrayBuffer(payload.iv) },
+    key,
+    base64ToArrayBuffer(payload.data)
+  );
+  const parsed = JSON.parse(new TextDecoder().decode(decrypted));
+  return normalizeTouchRepeatMediaLibrary(parsed);
+}
+
+function randomSaltBase64(): string {
+  return arrayBufferToBase64(window.crypto.getRandomValues(new Uint8Array(16)));
+}
+
+function arrayBufferToBase64(buffer: ArrayBuffer | Uint8Array): string {
+  const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+  let binary = '';
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return btoa(binary);
+}
+
+function base64ToArrayBuffer(value: string): ArrayBuffer {
+  const binary = atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+}
+
 function storageByteLength(value: string): number {
   if ('TextEncoder' in window) {
     return new TextEncoder().encode(value).byteLength;
@@ -5354,13 +6135,21 @@ function normalizeTouchSettings(stored?: TouchSettingsState): TouchSettingsState
       images: (card.images?.length ? card.images : [image]).map((source) => normalizeTouchImageSource({ id, image: source })),
       enabled: card.enabled !== false,
       order: Number.isFinite(card.order) ? card.order : index,
-      variations: card.variations?.length ? card.variations : createDefaultVariations(id, card.word || card.label || 'Kart')
+      variations: normalizeTouchVariations(id, card.word || card.label || 'Kart', card.variations)
     };
   });
+  const storedCardIds = new Set(normalizedCards.map((card) => card.id));
+  const missingDefaultCards = defaults.cards
+    .filter((card) => !storedCardIds.has(card.id))
+    .map((card, index) => ({
+      ...card,
+      order: normalizedCards.length + index
+    }));
+  const cards = [...normalizedCards, ...missingDefaultCards];
 
   return {
-    cards: normalizedCards.sort((a, b) => a.order - b.order).map((card, order) => ({ ...card, order })),
-    repeat: normalizeTouchRepeatSettings(stored.repeat, normalizedCards)
+    cards: cards.sort((a, b) => a.order - b.order).map((card, order) => ({ ...card, order })),
+    repeat: normalizeTouchRepeatSettings(stored.repeat, cards)
   };
 }
 
@@ -5379,8 +6168,9 @@ function normalizeTouchRepeatSettings(stored: Partial<TouchRepeatSettings> | und
     maxRepeats: clampNumber(Number(stored?.maxRepeats), 1, 60, TOUCH_DEFAULT_REPEAT_SETTINGS.maxRepeats),
     minIntervalMs: clampNumber(Number(stored?.minIntervalMs), 900, 5000, TOUCH_DEFAULT_REPEAT_SETTINGS.minIntervalMs),
     maxIntervalMs: clampNumber(Number(stored?.maxIntervalMs), 1200, 8000, TOUCH_DEFAULT_REPEAT_SETTINGS.maxIntervalMs),
-    resourceUrl: typeof stored?.resourceUrl === 'string' ? stored.resourceUrl : '',
-    note: typeof stored?.note === 'string' ? stored.note : ''
+    resourceUrl: '',
+    note: typeof stored?.note === 'string' ? stored.note : '',
+    useParentAudio: stored?.useParentAudio === true
   };
 }
 
@@ -5391,6 +6181,7 @@ function isTouchRepeatStyle(value: unknown): value is TouchRepeatStyle {
 async function initializeTouchSettings(): Promise<void> {
   const stored = await readTouchSettings();
   touchSettings = normalizeTouchSettings(stored);
+  await initializeTouchRepeatMediaVault();
   selectedTouchCardId = enabledTouchCards()[0]?.id ?? touchSettings.cards[0]?.id ?? 'baba';
   touchAudioPreload = undefined;
   renderTouchCards();
@@ -5401,6 +6192,21 @@ async function initializeTouchSettings(): Promise<void> {
   renderSentenceGame();
 }
 
+async function initializeTouchRepeatMediaVault(): Promise<void> {
+  const raw = await readRawTouchRepeatMediaPayload();
+  if (isEncryptedTouchRepeatMediaVault(raw)) {
+    touchRepeatMediaVaultExists = true;
+    touchRepeatMediaVaultSalt = raw.salt;
+    touchRepeatMediaLibrary = {};
+    touchRepeatPendingPlainMediaLibrary = {};
+    return;
+  }
+  touchRepeatMediaVaultExists = false;
+  touchRepeatMediaVaultSalt = '';
+  touchRepeatMediaLibrary = {};
+  touchRepeatPendingPlainMediaLibrary = normalizeTouchRepeatMediaLibrary(raw);
+}
+
 function renderParentTouchSettings(): void {
   const editor = document.querySelector<HTMLElement>('[data-touch-card-editor]');
   const focus = document.querySelector<HTMLSelectElement>('[data-touch-repeat-focus]');
@@ -5408,6 +6214,7 @@ function renderParentTouchSettings(): void {
   const duration = document.querySelector<HTMLInputElement>('[data-touch-repeat-duration]');
   const repeats = document.querySelector<HTMLInputElement>('[data-touch-repeat-count]');
   const resource = document.querySelector<HTMLInputElement>('[data-touch-repeat-resource]');
+  const useParentAudio = document.querySelector<HTMLInputElement>('[data-touch-repeat-use-parent-audio]');
   const note = document.querySelector<HTMLTextAreaElement>('[data-touch-repeat-note]');
   if (focus) {
     focus.innerHTML = enabledTouchCards()
@@ -5424,11 +6231,17 @@ function renderParentTouchSettings(): void {
     repeats.value = String(touchSettings.repeat.maxRepeats);
   }
   if (resource) {
-    resource.value = touchSettings.repeat.resourceUrl;
+    resource.value = touchRepeatMediaVaultUnlocked() ? currentTouchRepeatMediaEntry().externalUrl : '';
+    resource.disabled = !touchRepeatMediaVaultUnlocked();
+  }
+  if (useParentAudio) {
+    useParentAudio.checked = touchSettings.repeat.useParentAudio;
+    useParentAudio.disabled = !touchRepeatMediaVaultUnlocked();
   }
   if (note) {
     note.value = touchSettings.repeat.note;
   }
+  renderTouchRepeatMediaPanel();
   if (!editor) {
     return;
   }
@@ -5464,6 +6277,200 @@ function renderParentTouchSettings(): void {
       </article>`;
     })
     .join('');
+}
+
+function blankTouchRepeatMediaEntry(): TouchRepeatMediaEntry {
+  return {
+    externalUrl: '',
+    audioDataUrl: '',
+    audioMimeType: '',
+    audioUpdatedAt: '',
+    videoDataUrl: '',
+    videoMimeType: '',
+    videoUpdatedAt: ''
+  };
+}
+
+function currentTouchRepeatMediaEntry(): TouchRepeatMediaEntry {
+  if (!touchRepeatMediaVaultUnlocked()) {
+    return blankTouchRepeatMediaEntry();
+  }
+  return touchRepeatMediaLibrary[touchSettings.repeat.focusCardId] ?? blankTouchRepeatMediaEntry();
+}
+
+function updateCurrentTouchRepeatMediaEntry(update: Partial<TouchRepeatMediaEntry>): TouchRepeatMediaEntry {
+  const cardId = touchSettings.repeat.focusCardId;
+  const entry = { ...blankTouchRepeatMediaEntry(), ...touchRepeatMediaLibrary[cardId], ...update };
+  touchRepeatMediaLibrary = { ...touchRepeatMediaLibrary, [cardId]: entry };
+  return entry;
+}
+
+function touchRepeatRecordingSupported(): boolean {
+  return Boolean(navigator.mediaDevices) && typeof navigator.mediaDevices.getUserMedia === 'function' && 'MediaRecorder' in window;
+}
+
+function touchRepeatMediaVaultUnlocked(): boolean {
+  return Boolean(touchRepeatMediaVaultKey);
+}
+
+function renderTouchRepeatMediaPanel(): void {
+  const support = document.querySelector<HTMLElement>('[data-touch-repeat-media-support]');
+  const preview = document.querySelector<HTMLElement>('[data-touch-repeat-media-preview]');
+  const vaultStatus = document.querySelector<HTMLElement>('[data-touch-media-vault-status]');
+  const vaultPass = document.querySelector<HTMLInputElement>('[data-touch-media-vault-pass]');
+  const vaultUnlock = document.querySelector<HTMLButtonElement>('[data-touch-media-vault-unlock]');
+  const vaultLock = document.querySelector<HTMLButtonElement>('[data-touch-media-vault-lock]');
+  const recordButtons = document.querySelectorAll<HTMLButtonElement>('[data-touch-repeat-record]');
+  const entry = currentTouchRepeatMediaEntry();
+  const card = repeatFocusCard();
+  const unlocked = touchRepeatMediaVaultUnlocked();
+
+  if (vaultStatus) {
+    vaultStatus.textContent = !touchRepeatMediaCryptoSupported()
+      ? 'Bu tarayıcı şifreli medya kasasını desteklemiyor.'
+      : unlocked
+        ? 'Medya kasası açık. Kayıtlar bu oturumda görülebilir.'
+        : touchRepeatMediaVaultExists
+          ? 'Medya kasası kilitli. Kayıtları görmek için şifreyi girin.'
+          : 'İlk kullanımda en az 6 karakterli bir kasa şifresi belirleyin.';
+  }
+  if (vaultUnlock) {
+    vaultUnlock.disabled = !touchRepeatMediaCryptoSupported();
+    vaultUnlock.textContent = touchRepeatMediaVaultExists ? 'Kasayı aç' : 'Kasa oluştur';
+  }
+  if (vaultLock) {
+    vaultLock.disabled = !unlocked;
+  }
+  if (vaultPass) {
+    vaultPass.disabled = !touchRepeatMediaCryptoSupported();
+  }
+
+  if (support) {
+    support.textContent = !unlocked ? 'Kasa kilitli' : touchRepeatRecordingSupported() ? `${card.label} için şifreli kayıt` : 'Bu cihaz desteklemiyor';
+  }
+
+  recordButtons.forEach((button) => {
+    const kind = button.dataset.touchRepeatRecord === 'video' ? 'video' : 'audio';
+    const isRecording = touchRepeatRecorder?.kind === kind;
+    button.textContent = isRecording ? 'Kaydı bitir' : kind === 'video' ? 'Video kaydet' : 'Ses kaydet';
+    button.classList.toggle('active', isRecording);
+    button.disabled = (!unlocked || !touchRepeatRecordingSupported()) && !isRecording;
+  });
+
+  if (!preview) {
+    return;
+  }
+
+  if (!unlocked) {
+    preview.innerHTML = '<p class="recording-guide">Ses, video ve dış linkler kilitli kasada saklanır. Görmek veya eklemek için kasayı açın.</p>';
+    return;
+  }
+
+  const parts: string[] = [];
+  if (entry.audioDataUrl) {
+    parts.push(`
+      <article class="repeat-media-item">
+        <strong>Ses kaydı</strong>
+        <audio controls src="${entry.audioDataUrl}"></audio>
+        <small>${formatDateTime(entry.audioUpdatedAt)}</small>
+        <button class="soft-admin-button" type="button" data-touch-repeat-media-delete="audio">Sesi sil</button>
+      </article>`);
+  }
+  if (entry.videoDataUrl) {
+    parts.push(`
+      <article class="repeat-media-item">
+        <strong>Video kaydı</strong>
+        <video controls playsinline src="${entry.videoDataUrl}"></video>
+        <small>${formatDateTime(entry.videoUpdatedAt)}</small>
+        <button class="soft-admin-button" type="button" data-touch-repeat-media-delete="video">Videoyu sil</button>
+      </article>`);
+  }
+  if (entry.externalUrl) {
+    const safeUrl = escapeHtml(entry.externalUrl);
+    parts.push(`
+      <article class="repeat-media-item">
+        <strong>Dış link</strong>
+        <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${safeUrl}</a>
+      </article>`);
+  }
+
+  preview.innerHTML = parts.join('') || '<p class="recording-guide">Henüz ses, video veya dış link eklenmedi.</p>';
+}
+
+function formatDateTime(value: string): string {
+  if (!value) {
+    return 'Bugün kaydedildi';
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return 'Bugün kaydedildi';
+  }
+  return date.toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' });
+}
+
+async function unlockTouchRepeatMediaVault(): Promise<void> {
+  const input = document.querySelector<HTMLInputElement>('[data-touch-media-vault-pass]');
+  const passphrase = input?.value.trim() ?? '';
+  if (!touchRepeatMediaCryptoSupported()) {
+    setTouchParentStatus('Bu tarayıcı şifreli medya kasasını desteklemiyor.');
+    renderTouchRepeatMediaPanel();
+    return;
+  }
+  if (passphrase.length < 6) {
+    setTouchParentStatus('Medya kasası için en az 6 karakterli bir şifre girin.');
+    renderTouchRepeatMediaPanel();
+    return;
+  }
+
+  const raw = await readRawTouchRepeatMediaPayload();
+  try {
+    if (isEncryptedTouchRepeatMediaVault(raw)) {
+      const key = await deriveTouchRepeatMediaVaultKey(passphrase, raw.salt);
+      touchRepeatMediaLibrary = await decryptTouchRepeatMediaLibrary(raw, key);
+      touchRepeatMediaVaultKey = key;
+      touchRepeatMediaVaultSalt = raw.salt;
+      touchRepeatMediaVaultExists = true;
+      setTouchParentStatus('Medya kasası açıldı.');
+    } else {
+      touchRepeatMediaVaultSalt = randomSaltBase64();
+      touchRepeatMediaVaultKey = await deriveTouchRepeatMediaVaultKey(passphrase, touchRepeatMediaVaultSalt);
+      touchRepeatMediaLibrary = { ...touchRepeatPendingPlainMediaLibrary };
+      touchRepeatMediaVaultExists = true;
+      await writeTouchRepeatMediaLibrary();
+      setTouchParentStatus('Medya kasası oluşturuldu. Kayıtlar artık şifreli saklanır.');
+    }
+    if (input) {
+      input.value = '';
+    }
+  } catch {
+    touchRepeatMediaVaultKey = undefined;
+    touchRepeatMediaLibrary = {};
+    setTouchParentStatus('Medya kasası açılamadı. Şifre yanlış olabilir.');
+  }
+  renderParentTouchSettings();
+}
+
+function lockTouchRepeatMediaVault(): void {
+  if (touchRepeatRecorder) {
+    stopTouchRepeatRecording();
+  }
+  touchRepeatMediaVaultKey = undefined;
+  touchRepeatMediaLibrary = {};
+  renderParentTouchSettings();
+  setTouchParentStatus('Medya kasası kilitlendi.');
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (char) => {
+    const map: Record<string, string> = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    };
+    return map[char] ?? char;
+  });
 }
 
 function setTouchParentStatus(message: string): void {
@@ -5625,7 +6632,18 @@ function saveRepeatSettingsFromPanel(): void {
   const duration = document.querySelector<HTMLInputElement>('[data-touch-repeat-duration]');
   const repeats = document.querySelector<HTMLInputElement>('[data-touch-repeat-count]');
   const resource = document.querySelector<HTMLInputElement>('[data-touch-repeat-resource]');
+  const useParentAudio = document.querySelector<HTMLInputElement>('[data-touch-repeat-use-parent-audio]');
   const note = document.querySelector<HTMLTextAreaElement>('[data-touch-repeat-note]');
+  const externalUrl = normalizeExternalMediaUrl(resource?.value.trim() ?? '');
+  if ((resource?.value.trim() ?? '') && !externalUrl) {
+    setTouchParentStatus('Ses/video linki yalnız http veya https olmalı.');
+    return;
+  }
+  if (externalUrl && !touchRepeatMediaVaultUnlocked()) {
+    setTouchParentStatus('Linki saklamak için önce medya kasasını açın.');
+    renderTouchRepeatMediaPanel();
+    return;
+  }
   touchSettings.repeat = normalizeTouchRepeatSettings(
     {
       ...touchSettings.repeat,
@@ -5633,15 +6651,158 @@ function saveRepeatSettingsFromPanel(): void {
       style: style?.value as TouchRepeatStyle | undefined,
       maxDurationSeconds: Number(duration?.value),
       maxRepeats: Number(repeats?.value),
-      resourceUrl: resource?.value.trim() ?? '',
-      note: note?.value.trim() ?? ''
+      resourceUrl: '',
+      note: note?.value.trim() ?? '',
+      useParentAudio: Boolean(useParentAudio?.checked && touchRepeatMediaVaultUnlocked())
     },
     touchSettings.cards
   );
+  if (touchRepeatMediaVaultUnlocked()) {
+    updateCurrentTouchRepeatMediaEntry({ externalUrl });
+  }
   renderTouchRepeatState();
   renderParentTouchSettings();
   setTouchParentStatus(`${repeatFocusCard().label} için ${touchRepeatStatusPrefix().toLowerCase()} ayarları kaydedildi.`);
   void writeTouchSettings();
+  if (touchRepeatMediaVaultUnlocked()) {
+    void writeTouchRepeatMediaLibrary();
+  }
+}
+
+function normalizeExternalMediaUrl(value: string): string {
+  if (!value) {
+    return '';
+  }
+  try {
+    const url = new URL(value);
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+  } catch {
+    return '';
+  }
+}
+
+async function toggleTouchRepeatRecording(kind: TouchRepeatMediaKind): Promise<void> {
+  if (touchRepeatRecorder) {
+    stopTouchRepeatRecording();
+    return;
+  }
+  await startTouchRepeatRecording(kind);
+}
+
+async function startTouchRepeatRecording(kind: TouchRepeatMediaKind): Promise<void> {
+  if (!touchRepeatMediaVaultUnlocked()) {
+    setTouchParentStatus('Kayıt almak için önce medya kasasını açın.');
+    renderTouchRepeatMediaPanel();
+    return;
+  }
+  if (!touchRepeatRecordingSupported()) {
+    setTouchParentStatus('Bu tarayıcı kısa ses/video kaydını desteklemiyor.');
+    renderTouchRepeatMediaPanel();
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia(kind === 'video' ? { video: true, audio: true } : { audio: true });
+    const mimeType = preferredTouchRepeatMimeType(kind);
+    const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+    const chunks: Blob[] = [];
+    const cardId = touchSettings.repeat.focusCardId;
+    recorder.addEventListener('dataavailable', (event) => {
+      if (event.data.size > 0) {
+        chunks.push(event.data);
+      }
+    });
+    recorder.addEventListener('stop', () => {
+      void finishTouchRepeatRecording();
+    });
+    touchRepeatRecorder = {
+      cardId,
+      kind,
+      recorder,
+      stream,
+      chunks,
+      timeout: window.setTimeout(stopTouchRepeatRecording, kind === 'video' ? TOUCH_REPEAT_VIDEO_MAX_MS : TOUCH_REPEAT_AUDIO_MAX_MS)
+    };
+    recorder.start();
+    setTouchParentStatus(kind === 'video' ? 'Video kaydı başladı. En fazla 12 saniye.' : 'Ses kaydı başladı. En fazla 10 saniye.');
+    renderTouchRepeatMediaPanel();
+  } catch {
+    setTouchParentStatus(kind === 'video' ? 'Kamera veya mikrofon izni alınamadı.' : 'Mikrofon izni alınamadı.');
+    renderTouchRepeatMediaPanel();
+  }
+}
+
+function stopTouchRepeatRecording(): void {
+  const active = touchRepeatRecorder;
+  if (!active) {
+    return;
+  }
+  if (active.recorder.state !== 'inactive') {
+    active.recorder.stop();
+  }
+}
+
+async function finishTouchRepeatRecording(): Promise<void> {
+  const active = touchRepeatRecorder;
+  if (!active) {
+    return;
+  }
+
+  window.clearTimeout(active.timeout);
+  active.stream.getTracks().forEach((track) => track.stop());
+  touchRepeatRecorder = undefined;
+
+  const mimeType = active.recorder.mimeType || preferredTouchRepeatMimeType(active.kind) || (active.kind === 'video' ? 'video/webm' : 'audio/webm');
+  const blob = new Blob(active.chunks, { type: mimeType });
+  if (blob.size === 0) {
+    setTouchParentStatus('Kayıt alınamadı. Bir daha deneyin.');
+    renderTouchRepeatMediaPanel();
+    return;
+  }
+
+  const dataUrl = await readBlobAsDataUrl(blob);
+  const updatedAt = new Date().toISOString();
+  const update =
+    active.kind === 'video'
+      ? { videoDataUrl: dataUrl, videoMimeType: mimeType, videoUpdatedAt: updatedAt }
+      : { audioDataUrl: dataUrl, audioMimeType: mimeType, audioUpdatedAt: updatedAt };
+  touchRepeatMediaLibrary = {
+    ...touchRepeatMediaLibrary,
+    [active.cardId]: { ...blankTouchRepeatMediaEntry(), ...touchRepeatMediaLibrary[active.cardId], ...update }
+  };
+  await writeTouchRepeatMediaLibrary();
+  renderTouchRepeatMediaPanel();
+  setTouchParentStatus(active.kind === 'video' ? 'Kısa video kaydı saklandı.' : 'Kısa ses kaydı saklandı.');
+}
+
+function preferredTouchRepeatMimeType(kind: TouchRepeatMediaKind): string {
+  const options = kind === 'video' ? ['video/webm;codecs=vp8,opus', 'video/webm'] : ['audio/webm;codecs=opus', 'audio/webm'];
+  return options.find((type) => MediaRecorder.isTypeSupported(type)) ?? '';
+}
+
+function readBlobAsDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener('load', () => resolve(String(reader.result)));
+    reader.addEventListener('error', () => reject(reader.error));
+    reader.readAsDataURL(blob);
+  });
+}
+
+function deleteTouchRepeatMedia(kind: TouchRepeatMediaKind): void {
+  if (!touchRepeatMediaVaultUnlocked()) {
+    setTouchParentStatus('Silmek için önce medya kasasını açın.');
+    renderTouchRepeatMediaPanel();
+    return;
+  }
+  const update =
+    kind === 'video'
+      ? { videoDataUrl: '', videoMimeType: '', videoUpdatedAt: '' }
+      : { audioDataUrl: '', audioMimeType: '', audioUpdatedAt: '' };
+  updateCurrentTouchRepeatMediaEntry(update);
+  renderTouchRepeatMediaPanel();
+  setTouchParentStatus(kind === 'video' ? 'Video kaydı silindi.' : 'Ses kaydı silindi.');
+  void writeTouchRepeatMediaLibrary();
 }
 
 function clampNumber(value: number, min: number, max: number, fallback: number): number {
@@ -5718,7 +6879,7 @@ function renderParentMetrics(): void {
     { correct: 0, soft: 0 }
   );
 
-  document.getElementById('metric-sessions')!.textContent = String(state.sessions);
+  document.getElementById('metric-sessions')!.textContent = parentSessionRhythmLabel(state.sessions);
   document.getElementById('metric-correct')!.textContent = String(totals.correct);
   document.getElementById('metric-soft')!.textContent = String(totals.soft);
   document.getElementById('metric-repeats')!.textContent = String(state.repeats);
@@ -5728,12 +6889,24 @@ function renderParentMetrics(): void {
     return;
   }
 
+  const maxModuleAction = Math.max(1, ...modules.map(([, stats]) => stats.actions + stats.opens));
   log.innerHTML =
     modules.length === 0
-      ? 'Henüz kayıt yok. İlk oyun açıldığında burada sakin bir özet oluşacak.'
+      ? '<p>Henüz kayıt yok. İlk oyun açıldığında burada sakin bir özet oluşacak.</p>'
       : modules
           .map(([name, stats]) => {
-            return `<p><strong>${parentModuleLabel(name)}</strong>: ${stats.opens} açılış, ${stats.actions} eylem, ${stats.correct} olumlu deneme, ${stats.softRedirects} yönlendirme.</p>`;
+            const activityRate = Math.round(((stats.actions + stats.opens) / maxModuleAction) * 100);
+            return `<article class="module-detail-row">
+              <div>
+                <strong>${parentModuleLabel(name)}</strong>
+                <span>${stats.opens} açılış · ${stats.actions} etkileşim</span>
+              </div>
+              <div class="module-detail-bars" aria-label="${parentModuleLabel(name)} bölüm özeti">
+                <span><b>Bağımsız</b><em>${stats.correct}</em></span>
+                <span><b>Destekle</b><em>${stats.softRedirects}</em></span>
+              </div>
+              <span class="parent-bar-track" aria-hidden="true"><span style="width: ${activityRate}%"></span></span>
+            </article>`;
           })
           .join('');
 
@@ -5747,12 +6920,88 @@ function renderParentMetrics(): void {
       .join(', ');
     log.insertAdjacentHTML(
       'beforeend',
-      `<p><strong>Dokun öğrenme</strong>: ipucu kullanımı ${hintSummary || '0'}, ortalama doğru dokunma ${averageLatency} ms, tekrar ihtiyacı ${state.touch.repeatNeeds}.</p>`
+      `<article class="module-detail-row">
+        <div>
+          <strong>Dokun öğrenme ipucu</strong>
+          <span>İpucu seviyeleri: ${hintSummary || '0'} · ortalama bağımsız dokunma ${averageLatency} ms</span>
+        </div>
+        <div class="module-detail-note">Tekrar odağı: ${state.touch.repeatNeeds}</div>
+      </article>`
     );
   }
 
+  renderParentTodaySummary(state);
   renderParentInsight(state);
   renderParentGuidance(state);
+}
+
+function renderParentTodaySummary(state: AnalyticsState): void {
+  const container = document.querySelector<HTMLElement>('[data-parent-today-summary]');
+  if (!container) {
+    return;
+  }
+
+  const labels = Object.fromEntries(touchSettings.cards.map((card) => [card.id, card.word]));
+  const summary = createParentTodaySummary(state, touchProgress, matchProgress, labels);
+  const learnedText = summary.learnedWords.length > 0 ? summary.learnedWords.join(', ') : 'Henüz net öğrenildi işareti yok';
+  const recommendedWords =
+    summary.recommendedWords.length > 0
+      ? summary.recommendedWords
+          .map(
+            (word) => `
+              <li>
+                <strong>${word.label}</strong>
+                <span>${word.level} · ${word.reason}</span>
+              </li>`
+          )
+          .join('')
+      : '<li><strong>Baba</strong><span>Seviye 1 · erken hedef kelime</span></li>';
+
+  container.innerHTML = `
+    <article class="parent-today-card">
+      <span>Bölüm ağırlığı</span>
+      <div class="parent-module-bars" aria-label="Bölüm bazlı kullanım özeti">
+        ${summary.modules
+          .map(
+            (module) => `
+              <div class="parent-module-bar">
+                <div>
+                  <strong>${module.label}</strong>
+                  <small>${module.opens} açılış · ${module.actions} eylem</small>
+                </div>
+                <span class="parent-bar-track" aria-hidden="true"><span style="width: ${module.activityRate}%"></span></span>
+              </div>`
+          )
+          .join('')}
+      </div>
+    </article>
+    <article class="parent-today-card">
+      <span>Bağımsızlık dengesi</span>
+      <strong>${summary.supportSummary}</strong>
+      <div class="parent-ratio-bars" aria-label="Bağımsız ve destekle deneme oranı">
+        <span style="--value: ${summary.independenceRate}%"><b>Bağımsız</b><em>${summary.independenceRate}%</em></span>
+        <span style="--value: ${summary.supportRate}%"><b>Destekle</b><em>${summary.supportRate}%</em></span>
+      </div>
+      <small>Bağımsız deneme çocuğun kendi yaptığı olumlu seçimdir; destekle deneme yardım aldıktan sonra tamamlanan denemedir.</small>
+    </article>
+    <article class="parent-today-card">
+      <span>Önerilen kelimeler</span>
+      <ul class="parent-word-level-list">
+        ${recommendedWords}
+      </ul>
+      <small>Kelimeler iletişim önceliği, bilişsel seviye ve bugünkü destek ihtiyacına göre sıralanır.</small>
+    </article>
+    <article class="parent-today-card">
+      <span>Güçlenen kelimeler</span>
+      <strong>${learnedText}</strong>
+      <small>Öğrenildi işareti yoksa bu normaldir; önce tanıma, sonra seçme, en son genelleme beklenir.</small>
+    </article>
+    <article class="parent-today-card plan">
+      <span>Ev çalışması</span>
+      <ol>
+        ${summary.plan.map((step) => `<li>${step}</li>`).join('')}
+      </ol>
+    </article>`;
 }
 
 function renderParentInsight(state: AnalyticsState): void {
@@ -5815,6 +7064,10 @@ function setParentTab(tab: 'today' | 'edit' | 'control', focusSelector?: string)
   if (focusSelector) {
     window.setTimeout(() => {
       const target = document.querySelector<HTMLElement>(focusSelector);
+      const parentBlock = target?.closest<HTMLDetailsElement>('details');
+      if (parentBlock) {
+        parentBlock.open = true;
+      }
       target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       target?.focus({ preventScroll: true });
     }, 80);
@@ -5904,6 +7157,20 @@ function registerServiceWorker(): void {
 
   const isLocal = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
   if (isLocal) {
+    void navigator.serviceWorker.getRegistrations().then((registrations) => {
+      registrations.forEach((registration) => {
+        void registration.unregister();
+      });
+    });
+    if ('caches' in window) {
+      void caches.keys().then((keys) => {
+        keys
+          .filter((key) => key.startsWith('minaplay-'))
+          .forEach((key) => {
+            void caches.delete(key);
+          });
+      });
+    }
     return;
   }
 
@@ -5922,6 +7189,10 @@ function boot(): void {
     const touchRepeatTrigger = target?.closest<HTMLElement>('[data-touch-repeat-toggle]');
     const touchCardAdd = target?.closest<HTMLElement>('[data-touch-card-add]');
     const touchRepeatSave = target?.closest<HTMLElement>('[data-touch-repeat-save]');
+    const touchRepeatRecord = target?.closest<HTMLElement>('[data-touch-repeat-record]');
+    const touchRepeatMediaDelete = target?.closest<HTMLElement>('[data-touch-repeat-media-delete]');
+    const touchMediaVaultUnlock = target?.closest<HTMLElement>('[data-touch-media-vault-unlock]');
+    const touchMediaVaultLock = target?.closest<HTMLElement>('[data-touch-media-vault-lock]');
     const touchCardDelete = target?.closest<HTMLElement>('[data-touch-card-delete]');
     const touchCardMove = target?.closest<HTMLElement>('[data-touch-card-move]');
     const touchImageSelect = target?.closest<HTMLElement>('[data-touch-image-select]');
@@ -6016,6 +7287,26 @@ function boot(): void {
       return;
     }
 
+    if (touchMediaVaultUnlock) {
+      void unlockTouchRepeatMediaVault();
+      return;
+    }
+
+    if (touchMediaVaultLock) {
+      lockTouchRepeatMediaVault();
+      return;
+    }
+
+    if (touchRepeatRecord?.dataset.touchRepeatRecord) {
+      void toggleTouchRepeatRecording(touchRepeatRecord.dataset.touchRepeatRecord === 'video' ? 'video' : 'audio');
+      return;
+    }
+
+    if (touchRepeatMediaDelete?.dataset.touchRepeatMediaDelete) {
+      deleteTouchRepeatMedia(touchRepeatMediaDelete.dataset.touchRepeatMediaDelete === 'video' ? 'video' : 'audio');
+      return;
+    }
+
     if (touchCardDelete) {
       const card = touchCardFromAdminElement(touchCardDelete);
       if (card) {
@@ -6067,7 +7358,15 @@ function boot(): void {
   });
 
   document.addEventListener('change', (event) => {
-    const target = event.target instanceof HTMLInputElement ? event.target : undefined;
+    const targetElement = event.target instanceof Element ? event.target : undefined;
+    const repeatFocus = targetElement instanceof HTMLSelectElement ? targetElement.closest<HTMLSelectElement>('[data-touch-repeat-focus]') : undefined;
+    if (repeatFocus) {
+      touchSettings.repeat = normalizeTouchRepeatSettings({ ...touchSettings.repeat, focusCardId: repeatFocus.value }, touchSettings.cards);
+      renderParentTouchSettings();
+      return;
+    }
+
+    const target = targetElement instanceof HTMLInputElement ? targetElement : undefined;
     if (!target) {
       return;
     }
@@ -6113,16 +7412,21 @@ function boot(): void {
     }
   });
 
+  document.addEventListener('click', (event) => {
+    const peekabooButton = event.target instanceof Element ? event.target.closest<HTMLElement>('[data-peekaboo-toggle]') : undefined;
+    if (peekabooButton) {
+      event.preventDefault();
+      handlePeekabooToggle(peekabooButton);
+    }
+  });
+
   document.querySelectorAll<HTMLButtonElement>('[data-track-action]').forEach((button) => {
     button.addEventListener('click', () => {
-      if (button.hasAttribute('data-peekaboo-toggle')) {
-        handlePeekabooToggle(button);
-        return;
+      if (!button.hasAttribute('data-peekaboo-toggle')) {
+        const action = button.dataset.trackAction ?? 'action';
+        showActionCue(button, action);
+        trackAction(action, button);
       }
-
-      const action = button.dataset.trackAction ?? 'action';
-      showActionCue(button, action);
-      trackAction(action, button);
     });
   });
 
@@ -6208,6 +7512,8 @@ function boot(): void {
     renderChildLockSettings();
   });
 
+  document.querySelector<HTMLElement>('[data-child-profile-save]')?.addEventListener('click', saveChildProfileFromPanel);
+
   document.querySelector<HTMLElement>('[data-parent-secret-accept]')?.addEventListener('click', acceptParentSecretIntro);
 
   document.querySelector<HTMLElement>('[data-module-visibility-save]')?.addEventListener('click', saveModuleVisibilitySettingsFromPanel);
@@ -6255,6 +7561,7 @@ function boot(): void {
 
   preloadPofiParts();
   childLockSettings = readChildLockSettings();
+  childProfile = readChildProfile();
   touchProgress = readTouchProgress();
   touchMastery = readTouchMastery();
   matchProgress = readMatchProgress();
@@ -6266,6 +7573,7 @@ function boot(): void {
   renderPofiAvatars();
   syncModuleVisibility();
   syncChildLockMode();
+  renderChildProfile();
   showParentSecretIntroIfNeeded();
   renderParentMetrics();
   void renderDeviceStatus();

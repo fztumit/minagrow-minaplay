@@ -2,7 +2,7 @@
 name: architecture
 description: MinaPlay projesinin teknik omurgasını, ana bileşenlerini, veri akışını ve mimari yaklaşımını tanımlar.
 created: 2026-04-17
-updated: 2026-06-15
+updated: 2026-06-25
 ---
 
 # Mimari
@@ -64,16 +64,13 @@ V2 MVP aktif modülleri:
 - `home`
 - `touch`
 - `matching`
+- `sentence`
+- `stories`
 - `mirror`
 - `sleep`
 - `ceee`
 
-Gelecek modüller:
-
-- `sentence`
-- `stories`
-
-Gelecek modüller kod/rota düzeyinde var olabilir, ancak MVP çocuk UI içinde görünmez veya yalnız "yakında" durumunda pasif gösterilir.
+Ceee ana mod değil, bonus/kısa dikkat oyunu olarak yorumlanır. İfade ve Hikaye Faz 6 ile çocuk yüzeyinde aktif hale gelmiştir; gelecek çalışma bu modları büyütmekten önce davranış, kayıt ve Parent panel okunabilirliğini sertleştirmeye odaklanır.
 
 V2 klasör ağacı kararı:
 
@@ -205,8 +202,8 @@ V2'de modüller `src/features` altında yaşar. Bugünkü dosya örnekleri V1 re
 
 - Dosya: `src/modules/peekaboo/index.ts`
 - View: `view-peekaboo`
-- Rol: Pofi'nin ce-ee/peekaboo haliyle kısa, neşeli ve dikkat destekleyici oyun sağlamak
-- Kural: MVP'de 5. aktif oyun alanı olabilir; temiz PNG tarzı görsel dil kullanır ve ham/kötü SVG görünümüne yaslanmaz
+- Rol: Pofi'nin klasik karşılıklı ce-ee haliyle kısa, neşeli ve dikkat destekleyici oyun sağlamak
+- Kural: Ceee ana mod değil bonus/kısa dikkat oyunudur; Pofi merkezde kalır, yüzünü kapatıp açar, arama cümlesi ve kısa sevinçli seslerle ilerler
 
 ### Parent Panel
 

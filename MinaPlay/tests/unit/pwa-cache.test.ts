@@ -20,6 +20,8 @@ describe('PWA offline shell', () => {
     expect(serviceWorker).toContain("'/assets/cards/objects/apple.png'");
     expect(serviceWorker).toContain("'/assets/cards/actions/drink.png'");
     expect(serviceWorker).toContain("'/assets/cards/sentences/water-request.png'");
+    expect(serviceWorker).toContain("'/sounds/peekaboo/pofi_ceee_01.wav'");
+    expect(serviceWorker).toContain("'/sounds/peekaboo/pofi_ceee_05.wav'");
     expect(serviceWorker).not.toContain("'/assets/cards/objects/dad.png'");
     expect(serviceWorker).toContain("await caches.match('/offline.html')");
   });

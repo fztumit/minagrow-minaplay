@@ -12,7 +12,8 @@
     "start": "node dist/server.js",
     "lint": "eslint \"server.ts\" \"src/**/*.ts\" \"tests/**/*.ts\"",
     "test": "vitest run tests/unit",
-    "test:e2e": "playwright test tests/playwright"
+    "test:e2e": "playwright test tests/playwright",
+    "tts:ceee": "node scripts/generate-pofi-ceee-tts.mjs"
   },
   "dependencies": {
     "dotenv": "^16.4.5",

@@ -2,7 +2,7 @@
 name: project
 description: MinaPlay projesinin problemi, amacı, kapsamı, başarı ölçütleri ve temel bağlamını tanımlar.
 created: 2026-04-17
-updated: 2026-06-15
+updated: 2026-06-25
 ---
 
 # Proje
@@ -112,8 +112,11 @@ Bu vizyon bugünkü PWA çekirdeğine erken yüklenmez; ürün hafızasında gel
 - Ana ekran
 - Dokun modu
 - Eşleme modu
+- İfade modu
+- Hikaye modu
 - Ayna modu
 - Uyku modu
+- Ceee bonus modu
 - Parent panel
 - Pofi davranış/state/render sistemi
 - temel ilerleme ve tekrar takibi
@@ -124,12 +127,9 @@ Bu vizyon bugünkü PWA çekirdeğine erken yüklenmez; ürün hafızasında gel
 
 ### MVP Dışı / Sonra
 
-- Cümle modu
-- Hikaye modu
-- Ceee bonus modu
 - gelişmiş ebeveyn analizleri
 - özel ses kaydı ve kayıt kütüphanesinin gelişmiş hali
-- hikaye ve kolay cümle yönetimi
+- gelişmiş hikaye ve kolay cümle yönetimi
 - ilk aşamada kullanıcı hesabı ve bulut senkronizasyonu
 - gerçek üyelik ve rol yönetimi
 - terapist paneli ve görüntülü görüşme

@@ -2,7 +2,7 @@
 name: plan
 description: MinaPlay projesinin bugünkü yürütme yönünü, aktif odağını ve yakın çalışma sırasını tanımlar.
 created: 2026-04-17
-updated: 2026-06-16
+updated: 2026-06-26
 ---
 
 # Plan
@@ -133,7 +133,7 @@ Faz 5 sonucu:
 
 Durum:
 
-- aktif
+- tamamlandı
 
 Karar:
 
@@ -147,12 +147,12 @@ Kapanan paketler:
 - 6-1: İfade ve Hikaye ana ekran/alt navigasyon yüzeyinde aktif hale getirildi
 - 6-2: Dokun modunda ebeveynin belirli bir kelimeyi odak tekrar olarak seçebilmesi sağlandı
 - 6-3: Parent panel Bugün, Düzenle ve Kontrol sekmelerine ayrılarak sadeleştirildi
+- 6-4: Faz 6 sonrası genişleyen 33 kartlık Dokun seti, cache query taşıyan görseller ve meta kapsamı kalite hattıyla hizalandı
+- 6-5: Bugün sekmesi ham sayı dilinden çıkarılıp bölüm grafikleri, bağımsız/destekli deneme ayrımı, seviyeli kelime önerileri ve öğretmen/rehber diliyle sadeleştirildi
+- 6-6: Düzenle ve Kontrol sekmelerindeki yoğun tablo ve ayarlar katlanır çalışma bloklarına ayrıldı
+- 6-7: Faz 6 kapanış QA'sı tamamlandı; güvenli medya/yükleme kapsamı sonraki ayrı paket olarak ayrıldı
 
-Aktif paket:
-
-- 6-4: Parent panelde detay tabloları ve ayar yoğunluğunu daha da azaltmak için açılır detay davranışlarını güçlendirmek
-
-Faz 6 ara sonucu:
+Faz 6 sonucu:
 
 - İfade ve Hikaye çocuk yüzeyinde aktif görünür
 - Dokun tekrarının varsayılan odağı Baba kelimesidir
@@ -160,14 +160,66 @@ Faz 6 ara sonucu:
 - ebeveyn video/çekim linki ve çekim notunu yerel ayar olarak saklayabilir
 - Parent panel ilk açılışta Bugün özetini, yorumlu öneriyi ve üç hızlı aksiyonu gösterir
 - düzenleme işleri Düzenle sekmesine, güvenlik ve cihaz işleri Kontrol sekmesine taşınmıştır
-- video dosyası yükleme veya oynatma bu pakette açılmamıştır; güvenli medya yönetimi sonraki ayrı paket olarak ele alınır
+- genişleyen 33 kartlık Dokun seti Parent panel ve Playwright beklentileriyle uyumludur
+- İfade/Hikaye aktivasyonu `project`, `architecture` ve `phase-06` meta yüzeylerinde aynı dille görünür
+- Bugün sekmesi “doğru tıklama” gibi ham metrikler yerine bağımsız deneme, destekle deneme ve tekrar odağı dilini kullanır
+- bölüm ağırlığı mini bar grafikleriyle görünür; önerilen kelimeler bilişsel/dil gelişim seviyesine göre sıralanır
+- gelişim yorumu ve yorumlu rehberlik özel eğitim/rehber öğretmen tonuna yaklaştırılmıştır
+- Düzenle sekmesi odak tekrar, Dokun kartları, Dokun öğrenme ve Eşleme öğrenme bloklarına ayrılmıştır
+- Düzenle sekmesi masaüstü ve telefonda tek sütun akışa geri alınmıştır
+- Kontrol sekmesi çocuk profili, çocuk kilidi, mod görünürlüğü, Ayna planı, Uyku tercihi ve cihaz durumu bloklarıyla sakinleştirilmiştir
+- hızlı aksiyonlar hedef sekmedeki ilgili katlanır bloğu otomatik açar
+- 2026-06-26 kapanışında build, lint, 34 unit test ve 31 Playwright e2e testi başarılıdır
+- Bugün, Düzenle ve Kontrol sekmeleri masaüstü/telefon görsel QA ve yatay taşma ölçümüyle doğrulanmıştır
+- video dosyası yükleme veya oynatma Faz 6'da açılmamıştır; güvenli medya yönetimi sonraki ayrı paket/faz olarak ele alınacaktır
+
+## Faz 7 - Güvenli Medya ve Kayıt
+
+Durum:
+
+- aktif
+
+Karar:
+
+- kısa ses ve video kaydı yalnız Parent panelde, ebeveyn kontrolünde yapılır
+- kayıtlar otomatik olarak çocuk yüzeyinde oynatılmaz
+- kayıt dosyaları ve dış medya linkleri localStorage yerine şifreli medya kasası olarak IndexedDB içinde saklanır
+- medya kasası PBKDF2 ile türetilen anahtar ve AES-GCM şifreleme kullanır
+- kasa şifresi cihazda düz metin olarak saklanmaz; şifre unutulursa kayıtlar açılamaz
+- YouTube, Vimeo, Drive veya benzeri platformlara uygulama içinden yükleme yapılmaz; ebeveyn dışarıda yüklediği güvenli `https` linkini kaydedebilir
+- kamera/mikrofon izni alınamazsa uygulama sakin hata mesajı verir
+
+Kapanan paketler:
+
+- 7-1: Dokun odak tekrarına şifreli medya kasası, kısa ses/video kaydı ve dış medya linki alanı eklendi
+- 7-2: ebeveyn sesi çocuk tekrar akışına yalnız Parent panel izniyle ve kasa açıkken bağlandı; video otomatik oynatma kapalı kaldı
+
+Aktif paket:
+
+- 7-3: şifre unutma riskine karşı arka kapısız, şifreli yedek/dışa aktarma ve manuel cihaz QA checklist'i tasarlamak
+
+Faz 7 ara sonucu:
+
+- Düzenle sekmesindeki Odak tekrar bloğu ses/video linkini kabul eder
+- medya kasası açılmadan ses/video linki girilemez, kayıt başlatılamaz veya önizleme görülemez
+- seçili odak kelime için kısa ses kaydı ve kısa video kaydı başlatma/durdurma butonları görünür
+- ses kayıtları en fazla 10 saniye, video kayıtları en fazla 12 saniye ile sınırlandırılmıştır
+- kayıtlar ve dış linkler kelimeye bağlı şifreli medya kasasında IndexedDB üzerinde saklanır
+- kaydedilen ses/video Parent panelde önizlenebilir ve silinebilir
+- dış linkler yalnız `http/https` URL olarak normalize edilir ve önizleme alanında gösterilir
+- tekrar ayarlarının düz localStorage payload'ında dış medya linki saklanmaz
+- ebeveyn sesi çocuk tekrarında yalnız `Çocuk tekrarında ebeveyn sesini kullan` seçeneği açıksa, medya kasası açıksa ve ilgili kelime için ses kaydı varsa kullanılır
+- video kaydı çocuk ekranında otomatik oynatılmaz; yalnız Parent panel önizlemesinde kalır
+- gizlilik notu Parent panel medya alanında görünür: kayıtlar buluta yüklenmez, YouTube'a gönderilmez ve video çocuk ekranında otomatik oynatılmaz
+- build, lint, 34 unit test ve 31 Playwright e2e testi başarılıdır
+- masaüstü/telefon Düzenle sekmesi medya UI ve ebeveyn sesi izni görsel QA/yatay taşma ölçümüyle doğrulanmıştır
 
 ## Bugünkü Kapanış Hedefi
 
 - aktif uygulama hedefi `/Users/umitaydin/Documents/MinaGrow/MinaPlay` olarak korunur
-- Faz 1, Faz 2, Faz 3, Faz 4 ve Faz 5 kapanışları git kaydıyla doğrulanmış kabul edilir
+- Faz 1, Faz 2, Faz 3, Faz 4, Faz 5 ve Faz 6 kapanışları doğrulanmış kabul edilir
+- Faz 7 aktif yürütme fazıdır; sıradaki hedef şifreli medya yedeği/dışa aktarma kararı ve manuel gerçek cihaz QA checklist'idir
 - `MinaPlay` içinde build/lint/test/e2e hattı kararlı tutulur
-- sonraki aktif faz/paket, bu sertleştirilmiş MVP tabanı üstüne yeni tek kapanış hedefi olarak belirlenir
 - yeni iş açılırken çocuk yüzeyi kapsamı büyütülmeden önce Parent panel, Pofi state ve local-first veri sınırları korunur
 - Dokun tekrarında odak kelime, ritim çeşidi ve ebeveynin ek içerik notları local-first sınırda tutulur
 - Parent panel yeni işlerinde ilk ekran sade kalır; detay ve ayarlar ilgili sekme veya açılır alan arkasında tutulur
@@ -390,7 +442,7 @@ Alınan kararlar:
 - kamera varsa ölçüm yapılabilir, kamera yoksa görsel anlatım ve süre/tekrar akışı çalışır
 - Uyku modunda ses, süre ve kayıt ebeveyn tarafından belirlenir; touch lock ve özel çıkış gesture'ı kullanılır
 - Uyku modunda Pofi kaybolmaz; bulut gibi sakin görünür, ay ve Pofi doğal ve çok yavaş hareket eder
-- Ceee temiz PNG tarzı çocuk odası ortamında Pofi'nin saklanma, merkeze gelme, yeniden konumlanma ve otomatik devam etme davranışını taşır
+- Ceee klasik karşılıklı ce-ee deneyimidir; Pofi yüzünü kapatır, arama cümlesiyle bekler, açılınca kısa sevinçli ses ve görsel geri bildirim verir
 - Parent panel kelime, cümle, hikaye, ses, resim, egzersiz sırası ve uyku tercihlerini planlama alanı olarak ele alır
 
 ### 7. Pofi Presence Matrisi

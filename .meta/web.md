@@ -2,7 +2,7 @@
 name: web
 description: MinaPlay PWA yüzeyinin rolünü, ana kullanım akışını, modüllerini ve bugünkü yapı yönünü tanımlar.
 created: 2026-04-17
-updated: 2026-04-19
+updated: 2026-06-25
 ---
 
 # Web
@@ -235,7 +235,7 @@ Rol:
 
 - kısa dikkat ve neşe oyunu olarak Pofi'nin peekaboo/ce-ee halini kullanmak
 - MVP'de aktif 5. alan olarak yer alabilir
-- oyun temelli, neşeli ama düşük uyarımlı çocuk odası ortamı kurmak
+- oyun temelli, neşeli ama düşük uyarımlı klasik karşılıklı ce-ee deneyimi kurmak
 
 İlke:
 
@@ -248,12 +248,12 @@ Rol:
 
 Mekanik:
 
-- Pofi bazen yüzünü saklar
-- Pofi bazen nesnelerin arkasına saklanır
-- düşük görünürlüklü ipucu verilebilir
-- 5-10 saniye bulunamazsa merkeze gelir ve sonra yeni konuma yerleşir
-- çocuk dokununca sakin başarı geri bildirimi verilir
-- hiç etkileşim olmazsa oyun otomatik ve yumuşak biçimde devam eder
+- Pofi büyük ve merkezde kalır
+- Pofi gözlerini/yüzünü kapatarak kısa bekleme anı oluşturur
+- kapalı göz fazında çocuğun adıyla kısa arama cümleleri söylenebilir
+- Pofi açılınca kısa, heyecanlı ama ürkütmeyen "Ceee" sesi ve görsel geri bildirim verir
+- çocuk ekrana dokunarak yeni tur başlatabilir
+- hiç etkileşim olmazsa oyun aralıklı sakin nefeslerle otomatik ve yumuşak biçimde devam eder
 
 ### Parent Panel
 

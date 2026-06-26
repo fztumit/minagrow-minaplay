@@ -14,4 +14,12 @@ describe('touch default sound set', () => {
       }
     }
   });
+
+  test('ships recorded peekaboo voice clips', () => {
+    for (const fileName of ['pofi_ceee_01.wav', 'pofi_ceee_02.wav', 'pofi_ceee_03.wav', 'pofi_ceee_04.wav', 'pofi_ceee_05.wav']) {
+      const file = resolve(process.cwd(), `public/sounds/peekaboo/${fileName}`);
+      expect(existsSync(file), `${fileName} should exist`).toBe(true);
+      expect(statSync(file).size, `${fileName} should not be empty`).toBeGreaterThan(1024);
+    }
+  });
 });

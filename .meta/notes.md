@@ -2,7 +2,7 @@
 name: notes
 description: MinaPlay için açık soruları, teknik riskleri, görülen eksikleri ve ileri adayları toplar.
 created: 2026-04-17
-updated: 2026-04-22
+updated: 2026-06-25
 ---
 
 # Notlar
@@ -87,7 +87,7 @@ updated: 2026-04-22
 - merkezi `pofi-root` ve tek Pofi instance kuralı
 - modüllerin Pofi'yi doğrudan yönetmemesi, yalnız olay göndermesi
 - Parent Panel MVP: kelime/nesne deneme, doğru, streak, son 5 deneme, öğrenildi durumu, günlük özet ve set seçimi
-- Ceee temiz PNG tarzı çocuk odası ortamı
+- Ceee klasik karşılıklı ce-ee akışı ve düşük uyarımlı pastel sahne
 - Uyku Pofi bulut davranışı ve ayın yaklaşık 30 dakikalık doğal hareketi
 - Pofi Engine V2 role-first state modeli: `module`, `role`, `presence`, `assetKey`, `locked`, `updatedAt`
 - typed event bus ve persistent `img` render kararı
