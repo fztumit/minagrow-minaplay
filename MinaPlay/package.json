@@ -13,6 +13,7 @@
     "lint": "eslint \"server.ts\" \"src/**/*.ts\" \"tests/**/*.ts\"",
     "test": "vitest run tests/unit",
     "test:e2e": "playwright test tests/playwright",
+    "audio:pispis": "node scripts/generate-pispis-sleep-wav.mjs",
     "tts:ceee": "node scripts/generate-pofi-ceee-tts.mjs"
   },
   "dependencies": {

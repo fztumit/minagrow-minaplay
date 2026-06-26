@@ -1,4 +1,4 @@
-const CACHE_NAME = 'minaplay-assets-v35';
+const CACHE_NAME = 'minaplay-assets-v36';
 const APP_SHELL = [
   '/',
   '/offline.html',
@@ -164,6 +164,7 @@ const APP_SHELL = [
   '/assets/pofi/poses/playful.png',
   '/assets/pofi/poses/sleeping.png',
   '/assets/sleep/moon.png',
+  '/sounds/sleep/pispis-ninni.wav',
   '/sounds/peekaboo/pofi_ceee_01.wav',
   '/sounds/peekaboo/pofi_ceee_02.wav',
   '/sounds/peekaboo/pofi_ceee_03.wav',
