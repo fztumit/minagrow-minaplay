@@ -935,7 +935,7 @@ test('parent panel shows matching mastery and saves Ayna and Uyku preferences', 
   await page.selectOption('[data-mirror-plan-preset]', 'mouth-first');
   await page.click('[data-mirror-plan-save]');
   await openParentBlock(page, 'Ses ve süre');
-  await page.selectOption('[data-sleep-sound-setting]', 'pispis');
+  await page.selectOption('[data-sleep-sound-setting]', 'ocean');
   await page.selectOption('[data-sleep-duration-setting]', '20');
   await page.fill('[data-sleep-volume]', '80');
   await page.click('[data-sleep-settings-save]');
@@ -946,7 +946,7 @@ test('parent panel shows matching mastery and saves Ayna and Uyku preferences', 
     sleep: JSON.parse(localStorage.getItem('minaplay_sleep_settings_v1') ?? '{}')
   }));
   expect(saved.mirror).toEqual({ preset: 'mouth-first' });
-  expect(saved.sleep).toEqual({ sound: 'pispis', durationMinutes: 20, volume: 0.8 });
+  expect(saved.sleep).toEqual({ sound: 'ocean', durationMinutes: 20, volume: 0.8 });
 
   await page.click('.brand-home');
   await page.click('.mode-card[data-view="mirror"]');
@@ -954,7 +954,7 @@ test('parent panel shows matching mastery and saves Ayna and Uyku preferences', 
 
   await page.click('.brand-home');
   await page.click('.mode-card[data-view="sleep"]');
-  await expect(page.locator('[data-sleep-surface]')).toHaveAttribute('data-sleep-sound', 'pispis');
+  await expect(page.locator('[data-sleep-surface]')).toHaveAttribute('data-sleep-sound', 'ocean');
   await expect(page.locator('[data-sleep-surface]')).toHaveAttribute('data-sleep-duration', '20');
 });
 

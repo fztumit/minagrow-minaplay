@@ -325,7 +325,6 @@ Değerler:
 - `ocean`
 - `vacuum`
 - `heartbeat`
-- `pispis`
 - `parentRecording`
 
 Kalıcı veri olmaktan çok runtime state olarak yorumlanır.
