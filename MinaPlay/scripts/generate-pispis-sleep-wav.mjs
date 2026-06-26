@@ -13,17 +13,19 @@ const outputPaths = [
 ];
 
 const melody = [
-  { frequency: 256, length: 1.45 },
-  { frequency: 288, length: 1.45 },
-  { frequency: 320, length: 1.8 },
-  { frequency: 288, length: 1.45 },
-  { frequency: 256, length: 1.6 },
-  { frequency: 216, length: 2.1 },
-  { frequency: 240, length: 1.55 },
-  { frequency: 256, length: 2.25 }
+  { frequency: 330, length: 1.35 },
+  { frequency: 392, length: 1.35 },
+  { frequency: 440, length: 1.62 },
+  { frequency: 392, length: 1.35 },
+  { frequency: 330, length: 1.48 },
+  { frequency: 294, length: 1.52 },
+  { frequency: 330, length: 1.35 },
+  { frequency: 392, length: 1.74 },
+  { frequency: 349, length: 1.28 },
+  { frequency: 330, length: 2.04 }
 ];
-const noteStepSeconds = 1.48;
-const cycleSeconds = 13.2;
+const noteStepSeconds = 1.22;
+const cycleSeconds = 13.8;
 
 function envelope(time, start, length, attack = 0.22, release = 0.52) {
   const local = time - start;
@@ -54,12 +56,12 @@ function softNoise(time) {
   return (seed - Math.floor(seed)) * 2 - 1;
 }
 
-function lowVoice(frequency, time) {
+function softVoice(frequency, time) {
   return (
-    0.56 * sine(frequency, time) +
-    0.24 * sine(frequency * 2, time + 0.004) +
-    0.12 * sine(frequency * 3, time + 0.009) +
-    0.08 * sine(frequency * 4, time + 0.013)
+    0.66 * sine(frequency, time) +
+    0.18 * sine(frequency * 2, time + 0.004) +
+    0.1 * sine(frequency * 3, time + 0.009) +
+    0.06 * sine(frequency * 0.5, time + 0.017)
   );
 }
 
@@ -70,9 +72,9 @@ function pishSyllable(time, start) {
   }
 
   const breath = envelope(time, start, 0.34, 0.025, 0.19);
-  const vowel = envelope(time, start + 0.18, 0.5, 0.1, 0.3);
-  const shimmer = softNoise(time * 5.2) * 0.018 + softNoise(time * 8.7) * 0.01;
-  return breath * (0.034 * softNoise(time * 17.3) + shimmer) + vowel * 0.045 * lowVoice(247, time);
+  const vowel = envelope(time, start + 0.18, 0.48, 0.09, 0.28);
+  const shimmer = softNoise(time * 5.2) * 0.008 + softNoise(time * 8.7) * 0.006;
+  return breath * (0.022 * softNoise(time * 17.3) + shimmer) + vowel * 0.034 * softVoice(294, time);
 }
 
 function sampleAt(index) {
@@ -81,10 +83,9 @@ function sampleAt(index) {
   const slowPulse = 0.9 + 0.1 * Math.sin(2 * Math.PI * 0.11 * time);
   let value = 0;
 
-  value += 0.026 * sine(128, time) * slowPulse;
-  value += 0.018 * sine(192, time + 0.011) * slowPulse;
-  value += 0.008 * sine(64, time);
-  value += 0.012 * lowVoice(192, time + 0.04) * (0.7 + 0.3 * sine(0.08, time));
+  value += 0.016 * sine(196, time) * slowPulse;
+  value += 0.012 * sine(247, time + 0.011) * slowPulse;
+  value += 0.008 * sine(330, time + 0.021) * (0.76 + 0.24 * sine(0.07, time));
 
   const cycleStart = Math.floor(time / cycleSeconds) * cycleSeconds;
   for (let i = 0; i < melody.length; i += 1) {
@@ -92,14 +93,15 @@ function sampleAt(index) {
     const amp = envelope(time, start, melody[i].length, 0.34, 0.72);
     if (amp > 0) {
       const frequency = melody[i].frequency;
-      value += 0.07 * amp * lowVoice(frequency, time);
-      value += 0.02 * amp * sine(frequency / 2, time);
+      value += 0.082 * amp * softVoice(frequency, time);
+      value += 0.016 * amp * sine(frequency * 1.5, time);
     }
   }
 
-  const phraseStart = Math.floor(time / 4.8) * 4.8;
-  value += pishSyllable(time, phraseStart + 0.42);
-  value += pishSyllable(time, phraseStart + 1.58);
+  const phraseStart = Math.floor(time / 5.2) * 5.2;
+  value += pishSyllable(time, phraseStart + 0.48);
+  value += pishSyllable(time, phraseStart + 1.68);
+  value += 0.45 * pishSyllable(time, phraseStart + 3.55);
 
   return Math.max(-0.96, Math.min(0.96, value * fade));
 }
