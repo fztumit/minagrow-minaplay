@@ -1,5 +1,24 @@
 export type MirrorPlanPreset = 'balanced' | 'mouth-first' | 'expression-first';
-export type SleepSoundPreset = 'lullaby' | 'ocean' | 'white';
+export const SLEEP_SOUND_PRESETS = [
+  'lullaby',
+  'ocean',
+  'white',
+  'sleep-besik',
+  'sleep-bulut',
+  'sleep-dunya',
+  'sleep-esek',
+  'sleep-gul',
+  'sleep-derin',
+  'sleep-pofi-vocal-v2',
+  'sleep-pofi-vocal',
+  'sleep-pofi-pis-pis-vocal',
+  'sleep-pofi-pisss',
+  'sleep-ambient',
+  'sleep-ambient-v2',
+  'sleep-pis-pis-hipnotik',
+  'sleep-yum-gozlerini'
+] as const;
+export type SleepSoundPreset = (typeof SLEEP_SOUND_PRESETS)[number];
 export type MvpModuleId = 'touch' | 'match' | 'sentence' | 'story' | 'mirror' | 'sleep' | 'peekaboo';
 
 export interface MirrorPlanSettings {
@@ -96,7 +115,7 @@ function isMirrorPreset(value: unknown): value is MirrorPlanPreset {
 }
 
 function isSleepSound(value: unknown): value is SleepSoundPreset {
-  return value === 'lullaby' || value === 'ocean' || value === 'white';
+  return typeof value === 'string' && SLEEP_SOUND_PRESETS.includes(value as SleepSoundPreset);
 }
 
 function isSleepDuration(value: unknown): value is SleepSettings['durationMinutes'] {

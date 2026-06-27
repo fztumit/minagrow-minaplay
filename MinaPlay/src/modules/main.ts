@@ -403,6 +403,22 @@ const PEEKABOO_SEARCH_TEMPLATES = [
 const PEEKABOO_MOTIONS: PeekabooMotion[] = ['float', 'swoop', 'peek'];
 const PEEKABOO_CELEBRATIONS: PeekabooCelebration[] = ['sparkle', 'pop', 'halo', 'confetti', 'bounce'];
 const PEEKABOO_BIG_CELEBRATION_EVERY = 6;
+const SLEEP_RECORDED_TRACKS: Partial<Record<SleepSettings['sound'], string>> = {
+  'sleep-besik': '/sounds/sleep/Beşik Başında (Sade Ninni).wav',
+  'sleep-bulut': '/sounds/sleep/Bulutların Üzerinde Uyku.wav',
+  'sleep-dunya': '/sounds/sleep/Dünya Biraz Dursun.wav',
+  'sleep-esek': '/sounds/sleep/Eşek senin ağzınla.wav',
+  'sleep-gul': '/sounds/sleep/Gül Kokulu Ninni.wav',
+  'sleep-derin': '/sounds/sleep/Pofi ile Derin Uyku.wav',
+  'sleep-pofi-vocal-v2': "/sounds/sleep/Pofi'nin Ninnisi (Vokalli) - Versiyon 2.mp4",
+  'sleep-pofi-vocal': "/sounds/sleep/Pofi'nin Ninnisi (Vokalli).mp4",
+  'sleep-pofi-pis-pis-vocal': "/sounds/sleep/Pofi'nin Pış Pış Ninnisi (Vokalli).wav",
+  'sleep-pofi-pisss': "/sounds/sleep/Pofi'nin Pışşş Ninnisi .wav",
+  'sleep-ambient': "/sounds/sleep/Pofi'nin Uyku Frekansı (Ambient).wav",
+  'sleep-ambient-v2': "/sounds/sleep/Pofi'nin Uyku Frekansı - Versiyon 2.wav",
+  'sleep-pis-pis-hipnotik': '/sounds/sleep/Pış Pış (Hipnotik Ninni).wav',
+  'sleep-yum-gozlerini': '/sounds/sleep/Yum Gözlerini Canım Bebeğim.wav'
+};
 const SENTENCE_CONTEXT_MS = 900;
 const SENTENCE_HINT_LEVEL_1_MS = 5000;
 const SENTENCE_HINT_STEP_MS = 3000;
@@ -1610,6 +1626,7 @@ let storySession: StorySession | undefined;
 let storyCursor = 0;
 let lastStorySpeechKind: 'attention' | 'narration' | 'interaction' | 'success' | 'repeat' | 'closure' | undefined;
 let sleepAudioContext: AudioContext | undefined;
+let sleepAudioElement: HTMLAudioElement | undefined;
 let sleepMusicNodes: Array<OscillatorNode | GainNode> = [];
 let sleepMelodyTimer: number | undefined;
 let sleepAutoStopTimer: number | undefined;
@@ -4870,6 +4887,46 @@ function startSleepMusic(): void {
     return;
   }
 
+  const recordedSrc = SLEEP_RECORDED_TRACKS[sleepSettings.sound];
+  if (recordedSrc) {
+    startRecordedSleepMusic(recordedSrc);
+    return;
+  }
+
+  startGeneratedSleepMusic();
+}
+
+function startRecordedSleepMusic(src: string): void {
+  sleepMusicRunning = true;
+  sleepMusicNodes = [];
+  const audio = new Audio(src);
+  sleepAudioElement = audio;
+  audio.loop = true;
+  audio.preload = 'auto';
+  audio.volume = Math.min(0.82, sleepSettings.volume);
+  audio.addEventListener(
+    'error',
+    () => {
+      if (sleepAudioElement === audio) {
+        sleepAudioElement = undefined;
+        sleepMusicRunning = false;
+        startGeneratedSleepMusic();
+      }
+    },
+    { once: true }
+  );
+  void audio.play().catch(() => {
+    if (sleepAudioElement === audio) {
+      sleepAudioElement = undefined;
+      sleepMusicRunning = false;
+      startGeneratedSleepMusic();
+    }
+  });
+  scheduleSleepAutoStop();
+  renderSleepMode();
+}
+
+function startGeneratedSleepMusic(): void {
   const AudioContextConstructor = window.AudioContext;
   if (!AudioContextConstructor) {
     playSoftTouchTone();
@@ -4956,12 +5013,24 @@ async function stopSleepMusic(): Promise<void> {
     sleepAutoStopTimer = undefined;
   }
 
-  if (!sleepMusicRunning && !sleepAudioContext) {
+  if (!sleepMusicRunning && !sleepAudioContext && !sleepAudioElement) {
     renderSleepMode();
     return;
   }
 
   sleepMusicRunning = false;
+  if (sleepAudioElement) {
+    const audio = sleepAudioElement;
+    sleepAudioElement = undefined;
+    const startVolume = audio.volume;
+    for (let step = 5; step >= 0; step -= 1) {
+      audio.volume = startVolume * (step / 5);
+      await wait(70);
+    }
+    audio.pause();
+    audio.currentTime = 0;
+  }
+
   const context = sleepAudioContext;
   const master = sleepMusicNodes[0];
   if (context && master instanceof GainNode) {

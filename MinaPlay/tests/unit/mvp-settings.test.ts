@@ -24,6 +24,11 @@ describe('MVP parent settings', () => {
       durationMinutes: 20,
       volume: 0.8
     });
+    expect(normalizeSleepSettings({ sound: 'sleep-gul', durationMinutes: 10, volume: 0.55 })).toEqual({
+      sound: 'sleep-gul',
+      durationMinutes: 10,
+      volume: 0.55
+    });
     expect(normalizeSleepSettings({ sound: 'invalid', durationMinutes: 7, volume: 4 })).toEqual({
       ...DEFAULT_SLEEP_SETTINGS,
       volume: 1
