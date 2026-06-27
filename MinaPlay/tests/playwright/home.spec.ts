@@ -815,16 +815,19 @@ test('sleep module shows moon scene and toggles sleeping Pofi', async ({ page })
   await expect(page.locator('#view-sleep .sleep-moon')).toHaveAttribute('src', /assets\/sleep\/moon\.png(?:\?v=[\w-]+)?$/);
   await expect(page.locator('#view-sleep .sleep-floating-pofi')).toBeVisible();
   await expect(page.locator('#view-sleep .sleep-floating-pofi')).toHaveAttribute('data-pofi-state', 'sleepReady');
-  await expect(page.locator('#view-sleep .sleep-floating-pofi .pofi-eyes')).toHaveAttribute('src', /half-open-v01\.png$/);
-  await expect(page.locator('#view-sleep .sleeping-pofi-pose')).toHaveCSS('opacity', '0');
+  await expect(page.locator('#view-sleep .sleep-floating-pofi .pofi-eyes')).toHaveAttribute('src', /closed-soft-v01\.png$/);
+  await expect(page.locator('#view-sleep .sleep-floating-pofi .pofi-mouth')).toHaveAttribute('src', /smile-soft-v01\.png$/);
+  await expect(page.locator('#view-sleep .sleep-pofi-wrap')).toHaveCSS('animation-name', /sleep-pofi-cloud-path/);
+  await expect(page.locator('#view-sleep .sleep-moon')).toHaveCSS('animation-name', /sleep-moon-real-descent/);
   await expect(page.locator('[data-sleep-label]')).toHaveText('Başlat');
 
   await page.click('[data-sleep-toggle]');
   await expect(page.locator('[data-sleep-surface]')).toHaveAttribute('data-sleep-running', 'true');
   await expect(page.locator('#view-sleep .sleep-floating-pofi')).toHaveAttribute('data-pofi-state', 'sleep');
-  await expect(page.locator('#view-sleep .sleep-floating-pofi .pofi-eyes')).toHaveAttribute('src', /drowsy-v01\.png$/);
+  await expect(page.locator('#view-sleep .sleep-floating-pofi .pofi-eyes')).toHaveAttribute('src', /closed-v01\.png$/);
+  await expect(page.locator('#view-sleep .sleep-floating-pofi .pofi-mouth')).toHaveAttribute('src', /smile-soft-v01\.png$/);
+  await expect(page.locator('#view-sleep .sleep-floating-pofi .pofi-body')).toHaveCSS('animation-name', /sleep-pofi-breathe/);
   await expect(page.locator('[data-sleep-label]')).toHaveText('Durdur');
-  await expect(page.locator('#view-sleep .sleeping-pofi-pose')).toHaveCSS('opacity', '1', { timeout: 2000 });
   await expect(page.locator('.topbar')).toHaveCSS('opacity', '0');
   await expect(page.locator('.bottom-nav')).toHaveCSS('opacity', '0');
   await expect(page.locator('[data-sleep-toggle]')).toHaveCSS('opacity', '0');

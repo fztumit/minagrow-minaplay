@@ -1197,8 +1197,9 @@ const POFI_EXPRESSIONS: Record<PofiMood, PofiExpression> = {
     role: 'sleep',
     parts: {
       body: POFI_STABLE_BODY,
-      eyes: 'drowsy-v01.png',
-      mouth: 'closed-v01.png',
+      eyes: 'closed-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'smile-soft-v01.png',
       hands: 'pofi_hand_closed_v01.png'
     }
   },
@@ -1206,7 +1207,7 @@ const POFI_EXPRESSIONS: Record<PofiMood, PofiExpression> = {
     role: 'sleep',
     parts: {
       body: POFI_STABLE_BODY,
-      eyes: 'half-open-v01.png',
+      eyes: 'closed-soft-v01.png',
       eyebrows: POFI_HAPPY_EYEBROWS,
       mouth: 'smile-soft-v01.png',
       effect: POFI_WARMTH_EFFECT
@@ -1510,7 +1511,8 @@ const POFI_EXPRESSIONS: Record<PofiMood, PofiExpression> = {
     parts: {
       body: POFI_STABLE_BODY,
       eyes: 'closed-v01.png',
-      mouth: 'closed-v01.png',
+      eyebrows: POFI_HAPPY_EYEBROWS,
+      mouth: 'smile-soft-v01.png',
       hands: 'pofi_hand_closed_v01.png'
     }
   }
