@@ -1,5 +1,6 @@
 export type MirrorPlanPreset = 'balanced' | 'mouth-first' | 'expression-first';
 export const SLEEP_SOUND_PRESETS = [
+  'sleep-sequence',
   'lullaby',
   'ocean',
   'white',
@@ -43,7 +44,7 @@ export const DEFAULT_MIRROR_PLAN: MirrorPlanSettings = {
 };
 
 export const DEFAULT_SLEEP_SETTINGS: SleepSettings = {
-  sound: 'lullaby',
+  sound: 'sleep-sequence',
   durationMinutes: 10,
   volume: 0.55
 };

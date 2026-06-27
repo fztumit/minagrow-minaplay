@@ -19,6 +19,8 @@ describe('MVP parent settings', () => {
   });
 
   test('normalizes sleep sound, duration and volume safely', () => {
+    expect(normalizeSleepSettings(undefined)).toEqual(DEFAULT_SLEEP_SETTINGS);
+    expect(DEFAULT_SLEEP_SETTINGS.sound).toBe('sleep-sequence');
     expect(normalizeSleepSettings({ sound: 'ocean', durationMinutes: 20, volume: 0.8 })).toEqual({
       sound: 'ocean',
       durationMinutes: 20,

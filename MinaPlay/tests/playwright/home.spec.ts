@@ -935,6 +935,8 @@ test('parent panel shows matching mastery and saves Ayna and Uyku preferences', 
   await page.selectOption('[data-mirror-plan-preset]', 'mouth-first');
   await page.click('[data-mirror-plan-save]');
   await openParentBlock(page, 'Ses ve süre');
+  await expect(page.locator('[data-sleep-sound-setting]')).toContainText('Ninniler sırayla');
+  await expect(page.locator('[data-sleep-sound-setting]')).toContainText('Gül Kokulu Ninni');
   await page.selectOption('[data-sleep-sound-setting]', 'sleep-gul');
   await page.selectOption('[data-sleep-duration-setting]', '20');
   await page.fill('[data-sleep-volume]', '80');

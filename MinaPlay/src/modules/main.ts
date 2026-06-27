@@ -419,6 +419,22 @@ const SLEEP_RECORDED_TRACKS: Partial<Record<SleepSettings['sound'], string>> = {
   'sleep-pis-pis-hipnotik': '/sounds/sleep/Pış Pış (Hipnotik Ninni).wav',
   'sleep-yum-gozlerini': '/sounds/sleep/Yum Gözlerini Canım Bebeğim.wav'
 };
+const SLEEP_RECORDED_SEQUENCE = [
+  SLEEP_RECORDED_TRACKS['sleep-besik'],
+  SLEEP_RECORDED_TRACKS['sleep-bulut'],
+  SLEEP_RECORDED_TRACKS['sleep-dunya'],
+  SLEEP_RECORDED_TRACKS['sleep-gul'],
+  SLEEP_RECORDED_TRACKS['sleep-derin'],
+  SLEEP_RECORDED_TRACKS['sleep-pofi-vocal-v2'],
+  SLEEP_RECORDED_TRACKS['sleep-pofi-vocal'],
+  SLEEP_RECORDED_TRACKS['sleep-pofi-pis-pis-vocal'],
+  SLEEP_RECORDED_TRACKS['sleep-pofi-pisss'],
+  SLEEP_RECORDED_TRACKS['sleep-ambient'],
+  SLEEP_RECORDED_TRACKS['sleep-ambient-v2'],
+  SLEEP_RECORDED_TRACKS['sleep-pis-pis-hipnotik'],
+  SLEEP_RECORDED_TRACKS['sleep-yum-gozlerini'],
+  SLEEP_RECORDED_TRACKS['sleep-esek']
+].filter((src): src is string => Boolean(src));
 const SENTENCE_CONTEXT_MS = 900;
 const SENTENCE_HINT_LEVEL_1_MS = 5000;
 const SENTENCE_HINT_STEP_MS = 3000;
@@ -1631,6 +1647,8 @@ let sleepMusicNodes: Array<OscillatorNode | GainNode> = [];
 let sleepMelodyTimer: number | undefined;
 let sleepAutoStopTimer: number | undefined;
 let sleepMusicRunning = false;
+let sleepRecordedSequenceIndex = 0;
+let sleepRecordedSequenceFailures = 0;
 let storyFlowToken = 0;
 let mirrorState: MirrorState = 'idle';
 let mirrorExerciseIndex = 0;
@@ -4887,43 +4905,90 @@ function startSleepMusic(): void {
     return;
   }
 
+  if (sleepSettings.sound === 'sleep-sequence') {
+    sleepRecordedSequenceIndex = 0;
+    sleepRecordedSequenceFailures = 0;
+    startRecordedSleepSequence();
+    return;
+  }
+
   const recordedSrc = SLEEP_RECORDED_TRACKS[sleepSettings.sound];
   if (recordedSrc) {
-    startRecordedSleepMusic(recordedSrc);
+    startRecordedSleepMusic(recordedSrc, true);
     return;
   }
 
   startGeneratedSleepMusic();
 }
 
-function startRecordedSleepMusic(src: string): void {
+function startRecordedSleepSequence(): void {
+  if (SLEEP_RECORDED_SEQUENCE.length === 0) {
+    startGeneratedSleepMusic();
+    return;
+  }
+
+  startRecordedSleepMusic(SLEEP_RECORDED_SEQUENCE[sleepRecordedSequenceIndex % SLEEP_RECORDED_SEQUENCE.length], false);
+}
+
+function playNextRecordedSleepTrack(): void {
+  if (!sleepMusicRunning || sleepSettings.sound !== 'sleep-sequence') {
+    return;
+  }
+  sleepRecordedSequenceFailures = 0;
+  sleepRecordedSequenceIndex = (sleepRecordedSequenceIndex + 1) % SLEEP_RECORDED_SEQUENCE.length;
+  startRecordedSleepMusic(SLEEP_RECORDED_SEQUENCE[sleepRecordedSequenceIndex], false, false);
+}
+
+function startRecordedSleepMusic(src: string, loop: boolean, resetRunning = true): void {
   sleepMusicRunning = true;
-  sleepMusicNodes = [];
+  if (resetRunning) {
+    sleepMusicNodes = [];
+  }
+  sleepAudioElement?.pause();
   const audio = new Audio(src);
   sleepAudioElement = audio;
-  audio.loop = true;
+  audio.loop = loop;
   audio.preload = 'auto';
   audio.volume = Math.min(0.82, sleepSettings.volume);
+  if (!loop) {
+    audio.addEventListener('ended', playNextRecordedSleepTrack, { once: true });
+  }
   audio.addEventListener(
     'error',
     () => {
-      if (sleepAudioElement === audio) {
-        sleepAudioElement = undefined;
-        sleepMusicRunning = false;
-        startGeneratedSleepMusic();
-      }
+      handleRecordedSleepFailure(audio, loop);
     },
     { once: true }
   );
-  void audio.play().catch(() => {
-    if (sleepAudioElement === audio) {
-      sleepAudioElement = undefined;
-      sleepMusicRunning = false;
-      startGeneratedSleepMusic();
-    }
-  });
-  scheduleSleepAutoStop();
+  void audio.play().catch(() => handleRecordedSleepFailure(audio, loop));
+  if (resetRunning) {
+    scheduleSleepAutoStop();
+  }
   renderSleepMode();
+}
+
+function handleRecordedSleepFailure(audio: HTMLAudioElement, loop: boolean): void {
+  if (sleepAudioElement !== audio) {
+    return;
+  }
+
+  sleepAudioElement = undefined;
+  if (sleepSettings.sound === 'sleep-sequence' && !loop && SLEEP_RECORDED_SEQUENCE.length > 0) {
+    sleepRecordedSequenceFailures += 1;
+    if (sleepRecordedSequenceFailures < SLEEP_RECORDED_SEQUENCE.length) {
+      sleepRecordedSequenceIndex = (sleepRecordedSequenceIndex + 1) % SLEEP_RECORDED_SEQUENCE.length;
+      startRecordedSleepMusic(SLEEP_RECORDED_SEQUENCE[sleepRecordedSequenceIndex], false, false);
+      return;
+    }
+  }
+
+  sleepMusicRunning = false;
+  if (sleepAutoStopTimer) {
+    window.clearTimeout(sleepAutoStopTimer);
+    sleepAutoStopTimer = undefined;
+  }
+  sleepRecordedSequenceFailures = 0;
+  startGeneratedSleepMusic();
 }
 
 function startGeneratedSleepMusic(): void {
