@@ -37,8 +37,7 @@ Hariç:
 
 Durum:
 
-- kod ve yerel smoke doğrulaması tamamlandı
-- production keystore ve GitHub secrets kurulumu bekliyor
+- tamamlandı
 
 Kapanış sonucu:
 
@@ -46,14 +45,14 @@ Kapanış sonucu:
 - ilk stable kimlik `1.0.36 / 37` olarak tanımlandı
 - secrets olmadan `assembleRelease` bilinçli biçimde durur
 - release manifest cleartext trafiği kapatır
-- geçici test anahtarıyla imzalı APK, paket kimliği ve sürüm doğrulandı; geçici anahtar silindi
+- production keystore repo dışında üretildi; parolalar Keychain ve GitHub Actions secrets içinde tutulur
+- yayımlanan APK `com.minagrow.minaplay`, `1.0.36 (37)` ve production sertifikasıyla doğrulandı
 
 ### Paket 02 - Güvenli Güncelleme Sözleşmesi
 
 Durum:
 
-- uygulama tamamlandı
-- canlı Railway deploy sonrası smoke kontrolü bekliyor
+- tamamlandı
 
 Kapanış sonucu:
 
@@ -61,13 +60,13 @@ Kapanış sonucu:
 - istemci yalnız daha yüksek `versionCode` için indirme açar
 - LAN IP, debug APK route'u ve güvensiz indirme fallback'i kaldırıldı
 - native kurucu HTTPS yönlendirme zinciri, SHA-256, paket adı, sürüm kodu ve imza sertifikasını doğrular
+- canlı Railway `/health` ve `/api/update` HTTP 200 smoke kontrolünden geçti
 
 ### Paket 03 - GitHub Release Otomasyonu
 
 Durum:
 
-- workflow ve yayın scriptleri tamamlandı
-- GitHub secrets ve ilk `v1.0.36` tag çalıştırması bekliyor
+- tamamlandı
 
 Kapanış sonucu:
 
@@ -75,13 +74,15 @@ Kapanış sonucu:
 - build, lint, unit ve e2e geçmeden APK üretilmez
 - imzalı APK, checksum ve stable metadata aynı GitHub Release'e eklenir
 - manuel workflow yalnız dry-run artifact üretir
+- dry-run `30822018344` ve stable yayın `30822556473` başarılı tamamlandı
+- `v1.0.36` Release APK, checksum ve metadata varlıklarıyla yayımlandı
 
 ### Paket 04 - Tablet Geçişi ve Yayın QA
 
 Durum:
 
-- geçiş ve kabul listesi hazır
-- production imzalı APK sonrası gerçek tablet uygulaması bekliyor
+- production paketi ve geçiş listesi hazır
+- ADB'de bağlı cihaz bulunmadığı için gerçek tablet uygulaması bekliyor
 
 Kapanış ölçütü:
 
@@ -95,9 +96,9 @@ Kapanış ölçütü:
 
 - production release anahtarı kaybolursa aynı package üzerinde güncelleme yayınlanamaz
 - ilk debug-to-stable temiz kurulumda medya dışındaki yerel ilerleme sıfırlanabilir
-- ilk GitHub Release yayımlanana kadar Railway metadata kaynağı `503` verir
+- production keystore için repo ve GitHub dışındaki kurtarma yedeği ayrıca korunmalıdır
 - Android downgrade kabul etmediği için geri dönüş daha yüksek `versionCode` taşıyan düzeltme sürümü gerektirir
 
 ## Faz Kapanışı
 
-Faz 8; production keystore secrets kurulduğunda, `v1.0.36` GitHub Release yayımlandığında, canlı Railway `/api/update` geçerli metadata döndürdüğünde ve gerçek tablette temiz kurulum ile stable-to-stable güncelleme kabulü tamamlandığında kapanır.
+Production yayın hattı 2026-08-03 tarihinde tamamlandı: secrets kuruldu, dry-run geçti, `v1.0.36` yayımlandı ve Railway canlı metadata sundu. Faz 8'in tek açık kabulü; gerçek tablette temiz kurulum, izin/kiosk kontrolü ve daha yüksek `versionCode` ile stable-to-stable güncellemedir. Bu kabul bağlı cihaz olmadan tamamlanmış sayılmaz.

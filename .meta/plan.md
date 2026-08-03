@@ -218,8 +218,8 @@ Faz 7 ara sonucu:
 
 Durum:
 
-- uygulama ve yerel smoke doğrulaması tamamlandı
-- production secrets, GitHub tag/Railway deploy ve gerçek tablet kabulü bekliyor
+- production yayın hattı tamamlandı
+- gerçek tablet temiz kurulum ve stable-to-stable kabulü için cihaz bağlantısı bekliyor
 
 Karar:
 
@@ -230,20 +230,20 @@ Karar:
 
 Tamamlanan paketler:
 
-- 8-1: `release.json` tek sürüm kaynağı oldu; `1.0.36 / 37` kimliği ve secrets zorunlu release imzası kuruldu
-- 8-2: HTTPS, SHA-256, package, versionCode ve imza doğrulamalı update sözleşmesi kuruldu; LAN/debug indirme yolu kaldırıldı
-- 8-3: tag kontrollü GitHub Actions build/test/sign/release hattı ve dry-run artifact akışı eklendi
+- 8-1: `release.json` tek sürüm kaynağı oldu; repo dışı production keystore, `1.0.36 / 37` kimliği ve GitHub Actions secrets kuruldu
+- 8-2: HTTPS, SHA-256, package, versionCode ve imza doğrulamalı update sözleşmesi kuruldu; Railway canlı `/api/update` doğrulaması geçti
+- 8-3: tag kontrollü GitHub Actions build/test/sign/release hattı dry-run ve `v1.0.36` stable yayınla doğrulandı
 
 Açık kapanış paketi:
 
-- 8-4: production keystore secrets, ilk `v1.0.36` GitHub Release, Railway canlı smoke ve gerçek tablet clean-install/stable-update kabulü
+- 8-4: bağlı gerçek tablette medya kasası yedeği, debug-to-stable temiz kurulum, izin/kiosk kontrolü ve daha yüksek `versionCode` ile stable-to-stable kabulü
 
 ## Bugünkü Kapanış Hedefi
 
 - aktif uygulama hedefi `/Users/umitaydin/Documents/MinaGrow/MinaPlay` olarak korunur
 - Faz 1, Faz 2, Faz 3, Faz 4, Faz 5 ve Faz 6 kapanışları doğrulanmış kabul edilir
-- Faz 7 tamamlandı; Faz 8 güvenli yayın hattının repo uygulaması hazırdır
-- tek aktif kapanış hedefi Faz 8 Paket 8-4 production yayın ve gerçek tablet kabulüdür
+- Faz 7 tamamlandı; Faz 8 güvenli production yayın hattı canlıda doğrulandı
+- tek aktif kapanış hedefi Faz 8 Paket 8-4 gerçek tablet kabulüdür
 - `MinaPlay` içinde build/lint/test/e2e hattı kararlı tutulur
 - yeni iş açılırken çocuk yüzeyi kapsamı büyütülmeden önce Parent panel, Pofi state ve local-first veri sınırları korunur
 - Dokun tekrarında odak kelime, ritim çeşidi ve ebeveynin ek içerik notları local-first sınırda tutulur

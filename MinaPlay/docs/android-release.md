@@ -12,6 +12,14 @@ MinaPlay Android APK'leri yalnız GitHub Actions tarafından, kalıcı release a
 
 Anahtar ve parolalar hiçbir zaman repoya, `.env` dosyasına veya yayın artifact'ine eklenmez.
 
+Mevcut production sertifikasının SHA-256 parmak izi `F3:E0:6C:5F:10:52:5F:E9:22:4D:52:73:A5:3D:44:6E:1C:32:CB:17:70:38:BD:8E:98:A3:A2:5F:ED:13:80:4E` değeridir. Yeni bir stable APK bu kimlikle imzalanmıyorsa yayımlanmamalıdır.
+
+Canlı stable yüzeyler:
+
+- Release: `https://github.com/fztumit/minagrow-minaplay/releases/tag/v1.0.36`
+- Metadata: `https://minagrow-minaplay-production.up.railway.app/api/update`
+- Health: `https://minagrow-minaplay-production.up.railway.app/health`
+
 ## Yayın Akışı
 
 1. `release.json` içindeki `version` ve daima artan `versionCode` güncellenir.
