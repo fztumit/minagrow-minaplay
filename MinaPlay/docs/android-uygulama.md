@@ -78,7 +78,9 @@ APK çıktısı yine şu klasörde oluşur:
 android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
-## Huawei Tablete Kur
+## Huawei Tablete Geliştirme Paketi Kur
+
+Debug APK yalnız yerel geliştirme ve cihaz testi içindir; Parent panel güncelleme hattında veya production dağıtımında kullanılmaz.
 
 USB ile kurulum:
 
@@ -124,22 +126,21 @@ Komut başarılı olduktan sonra MinaPlay çocuk kilidi uygulamayı lock-task al
 
 Not: Railway güncellemesi bu native davranışı değiştirmez. Home/Kare tuşu davranışı için yeni APK'nın tablete tekrar kurulması gerekir.
 
-## Parent Panelden Güncelleme
+## Parent Panelden Stable Güncelleme
 
-Parent > Kontrol altında `Uygulamayı güncelle` kartı vardır. Bu kart `/downloads/minaplay-latest.apk` adresini açar.
+Parent > Kontrol altındaki `Uygulamayı güncelle` kartı Railway üzerindeki `/api/update` sözleşmesini kontrol eder. İndirme düğmesi yalnız daha yüksek `versionCode` taşıyan ve geçerli stable metadata ile gelen sürüm için açılır.
 
-Yerel geliştirmede bu adres şu dosyayı indirir:
+Android kurucu APK'yi açmadan önce şunları doğrular:
 
-```text
-/Users/umitaydin/Documents/MinaGrow/MinaPlay/android/app/build/outputs/apk/debug/app-debug.apk
-```
+- HTTPS indirme ve HTTPS yönlendirme zinciri
+- release metadata içindeki SHA-256 değeri
+- `com.minagrow.minaplay` paket adı
+- yüklü uygulamadan daha yüksek `versionCode`
+- yüklü MinaPlay ile aynı imza sertifikası
 
-Railway'de aynı butonun çalışması için iki seçenek vardır:
+İlk debug-to-stable geçişi imza değiştiği için temiz kurulumdur. Sonraki stable sürümler mevcut uygulamanın üzerine kurulur ve yerel veri korunur.
 
-- APK dosyasını sunucuda `/downloads/minaplay-latest.apk` olarak yayınlamak
-- veya Railway ortam değişkenine `APK_DOWNLOAD_URL` değeri vermek
-
-`APK_DOWNLOAD_URL` doğrudan indirilebilir bir APK adresi olmalıdır. Örneğin GitHub Release asset'i veya güvenilir bir dosya indirme bağlantısı kullanılabilir.
+Release anahtarı, GitHub secrets ve tag tabanlı yayın adımları için `docs/android-release.md` kullanılır.
 
 ## Not
 

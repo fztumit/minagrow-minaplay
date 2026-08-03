@@ -4,7 +4,9 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
+    "sync:release": "node scripts/sync-release.mjs",
     "build:server": "tsc -p tsconfig.json",
+    "prebuild:client": "npm run sync:release",
     "build:client": "tsc -p tsconfig.client.json",
     "build": "npm run build:server && npm run build:client",
     "dev": "npm run build:client && tsx server.ts",

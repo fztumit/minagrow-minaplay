@@ -72,6 +72,13 @@ import {
   parseMediaVaultBackup,
   type EncryptedMediaVaultPayload
 } from './media-vault-backup.js';
+import {
+  isReleaseNewer,
+  parseReleaseIdentity,
+  parseReleaseMetadata,
+  type ReleaseIdentity,
+  type ReleaseMetadata
+} from './release.js';
 
 declare global {
   interface Window {
@@ -82,7 +89,7 @@ declare global {
           keepFullscreen?: () => Promise<void>;
           dismissInput?: () => Promise<void>;
           speak?: (options: { text: string; rate: number; pitch: number; volume: number }) => Promise<{ spoken?: boolean }>;
-          downloadAndInstallUpdate?: (options: { url: string }) => Promise<{ status?: 'permission_required' | 'installer_opened' }>;
+          downloadAndInstallUpdate?: (options: { url: string; sha256: string }) => Promise<{ status?: 'permission_required' | 'installer_opened' }>;
         };
       };
     };
@@ -1777,10 +1784,8 @@ const DEFAULT_STATE: AnalyticsState = {
   modules: {}
 };
 
-const APP_VERSION = '1.0.35';
-const APP_UPDATE_VERSION = 'MinaPlay APK · 2026-07-17 · v1.0.35';
-const APP_UPDATE_APK_URL = 'http://192.168.1.104:3100/downloads/minaplay-latest.apk';
-const APP_UPDATE_METADATA_URL = 'http://192.168.1.104:3100/api/update';
+let bundledReleasePromise: Promise<ReleaseIdentity> | undefined;
+let availableAppRelease: ReleaseMetadata | undefined;
 
 export function createInitialModuleStats(): ModuleStats {
   return {
@@ -8169,7 +8174,20 @@ function renderTabletInstallStatus(): void {
   status.textContent = 'Tablette bu adresi açın; tarayıcı menüsünden ana ekrana ekleyin.';
 }
 
-function renderAppUpdateStatus(): void {
+function loadBundledRelease(): Promise<ReleaseIdentity> {
+  if (!bundledReleasePromise) {
+    const releaseUrl = new URL('/release.json', window.location.origin).href;
+    bundledReleasePromise = fetch(releaseUrl, { cache: 'no-store' }).then(async (response) => {
+      if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) {
+        throw new Error('Bundled release identity is unavailable');
+      }
+      return parseReleaseIdentity(await response.json());
+    });
+  }
+  return bundledReleasePromise;
+}
+
+async function renderAppUpdateStatus(): Promise<void> {
   const version = document.querySelector<HTMLElement>('[data-app-update-version]');
   const note = document.querySelector<HTMLElement>('[data-app-update-note]');
   const status = document.querySelector<HTMLElement>('[data-app-update-status]');
@@ -8178,13 +8196,19 @@ function renderAppUpdateStatus(): void {
     return;
   }
 
-  const apkUrl = new URL(APP_UPDATE_APK_URL, window.location.origin).href;
-  version.textContent = APP_UPDATE_VERSION;
+  version.textContent = 'MinaPlay stable';
   note.textContent = window.Capacitor?.Plugins?.MinaPlayKiosk?.downloadAndInstallUpdate
-    ? 'MinaPlay güncellemeyi uygulama içinde indirir ve Android kurulum ekranını açar.'
-    : `APK adresi: ${apkUrl}`;
+    ? 'İmzalı MinaPlay güncellemesi güvenli biçimde doğrulanıp Android kurulum ekranında açılır.'
+    : 'Stable sürüm GitHub Releases üzerinden güvenli HTTPS bağlantısıyla indirilir.';
   action.hidden = true;
   status.textContent = 'Yeni sürüm olup olmadığını kontrol edin.';
+  try {
+    const current = await loadBundledRelease();
+    version.textContent = `MinaPlay stable · v${current.version}`;
+  } catch {
+    version.textContent = 'MinaPlay sürüm bilgisi okunamadı';
+    status.textContent = 'Yüklü sürüm doğrulanamadığı için güncelleme kapalı.';
+  }
 }
 
 async function checkForAppUpdate(): Promise<void> {
@@ -8196,24 +8220,27 @@ async function checkForAppUpdate(): Promise<void> {
     button.textContent = 'Kontrol ediliyor…';
   });
   try {
-    const response = await fetch(APP_UPDATE_METADATA_URL, { cache: 'no-store' });
+    const current = await loadBundledRelease();
+    const response = await fetch(current.metadataUrl, { cache: 'no-store' });
     if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) {
       throw new Error('Update metadata is unavailable');
     }
-    const release = (await response.json()) as { version?: string };
-    const available = Boolean(release.version && release.version !== APP_VERSION);
+    const release = parseReleaseMetadata(await response.json());
+    const available = isReleaseNewer(release, current);
+    availableAppRelease = available ? release : undefined;
     downloads.forEach((button) => {
       button.hidden = !available;
     });
     if (status) {
-      status.textContent = available ? `Yeni sürüm hazır: v${release.version}` : `MinaPlay güncel: v${APP_VERSION}`;
+      status.textContent = available ? `Yeni güvenli sürüm hazır: v${release.version}` : `MinaPlay güncel: v${current.version}`;
     }
   } catch {
+    availableAppRelease = undefined;
     downloads.forEach((button) => {
-      button.hidden = false;
+      button.hidden = true;
     });
     if (status) {
-      status.textContent = 'Sürüm bilgisi alınamadı. Güncellemeyi indirerek devam edebilirsiniz.';
+      status.textContent = 'Güvenli sürüm bilgisi alınamadı. Daha sonra yeniden deneyin.';
     }
   } finally {
     checks.forEach((button) => {
@@ -8224,9 +8251,15 @@ async function checkForAppUpdate(): Promise<void> {
 }
 
 async function openAppUpdateDownload(): Promise<void> {
-  const apkUrl = new URL(APP_UPDATE_APK_URL, window.location.origin).href;
   const status = document.querySelector<HTMLElement>('[data-app-update-status]');
   const buttons = document.querySelectorAll<HTMLButtonElement>('[data-app-update-action], [data-app-update-quick]');
+  const release = availableAppRelease;
+  if (!release) {
+    if (status) {
+      status.textContent = 'Önce güvenli bir güncelleme olup olmadığını kontrol edin.';
+    }
+    return;
+  }
   if (status) {
     status.textContent = 'Güncelleme MinaPlay içinde indiriliyor. Lütfen bekleyin…';
   }
@@ -8238,7 +8271,7 @@ async function openAppUpdateDownload(): Promise<void> {
   const nativeUpdater = window.Capacitor?.Plugins?.MinaPlayKiosk?.downloadAndInstallUpdate;
   try {
     if (nativeUpdater) {
-      const result = await nativeUpdater({ url: apkUrl });
+      const result = await nativeUpdater({ url: release.apkUrl, sha256: release.sha256 });
       if (status) {
         status.textContent =
           result.status === 'permission_required'
@@ -8247,7 +8280,7 @@ async function openAppUpdateDownload(): Promise<void> {
       }
       return;
     }
-    window.location.href = apkUrl;
+    window.location.href = release.apkUrl;
   } catch (error) {
     if (status) {
       const detail = error instanceof Error && error.message ? ` (${error.message})` : '';
@@ -8866,7 +8899,7 @@ function boot(): void {
   renderParentMetrics();
   void renderDeviceStatus();
   renderTabletInstallStatus();
-  renderAppUpdateStatus();
+  void renderAppUpdateStatus();
   renderTouchProgressTable();
   renderMatchProgressTable();
   renderMvpModuleSettings();

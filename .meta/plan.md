@@ -214,11 +214,36 @@ Faz 7 ara sonucu:
 - build, lint, 34 unit test ve 31 Playwright e2e testi başarılıdır
 - masaüstü/telefon Düzenle sekmesi medya UI ve ebeveyn sesi izni görsel QA/yatay taşma ölçümüyle doğrulanmıştır
 
+## Faz 8 - Güvenli Yayın ve Android Güncelleme Hattı
+
+Durum:
+
+- uygulama ve yerel smoke doğrulaması tamamlandı
+- production secrets, GitHub tag/Railway deploy ve gerçek tablet kabulü bekliyor
+
+Karar:
+
+- tek yayın kanalı `stable`dır
+- APK dağıtımı GitHub Releases üzerinden yapılır
+- Railway yalnız doğrulanmış stable metadata sunar
+- ilk debug-to-release geçişi temiz kurulumdur
+
+Tamamlanan paketler:
+
+- 8-1: `release.json` tek sürüm kaynağı oldu; `1.0.36 / 37` kimliği ve secrets zorunlu release imzası kuruldu
+- 8-2: HTTPS, SHA-256, package, versionCode ve imza doğrulamalı update sözleşmesi kuruldu; LAN/debug indirme yolu kaldırıldı
+- 8-3: tag kontrollü GitHub Actions build/test/sign/release hattı ve dry-run artifact akışı eklendi
+
+Açık kapanış paketi:
+
+- 8-4: production keystore secrets, ilk `v1.0.36` GitHub Release, Railway canlı smoke ve gerçek tablet clean-install/stable-update kabulü
+
 ## Bugünkü Kapanış Hedefi
 
 - aktif uygulama hedefi `/Users/umitaydin/Documents/MinaGrow/MinaPlay` olarak korunur
 - Faz 1, Faz 2, Faz 3, Faz 4, Faz 5 ve Faz 6 kapanışları doğrulanmış kabul edilir
-- Faz 7 tamamlandı; sıradaki ürün geliştirme hedefi yeni faz kararı olarak ayrıca açılır
+- Faz 7 tamamlandı; Faz 8 güvenli yayın hattının repo uygulaması hazırdır
+- tek aktif kapanış hedefi Faz 8 Paket 8-4 production yayın ve gerçek tablet kabulüdür
 - `MinaPlay` içinde build/lint/test/e2e hattı kararlı tutulur
 - yeni iş açılırken çocuk yüzeyi kapsamı büyütülmeden önce Parent panel, Pofi state ve local-first veri sınırları korunur
 - Dokun tekrarında odak kelime, ritim çeşidi ve ebeveynin ek içerik notları local-first sınırda tutulur

@@ -1548,8 +1548,8 @@ test('parent panel shows local-first device and offline readiness', async ({ pag
   await expect(page.locator('[data-tablet-install-url]')).toContainText('127.0.0.1');
   await expect(page.locator('[data-tablet-install-status]')).toContainText(/ana ekrana|Kurulum hazır|uygulaması hazır/i);
   await openParentBlock(page, 'Uygulamayı güncelle');
-  await expect(page.locator('[data-app-update-version]')).toContainText('MinaPlay APK');
-  await expect(page.locator('[data-app-update-note]')).toContainText('/downloads/minaplay-latest.apk');
+  await expect(page.locator('[data-app-update-version]')).toContainText('v1.0.36');
+  await expect(page.locator('[data-app-update-note]')).toContainText('GitHub Releases');
   await expect(page.locator('[data-app-update-status]')).toContainText('kontrol edin');
   await openParentBlock(page, 'Offline ve izinler');
   await expect(page.locator('#view-parent')).toHaveClass(/active/);
@@ -1641,4 +1641,98 @@ test('module surfaces render stateful layered Pofi parts', async ({ page }) => {
   const touchPofi = page.locator('#view-touch [data-pofi-avatar]');
   await expect(page.locator('#view-touch [data-touch-surface]')).toHaveAttribute('data-touch-state', 'success');
   await expect(touchPofi.locator('.pofi-body')).toHaveAttribute('src', /default-v01\.png$/);
+});
+
+test('parent update check exposes only a newer validated stable release', async ({ page }) => {
+  await disableChildLock(page);
+  await page.route('**/api/update', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      channel: 'stable',
+      version: '1.0.37',
+      versionCode: 38,
+      apkUrl: 'https://github.com/fztumit/minagrow-minaplay/releases/download/v1.0.37/minaplay-v1.0.37.apk',
+      sha256: 'b'.repeat(64),
+      publishedAt: '2026-08-03T12:00:00.000Z'
+    })
+  }));
+  await page.goto('/');
+
+  await openParentBySecretGesture(page);
+  await openParentTab(page, 'Kontrol');
+  await openParentBlock(page, 'Uygulamayı güncelle');
+  await page.locator('[data-app-update-check]').last().click();
+
+  await expect(page.locator('[data-app-update-status]')).toContainText('Yeni güvenli sürüm hazır: v1.0.37');
+  await expect(page.locator('[data-app-update-action]')).toBeVisible();
+  await expect(page.locator('[data-app-update-quick]')).toBeVisible();
+});
+
+test('parent update check keeps download closed for current or unsafe metadata', async ({ page }) => {
+  await disableChildLock(page);
+  await page.route('**/api/update', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      channel: 'stable',
+      version: '1.0.37',
+      versionCode: 38,
+      apkUrl: 'http://unsafe.test/minaplay.apk',
+      sha256: 'c'.repeat(64),
+      publishedAt: '2026-08-03T12:00:00.000Z'
+    })
+  }));
+  await page.goto('/');
+
+  await openParentBySecretGesture(page);
+  await openParentTab(page, 'Kontrol');
+  await openParentBlock(page, 'Uygulamayı güncelle');
+  await page.locator('[data-app-update-check]').last().click();
+
+  await expect(page.locator('[data-app-update-status]')).toContainText('Güvenli sürüm bilgisi alınamadı');
+  await expect(page.locator('[data-app-update-action]')).toBeHidden();
+  await expect(page.locator('[data-app-update-quick]')).toBeHidden();
+});
+
+test('native update receives the validated URL and checksum and explains install permission', async ({ page }) => {
+  await disableChildLock(page);
+  await page.addInitScript(() => {
+    const target = window as typeof window & { __updateRequest?: unknown };
+    target.Capacitor = {
+      Plugins: {
+        MinaPlayKiosk: {
+          downloadAndInstallUpdate: async (options: { url: string; sha256: string }) => {
+            target.__updateRequest = options;
+            return { status: 'permission_required' as const };
+          }
+        }
+      }
+    };
+  });
+  await page.route('**/api/update', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      channel: 'stable',
+      version: '1.0.37',
+      versionCode: 38,
+      apkUrl: 'https://github.com/fztumit/minagrow-minaplay/releases/download/v1.0.37/minaplay-v1.0.37.apk',
+      sha256: 'd'.repeat(64),
+      publishedAt: '2026-08-03T12:00:00.000Z'
+    })
+  }));
+  await page.goto('/');
+
+  await openParentBySecretGesture(page);
+  await openParentTab(page, 'Kontrol');
+  await openParentBlock(page, 'Uygulamayı güncelle');
+  await page.locator('[data-app-update-check]').last().click();
+  await page.locator('[data-app-update-action]').click();
+
+  await expect(page.locator('[data-app-update-status]')).toContainText('Bu kaynaktan izin ver');
+  await expect.poll(() => page.evaluate(() => (window as typeof window & { __updateRequest?: unknown }).__updateRequest)).toEqual({
+    url: 'https://github.com/fztumit/minagrow-minaplay/releases/download/v1.0.37/minaplay-v1.0.37.apk',
+    sha256: 'd'.repeat(64)
+  });
 });

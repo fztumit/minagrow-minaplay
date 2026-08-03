@@ -1,5 +1,22 @@
 apply plugin: 'com.android.application'
 
+import groovy.json.JsonSlurper
+
+def releaseIdentityFile = file('../../release.json')
+if (!releaseIdentityFile.exists()) {
+    throw new GradleException('MinaPlay release.json is missing')
+}
+def releaseIdentity = new JsonSlurper().parse(releaseIdentityFile)
+if (!(releaseIdentity.version ==~ /\d+\.\d+\.\d+/) || !(releaseIdentity.versionCode instanceof Number)) {
+    throw new GradleException('MinaPlay release.json has an invalid version identity')
+}
+
+def releaseStorePath = System.getenv('MINAPLAY_KEYSTORE_PATH') ?: project.findProperty('MINAPLAY_KEYSTORE_PATH')
+def releaseStorePassword = System.getenv('MINAPLAY_KEYSTORE_PASSWORD') ?: project.findProperty('MINAPLAY_KEYSTORE_PASSWORD')
+def releaseKeyAlias = System.getenv('MINAPLAY_KEY_ALIAS') ?: project.findProperty('MINAPLAY_KEY_ALIAS')
+def releaseKeyPassword = System.getenv('MINAPLAY_KEY_PASSWORD') ?: project.findProperty('MINAPLAY_KEY_PASSWORD')
+def hasReleaseSigning = [releaseStorePath, releaseStorePassword, releaseKeyAlias, releaseKeyPassword].every { it }
+
 android {
     namespace = "com.minagrow.minaplay"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +24,8 @@ android {
         applicationId "com.minagrow.minaplay"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 36
-        versionName "1.0.35"
+        versionCode releaseIdentity.versionCode as int
+        versionName releaseIdentity.version as String
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,11 +33,33 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
-    buildTypes {
+    signingConfigs {
         release {
+            if (hasReleaseSigning) {
+                storeFile file(releaseStorePath)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
+    }
+    buildTypes {
+        debug {
+            manifestPlaceholders = [usesCleartextTraffic: 'true']
+        }
+        release {
+            manifestPlaceholders = [usesCleartextTraffic: 'false']
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+}
+
+gradle.taskGraph.whenReady { graph ->
+    def releaseRequested = graph.hasTask(':app:assembleRelease') || graph.hasTask(':app:bundleRelease')
+    if (releaseRequested && !hasReleaseSigning) {
+        throw new GradleException('Release signing credentials are required; unsigned MinaPlay releases are not allowed')
     }
 }
 

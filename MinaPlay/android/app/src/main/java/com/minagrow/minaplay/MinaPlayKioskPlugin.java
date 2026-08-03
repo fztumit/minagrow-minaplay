@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.pm.Signature;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
@@ -34,7 +35,10 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -148,9 +152,18 @@ public class MinaPlayKioskPlugin extends Plugin {
     @PluginMethod
     public void downloadAndInstallUpdate(PluginCall call) {
         String url = call.getString("url", "").trim();
+        String expectedSha256 = call.getString("sha256", "").trim().toLowerCase(Locale.ROOT);
         Activity activity = getActivity();
-        if (activity == null || url.isEmpty()) {
-            call.reject("Update URL or activity is unavailable");
+        if (activity == null || url.isEmpty() || !expectedSha256.matches("^[a-f0-9]{64}$")) {
+            call.reject("Secure update URL, checksum, or activity is unavailable");
+            return;
+        }
+
+        final URL updateUrl;
+        try {
+            updateUrl = requireSecureUrl(new URL(url));
+        } catch (Exception error) {
+            call.reject("MinaPlay updates require a credential-free HTTPS URL", error);
             return;
         }
 
@@ -172,23 +185,20 @@ public class MinaPlayKioskPlugin extends Plugin {
             File updateFile = new File(activity.getCacheDir(), "minaplay-update.apk");
             File temporaryFile = new File(activity.getCacheDir(), "minaplay-update-download.apk");
             try {
-                HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
-                connection.setConnectTimeout(15_000);
-                connection.setReadTimeout(10 * 60_000);
-                connection.setRequestProperty("Cache-Control", "no-cache");
-                connection.setRequestProperty("Accept", "application/vnd.android.package-archive");
-                connection.connect();
+                HttpURLConnection connection = openSecureConnection(updateUrl);
                 int statusCode = connection.getResponseCode();
                 if (statusCode < 200 || statusCode >= 300) {
                     throw new IllegalStateException("Update server returned " + statusCode);
                 }
                 long expectedLength = connection.getContentLengthLong();
+                MessageDigest downloadedDigest = MessageDigest.getInstance("SHA-256");
 
                 try (InputStream input = connection.getInputStream(); FileOutputStream output = new FileOutputStream(temporaryFile)) {
                     byte[] buffer = new byte[64 * 1024];
                     int read;
                     while ((read = input.read(buffer)) != -1) {
                         output.write(buffer, 0, read);
+                        downloadedDigest.update(buffer, 0, read);
                     }
                 } finally {
                     connection.disconnect();
@@ -197,14 +207,18 @@ public class MinaPlayKioskPlugin extends Plugin {
                 if (temporaryFile.length() < 1_000_000 || (expectedLength > 0 && temporaryFile.length() != expectedLength)) {
                     throw new IllegalStateException("Downloaded update is incomplete");
                 }
-                PackageInfo archiveInfo = activity.getPackageManager().getPackageArchiveInfo(
-                    temporaryFile.getAbsolutePath(),
-                    PackageManager.GET_SIGNING_CERTIFICATES
-                );
+                if (!expectedSha256.equals(hexDigest(downloadedDigest.digest()))) {
+                    throw new IllegalStateException("Downloaded update checksum does not match the signed release metadata");
+                }
+                PackageManager packageManager = activity.getPackageManager();
+                PackageInfo archiveInfo = getArchivePackageInfo(packageManager, temporaryFile);
                 if (archiveInfo == null || !activity.getPackageName().equals(archiveInfo.packageName)) {
                     throw new IllegalStateException("Downloaded file is not a MinaPlay update");
                 }
-                PackageInfo installedInfo = activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0);
+                PackageInfo installedInfo = getInstalledPackageInfo(packageManager, activity.getPackageName());
+                if (!sameSigningCertificates(installedInfo, archiveInfo)) {
+                    throw new IllegalStateException("Downloaded MinaPlay signature does not match the installed application");
+                }
                 long installedVersion = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
                     ? installedInfo.getLongVersionCode()
                     : installedInfo.versionCode;
@@ -227,6 +241,84 @@ public class MinaPlayKioskPlugin extends Plugin {
                 call.reject("Update download failed: " + error.getMessage(), error);
             }
         });
+    }
+
+    private URL requireSecureUrl(URL url) {
+        if (!"https".equalsIgnoreCase(url.getProtocol()) || url.getUserInfo() != null) {
+            throw new IllegalArgumentException("Only credential-free HTTPS URLs are allowed");
+        }
+        return url;
+    }
+
+    private HttpURLConnection openSecureConnection(URL initialUrl) throws Exception {
+        URL currentUrl = requireSecureUrl(initialUrl);
+        for (int redirectCount = 0; redirectCount <= 5; redirectCount += 1) {
+            HttpURLConnection connection = (HttpURLConnection) currentUrl.openConnection();
+            connection.setInstanceFollowRedirects(false);
+            connection.setConnectTimeout(15_000);
+            connection.setReadTimeout(10 * 60_000);
+            connection.setRequestProperty("Cache-Control", "no-cache");
+            connection.setRequestProperty("Accept", "application/vnd.android.package-archive");
+            connection.connect();
+            int statusCode = connection.getResponseCode();
+            if (statusCode < 300 || statusCode >= 400) {
+                return connection;
+            }
+            String location = connection.getHeaderField("Location");
+            connection.disconnect();
+            if (location == null || location.trim().isEmpty()) {
+                throw new IllegalStateException("Update redirect is missing a destination");
+            }
+            currentUrl = requireSecureUrl(new URL(currentUrl, location));
+        }
+        throw new IllegalStateException("Update download has too many redirects");
+    }
+
+    private PackageInfo getArchivePackageInfo(PackageManager packageManager, File apkFile) {
+        int flags = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+            ? PackageManager.GET_SIGNING_CERTIFICATES
+            : PackageManager.GET_SIGNATURES;
+        return packageManager.getPackageArchiveInfo(apkFile.getAbsolutePath(), flags);
+    }
+
+    private PackageInfo getInstalledPackageInfo(PackageManager packageManager, String packageName) throws PackageManager.NameNotFoundException {
+        int flags = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+            ? PackageManager.GET_SIGNING_CERTIFICATES
+            : PackageManager.GET_SIGNATURES;
+        return packageManager.getPackageInfo(packageName, flags);
+    }
+
+    private boolean sameSigningCertificates(PackageInfo installedInfo, PackageInfo archiveInfo) throws Exception {
+        Set<String> installed = signingCertificateDigests(installedInfo);
+        Set<String> archive = signingCertificateDigests(archiveInfo);
+        return !installed.isEmpty() && installed.equals(archive);
+    }
+
+    @SuppressWarnings("deprecation")
+    private Set<String> signingCertificateDigests(PackageInfo packageInfo) throws Exception {
+        Signature[] signatures;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && packageInfo.signingInfo != null) {
+            signatures = packageInfo.signingInfo.getApkContentsSigners();
+        } else {
+            signatures = packageInfo.signatures;
+        }
+        Set<String> digests = new HashSet<>();
+        if (signatures == null) {
+            return digests;
+        }
+        for (Signature signature : signatures) {
+            MessageDigest certificateDigest = MessageDigest.getInstance("SHA-256");
+            digests.add(hexDigest(certificateDigest.digest(signature.toByteArray())));
+        }
+        return digests;
+    }
+
+    private String hexDigest(byte[] digest) {
+        StringBuilder result = new StringBuilder(digest.length * 2);
+        for (byte value : digest) {
+            result.append(String.format(Locale.ROOT, "%02x", value & 0xff));
+        }
+        return result.toString();
     }
 
     private void openPackageInstaller(Activity activity, File updateFile, PluginCall call) {
