@@ -57,8 +57,8 @@ export interface SpeechStateMachineOptions {
   onHint?: (event: { item: SpeechItem; hintLevel: 1 | 2 | 3 | 4 }) => void;
 }
 
-const DEFAULT_WAITING_MS = 10_000;
-const DEFAULT_HINT_STEP_MS = 10_000;
+const DEFAULT_WAITING_MS = 12_000;
+const DEFAULT_HINT_STEP_MS = 12_000;
 const ATTENTION_MS = 620;
 const TARGETING_MS = 760;
 const SUCCESS_MS = 800;
@@ -217,8 +217,8 @@ export class SpeechStateMachine {
     this.correctCount += 1;
     this.level = this.levelForCorrectCount(this.correctCount);
     this.emit();
-    const successText = this.correctCount % 8 === 0 ? `Harika! ${this.target.label} 😄` : this.target.label;
-    const successPhrase = this.correctCount % 8 === 0 ? `Harika, ${this.target.label}` : this.target.label;
+    const successText = this.correctCount % 8 === 0 ? `Güzel. ${this.target.label}` : this.target.label;
+    const successPhrase = this.correctCount % 8 === 0 ? `Güzel, ${this.target.label}` : this.target.label;
     this.options.onPrompt?.({ kind: 'success', item: this.target, text: this.promptFor('success', this.target) ?? successText });
     void this.options.onSound?.({ intent: 'success', item: this.target, phrase: successPhrase, style: 'celebration' });
     this.timer = window.setTimeout(() => this.enterIdle(true), SUCCESS_MS);

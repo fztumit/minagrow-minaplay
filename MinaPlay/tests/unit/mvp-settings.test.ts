@@ -2,10 +2,13 @@ import { describe, expect, test } from 'vitest';
 import {
   DEFAULT_MODULE_VISIBILITY,
   DEFAULT_MIRROR_PLAN,
+  DEFAULT_POFI_GUIDE_SETTINGS,
   DEFAULT_SLEEP_SETTINGS,
   mirrorExerciseOrder,
   normalizeModuleVisibility,
   normalizeMirrorPlan,
+  normalizePofiGuideSettings,
+  pofiGuideDelay,
   normalizeSleepSettings
 } from '../../src/modules/mvp-settings';
 
@@ -63,5 +66,14 @@ describe('MVP parent settings', () => {
       sleep: false,
       peekaboo: false
     });
+  });
+
+  test('normalizes Pofi guide frequency and divides only the waiting delay', () => {
+    expect(normalizePofiGuideSettings(undefined)).toEqual(DEFAULT_POFI_GUIDE_SETTINGS);
+    expect(normalizePofiGuideSettings({ frequencyMultiplier: 5 })).toEqual({ frequencyMultiplier: 5 });
+    expect(normalizePofiGuideSettings({ frequencyMultiplier: 9 })).toEqual(DEFAULT_POFI_GUIDE_SETTINGS);
+    expect(pofiGuideDelay(12_000, { frequencyMultiplier: 1 })).toBe(12_000);
+    expect(pofiGuideDelay(12_000, { frequencyMultiplier: 3 })).toBe(4_000);
+    expect(pofiGuideDelay(3_000, { frequencyMultiplier: 5 })).toBe(800);
   });
 });

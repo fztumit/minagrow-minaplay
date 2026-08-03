@@ -30,18 +30,23 @@ import {
 import {
   DEFAULT_MODULE_VISIBILITY,
   DEFAULT_MIRROR_PLAN,
+  DEFAULT_POFI_GUIDE_SETTINGS,
   DEFAULT_SLEEP_SETTINGS,
   MIRROR_PLAN_KEY,
   MODULE_VISIBILITY_KEY,
   MVP_MODULE_IDS,
+  POFI_GUIDE_SETTINGS_KEY,
   SLEEP_SETTINGS_KEY,
   mirrorExerciseOrder,
   normalizeModuleVisibility,
   normalizeMirrorPlan,
+  normalizePofiGuideSettings,
   normalizeSleepSettings,
+  pofiGuideDelay,
   type ModuleVisibilitySettings,
   type MirrorPlanSettings,
   type MvpModuleId,
+  type PofiGuideSettings,
   type SleepSettings
 } from './mvp-settings.js';
 import {
@@ -52,6 +57,41 @@ import {
   sentenceTargetWeight,
   type SentenceProgressState
 } from './sentence-learning.js';
+import {
+  POFI_CONTRACTS,
+  POFI_SUPPORT_LABELS,
+  POFI_SUPPORT_TYPES,
+  createInitialPofiSupportTypes,
+  type PofiContract,
+  type PofiSupportType
+} from './pofi-contracts.js';
+import {
+  createMediaVaultBackup,
+  isEncryptedMediaVaultPayload,
+  mediaVaultBackupFileName,
+  parseMediaVaultBackup,
+  type EncryptedMediaVaultPayload
+} from './media-vault-backup.js';
+
+declare global {
+  interface Window {
+    Capacitor?: {
+      Plugins?: {
+        MinaPlayKiosk?: {
+          setChildLockActive?: (options: { active: boolean }) => Promise<{ active?: boolean }>;
+          keepFullscreen?: () => Promise<void>;
+          dismissInput?: () => Promise<void>;
+          speak?: (options: { text: string; rate: number; pitch: number; volume: number }) => Promise<{ spoken?: boolean }>;
+          downloadAndInstallUpdate?: (options: { url: string }) => Promise<{ status?: 'permission_required' | 'installer_opened' }>;
+        };
+      };
+    };
+    MinaPlayAndroid?: {
+      setChildLockActive?: (active: boolean) => void;
+      keepFullscreen?: () => void;
+    };
+  }
+}
 
 type ViewName = 'home' | 'touch' | 'match' | 'sentence' | 'story' | 'mirror' | 'sleep' | 'peekaboo' | 'parent';
 type PofiState =
@@ -114,9 +154,6 @@ type PeekabooMotion = 'float' | 'swoop' | 'peek';
 type TouchPofiMotion = 'idle' | 'focus' | 'listen' | 'speak' | 'affirm' | 'reassure';
 type MatchPofiMotion = 'focus' | 'model' | 'listen' | 'guide' | 'affirm' | 'reassure';
 
-interface PofiViewTransition {
-  bridge: HTMLElement;
-}
 
 interface PofiExpression {
   role: PofiRole;
@@ -128,6 +165,22 @@ interface ModuleStats {
   actions: number;
   correct: number;
   softRedirects: number;
+  pofiSupportTypes?: Record<PofiSupportType, number>;
+  pofiSupportTargets?: Record<string, PofiSupportTargetStats>;
+  pofiFatigueEvents?: number;
+}
+
+interface PofiSupportTargetStats {
+  label: string;
+  total: number;
+  repeatSignals: number;
+  supportTypes: Record<PofiSupportType, number>;
+}
+
+interface PofiActionContext {
+  targetId?: string;
+  targetLabel?: string;
+  supportType?: PofiSupportType;
 }
 
 interface AnalyticsState {
@@ -162,6 +215,10 @@ interface ParentInsight {
 interface ParentTodaySummary {
   modules: ParentModuleSummary[];
   supportSummary: string;
+  supportTypeSummary: string[];
+  supportDetailSummary: string[];
+  detailAnalysis: ParentDetailAnalysis;
+  fatigueSummary: string;
   independenceRate: number;
   supportRate: number;
   learnedWords: string[];
@@ -175,6 +232,8 @@ interface ParentModuleSummary {
   actions: number;
   independent: number;
   supported: number;
+  supportTypes: Record<PofiSupportType, number>;
+  topSupportTarget?: PofiSupportTargetStats;
   activityRate: number;
 }
 
@@ -183,6 +242,16 @@ interface ParentWordRecommendation {
   level: string;
   reason: string;
   priority: number;
+}
+
+interface ParentDetailAnalysis {
+  focusLabel: string;
+  priorityLabel: string;
+  reason: string;
+  nextMode: string;
+  supportRhythm: string;
+  watchNote: string;
+  rows: Array<{ label: string; value: string; note: string }>;
 }
 
 interface TouchVoiceVariation {
@@ -234,12 +303,7 @@ interface TouchRepeatMediaEntry {
 type TouchRepeatMediaLibrary = Record<string, TouchRepeatMediaEntry>;
 type TouchRepeatMediaKind = 'audio' | 'video';
 
-interface EncryptedTouchRepeatMediaVault {
-  version: 1;
-  salt: string;
-  iv: string;
-  data: string;
-}
+type EncryptedTouchRepeatMediaVault = EncryptedMediaVaultPayload;
 
 interface TouchSettingsState {
   cards: TouchCard[];
@@ -273,10 +337,22 @@ type MirrorExerciseId = 'open-mouth' | 'smile' | 'pucker' | 'teeth' | 'sound-a' 
 type StoryState = 'idle' | 'attention' | 'narration' | 'interaction' | 'waiting' | 'success' | 'continue' | 'closure';
 type StoryStepKind = 'attention' | 'narration' | 'interaction' | 'repeat' | 'closure';
 type StoryEffect = 'sparkle' | 'water' | 'chime' | 'step' | 'warm' | 'sleep' | 'pop';
-type ChildLockSettings = { enabled: boolean; keepAwake: boolean; parentTapCount: number; parentPullDistance: number; introSeen: boolean };
+type ChildLockSettings = {
+  enabled: boolean;
+  keepAwake: boolean;
+  parentTapCount: number;
+  parentPullDistance: number;
+  introSeen: boolean;
+  parentPin: string;
+};
 type ChildProfile = { name: string };
 type WakeLockSentinelLike = { release: () => Promise<void>; addEventListener: (type: 'release', listener: () => void) => void };
 type NavigatorWithWakeLock = Navigator & { wakeLock?: { request: (type: 'screen') => Promise<WakeLockSentinelLike> } };
+type BeforeInstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+};
+type NavigatorWithStandalone = Navigator & { standalone?: boolean };
 
 interface SentenceScene {
   id: string;
@@ -373,51 +449,44 @@ const POFI_PARTS_ROOT = '/assets/pofi/parts';
 const TOUCH_ACTIVE_MS = 900;
 const MATCH_ATTENTION_MS = 950;
 const MATCH_TARGETING_MS = 1200;
-const MATCH_WAITING_MS = 10_000;
-const MATCH_HINT_STEP_MS = 10_000;
-const MATCH_SUCCESS_MS = 1200;
-const MATCH_RETRY_MS = 1350;
+const MATCH_WAITING_MS = 12_000;
+const MATCH_HINT_STEP_MS = 12_000;
+const MATCH_SUCCESS_MS = 1100;
+const MATCH_RETRY_MS = 1600;
 const MATCH_POFI_MIN_HOLD_MS = 820;
 const MATCH_FATIGUE_WRONG_STREAK = 2;
-const PEEKABOO_IDLE_MS = 2600;
+const PEEKABOO_IDLE_MS = 900;
 const PEEKABOO_CALM_IDLE_MIN_MS = 4200;
 const PEEKABOO_CALM_IDLE_MAX_MS = 6200;
 const PEEKABOO_CALM_EVERY = 3;
-const PEEKABOO_COVER_MIN_MS = 5000;
-const PEEKABOO_COVER_MAX_MS = 7000;
+const PEEKABOO_COVER_MIN_MS = 2200;
+const PEEKABOO_COVER_MAX_MS = 3400;
 const PEEKABOO_REVEAL_MS = 850;
 const PEEKABOO_CELEBRATE_MS = 1050;
-const PEEKABOO_VOICE_CLIPS = [
-  { src: '/sounds/peekaboo/pofi_ceee_01.wav', text: 'Ceeee!' },
-  { src: '/sounds/peekaboo/pofi_ceee_02.wav', text: 'Ceee!' },
-  { src: '/sounds/peekaboo/pofi_ceee_03.wav', text: 'Ceeee!' },
-  { src: '/sounds/peekaboo/pofi_ceee_04.wav', text: 'Ceee!' },
-  { src: '/sounds/peekaboo/pofi_ceee_05.wav', text: 'Ceeee!' }
-] as const;
 const PEEKABOO_SEARCH_TEMPLATES = [
-  (name: string) => `${name} nerede?`,
-  (name: string) => `Haniymiş ${name}?`,
-  (name: string) => `${name} yok.`,
-  (name: string) => `${name} nerede saklandı?`
+  () => 'Neredesin?',
+  () => 'Haniymiş?',
+  () => 'Seni bulabilecek miyim?',
+  () => 'Nereye saklandın?'
 ] as const;
 const PEEKABOO_MOTIONS: PeekabooMotion[] = ['float', 'swoop', 'peek'];
 const PEEKABOO_CELEBRATIONS: PeekabooCelebration[] = ['sparkle', 'pop', 'halo', 'confetti', 'bounce'];
 const PEEKABOO_BIG_CELEBRATION_EVERY = 6;
 const SLEEP_RECORDED_TRACKS: Partial<Record<SleepSettings['sound'], string>> = {
-  'sleep-besik': '/sounds/sleep/Beşik Başında (Sade Ninni).wav',
-  'sleep-bulut': '/sounds/sleep/Bulutların Üzerinde Uyku.wav',
-  'sleep-dunya': '/sounds/sleep/Dünya Biraz Dursun.wav',
-  'sleep-esek': '/sounds/sleep/Eşek senin ağzınla.wav',
-  'sleep-gul': '/sounds/sleep/Gül Kokulu Ninni.wav',
-  'sleep-derin': '/sounds/sleep/Pofi ile Derin Uyku.wav',
+  'sleep-besik': '/sounds/sleep/Beşik Başında (Sade Ninni).m4a',
+  'sleep-bulut': '/sounds/sleep/Bulutların Üzerinde Uyku.m4a',
+  'sleep-dunya': '/sounds/sleep/Dünya Biraz Dursun.m4a',
+  'sleep-esek': '/sounds/sleep/Eşek senin ağzınla.m4a',
+  'sleep-gul': '/sounds/sleep/Gül Kokulu Ninni.m4a',
+  'sleep-derin': '/sounds/sleep/Pofi ile Derin Uyku.m4a',
   'sleep-pofi-vocal-v2': "/sounds/sleep/Pofi'nin Ninnisi (Vokalli) - Versiyon 2.mp4",
   'sleep-pofi-vocal': "/sounds/sleep/Pofi'nin Ninnisi (Vokalli).mp4",
-  'sleep-pofi-pis-pis-vocal': "/sounds/sleep/Pofi'nin Pış Pış Ninnisi (Vokalli).wav",
-  'sleep-pofi-pisss': "/sounds/sleep/Pofi'nin Pışşş Ninnisi .wav",
-  'sleep-ambient': "/sounds/sleep/Pofi'nin Uyku Frekansı (Ambient).wav",
-  'sleep-ambient-v2': "/sounds/sleep/Pofi'nin Uyku Frekansı - Versiyon 2.wav",
-  'sleep-pis-pis-hipnotik': '/sounds/sleep/Pış Pış (Hipnotik Ninni).wav',
-  'sleep-yum-gozlerini': '/sounds/sleep/Yum Gözlerini Canım Bebeğim.wav'
+  'sleep-pofi-pis-pis-vocal': "/sounds/sleep/Pofi'nin Pış Pış Ninnisi (Vokalli).m4a",
+  'sleep-pofi-pisss': "/sounds/sleep/Pofi'nin Pışşş Ninnisi .m4a",
+  'sleep-ambient': "/sounds/sleep/Pofi'nin Uyku Frekansı (Ambient).m4a",
+  'sleep-ambient-v2': "/sounds/sleep/Pofi'nin Uyku Frekansı - Versiyon 2.m4a",
+  'sleep-pis-pis-hipnotik': '/sounds/sleep/Pış Pış (Hipnotik Ninni).m4a',
+  'sleep-yum-gozlerini': '/sounds/sleep/Yum Gözlerini Canım Bebeğim.m4a'
 };
 const SLEEP_RECORDED_SEQUENCE = [
   SLEEP_RECORDED_TRACKS['sleep-besik'],
@@ -456,8 +525,8 @@ const TOUCH_SETTINGS_KEY = 'minaplay_touch_settings_v1';
 const TOUCH_REPEAT_MEDIA_KEY = 'minaplay_touch_repeat_media_v1';
 const CHILD_LOCK_SETTINGS_KEY = 'minaplay_child_lock_settings_v1';
 const CHILD_PROFILE_KEY = 'minaplay_child_profile_v1';
-const PARENT_GESTURE_ZONE_PX = 112;
-const PARENT_GESTURE_RESET_MS = 1700;
+const PARENT_GESTURE_ZONE_PX = 160;
+const DEFAULT_PARENT_PIN = '2468';
 const TOUCH_DB_NAME = 'minaplay_touch_cards_v1';
 const TOUCH_DB_STORE = 'touchSettings';
 const TOUCH_DB_VERSION = 1;
@@ -466,6 +535,7 @@ const TOUCH_MAX_IMAGE_EDGE = 720;
 const TOUCH_SETTINGS_STORAGE_WARNING_BYTES = 4_500_000;
 const TOUCH_REPEAT_AUDIO_MAX_MS = 10_000;
 const TOUCH_REPEAT_VIDEO_MAX_MS = 12_000;
+const TOUCH_REPEAT_MEDIA_BACKUP_MAX_BYTES = 128 * 1024 * 1024;
 const TOUCH_REPEAT_MEDIA_VAULT_VERSION = 1;
 const TOUCH_REPEAT_MEDIA_KDF_ITERATIONS = 180_000;
 const TOUCH_DEFAULT_LEARNING_GOALS: Record<string, string> = {
@@ -840,6 +910,24 @@ const SENTENCE_PROMPTS: SentencePrompt[] = [
   }
 ];
 
+const SENTENCE_RECORDED_SPEECH: Record<string, string> = {
+  'su istiyorum': '/sounds/sentence/su-istiyorum.wav',
+  'su içelim': '/sounds/sentence/su-icelim.wav',
+  'yemek istiyorum': '/sounds/sentence/yemek-istiyorum.wav',
+  'yemek yiyelim': '/sounds/sentence/yemek-yiyelim.wav',
+  tuvalet: '/sounds/sentence/tuvalet.wav',
+  'uykum var': '/sounds/sentence/uykum-var.wav',
+  acıdı: '/sounds/sentence/acidi.wav',
+  üşüdüm: '/sounds/sentence/usudum.wav',
+  'sıcak oldu': '/sounds/sentence/sicak-oldu.wav',
+  'anne gel': '/sounds/sentence/anne-gel.wav',
+  'baba gel': '/sounds/sentence/baba-gel.wav',
+  'yardım et': '/sounds/sentence/yardim-et.wav',
+  'gezmek istiyorum': '/sounds/sentence/gezmek-istiyorum.wav',
+  'hadi söyle': '/sounds/sentence/hadi-soyle.wav',
+  'bir daha bakalım': '/sounds/sentence/bir-daha-bakalim.wav'
+};
+
 const STORY_LIBRARY: StoryDefinition[] = [
   {
     id: 'water-little-cloud',
@@ -976,7 +1064,6 @@ const POFI_WARMTH_EFFECT = 'blush-soft-v01.png';
 const POFI_HAPPY_EYEBROWS = 'happy-v01.png';
 const POFI_EXPRESSION_CHANGE_MS = 220;
 const POFI_POINT_HAND_MS = 1200;
-const POFI_VIEW_TRANSITION_MS = 360;
 const TOUCH_CUE_MS = 920;
 const TOUCH_AFFIRM_MOTION_MS = 900;
 const CLICK_HAND_CUE_MS = 760;
@@ -1199,17 +1286,17 @@ const POFI_EXPRESSIONS: Record<PofiMood, PofiExpression> = {
       body: POFI_STABLE_BODY,
       eyes: 'closed-v01.png',
       eyebrows: POFI_HAPPY_EYEBROWS,
-      mouth: 'smile-soft-v01.png',
-      hands: 'pofi_hand_closed_v01.png'
+      mouth: 'closed-v01.png',
+      effect: POFI_WARMTH_EFFECT
     }
   },
   sleepReady: {
     role: 'sleep',
     parts: {
       body: POFI_STABLE_BODY,
-      eyes: 'closed-soft-v01.png',
+      eyes: 'half-open-v01.png',
       eyebrows: POFI_HAPPY_EYEBROWS,
-      mouth: 'smile-soft-v01.png',
+      mouth: 'closed-v01.png',
       effect: POFI_WARMTH_EFFECT
     }
   },
@@ -1512,8 +1599,8 @@ const POFI_EXPRESSIONS: Record<PofiMood, PofiExpression> = {
       body: POFI_STABLE_BODY,
       eyes: 'closed-v01.png',
       eyebrows: POFI_HAPPY_EYEBROWS,
-      mouth: 'smile-soft-v01.png',
-      hands: 'pofi_hand_closed_v01.png'
+      mouth: 'closed-v01.png',
+      effect: POFI_WARMTH_EFFECT
     }
   }
 };
@@ -1565,10 +1652,11 @@ let pofiBlinkTimer: number | undefined;
 let pofiReturnTimer: number | undefined;
 let pofiExpressionTimer: number | undefined;
 let pofiHandTimer: number | undefined;
+const pofiRenderTokens = new WeakMap<HTMLElement, number>();
+const pofiAssetLoads = new Map<string, Promise<void>>();
 let peekabooState: PeekabooState = 'ready';
 let peekabooReturnTimer: number | undefined;
 let peekabooAutoTimer: number | undefined;
-let peekabooVoiceIndex = -1;
 let peekabooSearchPhraseIndex = -1;
 let peekabooCelebrationIndex = -1;
 let peekabooCelebrationCount = 0;
@@ -1576,7 +1664,10 @@ let peekabooCelebration: PeekabooCelebration = 'sparkle';
 let peekabooMotionIndex = 0;
 let peekabooMotion: PeekabooMotion = 'float';
 let peekabooAutoCycleCount = 0;
+let peekabooSearchAudioCount = 0;
+let peekabooRevealAudioCount = 0;
 let childProfile: ChildProfile = { name: 'Mina' };
+let appPermissionSettings = { camera: true, microphone: true };
 let touchRepeatTimer: number | undefined;
 let touchActiveTimer: number | undefined;
 let touchAffirmTimer: number | undefined;
@@ -1584,11 +1675,12 @@ let touchIdleRecoveryTimer: number | undefined;
 let touchAffirmUntil = 0;
 let touchVariationIndex = 0;
 let touchAudioUnlocked = false;
-let touchAudioPreload: Promise<void> | undefined;
 let touchAudioPools: Record<string, HTMLAudioElement[]> = {};
+let touchAudioPoolLoads: Record<string, Promise<HTMLAudioElement[]>> = {};
 let currentTouchAudio: HTMLAudioElement | undefined;
 let lastTouchAudioSrc: string | undefined;
 let voiceQueue: Promise<void> = Promise.resolve();
+let voiceQueueEpoch = 0;
 let lastTouchVariationId: string | undefined;
 let touchSettings: TouchSettingsState = cloneDefaultTouchSettings();
 let touchRepeatMediaLibrary: TouchRepeatMediaLibrary = {};
@@ -1620,7 +1712,7 @@ let touchMastery: TouchMasteryState = { masteredWords: [] };
 let touchRoundImages: Record<string, string> = {};
 let touchLastImageByCard: Record<string, string> = {};
 let matchTargetId: string | undefined;
-let lastMatchTargetId: string | undefined;
+let recentMatchTargetIds: string[] = [];
 let matchProgress: MatchProgressState = {};
 let matchRound: MatchRound | undefined;
 let matchTimer: number | undefined;
@@ -1639,10 +1731,12 @@ let lastSentenceSceneByPrompt: Record<string, string> = {};
 let sentenceProgress: SentenceProgressState = {};
 let lastSentenceSpeechKind: 'targeting' | 'success' | 'repeat' | 'hint' | 'retry' | undefined;
 let sentenceFlowToken = 0;
+let sentenceAudioClips: Record<string, HTMLAudioElement> = {};
+let pofiGuideAudioClips: Record<string, HTMLAudioElement> = {};
+let pofiGuideManifestPromise: Promise<Record<string, string>> | undefined;
 let storyTimer: number | undefined;
 let storySession: StorySession | undefined;
 let storyCursor = 0;
-let lastStorySpeechKind: 'attention' | 'narration' | 'interaction' | 'success' | 'repeat' | 'closure' | undefined;
 let sleepAudioContext: AudioContext | undefined;
 let sleepAudioElement: HTMLAudioElement | undefined;
 let sleepMusicNodes: Array<OscillatorNode | GainNode> = [];
@@ -1661,12 +1755,20 @@ let mirrorCameraRequested = false;
 let mirrorPlanSettings: MirrorPlanSettings = { ...DEFAULT_MIRROR_PLAN };
 let sleepSettings: SleepSettings = { ...DEFAULT_SLEEP_SETTINGS };
 let moduleVisibilitySettings: ModuleVisibilitySettings = { ...DEFAULT_MODULE_VISIBILITY };
-let childLockSettings: ChildLockSettings = { enabled: true, keepAwake: true, parentTapCount: 3, parentPullDistance: 80, introSeen: false };
+let pofiGuideSettings: PofiGuideSettings = { ...DEFAULT_POFI_GUIDE_SETTINGS };
+let childLockSettings: ChildLockSettings = {
+  enabled: true,
+  keepAwake: true,
+  parentTapCount: 3,
+  parentPullDistance: 80,
+  introSeen: false,
+  parentPin: DEFAULT_PARENT_PIN
+};
 let wakeLockSentinel: WakeLockSentinelLike | undefined;
 let wakeLockRequestInFlight = false;
-let parentGestureTapCount = 0;
-let parentGestureStartedAt = 0;
+let deferredInstallPrompt: BeforeInstallPromptEvent | undefined;
 let parentGestureStartY = 0;
+let parentGestureStartAt = 0;
 let parentGestureReadyForPull = false;
 
 const DEFAULT_STATE: AnalyticsState = {
@@ -1675,12 +1777,60 @@ const DEFAULT_STATE: AnalyticsState = {
   modules: {}
 };
 
+const APP_VERSION = '1.0.35';
+const APP_UPDATE_VERSION = 'MinaPlay APK · 2026-07-17 · v1.0.35';
+const APP_UPDATE_APK_URL = 'http://192.168.1.104:3100/downloads/minaplay-latest.apk';
+const APP_UPDATE_METADATA_URL = 'http://192.168.1.104:3100/api/update';
+
 export function createInitialModuleStats(): ModuleStats {
   return {
     opens: 0,
     actions: 0,
     correct: 0,
-    softRedirects: 0
+    softRedirects: 0,
+    pofiSupportTypes: createInitialPofiSupportTypes(),
+    pofiSupportTargets: {},
+    pofiFatigueEvents: 0
+  };
+}
+
+function moduleSupportTypes(stats: ModuleStats): Record<PofiSupportType, number> {
+  return {
+    ...createInitialPofiSupportTypes(),
+    ...(stats.pofiSupportTypes ?? {})
+  };
+}
+
+function normalizePofiSupportTargetStats(stats: Partial<PofiSupportTargetStats> | undefined, fallbackLabel: string): PofiSupportTargetStats {
+  return {
+    label: String(stats?.label ?? fallbackLabel),
+    total: Number(stats?.total ?? 0),
+    repeatSignals: Number(stats?.repeatSignals ?? 0),
+    supportTypes: {
+      ...createInitialPofiSupportTypes(),
+      ...(stats?.supportTypes ?? {})
+    }
+  };
+}
+
+function normalizePofiSupportTargets(
+  targets: Record<string, Partial<PofiSupportTargetStats>> | undefined
+): Record<string, PofiSupportTargetStats> {
+  return Object.fromEntries(Object.entries(targets ?? {}).map(([id, stats]) => [id, normalizePofiSupportTargetStats(stats, id)]));
+}
+
+function normalizeModuleStats(stats: Partial<ModuleStats> | undefined): ModuleStats {
+  return {
+    opens: Number(stats?.opens ?? 0),
+    actions: Number(stats?.actions ?? 0),
+    correct: Number(stats?.correct ?? 0),
+    softRedirects: Number(stats?.softRedirects ?? 0),
+    pofiSupportTypes: {
+      ...createInitialPofiSupportTypes(),
+      ...(stats?.pofiSupportTypes ?? {})
+    },
+    pofiSupportTargets: normalizePofiSupportTargets(stats?.pofiSupportTargets),
+    pofiFatigueEvents: Number(stats?.pofiFatigueEvents ?? 0)
   };
 }
 
@@ -1716,7 +1866,7 @@ export function createParentGuidanceCards(
           value: parentSessionRhythmLabel(state.sessions),
           note:
             totals.soft > totals.correct && totals.soft > 0
-              ? 'Destekli denemeler bağımsız denemeden fazla. Bugün süreyi kısa, kartları tanıdık tutun.'
+              ? `Bugün Pofi ${totals.soft} kez destek verdi. Süreyi kısa, kartları tanıdık tutun.`
               : `${parentModuleLabel(mostOpenedModule?.[0] ?? 'touch')} bugün en çok açılan alan. İlgi bu yöne dönmüş görünüyor.`
         };
 
@@ -1724,7 +1874,7 @@ export function createParentGuidanceCards(
     supportTarget.score > 0
       ? {
           value: supportTarget.label,
-          note: `${supportTarget.reason}. Aynı kartı kısa, melodik ve aralıklı tekrar etmek iyi olur.`
+          note: `${supportTarget.reason}. ${supportTarget.label} kelimesini kısa, melodik ve aralıklı tekrar etmek iyi olur.`
         }
       : {
           value: masteredCount > 0 ? `${masteredCount} güçlü iz` : 'İlk izler hazırlanıyor',
@@ -1845,9 +1995,14 @@ export function createParentTodaySummary(
     { correct: 0, soft: 0, actions: 0 }
   );
   const moduleSummaries = createParentModuleSummaries(modules);
+  const supportTypeSummary = createPofiSupportTypeSummary(modules.map(([, stats]) => stats));
+  const supportDetailSummary = createPofiSupportDetailSummary(modules);
+  const fatigueSummary = createPofiFatigueSummary(modules.map(([, stats]) => stats));
   const learnedWords = learnedWordLabels(touchState, matchState, labels);
   const recommendedWords = createParentWordRecommendations(touchState, matchState, labels);
   const insight = createParentInsight(state, touchState, matchState, labels);
+  const detailAnalysis = createParentDetailAnalysis(state, touchState, matchState, labels);
+  const supportFocusLabel = topPofiSupportFocus(modules)?.label ?? insight.focusLabel;
   const attemptTotal = totals.correct + totals.soft;
   const independenceRate = attemptTotal > 0 ? Math.round((totals.correct / attemptTotal) * 100) : 0;
   const supportRate = attemptTotal > 0 ? Math.round((totals.soft / attemptTotal) * 100) : 0;
@@ -1856,8 +2011,12 @@ export function createParentTodaySummary(
     modules: moduleSummaries,
     supportSummary:
       totals.actions > 0 || attemptTotal > 0
-        ? `${independenceRate}% bağımsız deneme, ${supportRate}% destekle deneme. ${state.repeats} tekrar odağı oluştu.`
+        ? `Bugün Pofi ${totals.soft} kez destek verdi; ${supportFocusLabel} kelimesinde tekrar iyi olur. ${independenceRate}% bağımsız deneme, ${supportRate}% destekle deneme.`
         : 'Henüz bağımsız deneme verisi oluşmadı.',
+    supportTypeSummary,
+    supportDetailSummary,
+    detailAnalysis,
+    fatigueSummary,
     independenceRate,
     supportRate,
     learnedWords,
@@ -1866,17 +2025,88 @@ export function createParentTodaySummary(
   };
 }
 
+export function createParentDetailAnalysis(
+  state: AnalyticsState,
+  touchState: TouchProgressState = {},
+  matchState: MatchProgressState = {},
+  labels: Record<string, string> = {}
+): ParentDetailAnalysis {
+  const modules = Object.entries(state.modules);
+  const supportTarget = strongestSupportTarget(touchState, matchState, labels);
+  const focusId = supportTarget.id || strongestProgressTarget(touchState, matchState, labels) || Object.keys(labels)[0] || 'baba';
+  const focusLabel = labels[focusId] ?? focusId;
+  const touch = touchState[focusId];
+  const match = matchState[focusId];
+  const touchAttempts = (touch?.success ?? 0) + (touch?.fail ?? 0);
+  const matchAttempts = (match?.success ?? 0) + (match?.fail ?? 0);
+  const repeatNeeds = (touch?.repeatNeeds ?? 0) + (match?.repeatNeeds ?? 0) + supportTarget.score;
+  const supportTotal = modules.reduce((sum, [, stats]) => sum + stats.softRedirects, 0);
+  const independentTotal = modules.reduce((sum, [, stats]) => sum + stats.correct, 0);
+  const fatigueEvents = modules.reduce((sum, [, stats]) => sum + (stats.pofiFatigueEvents ?? 0), 0);
+  const touchReady = isMastered(touch);
+  const matchReady = isMatchMastered(match) || (match?.conceptGeneralizationSuccess ?? 0) >= 2;
+  const priorityLabel =
+    repeatNeeds >= 4 || supportTotal > independentTotal
+      ? 'Yüksek'
+      : repeatNeeds > 0 || touchAttempts + matchAttempts > 0
+        ? 'Orta'
+        : 'Düşük';
+  const nextMode = matchReady
+    ? 'Hikaye veya İfade'
+    : touchReady
+      ? 'Eşleme'
+      : 'Dokun';
+  const supportRhythm =
+    fatigueEvents > 0
+      ? 'Destek arası açılmalı'
+      : supportTotal > independentTotal && supportTotal > 0
+        ? 'Kısa ve aralıklı destek'
+        : 'Ritim dengeli';
+  const reason =
+    supportTarget.score > 0
+      ? `${focusLabel} için Pofi desteği ve tekrar sinyali birikmiş.`
+      : touchReady || matchReady
+        ? `${focusLabel} güçlenmiş; farklı bağlama taşıma zamanı.`
+        : `${focusLabel} erken hedef olarak kısa tanıma turuna uygun.`;
+  const watchNote =
+    priorityLabel === 'Yüksek'
+      ? 'Aynı hedefi uzun süre zorlamayın; olumlu bir denemede kapatın.'
+      : nextMode === 'Dokun'
+        ? 'Önce dinle-dokun güveni kurulsun, sonra seçenek sayısı artsın.'
+        : 'Genelleme için aynı kelimeyi farklı görsel veya kısa hikaye içinde deneyin.';
+
+  return {
+    focusLabel,
+    priorityLabel,
+    reason,
+    nextMode,
+    supportRhythm,
+    watchNote,
+    rows: [
+      { label: 'Odak', value: focusLabel, note: reason },
+      { label: 'Öncelik', value: priorityLabel, note: watchNote },
+      { label: 'Sıradaki mod', value: nextMode, note: `${focusLabel} için önerilen bir sonraki çalışma alanı.` },
+      { label: 'Pofi ritmi', value: supportRhythm, note: createPofiFatigueSummary(modules.map(([, stats]) => stats)) }
+    ]
+  };
+}
+
 function createParentModuleSummaries(modules: Array<[string, ModuleStats]>): ParentModuleSummary[] {
   const maxActivity = Math.max(1, ...modules.map(([, stats]) => stats.opens + stats.actions));
   return modules.length > 0
-    ? modules.slice(0, 6).map(([name, stats]) => ({
-        label: parentModuleLabel(name),
-        opens: stats.opens,
-        actions: stats.actions,
-        independent: stats.correct,
-        supported: stats.softRedirects,
-        activityRate: Math.round(((stats.opens + stats.actions) / maxActivity) * 100)
-      }))
+    ? modules.slice(0, 6).map(([name, stats]) => {
+        const supportTypes = moduleSupportTypes(stats);
+        return {
+          label: parentModuleLabel(name),
+          opens: stats.opens,
+          actions: stats.actions,
+          independent: stats.correct,
+          supported: stats.softRedirects,
+          supportTypes,
+          topSupportTarget: topPofiSupportTarget(stats),
+          activityRate: Math.round(((stats.opens + stats.actions) / maxActivity) * 100)
+        };
+      })
     : [
         {
           label: 'Henüz oyun yok',
@@ -1884,9 +2114,66 @@ function createParentModuleSummaries(modules: Array<[string, ModuleStats]>): Par
           actions: 0,
           independent: 0,
           supported: 0,
+          supportTypes: createInitialPofiSupportTypes(),
+          topSupportTarget: undefined,
           activityRate: 0
         }
       ];
+}
+
+function topPofiSupportTarget(stats: ModuleStats): PofiSupportTargetStats | undefined {
+  return Object.values(normalizePofiSupportTargets(stats.pofiSupportTargets)).sort((a, b) => b.total - a.total)[0];
+}
+
+function topPofiSupportFocus(modules: Array<[string, ModuleStats]>): PofiSupportTargetStats | undefined {
+  return modules
+    .flatMap(([, stats]) => Object.values(normalizePofiSupportTargets(stats.pofiSupportTargets)))
+    .sort((a, b) => b.repeatSignals - a.repeatSignals || b.total - a.total)[0];
+}
+
+function createPofiSupportTypeSummary(statsList: ModuleStats[]): string[] {
+  const totals = statsList.reduce(
+    (acc, stats) => {
+      const supportTypes = moduleSupportTypes(stats);
+      POFI_SUPPORT_TYPES.forEach((type) => {
+        acc[type] += supportTypes[type] ?? 0;
+      });
+      return acc;
+    },
+    createInitialPofiSupportTypes()
+  );
+
+  const entries = POFI_SUPPORT_TYPES.filter((type) => totals[type] > 0).map((type) => `${POFI_SUPPORT_LABELS[type]} ${totals[type]}`);
+  return entries.length > 0 ? entries : ['Henüz Pofi destek izi yok'];
+}
+
+function createPofiSupportDetailSummary(modules: Array<[string, ModuleStats]>): string[] {
+  const entries = modules.flatMap(([name, stats]) =>
+    Object.values(normalizePofiSupportTargets(stats.pofiSupportTargets)).map((target) => {
+      const topType = POFI_SUPPORT_TYPES.map((type) => ({ type, count: target.supportTypes[type] ?? 0 })).sort((a, b) => b.count - a.count)[0];
+      return {
+        moduleLabel: parentModuleLabel(name),
+        target,
+        topType: topType?.type ?? 'hint',
+        topCount: topType?.count ?? 0
+      };
+    })
+  );
+
+  const summary = entries
+    .filter((entry) => entry.target.total > 0)
+    .sort((a, b) => b.target.repeatSignals - a.target.repeatSignals || b.target.total - a.target.total)
+    .slice(0, 4)
+    .map((entry) => `${entry.target.label}: ${POFI_SUPPORT_LABELS[entry.topType]} ${entry.topCount} (${entry.moduleLabel})`);
+
+  return summary.length > 0 ? summary : ['Henüz kelime bazlı destek detayı yok'];
+}
+
+function createPofiFatigueSummary(statsList: ModuleStats[]): string {
+  const fatigueEvents = statsList.reduce((sum, stats) => sum + (stats.pofiFatigueEvents ?? 0), 0);
+  return fatigueEvents > 0
+    ? `Aynı hedefte ${fatigueEvents} kez sık destek birikti; Pofi arayı açıp daha sakin modelle ilerlemeli.`
+    : 'Destek ritmi şu an sakin; sık ve robotik tekrar izi yok.';
 }
 
 function createParentWordRecommendations(
@@ -2033,7 +2320,13 @@ function strongestProgressTarget(
 function readAnalytics(): AnalyticsState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? { ...DEFAULT_STATE, ...JSON.parse(raw) } : { ...DEFAULT_STATE };
+    const parsed = raw ? { ...DEFAULT_STATE, ...JSON.parse(raw) } : { ...DEFAULT_STATE };
+    return {
+      ...parsed,
+      modules: Object.fromEntries(
+        Object.entries(parsed.modules ?? {}).map(([name, stats]) => [name, normalizeModuleStats(stats as Partial<ModuleStats>)])
+      )
+    };
   } catch {
     return { ...DEFAULT_STATE };
   }
@@ -2046,7 +2339,16 @@ function writeAnalytics(state: AnalyticsState): void {
 function readChildLockSettings(): ChildLockSettings {
   try {
     const raw = localStorage.getItem(CHILD_LOCK_SETTINGS_KEY);
-    return raw ? { ...childLockSettings, ...JSON.parse(raw) } : { ...childLockSettings };
+    const parsed = raw ? ({ ...childLockSettings, ...JSON.parse(raw) } as Partial<ChildLockSettings>) : { ...childLockSettings };
+    const parentPin = typeof parsed.parentPin === 'string' && /^\d{4}$/.test(parsed.parentPin) ? parsed.parentPin : DEFAULT_PARENT_PIN;
+    return {
+      enabled: parsed.enabled ?? childLockSettings.enabled,
+      keepAwake: parsed.keepAwake ?? childLockSettings.keepAwake,
+      parentTapCount: parsed.parentTapCount ?? childLockSettings.parentTapCount,
+      parentPullDistance: Math.min(180, Math.max(40, Number(parsed.parentPullDistance ?? childLockSettings.parentPullDistance))),
+      introSeen: parsed.introSeen ?? childLockSettings.introSeen,
+      parentPin
+    };
   } catch {
     return { ...childLockSettings };
   }
@@ -2071,17 +2373,17 @@ function writeChildProfile(profile: ChildProfile): void {
 }
 
 function isChildMode(view: ViewName | string | undefined): boolean {
-  return view === 'peekaboo' || PRIMARY_VIEWS.includes(view as ViewName);
+  return view === 'home' || view === 'peekaboo' || PRIMARY_VIEWS.includes(view as ViewName);
 }
 
 function shouldLockChildNavigation(view: ViewName | string | undefined = document.querySelector<HTMLElement>('.app-shell')?.dataset.activeView): boolean {
-  return childLockSettings.enabled && isChildMode(view);
+  return childLockSettings.enabled && (isChildMode(view) || view === 'parent');
 }
 
 function renderChildLockSettings(): void {
   const enabledInput = document.querySelector<HTMLInputElement>('[data-child-lock-enabled]');
   const awakeInput = document.querySelector<HTMLInputElement>('[data-child-lock-awake]');
-  const tapsInput = document.querySelector<HTMLInputElement>('[data-parent-gesture-taps]');
+  const pinInput = document.querySelector<HTMLInputElement>('[data-parent-pin-setting]');
   const pullInput = document.querySelector<HTMLInputElement>('[data-parent-gesture-pull]');
   const status = document.querySelector<HTMLElement>('[data-child-lock-status]');
   if (enabledInput) {
@@ -2090,8 +2392,8 @@ function renderChildLockSettings(): void {
   if (awakeInput) {
     awakeInput.checked = childLockSettings.keepAwake;
   }
-  if (tapsInput) {
-    tapsInput.value = String(childLockSettings.parentTapCount);
+  if (pinInput) {
+    pinInput.value = childLockSettings.parentPin;
   }
   if (pullInput) {
     pullInput.value = String(childLockSettings.parentPullDistance);
@@ -2132,18 +2434,40 @@ function saveChildProfileFromPanel(): void {
   renderChildProfile();
 
   if (status) {
-    status.textContent = `${name} adı kaydedildi. Ceee soruları artık bu isimle başlayacak.`;
+    status.textContent = `${name} adı kaydedildi. Pofi yönergelerde bu isimle seslenecek.`;
   }
 }
 
 function parentGestureGuideText(): string {
-  return `Sol üst köşeye ${childLockSettings.parentTapCount} kez dokunun; sonraki dokunuşta parmağı aşağı çekin.`;
+  return `Sol üstteki yıldıza dokunun; ardından Parent şifresini girin.`;
 }
 
 function syncChildLockMode(view: ViewName | string | undefined = document.querySelector<HTMLElement>('.app-shell')?.dataset.activeView): void {
-  document.querySelector<HTMLElement>('.app-shell')?.setAttribute('data-child-lock', String(shouldLockChildNavigation(view)));
+  const locked = shouldLockChildNavigation(view);
+  document.querySelector<HTMLElement>('.app-shell')?.setAttribute('data-child-lock', String(locked));
   renderChildLockSettings();
+  void syncNativeChildLock(locked);
   void syncScreenWakeLock();
+}
+
+async function syncNativeChildLock(locked: boolean): Promise<void> {
+  const kiosk = window.Capacitor?.Plugins?.MinaPlayKiosk;
+  try {
+    if (kiosk?.setChildLockActive) {
+      await kiosk.setChildLockActive({ active: locked });
+      if (!locked) {
+        await kiosk.keepFullscreen?.();
+      }
+      return;
+    }
+
+    window.MinaPlayAndroid?.setChildLockActive?.(locked);
+    if (!locked) {
+      window.MinaPlayAndroid?.keepFullscreen?.();
+    }
+  } catch {
+    // Native kiosk support depends on Android screen pinning/device policy settings.
+  }
 }
 
 async function syncScreenWakeLock(): Promise<void> {
@@ -2287,6 +2611,22 @@ function writeModuleVisibilitySettings(): void {
   localStorage.setItem(MODULE_VISIBILITY_KEY, JSON.stringify(moduleVisibilitySettings));
 }
 
+function readPofiGuideSettings(): PofiGuideSettings {
+  try {
+    return normalizePofiGuideSettings(JSON.parse(localStorage.getItem(POFI_GUIDE_SETTINGS_KEY) ?? '{}'));
+  } catch {
+    return { ...DEFAULT_POFI_GUIDE_SETTINGS };
+  }
+}
+
+function writePofiGuideSettings(): void {
+  localStorage.setItem(POFI_GUIDE_SETTINGS_KEY, JSON.stringify(pofiGuideSettings));
+}
+
+function guideDelay(baseDelayMs: number): number {
+  return pofiGuideDelay(baseDelayMs, pofiGuideSettings);
+}
+
 function writeMatchProgress(): void {
   localStorage.setItem(MATCH_PROGRESS_KEY, JSON.stringify(matchProgress));
   renderMatchProgressTable();
@@ -2378,9 +2718,10 @@ function renderTouchProgressTable(): void {
       const mastered = touchMastery.masteredWords.includes(card.id);
       const recentCorrectCount = entry?.recentResults.filter(Boolean).length ?? 0;
       const recentSummary = entry?.recentResults.length ? `${recentCorrectCount}/${entry.recentResults.length}` : '-';
-      return `<article class="touch-progress-row">
+      return `<article class="touch-progress-row" style="--progress:${rate}%">
         <strong>${card.word}</strong>
         <span>${card.learningGoal}</span>
+        <span class="progress-visual" aria-label="İlerleme yüzde ${rate}"><i></i></span>
         <span>${success} doğru</span>
         <span>${fail} yönlendirme</span>
         <span>%${rate}</span>
@@ -2421,9 +2762,10 @@ function renderMatchProgressTable(): void {
       const recentCorrectCount = entry?.recentResults.filter(Boolean).length ?? 0;
       const recentSummary = entry?.recentResults.length ? `${recentCorrectCount}/${entry.recentResults.length}` : '-';
       const mastered = isMatchMastered(entry);
-      return `<article class="touch-progress-row">
+      return `<article class="touch-progress-row" style="--progress:${rate}%">
         <strong>${card.word}</strong>
         <span>${level}. seviye</span>
+        <span class="progress-visual" aria-label="İlerleme yüzde ${rate}"><i></i></span>
         <span>${success} doğru</span>
         <span>${fail} yönlendirme</span>
         <span>%${rate}</span>
@@ -2445,6 +2787,7 @@ function renderMvpModuleSettings(): void {
   const sleepSound = document.querySelector<HTMLSelectElement>('[data-sleep-sound-setting]');
   const sleepDuration = document.querySelector<HTMLSelectElement>('[data-sleep-duration-setting]');
   const sleepVolume = document.querySelector<HTMLInputElement>('[data-sleep-volume]');
+  const pofiGuideFrequency = document.querySelector<HTMLSelectElement>('[data-pofi-guide-frequency]');
   document.querySelectorAll<HTMLInputElement>('[data-module-visibility]').forEach((input) => {
     const moduleId = input.dataset.moduleVisibility as MvpModuleId | undefined;
     input.checked = Boolean(moduleId && moduleVisibilitySettings[moduleId]);
@@ -2460,6 +2803,9 @@ function renderMvpModuleSettings(): void {
   }
   if (sleepVolume) {
     sleepVolume.value = String(Math.round(sleepSettings.volume * 100));
+  }
+  if (pofiGuideFrequency) {
+    pofiGuideFrequency.value = String(pofiGuideSettings.frequencyMultiplier);
   }
 }
 
@@ -2499,8 +2845,101 @@ function saveModuleVisibilitySettingsFromPanel(): void {
 }
 
 function ensureModule(state: AnalyticsState, view: string): ModuleStats {
-  state.modules[view] ??= createInitialModuleStats();
+  state.modules[view] = normalizeModuleStats(state.modules[view]);
   return state.modules[view];
+}
+
+function pofiSupportTypeForAction(action: string): PofiSupportType | undefined {
+  if (action.includes('wrong') || action.includes('offtarget')) {
+    return 'softRedirect';
+  }
+  if (action.includes('guide') || action.includes('hint')) {
+    return 'hint';
+  }
+  if (action.includes('repeat')) {
+    return 'repeat';
+  }
+  if (action.includes('mirror') || action.includes('sentence') || action.includes('story')) {
+    return 'model';
+  }
+  if (action.includes('sleep') || action.includes('peekaboo')) {
+    return 'calm';
+  }
+  return undefined;
+}
+
+function pofiSupportTargetKey(action: string, context: PofiActionContext | undefined): string | undefined {
+  if (context?.targetId) {
+    return context.targetId;
+  }
+  if (action.startsWith('sleep') || action.startsWith('peekaboo')) {
+    return action.split('-')[0];
+  }
+  return undefined;
+}
+
+function recordPofiSupportType(module: ModuleStats, supportType: PofiSupportType, action: string, context?: PofiActionContext): void {
+  module.pofiSupportTypes = moduleSupportTypes(module);
+  module.pofiSupportTypes[supportType] += 1;
+
+  const targetKey = pofiSupportTargetKey(action, context);
+  if (!targetKey) {
+    return;
+  }
+
+  module.pofiSupportTargets = normalizePofiSupportTargets(module.pofiSupportTargets);
+  const target = module.pofiSupportTargets[targetKey] ?? normalizePofiSupportTargetStats(undefined, context?.targetLabel ?? targetKey);
+  target.label = context?.targetLabel ?? target.label;
+  target.total += 1;
+  target.supportTypes[supportType] += 1;
+  if (supportType === 'repeat' || target.supportTypes[supportType] >= 3) {
+    target.repeatSignals += 1;
+  }
+  if (target.repeatSignals > 0 && target.total >= 4) {
+    module.pofiFatigueEvents = (module.pofiFatigueEvents ?? 0) + 1;
+  }
+  module.pofiSupportTargets[targetKey] = target;
+}
+
+function touchCardActionContext(cardId: string | undefined, supportType?: PofiSupportType): PofiActionContext | undefined {
+  if (!cardId) {
+    return supportType ? { supportType } : undefined;
+  }
+  const card = touchSettings.cards.find((entry) => entry.id === cardId);
+  return {
+    targetId: cardId,
+    targetLabel: card?.word ?? card?.label ?? cardId,
+    supportType
+  };
+}
+
+function matchActionContext(supportType?: PofiSupportType): PofiActionContext | undefined {
+  return touchCardActionContext(matchRound?.targetId ?? matchTargetId, supportType);
+}
+
+function sentenceActionContext(supportType?: PofiSupportType): PofiActionContext | undefined {
+  if (!sentenceRound) {
+    return supportType ? { supportType } : undefined;
+  }
+  return {
+    targetId: sentenceKey(sentenceRound.prompt.subjectId, sentenceRound.prompt.verbId),
+    targetLabel: sentencePhrase(sentenceRound.prompt),
+    supportType
+  };
+}
+
+function storyActionContext(choice: StoryChoice | undefined, supportType?: PofiSupportType): PofiActionContext | undefined {
+  const step = currentStoryStep();
+  const card = choice?.cardId ? touchSettings.cards.find((entry) => entry.id === choice.cardId) : undefined;
+  const targetId = choice?.cardId ?? choice?.id ?? step?.id;
+  if (!targetId) {
+    return supportType ? { supportType } : undefined;
+  }
+  return {
+    targetId,
+    targetLabel: choice?.label ?? card?.word ?? step?.text ?? targetId,
+    supportType
+  };
 }
 
 function trackViewOpen(view: ViewName): void {
@@ -2514,7 +2953,7 @@ function trackViewOpen(view: ViewName): void {
   writeAnalytics(state);
 }
 
-function trackAction(action: string, _sourceElement?: HTMLElement): void {
+function trackAction(action: string, _sourceElement?: HTMLElement, context?: PofiActionContext): void {
   const activeView = document.querySelector<HTMLElement>('.view.active')?.dataset.viewPanel ?? 'home';
   const state = readAnalytics();
   const module = ensureModule(state, activeView);
@@ -2526,6 +2965,11 @@ function trackAction(action: string, _sourceElement?: HTMLElement): void {
 
   if (action.includes('wrong') || action.includes('offtarget')) {
     module.softRedirects += 1;
+  }
+
+  const supportType = context?.supportType ?? pofiSupportTypeForAction(action);
+  if (supportType) {
+    recordPofiSupportType(module, supportType, action, context);
   }
 
   if (action.includes('repeat') || action.includes('select')) {
@@ -2556,9 +3000,15 @@ function activateView(view: ViewName): void {
     return;
   }
 
-  const transition = view === 'parent' ? undefined : beginPofiViewTransition();
+  if (view !== 'parent' && document.activeElement instanceof HTMLElement) {
+    document.activeElement.blur();
+    void window.Capacitor?.Plugins?.MinaPlayKiosk?.dismissInput?.();
+  }
+
+  // Layered transparent Pofi parts can render as black/"melting" rectangles in
+  // Huawei WebView while cloned between screens. Child views open atomically.
   const shell = document.querySelector<HTMLElement>('.app-shell');
-  shell?.classList.add('view-transitioning');
+  shell?.classList.remove('view-transitioning');
 
   document.querySelectorAll<HTMLElement>('[data-view-panel]').forEach((panel) => {
     panel.classList.toggle('active', panel.dataset.viewPanel === view);
@@ -2569,6 +3019,10 @@ function activateView(view: ViewName): void {
   });
 
   shell?.setAttribute('data-active-view', view);
+  supersedeVoiceQueue();
+  if (['touch', 'match', 'sentence', 'story', 'mirror', 'peekaboo'].includes(view)) {
+    unlockTouchAudio();
+  }
   syncChildLockMode(view);
   setPofiBaseState(POFI_VIEW_STATES[view] ?? 'neutral');
   syncTouchRitual(view);
@@ -2605,8 +3059,39 @@ function activateView(view: ViewName): void {
   }
   trackViewOpen(view);
   renderParentMetrics();
-  completePofiViewTransition(transition);
-  window.setTimeout(() => shell?.classList.remove('view-transitioning'), POFI_VIEW_TRANSITION_MS);
+}
+
+async function leaveParentAndActivate(view: ViewName): Promise<void> {
+  if (document.activeElement instanceof HTMLElement) {
+    document.activeElement.blur();
+  }
+  await window.Capacitor?.Plugins?.MinaPlayKiosk?.dismissInput?.().catch(() => undefined);
+  await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
+  activateView(view);
+}
+
+function handleNativeBackButton(): void {
+  const shell = document.querySelector<HTMLElement>('.app-shell');
+  const activeView = (shell?.dataset.activeView ?? 'home') as ViewName;
+
+  if (activeView === 'parent') {
+    activateView('home');
+    return;
+  }
+
+  if (activeView === 'sleep' && sleepMusicRunning) {
+    renderSleepMode();
+    return;
+  }
+
+  if (shouldLockChildNavigation(activeView)) {
+    setPofiBaseState(POFI_VIEW_STATES[activeView] ?? 'neutral');
+    return;
+  }
+
+  if (activeView !== 'home') {
+    activateView('home');
+  }
 }
 
 function syncPeekabooMode(view: ViewName): void {
@@ -2638,12 +3123,16 @@ function renderPeekabooMode(): void {
 
   surface.dataset.peekabooState = peekabooState;
   delete surface.dataset.peekabooSpot;
+  surface.dataset.peekabooContract = POFI_CONTRACTS.peekabooClassicCoverReveal;
+  surface.dataset.peekabooScore = 'false';
   surface.dataset.peekabooReward = String(peekabooState === 'celebrate');
   surface.dataset.peekabooCelebration = peekabooCelebration;
   surface.dataset.peekabooMotion = peekabooMotion;
+  surface.dataset.peekabooSearchAudioCount = String(peekabooSearchAudioCount);
+  surface.dataset.peekabooRevealAudioCount = String(peekabooRevealAudioCount);
 
   if (peekabooState === 'cover') {
-    label.textContent = 'Pofi saklandı';
+    label.textContent = 'Pofi gözlerini kapattı';
     hint.textContent = peekabooSearchText();
     return;
   }
@@ -2776,10 +3265,6 @@ function advancePeekabooCelebration(): void {
   peekabooCelebration = PEEKABOO_CELEBRATIONS[peekabooCelebrationIndex];
 }
 
-function childDisplayName(): string {
-  return sanitizeChildName(childProfile.name || 'Mina');
-}
-
 function sanitizeChildName(name: string): string {
   const cleaned = name.trim().replace(/\s+/g, ' ').split(' ')[0] ?? 'Mina';
   return cleaned.slice(0, 18) || 'Mina';
@@ -2791,21 +3276,16 @@ function advancePeekabooSearchPhrase(): void {
 
 function peekabooSearchText(): string {
   const index = peekabooSearchPhraseIndex >= 0 ? peekabooSearchPhraseIndex : 0;
-  return PEEKABOO_SEARCH_TEMPLATES[index](childDisplayName());
+  return PEEKABOO_SEARCH_TEMPLATES[index]();
 }
 
 function playPeekabooSearchCue(): void {
-  if (!('speechSynthesis' in window)) {
-    playSoftTouchTone();
-    return;
-  }
-
-  const utterance = new SpeechSynthesisUtterance(peekabooSearchText());
-  utterance.lang = 'tr-TR';
-  utterance.rate = randomBetween(80, 92) / 100;
-  utterance.pitch = randomBetween(118, 134) / 100;
-  utterance.volume = randomBetween(62, 72) / 100;
-  window.speechSynthesis.speak(utterance);
+  void playRecordedPofiText(peekabooSearchText(), 0.82).then((played) => {
+    if (played) {
+      peekabooSearchAudioCount += 1;
+      renderPeekabooMode();
+    }
+  });
 }
 
 function stopPeekabooSearchCue(): void {
@@ -2814,65 +3294,13 @@ function stopPeekabooSearchCue(): void {
   }
 }
 
-function nextPeekabooVoiceClip(): (typeof PEEKABOO_VOICE_CLIPS)[number] {
-  peekabooVoiceIndex = (peekabooVoiceIndex + 1) % PEEKABOO_VOICE_CLIPS.length;
-  return PEEKABOO_VOICE_CLIPS[peekabooVoiceIndex];
-}
-
 function playPeekabooVoice(): Promise<void> {
-  const clip = nextPeekabooVoiceClip();
-  const profile = { rate: 0.92, pitch: 1.42, volume: 0.84 };
-  return playPeekabooRecording(clip, profile);
-}
-
-async function playPeekabooRecording(clip: (typeof PEEKABOO_VOICE_CLIPS)[number], profile: { rate: number; pitch: number; volume: number }): Promise<void> {
-  const audio = await loadAudioCandidate(clip.src);
-  if (audio) {
-    await enqueueAudioPlayback(audio, 0.94);
-    return;
-  }
-
-  playPeekabooSyllableTone();
-  await enqueueSpeechText(clip.text, profile);
-}
-
-function playPeekabooSyllableTone(): void {
-  const AudioContextConstructor = window.AudioContext;
-  if (!AudioContextConstructor || !touchAudioUnlocked) {
-    return;
-  }
-
-  const context = new AudioContextConstructor();
-  const gain = context.createGain();
-  gain.connect(context.destination);
-  gain.gain.setValueAtTime(0.0001, context.currentTime);
-
-  const now = context.currentTime;
-  const notes = [
-    { at: 0, start: 560, end: 650, duration: 0.18, gain: 0.018 },
-    { at: 0.22, start: 640, end: 720, duration: 0.2, gain: 0.014 },
-    { at: 0.48, start: 620, end: 700, duration: 0.22, gain: 0.012 }
-  ];
-
-  notes.forEach((note) => {
-    const oscillator = context.createOscillator();
-    const noteGain = context.createGain();
-    const start = now + note.at;
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(note.start, start);
-    oscillator.frequency.exponentialRampToValueAtTime(note.end, start + note.duration);
-    noteGain.gain.setValueAtTime(0.0001, start);
-    noteGain.gain.exponentialRampToValueAtTime(note.gain, start + 0.035);
-    noteGain.gain.exponentialRampToValueAtTime(0.0001, start + note.duration + 0.05);
-    oscillator.connect(noteGain);
-    noteGain.connect(gain);
-    oscillator.start(start);
-    oscillator.stop(start + note.duration + 0.07);
+  return playRecordedPofiText('Ceee!', 0.94).then((played) => {
+    if (played) {
+      peekabooRevealAudioCount += 1;
+      renderPeekabooMode();
+    }
   });
-
-  window.setTimeout(() => {
-    void context.close();
-  }, 900);
 }
 
 function openParentWithUnlock(): void {
@@ -2880,13 +3308,7 @@ function openParentWithUnlock(): void {
 }
 
 function showParentSecretIntroIfNeeded(): void {
-  const intro = document.querySelector<HTMLElement>('[data-parent-secret-intro]');
-  const guide = document.querySelector<HTMLElement>('[data-parent-secret-guide]');
-  if (!intro || !guide || childLockSettings.introSeen) {
-    return;
-  }
-  guide.textContent = `${parentGestureGuideText()} Bu hareket ebeveyn panelini açar. İsterseniz bu şifreyi Ebeveyn panelinden güncelleyebilirsiniz.`;
-  intro.hidden = false;
+  document.querySelector<HTMLElement>('[data-parent-secret-intro]')?.setAttribute('hidden', '');
 }
 
 function acceptParentSecretIntro(): void {
@@ -2896,55 +3318,113 @@ function acceptParentSecretIntro(): void {
 }
 
 function resetParentGesture(): void {
-  parentGestureTapCount = 0;
-  parentGestureStartedAt = 0;
   parentGestureStartY = 0;
+  parentGestureStartAt = 0;
   parentGestureReadyForPull = false;
+  document.querySelector<HTMLElement>('[data-parent-gesture-zone]')?.classList.remove('ready');
 }
 
-function isInParentGestureZone(event: PointerEvent): boolean {
-  return event.clientX <= PARENT_GESTURE_ZONE_PX && event.clientY <= PARENT_GESTURE_ZONE_PX;
+function isInParentGestureZonePoint(clientX: number, clientY: number): boolean {
+  const zone = document.querySelector<HTMLElement>('[data-parent-gesture-zone]');
+  const rect = zone?.getBoundingClientRect();
+  if (rect) {
+    return clientX >= rect.left - 8 && clientX <= rect.right + 8 && clientY >= rect.top - 8 && clientY <= rect.bottom + 8;
+  }
+
+  return clientX <= PARENT_GESTURE_ZONE_PX && clientY <= PARENT_GESTURE_ZONE_PX;
 }
 
-function handleParentGesturePointerDown(event: PointerEvent): void {
-  if (!isInParentGestureZone(event)) {
+function beginParentGesture(clientX: number, clientY: number): void {
+  if (!isInParentGestureZonePoint(clientX, clientY)) {
     resetParentGesture();
     return;
   }
 
-  const now = window.performance.now();
-  if (!parentGestureStartedAt || now - parentGestureStartedAt > PARENT_GESTURE_RESET_MS) {
-    parentGestureTapCount = 0;
-  }
-
-  parentGestureStartedAt = now;
-  parentGestureStartY = event.clientY;
-  parentGestureReadyForPull = parentGestureTapCount >= childLockSettings.parentTapCount;
+  resetParentGesture();
+  parentGestureStartY = clientY;
+  parentGestureStartAt = Date.now();
+  parentGestureReadyForPull = true;
 }
 
-function handleParentGesturePointerUp(event: PointerEvent): void {
-  if (!isInParentGestureZone(event)) {
+function finishParentGesture(_clientY?: number): void {
+  if (parentGestureReadyForPull && parentGestureStartAt > 0) {
     resetParentGesture();
+    openParentPinModal();
     return;
   }
 
-  if (parentGestureReadyForPull) {
-    resetParentGesture();
-    return;
-  }
-
-  parentGestureTapCount += 1;
+  resetParentGesture();
 }
 
-function handleParentGesturePointerMove(event: PointerEvent): void {
+function updateParentGesture(clientY: number): void {
   if (!parentGestureReadyForPull) {
     return;
   }
 
-  if (event.clientY - parentGestureStartY >= childLockSettings.parentPullDistance) {
+  if (clientY - parentGestureStartY >= childLockSettings.parentPullDistance) {
     resetParentGesture();
-    openParentWithUnlock();
+    openParentPinModal();
   }
+}
+
+function openParentPinModal(): void {
+  const modal = document.querySelector<HTMLElement>('[data-parent-pin-modal]');
+  const input = document.querySelector<HTMLInputElement>('[data-parent-pin-input]');
+  const status = document.querySelector<HTMLElement>('[data-parent-pin-status]');
+  if (!modal || !input) {
+    return;
+  }
+
+  pauseChildRuntimeForParentGate();
+  input.value = '';
+  if (status) {
+    status.textContent = '';
+  }
+  modal.hidden = false;
+  window.setTimeout(() => input.focus(), 80);
+}
+
+function closeParentPinModal(): void {
+  document.querySelector<HTMLElement>('[data-parent-pin-modal]')?.setAttribute('hidden', '');
+  const activeView = document.querySelector<HTMLElement>('.app-shell')?.dataset.activeView as ViewName | undefined;
+  if (activeView && isChildMode(activeView)) {
+    activateView(activeView);
+  }
+}
+
+function hideParentPinModal(): void {
+  document.querySelector<HTMLElement>('[data-parent-pin-modal]')?.setAttribute('hidden', '');
+}
+
+function pauseChildRuntimeForParentGate(): void {
+  stopTouchRitual();
+  clearMatchTimer();
+  clearSentenceTimer();
+  clearStoryTimer();
+  clearMirrorTimer();
+  clearPeekabooAutoTimer();
+  if (peekabooReturnTimer) {
+    window.clearTimeout(peekabooReturnTimer);
+    peekabooReturnTimer = undefined;
+  }
+  supersedeVoiceQueue();
+  void stopSleepMusic();
+}
+
+function submitParentPin(): void {
+  const input = document.querySelector<HTMLInputElement>('[data-parent-pin-input]');
+  const status = document.querySelector<HTMLElement>('[data-parent-pin-status]');
+  const value = input?.value.trim() ?? '';
+  if (value === childLockSettings.parentPin) {
+    hideParentPinModal();
+    openParentWithUnlock();
+    return;
+  }
+
+  if (status) {
+    status.textContent = 'Şifre yanlış.';
+  }
+  input?.select();
 }
 
 function pofiStateForAction(action: string): PofiState | undefined {
@@ -2993,60 +3473,6 @@ function activePofiAvatar(): HTMLElement | undefined {
   });
 }
 
-function applyPofiBridgeRect(bridge: HTMLElement, rect: DOMRect): void {
-  bridge.style.left = `${rect.left}px`;
-  bridge.style.top = `${rect.top}px`;
-  bridge.style.width = `${rect.width}px`;
-  bridge.style.height = `${rect.height}px`;
-}
-
-function beginPofiViewTransition(): PofiViewTransition | undefined {
-  if (!pofiMotionAllowed()) {
-    return undefined;
-  }
-
-  const avatar = activePofiAvatar();
-  if (!avatar) {
-    return undefined;
-  }
-
-  const rect = avatar.getBoundingClientRect();
-  if (rect.width <= 0 || rect.height <= 0) {
-    return undefined;
-  }
-
-  const bridge = avatar.cloneNode(true) as HTMLElement;
-  bridge.classList.add('pofi-transition-bridge');
-  bridge.setAttribute('aria-hidden', 'true');
-  bridge.removeAttribute('aria-label');
-  bridge.removeAttribute('id');
-  applyPofiBridgeRect(bridge, rect);
-  document.body.append(bridge);
-  void bridge.offsetWidth;
-  bridge.dataset.transitionPhase = 'move';
-
-  return { bridge };
-}
-
-function completePofiViewTransition(transition?: PofiViewTransition): void {
-  if (!transition) {
-    return;
-  }
-
-  window.setTimeout(() => {
-    const nextAvatar = activePofiAvatar();
-    if (!nextAvatar) {
-      transition.bridge.dataset.transitionPhase = 'exit';
-      window.setTimeout(() => transition.bridge.remove(), POFI_VIEW_TRANSITION_MS);
-      return;
-    }
-
-    applyPofiBridgeRect(transition.bridge, nextAvatar.getBoundingClientRect());
-    transition.bridge.dataset.transitionPhase = 'arrive';
-    window.setTimeout(() => transition.bridge.remove(), POFI_VIEW_TRANSITION_MS);
-  }, 40);
-}
-
 function clearPofiTimers(): void {
   if (pofiIdleTimer) {
     window.clearTimeout(pofiIdleTimer);
@@ -3093,6 +3519,49 @@ function ensurePofiLayer(container: HTMLElement, className: string, alt = ''): H
   return image;
 }
 
+function ensurePofiFaceTeam(container: HTMLElement): HTMLElement {
+  const existing = container.querySelector<HTMLElement>('.pofi-face-team');
+  if (existing) {
+    return existing;
+  }
+  const team = document.createElement('span');
+  team.className = 'pofi-face-team';
+  container.querySelectorAll<HTMLImageElement>(':scope > .pofi-face').forEach((layer) => team.append(layer));
+  container.append(team);
+  return team;
+}
+
+function ensurePofiFaceLayer(container: HTMLElement, className: string): HTMLImageElement {
+  const team = ensurePofiFaceTeam(container);
+  const layerClass = className.trim().split(/\s+/).at(-1);
+  const existing = layerClass ? team.querySelector<HTMLImageElement>(`.${layerClass}`) : undefined;
+  if (existing) {
+    return existing;
+  }
+  const image = pofiImage('', className);
+  team.append(image);
+  return image;
+}
+
+function preloadPofiAsset(path: string): Promise<void> {
+  const existing = pofiAssetLoads.get(path);
+  if (existing) {
+    return existing;
+  }
+  const load = new Promise<void>((resolve) => {
+    const image = new Image();
+    const done = (): void => resolve();
+    image.addEventListener('load', done, { once: true });
+    image.addEventListener('error', done, { once: true });
+    image.src = path;
+    if (image.complete) {
+      resolve();
+    }
+  });
+  pofiAssetLoads.set(path, load);
+  return load;
+}
+
 function updatePofiLayer(image: HTMLImageElement, path: string): void {
   if (image.getAttribute('src') === path) {
     return;
@@ -3126,32 +3595,48 @@ function isPointHand(fileName: string): boolean {
 }
 
 function renderPofiParts(container: HTMLElement, mood: PofiMood, parts: PofiParts, animateExpression = true): void {
-  container.dataset.pofiMood = mood;
-  container.dataset.pofiRole = POFI_EXPRESSIONS[mood].role;
+  const token = (pofiRenderTokens.get(container) ?? 0) + 1;
+  pofiRenderTokens.set(container, token);
+  const paths = [
+    pofiPartPath('body', parts.body),
+    pofiPartPath('eyes', parts.eyes),
+    pofiPartPath('mouth', parts.mouth),
+    parts.eyebrows ? pofiPartPath('eyebrows', parts.eyebrows) : '',
+    parts.effect ? pofiPartPath('effects', parts.effect) : '',
+    parts.hands ? pofiPartPath('hands', parts.hands) : ''
+  ].filter(Boolean);
 
-  if (animateExpression) {
-    container.classList.remove('pofi-expression-change');
-    void container.offsetWidth;
-    container.classList.add('pofi-expression-change');
-    pofiExpressionTimer = window.setTimeout(() => {
-      container.classList.remove('pofi-expression-change');
-    }, POFI_EXPRESSION_CHANGE_MS);
-  }
-
-  updatePofiLayer(ensurePofiLayer(container, 'pofi-body'), pofiPartPath('body', parts.body));
-  updateOptionalPofiLayer(ensurePofiLayer(container, 'pofi-effect pofi-blush'), 'effects', parts.effect);
-  updateOptionalPofiLayer(ensurePofiLayer(container, 'pofi-face pofi-eyebrows'), 'eyebrows', parts.eyebrows);
-  updatePofiLayer(ensurePofiLayer(container, 'pofi-face pofi-eyes'), pofiPartPath('eyes', parts.eyes));
-  updatePofiLayer(ensurePofiLayer(container, 'pofi-face pofi-mouth'), pofiPartPath('mouth', parts.mouth));
-  updateOptionalPofiLayer(ensurePofiLayer(container, 'pofi-hands'), 'hands', parts.hands);
+  void Promise.all(paths.map(preloadPofiAsset)).then(() => {
+    if (pofiRenderTokens.get(container) !== token) {
+      return;
+    }
+    window.requestAnimationFrame(() => {
+      if (pofiRenderTokens.get(container) !== token) {
+        return;
+      }
+      container.dataset.pofiMood = mood;
+      container.dataset.pofiRole = POFI_EXPRESSIONS[mood].role;
+      updatePofiLayer(ensurePofiLayer(container, 'pofi-body'), pofiPartPath('body', parts.body));
+      updateOptionalPofiLayer(ensurePofiLayer(container, 'pofi-effect pofi-blush'), 'effects', parts.effect);
+      updateOptionalPofiLayer(ensurePofiFaceLayer(container, 'pofi-face pofi-eyebrows'), 'eyebrows', parts.eyebrows);
+      updatePofiLayer(ensurePofiFaceLayer(container, 'pofi-face pofi-eyes'), pofiPartPath('eyes', parts.eyes));
+      updatePofiLayer(ensurePofiFaceLayer(container, 'pofi-face pofi-mouth'), pofiPartPath('mouth', parts.mouth));
+      updateOptionalPofiLayer(ensurePofiLayer(container, 'pofi-hands'), 'hands', parts.hands);
+      container.dataset.pofiPoseReady = 'true';
+      if (animateExpression) {
+        container.classList.remove('pofi-expression-change');
+        void container.offsetWidth;
+        container.classList.add('pofi-expression-change');
+        pofiExpressionTimer = window.setTimeout(() => {
+          container.classList.remove('pofi-expression-change');
+        }, POFI_EXPRESSION_CHANGE_MS);
+      }
+    });
+  });
 }
 
 function renderPofiAvatar(container: HTMLElement, mood: PofiMood): void {
   renderPofiParts(container, mood, POFI_EXPRESSIONS[mood].parts);
-}
-
-function updatePofiEyes(container: HTMLElement, fileName: string): void {
-  updatePofiLayer(ensurePofiLayer(container, 'pofi-face pofi-eyes'), pofiPartPath('eyes', fileName));
 }
 
 function renderActivePofi(state?: PofiState): void {
@@ -3185,12 +3670,11 @@ function schedulePofiLife(): void {
       return;
     }
 
-    const baseParts = POFI_EXPRESSIONS[pofiBaseState].parts;
-    updatePofiEyes(avatar, pofiBaseState === 'sleep' ? 'closed-v01.png' : 'closed-soft-v01.png');
+    renderPofiAvatar(avatar, pofiBaseState === 'sleep' ? 'sleepBlink' : 'blink');
     pofiReturnTimer = window.setTimeout(() => {
       const nextAvatar = activePofiAvatar();
       if (nextAvatar) {
-        updatePofiEyes(nextAvatar, baseParts.eyes);
+        renderPofiAvatar(nextAvatar, pofiBaseState);
       }
       schedulePofiLife();
     }, pofiBaseState === 'sleep' ? 520 : 150);
@@ -3327,7 +3811,7 @@ function normalizedTouchImages(card: TouchCard): string[] {
 
 function touchCardVisualMarkup(card: TouchCard): string {
   const image = touchCardImageSource(card);
-  return `<img src="${image}" alt="" loading="lazy" />`;
+  return `<img src="${image}" alt="" decoding="async" data-touch-runtime-image />`;
 }
 
 function touchCardVisualMarkupForImage(card: TouchCard, image: string): string {
@@ -3388,14 +3872,17 @@ function nextTouchVariation(card: TouchCard, rhythm: TouchVoiceVariation['rhythm
   return { ...variation, rhythm };
 }
 
-function renderTouchCards(): void {
+let touchCardRenderEpoch = 0;
+
+async function renderTouchCards(): Promise<void> {
   const grid = document.querySelector<HTMLElement>('[data-touch-card-grid]');
   if (!grid) {
     return;
   }
 
+  const renderEpoch = ++touchCardRenderEpoch;
   const cards = visibleTouchCards();
-  grid.innerHTML = cards
+  const markup = cards
     .map((card) => {
       const activeClass = card.id === selectedTouchCardId ? ' active' : '';
       const targetClass = card.id === touchSpeechSnapshot?.targetId ? ' active-target' : '';
@@ -3413,6 +3900,42 @@ function renderTouchCards(): void {
       </button>`;
     })
     .join('');
+
+  const staging = document.createElement('div');
+  staging.innerHTML = markup;
+  const images = [...staging.querySelectorAll<HTMLImageElement>('[data-touch-runtime-image]')];
+  grid.setAttribute('aria-busy', 'true');
+
+  const decoded = await Promise.all(images.map(async (image) => {
+    if (!image.complete) {
+      await new Promise<void>((resolve) => {
+        const done = () => resolve();
+        image.addEventListener('load', done, { once: true });
+        image.addEventListener('error', done, { once: true });
+      });
+    }
+    if (image.naturalWidth > 0) {
+      try {
+        await image.decode();
+      } catch {
+        return false;
+      }
+    }
+    return image.naturalWidth > 0;
+  }));
+
+  if (renderEpoch !== touchCardRenderEpoch) {
+    return;
+  }
+
+  if (decoded.length !== cards.length || decoded.some((ready) => !ready)) {
+    grid.removeAttribute('aria-busy');
+    return;
+  }
+
+  staging.querySelectorAll<HTMLElement>('.touch-card').forEach((card) => card.classList.add('touch-card-ready'));
+  grid.replaceChildren(...Array.from(staging.children));
+  grid.removeAttribute('aria-busy');
   renderTouchSelection();
 }
 
@@ -3482,7 +4005,7 @@ function startMatchRound(): void {
 
   matchRound = round;
   matchTargetId = round.targetId;
-  lastMatchTargetId = round.targetId;
+  recentMatchTargetIds = [...recentMatchTargetIds, round.targetId].slice(-4);
   setMatchPofiState('matchGuide', { immediate: true });
   renderMatchingGame();
   matchTimer = window.setTimeout(() => enterMatchState('targeting'), MATCH_ATTENTION_MS);
@@ -3494,9 +4017,10 @@ function createMatchRound(): MatchRound | undefined {
     return undefined;
   }
 
-  const masteredTargets = cards.filter((card) => touchMastery.masteredWords.includes(card.id));
-  const targetSource = masteredTargets.length > 0 ? masteredTargets : cards;
-  const pool = targetSource.length > 1 ? targetSource.filter((card) => card.id !== lastMatchTargetId) : targetSource;
+  const targetSource = matchTargetSource(cards);
+  const recentLimit = Math.min(3, Math.max(1, targetSource.length - 1));
+  const recentIds = recentMatchTargetIds.slice(-recentLimit);
+  const pool = targetSource.length > 1 ? targetSource.filter((card) => !recentIds.includes(card.id)) : targetSource;
   const selected = pickWeightedMatchCard(pool.length > 0 ? pool : targetSource);
   const baseLevel = matchLevelForProgress(matchProgress[selected.id]);
   const level = matchWrongStreak >= MATCH_FATIGUE_WRONG_STREAK ? 1 : baseLevel;
@@ -3523,6 +4047,21 @@ function createMatchRound(): MatchRound | undefined {
     hintLevel: 0,
     startedAt: Date.now()
   };
+}
+
+function matchTargetSource(cards: TouchCard[]): TouchCard[] {
+  const masteredTargets = cards.filter((card) => touchMastery.masteredWords.includes(card.id));
+  if (masteredTargets.length >= 3) {
+    return masteredTargets;
+  }
+
+  const practiced = cards.filter((card) => (touchProgress[card.id]?.success ?? 0) > 0);
+  const blended = [...masteredTargets, ...practiced.filter((card) => !touchMastery.masteredWords.includes(card.id))];
+  if (blended.length >= 3) {
+    return blended;
+  }
+
+  return cards;
 }
 
 function pickWeightedMatchCard(cards: TouchCard[]): TouchCard {
@@ -3563,17 +4102,18 @@ function enterMatchState(state: MatchState, hintLevel: 0 | 1 | 2 | 3 | 4 = 0): v
 
   if (state === 'waiting') {
     setMatchPofiState('matchWaiting');
-    matchTimer = window.setTimeout(() => enterMatchHint(1), MATCH_WAITING_MS);
+    matchTimer = window.setTimeout(() => enterMatchHint(1), guideDelay(MATCH_WAITING_MS));
   }
 
   if (state === 'hint') {
     setMatchPofiState('matchHint');
     recordMatchHint(matchRound.targetId, hintLevel);
+    trackAction('match-hint', undefined, matchActionContext('hint'));
     if (hintLevel === 1 || hintLevel === 3) {
       void playMatchTargetSound('hint');
     }
     if (hintLevel < 4) {
-      matchTimer = window.setTimeout(() => enterMatchHint((hintLevel + 1) as 1 | 2 | 3 | 4), MATCH_HINT_STEP_MS);
+      matchTimer = window.setTimeout(() => enterMatchHint((hintLevel + 1) as 1 | 2 | 3 | 4), guideDelay(MATCH_HINT_STEP_MS));
     }
   }
 
@@ -3636,7 +4176,7 @@ function renderMatchingGame(): void {
   const correctChoice = round.choices.find((choice) => choice.correct);
   const correctIndex = correctChoice ? round.choices.indexOf(correctChoice) : -1;
 
-  target.innerHTML = `<span class="match-target-label">Model</span>
+  target.innerHTML = `<span class="match-target-label sr-only">Aynısını bul</span>
     <span class="match-model-visual">${touchCardVisualMarkupForImage(selected, round.modelImage)}</span>
     <strong>${selected.word}</strong>`;
   surface.dataset.matchTargetId = selected.id;
@@ -3748,7 +4288,7 @@ function positionCompactMatchGuide(surface: HTMLElement, avatar: HTMLElement | n
   const preferredTop = compactLayout
     ? (matchRound?.state === 'hint' && (matchRound.hintLevel ?? 0) >= 3 ? 34 : 18)
     : narrowLayout
-      ? Math.max(22, targetTop - avatarRect.height * 0.34)
+      ? 22
       : targetTop + targetRect.height * 0.26;
   const clampedTop = compactLayout ? preferredTop : Math.min(surfaceRect.height * 0.28, Math.max(12, preferredTop));
 
@@ -3763,11 +4303,11 @@ function matchStatusText(card: TouchCard, correctChoice?: MatchChoice): string {
   }
 
   if (matchRound.state === 'attention') {
-    return 'Bak dikkatlice.';
+    return 'Pofi bekliyor.';
   }
 
   if (matchRound.state === 'targeting' || matchRound.state === 'waiting') {
-    return `${card.word}'u bulalım.`;
+    return `${card.word} kartını bulalım.`;
   }
 
   if (matchRound.state === 'hint') {
@@ -3775,20 +4315,20 @@ function matchStatusText(card: TouchCard, correctChoice?: MatchChoice): string {
       return `${card.word}`;
     }
     if (matchRound.hintLevel === 2) {
-      return 'Model kartına bir daha bak.';
+      return 'Bir daha birlikte bakalım.';
     }
     if (matchRound.hintLevel === 3) {
-      return 'Doğru kart yumuşakça parlıyor.';
+      return 'Pofi destek veriyor.';
     }
     return `${card.word} olan karta dokunalım.`;
   }
 
   if (matchRound.state === 'success') {
-    return `Evet! ${card.word} bu.`;
+    return `${card.word}. Güzel.`;
   }
 
   if (matchRound.state === 'retry') {
-    return correctChoice ? 'Hadi tekrar bakalım.' : 'Tekrar deneyelim.';
+    return correctChoice ? 'Birlikte tekrar bakalım.' : 'Pofi destek verecek.';
   }
 
   return '';
@@ -3810,7 +4350,7 @@ function handleMatchChoice(cardId: string, element?: HTMLElement): void {
   recordMatchAttempt(matchTargetId, correct, matchRound.mode, Math.max(0, Date.now() - matchRound.startedAt));
   matchCorrectStreak = correct ? matchCorrectStreak + 1 : 0;
   matchWrongStreak = correct ? 0 : matchWrongStreak + 1;
-  trackAction(correct ? 'match-correct' : 'match-wrong', element);
+  trackAction(correct ? 'match-correct' : 'match-wrong', element, matchActionContext(correct ? undefined : 'softRedirect'));
   void playMatchTargetSound(correct ? 'success' : 'hint');
   enterMatchState(correct ? 'success' : 'retry');
 }
@@ -3974,14 +4514,17 @@ function enterSentenceState(state: SentenceState, hintLevel: 0 | 1 | 2 | 3 | 4 =
 
   if (state === 'waiting') {
     setPofiBaseState('sentenceWaiting');
-    sentenceTimer = window.setTimeout(() => enterSentenceHint(1), SENTENCE_HINT_LEVEL_1_MS);
+    sentenceTimer = window.setTimeout(() => enterSentenceHint(1), guideDelay(SENTENCE_HINT_LEVEL_1_MS));
   }
 
   if (state === 'hint') {
     setPofiBaseState('sentenceHint');
     recordSentenceHint(hintLevel);
+    trackAction('sentence-hint', undefined, sentenceActionContext('hint'));
     if (hintLevel < 4) {
-      void scheduleSentenceStateAfterSpeech(token, 'hint', SENTENCE_HINT_STEP_MS, () => enterSentenceHint((hintLevel + 1) as 1 | 2 | 3 | 4));
+      void scheduleSentenceStateAfterSpeech(token, 'hint', guideDelay(SENTENCE_HINT_STEP_MS), () =>
+        enterSentenceHint((hintLevel + 1) as 1 | 2 | 3 | 4)
+      );
     } else {
       void playSentencePrompt('hint');
     }
@@ -3995,6 +4538,7 @@ function enterSentenceState(state: SentenceState, hintLevel: 0 | 1 | 2 | 3 | 4 =
   if (state === 'repeat_prompt') {
     setPofiBaseState('sentenceRepeat');
     recordSentenceRepeatPrompt();
+    trackAction('sentence-repeat', undefined, sentenceActionContext('repeat'));
     void scheduleSentenceStateAfterSpeech(token, 'repeat', SENTENCE_REPEAT_PROMPT_MS, () => startSentenceRound());
   }
 
@@ -4051,6 +4595,7 @@ function renderSentenceGame(): void {
 
   const completeSentence = sentencePhrase(sentenceRound.prompt);
   surface.dataset.sentenceState = sentenceRound.state;
+  surface.dataset.sentencePofiContract = sentencePofiContract(sentenceRound.state, sentenceMode);
   surface.dataset.sentenceHintLevel = String(sentenceRound.hintLevel);
   surface.dataset.sentenceTargetId = sentenceRound.prompt.subjectId;
   surface.dataset.sentenceVerbId = sentenceRound.prompt.verbId;
@@ -4089,6 +4634,7 @@ function renderSentenceBoard(
 ): void {
   const activePrompt = sentenceRound?.prompt;
   surface.dataset.sentenceState = sentenceRound?.state ?? 'board';
+  surface.dataset.sentencePofiContract = sentencePofiContract(sentenceRound?.state ?? 'board', 'board');
   surface.dataset.sentenceHintLevel = String(sentenceRound?.hintLevel ?? 0);
   surface.dataset.sentenceTargetId = activePrompt?.subjectId ?? '';
   surface.dataset.sentenceVerbId = activePrompt?.verbId ?? '';
@@ -4109,6 +4655,26 @@ function renderSentenceBoard(
     })
     .join('');
   status.textContent = activePrompt ? sentencePhrase(activePrompt) : 'İhtiyacını seç.';
+}
+
+function sentencePofiContract(state: SentenceState | 'board', mode: SentenceMode): PofiContract {
+  if (mode === 'board') {
+    return state === 'success' || state === 'repeat_prompt' ? POFI_CONTRACTS.sentenceChoiceRepeatGuide : POFI_CONTRACTS.sentenceNeedsBoardGuide;
+  }
+
+  if (state === 'success') {
+    return POFI_CONTRACTS.sentenceWarmAffirm;
+  }
+
+  if (state === 'repeat_prompt') {
+    return POFI_CONTRACTS.sentenceSpeechPracticePrompt;
+  }
+
+  if (state === 'hint' || state === 'retry') {
+    return POFI_CONTRACTS.sentenceSoftCommunicationSupport;
+  }
+
+  return POFI_CONTRACTS.sentenceContextModel;
 }
 
 function sentenceBoardPrompts(): SentencePrompt[] {
@@ -4164,7 +4730,7 @@ function handleSentenceExpressionPress(element?: HTMLElement): void {
   }
 
   recordSentenceAttempt(true);
-  trackAction('sentence-expression', element);
+  trackAction('sentence-expression', element, sentenceActionContext('model'));
   enterSentenceState('success');
 }
 
@@ -4194,7 +4760,7 @@ function handleSentenceBoardCard(promptId: string, element?: HTMLElement): void 
     element.classList.add('selected');
   }
   recordSentenceAttempt(true);
-  trackAction('sentence-board-select', element);
+  trackAction('sentence-board-select', element, sentenceActionContext('model'));
   renderSentenceGame();
   void scheduleSentenceStateAfterSpeech(token, 'success', SENTENCE_REPEAT_PAUSE_MS, () => {
     if (sentenceMode !== 'board' || !sentenceRound) {
@@ -4282,7 +4848,7 @@ function publishSentenceNeedsMatch(subjectId: string): void {
 }
 
 async function playSentencePrompt(kind: 'context' | 'hint' | 'success' | 'repeat' | 'retry'): Promise<void> {
-  if (!sentenceRound || !touchAudioUnlocked) {
+  if (!sentenceRound) {
     return;
   }
 
@@ -4299,8 +4865,25 @@ async function playSentencePrompt(kind: 'context' | 'hint' | 'success' | 'repeat
   await speakSentenceText(text, kind === 'context' ? 'targeting' : kind === 'repeat' ? 'repeat' : kind);
 }
 
-function speakSentenceText(text: string, kind: 'targeting' | 'success' | 'repeat' | 'hint' | 'retry'): Promise<void> {
-  return enqueueSpeechText(text, { ...sentenceSpeechProfile(kind), volume: 0.82 });
+async function speakSentenceText(text: string, kind: 'targeting' | 'success' | 'repeat' | 'hint' | 'retry'): Promise<void> {
+  const surface = document.querySelector<HTMLElement>('[data-sentence-surface]');
+  surface?.classList.add('sentence-speaking');
+  try {
+  const key = text.toLocaleLowerCase('tr-TR').replace(/[.!?,;:]/g, '').replace(/\s+/g, ' ').trim();
+  const source = SENTENCE_RECORDED_SPEECH[key];
+  if (source) {
+    const cached = sentenceAudioClips[source];
+    const audio = cached ?? (await loadAudioCandidate(source));
+    if (audio) {
+      sentenceAudioClips[source] = audio;
+      await enqueueAudioPlayback(audio, 0.86);
+      return;
+    }
+  }
+  await enqueueSpeechText(text, { ...sentenceSpeechProfile(kind), volume: 0.82 });
+  } finally {
+    surface?.classList.remove('sentence-speaking');
+  }
 }
 
 function sentenceSpeechProfile(kind: 'targeting' | 'success' | 'repeat' | 'hint' | 'retry'): { rate: number; pitch: number } {
@@ -4432,7 +5015,7 @@ async function scheduleStoryStepAfterAudio(token: number, stepIndex: number, ste
         return;
       }
       resolveStoryInteraction(undefined);
-    }, STORY_WAITING_MS);
+    }, guideDelay(STORY_WAITING_MS));
     return;
   }
 
@@ -4465,6 +5048,7 @@ function renderStory(): void {
 
   const step = currentStoryStep();
   surface.dataset.storyState = storySession?.state ?? 'idle';
+  surface.dataset.storyPofiContract = storyPofiContract(storySession?.state ?? 'idle');
   surface.dataset.storyStep = step?.id ?? '';
   surface.dataset.storyId = storySession?.story.id ?? '';
   surface.dataset.storyTheme = storySession?.story.theme ?? '';
@@ -4508,6 +5092,26 @@ function renderStory(): void {
         .join('')
     : '';
   status.textContent = step.text;
+}
+
+function storyPofiContract(state: StoryState): PofiContract {
+  if (state === 'interaction' || state === 'waiting') {
+    return POFI_CONTRACTS.storyInteractionWaitGuide;
+  }
+
+  if (state === 'success') {
+    return POFI_CONTRACTS.storyWarmAffirm;
+  }
+
+  if (state === 'closure' || state === 'continue') {
+    return POFI_CONTRACTS.storyGentleContinuation;
+  }
+
+  if (state === 'attention' || state === 'narration') {
+    return POFI_CONTRACTS.storyNarrator;
+  }
+
+  return POFI_CONTRACTS.storyIdle;
 }
 
 function storyProgressClass(step: StoryStep, visualIndex: number): string {
@@ -4566,7 +5170,8 @@ function handleStoryChoice(choiceId: string, element: HTMLElement): void {
 
   unlockTouchAudio();
   showClickHandCue(element);
-  trackAction('story-interaction', element);
+  const choice = step.choices?.find((entry) => entry.id === choiceId);
+  trackAction('story-interaction', element, storyActionContext(choice, choice?.correct ? 'model' : 'softRedirect'));
   resolveStoryInteraction(choiceId);
   element.classList.add('story-picked');
 }
@@ -4605,9 +5210,6 @@ async function scheduleStoryFeedbackAfterAudio(token: number, stepId: string, st
 }
 
 async function playStoryStep(step: StoryStep): Promise<void> {
-  if (!touchAudioUnlocked) {
-    return;
-  }
   const kind =
     step.kind === 'attention'
       ? 'attention'
@@ -4622,40 +5224,14 @@ async function playStoryStep(step: StoryStep): Promise<void> {
   await playStoryEffect(step.effect);
 }
 
-function speakStoryText(text: string, kind: 'attention' | 'narration' | 'interaction' | 'success' | 'repeat' | 'closure'): Promise<void> {
-  return enqueueSpeechText(text, { ...storySpeechProfile(kind), volume: 0.82 });
-}
-
-function storySpeechProfile(kind: 'attention' | 'narration' | 'interaction' | 'success' | 'repeat' | 'closure'): { rate: number; pitch: number } {
-  const profiles: Record<typeof kind, Array<{ rate: number; pitch: number }>> = {
-    attention: [
-      { rate: 0.78, pitch: 1.08 },
-      { rate: 0.82, pitch: 1.12 }
-    ],
-    narration: [
-      { rate: 0.72, pitch: 1.02 },
-      { rate: 0.76, pitch: 1.05 }
-    ],
-    interaction: [
-      { rate: 0.76, pitch: 1.08 },
-      { rate: 0.8, pitch: 1.12 }
-    ],
-    success: [
-      { rate: 0.9, pitch: 1.16 },
-      { rate: 0.86, pitch: 1.12 }
-    ],
-    repeat: [
-      { rate: 0.78, pitch: 1.1 },
-      { rate: 0.74, pitch: 1.06 }
-    ],
-    closure: [
-      { rate: 0.78, pitch: 1.04 },
-      { rate: 0.82, pitch: 1.08 }
-    ]
-  };
-  const kindPool = kind === lastStorySpeechKind ? [...profiles[kind]].reverse() : profiles[kind];
-  lastStorySpeechKind = kind;
-  return kindPool[0];
+async function speakStoryText(text: string, kind: 'attention' | 'narration' | 'interaction' | 'success' | 'repeat' | 'closure'): Promise<void> {
+  const surface = document.querySelector<HTMLElement>('[data-story-surface]');
+  surface?.classList.add('story-speaking');
+  try {
+    await playRecordedPofiText(text, kind === 'success' ? 0.9 : 0.84);
+  } finally {
+    surface?.classList.remove('story-speaking');
+  }
 }
 
 function playStoryEffect(effect?: StoryEffect): Promise<void> {
@@ -4716,6 +5292,10 @@ function currentMirrorExercise(): MirrorExercise {
 
 function startMirrorSession(): void {
   clearMirrorTimer();
+  const order = mirrorExerciseOrder(mirrorPlanSettings);
+  mirrorExerciseIndex = mirrorPlanSettings.preset === 'balanced' && order.length > 1
+    ? Math.floor(Math.random() * order.length)
+    : 0;
   mirrorFlowToken += 1;
   mirrorState = 'attention';
   setPofiBaseState('mirrorAttention');
@@ -4734,7 +5314,7 @@ function stopMirrorSession(): void {
 
 async function scheduleMirrorExercise(token: number, withAttention: boolean): Promise<void> {
   if (withAttention) {
-    await speakMirrorText('Bak', 'attention');
+    await speakMirrorText('Bana bak', 'attention');
     await wait(MIRROR_ATTENTION_MS);
   }
   if (token !== mirrorFlowToken || !isMirrorViewActive()) {
@@ -4749,13 +5329,24 @@ function enterMirrorExercise(token = ++mirrorFlowToken): void {
   mirrorState = 'exercise';
   setPofiBaseState(exercise.pofiState);
   renderMirrorMode();
-  void speakMirrorText(exercise.command, 'exercise');
+  void runMirrorDemonstration(token, exercise);
+}
+
+async function runMirrorDemonstration(token: number, exercise: MirrorExercise): Promise<void> {
+  await speakMirrorText(exercise.command, 'exercise');
+  if (token !== mirrorFlowToken || !isMirrorViewActive()) {
+    return;
+  }
+  await speakMirrorText('Şimdi sen yap', 'exercise');
+  if (token !== mirrorFlowToken || !isMirrorViewActive()) {
+    return;
+  }
   mirrorTimer = window.setTimeout(() => {
     if (token !== mirrorFlowToken || !isMirrorViewActive()) {
       return;
     }
     enterMirrorWaiting(token);
-  }, 900);
+  }, 420);
 }
 
 function enterMirrorWaiting(token: number): void {
@@ -4806,9 +5397,16 @@ function renderMirrorMode(): void {
   const exercise = currentMirrorExercise();
   surface.dataset.mirrorState = mirrorState;
   surface.dataset.mirrorExercise = exercise.id;
+  surface.dataset.mirrorPofiContract =
+    mirrorState === 'success' ? POFI_CONTRACTS.mirrorRewardAfterExercise : POFI_CONTRACTS.mirrorExerciseModel;
   pofi.dataset.pofiState = mirrorState === 'attention' ? 'mirrorAttention' : mirrorState === 'success' ? 'mirrorSuccess' : exercise.pofiState;
+  pofi.dataset.pofiContract = surface.dataset.mirrorPofiContract;
   renderPofiAvatar(pofi, pofi.dataset.pofiState as PofiState);
-  fallback.textContent = mirrorCameraStream ? '' : mirrorCameraRequested ? 'Kamera kapalı' : '';
+  fallback.textContent = mirrorCameraStream
+    ? ''
+    : mirrorCameraRequested
+      ? 'Kamera hazır değil. Pofi ile egzersize devam edebilirsin.'
+      : 'Pofi hareketi gösterecek. Sen de onu taklit et.';
   video.classList.toggle('active', Boolean(mirrorCameraStream));
   progress.style.setProperty('--mirror-duration', `${exercise.durationMs}ms`);
   progress.classList.toggle('running', mirrorState === 'waiting');
@@ -4816,6 +5414,11 @@ function renderMirrorMode(): void {
 }
 
 async function ensureMirrorCamera(): Promise<void> {
+  if (!appPermissionSettings.camera) {
+    mirrorCameraRequested = false;
+    renderMirrorMode();
+    return;
+  }
   if (mirrorCameraStream || mirrorCameraRequested) {
     renderMirrorMode();
     return;
@@ -4852,12 +5455,11 @@ function stopMirrorCamera(): void {
 }
 
 function speakMirrorText(text: string, kind: 'attention' | 'exercise' | 'success'): Promise<void> {
-  const profiles: Record<typeof kind, { rate: number; pitch: number; volume: number }> = {
-    attention: { rate: 0.84, pitch: 1.08, volume: 0.78 },
-    exercise: { rate: 0.78, pitch: 1.04, volume: 0.82 },
-    success: { rate: 0.92, pitch: 1.16, volume: 0.84 }
-  };
-  return enqueueSpeechText(text, profiles[kind]);
+  const surface = document.querySelector<HTMLElement>('[data-mirror-surface]');
+  surface?.classList.add('mirror-speaking');
+  return playRecordedPofiText(text, kind === 'success' ? 0.9 : 0.84)
+    .then(() => undefined)
+    .finally(() => surface?.classList.remove('mirror-speaking'));
 }
 
 function syncSleepMode(view: ViewName): void {
@@ -4879,11 +5481,19 @@ function renderSleepMode(): void {
   surface.dataset.sleepRunning = String(sleepMusicRunning);
   surface.dataset.sleepSound = sleepSettings.sound;
   surface.dataset.sleepDuration = String(sleepSettings.durationMinutes);
+  surface.dataset.sleepPofiContract = sleepMusicRunning ? POFI_CONTRACTS.sleepOnly : POFI_CONTRACTS.sleepReadyOnly;
+  const stopLocked = sleepMusicRunning && childLockSettings.enabled;
+  toggle.hidden = stopLocked;
+  toggle.disabled = stopLocked;
   toggle.setAttribute('aria-pressed', String(sleepMusicRunning));
   toggle.setAttribute('aria-label', sleepMusicRunning ? 'Uyku müziğini durdur' : 'Uyku müziğini başlat');
+  toggle.setAttribute('aria-hidden', String(stopLocked));
   label.textContent = sleepMusicRunning ? 'Durdur' : 'Başlat';
 
   const shell = document.querySelector<HTMLElement>('.app-shell');
+  if (shell) {
+    shell.dataset.sleepRunning = String(sleepMusicRunning);
+  }
   const nextPofiState: PofiState = sleepMusicRunning ? 'sleep' : 'sleepReady';
   if (shell?.dataset.activeView === 'sleep' && pofiBaseState !== nextPofiState) {
     setPofiBaseState(nextPofiState);
@@ -4892,6 +5502,10 @@ function renderSleepMode(): void {
 
 async function toggleSleepMusic(button?: HTMLElement): Promise<void> {
   if (sleepMusicRunning) {
+    if (childLockSettings.enabled) {
+      renderSleepMode();
+      return;
+    }
     await stopSleepMusic();
     trackAction('sleep-stop', button);
     return;
@@ -4908,7 +5522,7 @@ function startSleepMusic(): void {
   }
 
   if (sleepSettings.sound === 'sleep-sequence') {
-    sleepRecordedSequenceIndex = 0;
+    sleepRecordedSequenceIndex = randomSleepTrackIndex();
     sleepRecordedSequenceFailures = 0;
     startRecordedSleepSequence();
     return;
@@ -4921,6 +5535,17 @@ function startSleepMusic(): void {
   }
 
   startGeneratedSleepMusic();
+}
+
+function randomSleepTrackIndex(except = -1): number {
+  if (SLEEP_RECORDED_SEQUENCE.length <= 1) {
+    return 0;
+  }
+  let next = Math.floor(Math.random() * SLEEP_RECORDED_SEQUENCE.length);
+  if (next === except) {
+    next = (next + 1) % SLEEP_RECORDED_SEQUENCE.length;
+  }
+  return next;
 }
 
 function startRecordedSleepSequence(): void {
@@ -4937,7 +5562,7 @@ function playNextRecordedSleepTrack(): void {
     return;
   }
   sleepRecordedSequenceFailures = 0;
-  sleepRecordedSequenceIndex = (sleepRecordedSequenceIndex + 1) % SLEEP_RECORDED_SEQUENCE.length;
+  sleepRecordedSequenceIndex = randomSleepTrackIndex(sleepRecordedSequenceIndex);
   startRecordedSleepMusic(SLEEP_RECORDED_SEQUENCE[sleepRecordedSequenceIndex], false, false);
 }
 
@@ -4978,7 +5603,7 @@ function handleRecordedSleepFailure(audio: HTMLAudioElement, loop: boolean): voi
   if (sleepSettings.sound === 'sleep-sequence' && !loop && SLEEP_RECORDED_SEQUENCE.length > 0) {
     sleepRecordedSequenceFailures += 1;
     if (sleepRecordedSequenceFailures < SLEEP_RECORDED_SEQUENCE.length) {
-      sleepRecordedSequenceIndex = (sleepRecordedSequenceIndex + 1) % SLEEP_RECORDED_SEQUENCE.length;
+      sleepRecordedSequenceIndex = randomSleepTrackIndex(sleepRecordedSequenceIndex);
       startRecordedSleepMusic(SLEEP_RECORDED_SEQUENCE[sleepRecordedSequenceIndex], false, false);
       return;
     }
@@ -5349,26 +5974,26 @@ function touchCardSupportText(
   }
 
   if (!isTarget) {
-    return 'Bekle';
+    return '';
   }
 
   if (touchSpeechSnapshot?.state === 'success') {
-    return `Evet! ${card.label}`;
+    return '';
   }
 
   if (touchSpeechSnapshot?.state === 'retry') {
-    return 'Tekrar bakalım';
+    return '';
   }
 
   if (touchSpeechSnapshot?.state === 'hint') {
-    return 'Burada';
+    return '';
   }
 
   if (touchSpeechSnapshot?.state === 'targeting' || touchSpeechSnapshot?.state === 'waiting') {
-    return 'Dokun';
+    return '';
   }
 
-  return isActive ? variation?.text ?? 'Dokun ve dinle' : 'Dokun ve dinle';
+  return isActive ? variation?.text ?? '' : '';
 }
 
 function setTouchStatus(message?: string): void {
@@ -5414,29 +6039,50 @@ function loadAudioCandidate(src: string): Promise<HTMLAudioElement | undefined> 
   });
 }
 
+function normalizePofiGuideText(text: string): string {
+  return text.toLocaleLowerCase('tr-TR').replace(/[.!?,;:]/g, '').replace(/\s+/g, ' ').trim();
+}
+
+function loadPofiGuideManifest(): Promise<Record<string, string>> {
+  if (!pofiGuideManifestPromise) {
+    pofiGuideManifestPromise = fetch('/sounds/pofi-guides/manifest.json', { cache: 'no-store' })
+      .then((response) => response.ok ? response.json() as Promise<Record<string, string>> : {})
+      .catch(() => ({}));
+  }
+  return pofiGuideManifestPromise;
+}
+
+async function playRecordedPofiText(text: string, volume: number): Promise<boolean> {
+  const manifest = await loadPofiGuideManifest();
+  const source = manifest[normalizePofiGuideText(text)];
+  if (!source) {
+    console.warn(`Pofi kayıtlı ses bulunamadı: ${text}`);
+    return false;
+  }
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const cached = pofiGuideAudioClips[source];
+    const audio = cached ?? await loadAudioCandidate(source);
+    if (!audio) {
+      delete pofiGuideAudioClips[source];
+      continue;
+    }
+    pofiGuideAudioClips[source] = audio;
+    await enqueueAudioPlayback(audio, volume);
+    return true;
+  }
+
+  console.warn(`Pofi kayıtlı ses oynatılamadı: ${source}`);
+  return false;
+}
+
 async function loadAudioPool(paths: string[]): Promise<HTMLAudioElement[]> {
   const loaded = await Promise.all(paths.map((path) => loadAudioCandidate(path)));
   return loaded.filter((audio): audio is HTMLAudioElement => Boolean(audio));
 }
 
-async function preloadTouchAudio(): Promise<void> {
-  if (touchAudioPreload) {
-    return touchAudioPreload;
-  }
-
-  touchAudioPreload = (async () => {
-    const loadedEntries = await Promise.all(enabledTouchCards().map(async (card) => [card.id, await loadTouchAudioForCard(card)] as const));
-    touchAudioPools = Object.fromEntries(loadedEntries);
-  })();
-
-  return touchAudioPreload;
-}
-
 function touchSoundPaths(card: TouchCard, source: TouchSoundSource): string[] {
   const id = card.id.toLowerCase().replace(/[^a-z0-9-]/g, '');
-  if (source === 'default' && id !== 'baba') {
-    return [`/sounds/${source}/${id}_1.wav`, `/sounds/${source}/${id}_2.wav`];
-  }
   return [`/sounds/${source}/${id}_1.wav`, `/sounds/${source}/${id}_2.wav`, `/sounds/${source}/${id}_3.wav`];
 }
 
@@ -5450,7 +6096,19 @@ async function loadTouchAudioForCard(card: TouchCard): Promise<HTMLAudioElement[
 
 function unlockTouchAudio(): void {
   touchAudioUnlocked = true;
-  void preloadTouchAudio();
+}
+
+async function touchAudioPoolFor(card: TouchCard): Promise<HTMLAudioElement[]> {
+  if (touchAudioPools[card.id]) {
+    return touchAudioPools[card.id];
+  }
+  if (!touchAudioPoolLoads[card.id]) {
+    touchAudioPoolLoads[card.id] = loadTouchAudioForCard(card);
+  }
+  const pool = await touchAudioPoolLoads[card.id];
+  touchAudioPools[card.id] = pool;
+  delete touchAudioPoolLoads[card.id];
+  return pool;
 }
 
 function stopCurrentTouchAudio(): void {
@@ -5481,12 +6139,22 @@ function wait(ms: number): Promise<void> {
 }
 
 function enqueueVoiceTask(task: () => Promise<void> | void): Promise<void> {
+  const epoch = voiceQueueEpoch;
   const next = voiceQueue
     .catch(() => undefined)
     .then(() => wait(VOICE_QUEUE_GAP_MS))
-    .then(() => task());
+    .then(() => (epoch === voiceQueueEpoch ? task() : undefined));
   voiceQueue = next.catch(() => undefined);
   return next;
+}
+
+function supersedeVoiceQueue(): void {
+  voiceQueueEpoch += 1;
+  voiceQueue = Promise.resolve();
+  stopCurrentTouchAudio();
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
 }
 
 function estimatedSpeechDurationMs(text: string, rate: number): number {
@@ -5501,6 +6169,28 @@ function enqueueSpeechText(text: string, profile: { rate: number; pitch: number;
     return Promise.resolve();
   }
 
+  const softProfile = {
+    rate: Math.min(0.92, Math.max(0.7, profile.rate)),
+    pitch: Math.min(1.14, Math.max(1.02, profile.pitch)),
+    volume: Math.min(0.9, Math.max(0.55, profile.volume))
+  };
+
+  const nativeSpeaker = window.Capacitor?.Plugins?.MinaPlayKiosk?.speak;
+  if (nativeSpeaker) {
+    return enqueueVoiceTask(async () => {
+      try {
+        const result = await nativeSpeaker({ text, ...softProfile });
+        if (result.spoken !== false) {
+          await wait(estimatedSpeechDurationMs(text, softProfile.rate));
+          return;
+        }
+      } catch {
+        // Capacitor's web proxy can expose the method even when no native implementation is available.
+      }
+      await speakWithWebSpeech(text, softProfile);
+    });
+  }
+
   if (!('speechSynthesis' in window)) {
     return enqueueVoiceTask(() => {
       playSoftTouchTone();
@@ -5508,29 +6198,41 @@ function enqueueSpeechText(text: string, profile: { rate: number; pitch: number;
     });
   }
 
-  return enqueueVoiceTask(
-    () =>
-      new Promise<void>((resolve) => {
-        const utterance = new SpeechSynthesisUtterance(text);
-        let settled = false;
-        const finish = (): void => {
-          if (settled) {
-            return;
-          }
-          settled = true;
-          window.clearTimeout(timeout);
-          resolve();
-        };
-        const timeout = window.setTimeout(finish, estimatedSpeechDurationMs(text, profile.rate) + 900);
-        utterance.lang = 'tr-TR';
-        utterance.rate = profile.rate;
-        utterance.pitch = profile.pitch;
-        utterance.volume = profile.volume;
-        utterance.addEventListener('end', finish, { once: true });
-        utterance.addEventListener('error', finish, { once: true });
-        window.speechSynthesis.speak(utterance);
-      })
-  );
+  return enqueueVoiceTask(() => speakWithWebSpeech(text, softProfile));
+}
+
+function speakWithWebSpeech(text: string, profile: { rate: number; pitch: number; volume: number }): Promise<void> {
+  return new Promise<void>((resolve) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    let settled = false;
+    const finish = (): void => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      window.clearTimeout(timeout);
+      resolve();
+    };
+    const timeout = window.setTimeout(finish, estimatedSpeechDurationMs(text, profile.rate) + 900);
+    utterance.lang = 'tr-TR';
+    utterance.rate = profile.rate;
+    utterance.pitch = profile.pitch;
+    utterance.volume = profile.volume;
+    const availableVoices = typeof window.speechSynthesis.getVoices === 'function' ? window.speechSynthesis.getVoices() : [];
+    const preferredVoice = selectSoftTurkishVoice(availableVoices);
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+    }
+    utterance.addEventListener('end', finish, { once: true });
+    utterance.addEventListener('error', finish, { once: true });
+    window.speechSynthesis.speak(utterance);
+  });
+}
+
+function selectSoftTurkishVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | undefined {
+  const turkishVoices = voices.filter((voice) => voice.lang.toLocaleLowerCase('tr-TR').startsWith('tr'));
+  const softVoicePattern = /female|woman|kadın|filiz|yelda|seda|aylin|emel|google türkçe/i;
+  return turkishVoices.find((voice) => softVoicePattern.test(`${voice.name} ${voice.voiceURI}`)) ?? turkishVoices[0];
 }
 
 function enqueueAudioPlayback(audio: HTMLAudioElement, volume: number): Promise<void> {
@@ -5569,26 +6271,21 @@ function enqueueAudioPlayback(audio: HTMLAudioElement, volume: number): Promise<
 
 function touchFallbackSpeechProfile(intent: TouchSoundIntent): { rate: number; pitch: number; volume: number } {
   if (intent === 'repeat') {
-    return { rate: 0.72, pitch: 1.22, volume: 0.86 };
+    return { rate: 0.76, pitch: 1.08, volume: 0.86 };
   }
   if (intent === 'pofi') {
-    return { rate: 0.78, pitch: 1.24, volume: 0.9 };
+    return { rate: 0.8, pitch: 1.1, volume: 0.9 };
   }
-  return { rate: 0.74, pitch: 1.18, volume: 0.84 };
+  return { rate: 0.78, pitch: 1.08, volume: 0.86 };
 }
 
 async function playTouchCardSound(card: TouchCard, intent: TouchSoundIntent, volume: number, phrase = card.label): Promise<void> {
-  if (!touchAudioUnlocked) {
-    return;
-  }
-
   if (intent === 'repeat' && shouldUseParentRepeatAudio(card)) {
     await enqueueAudioPlayback(new Audio(currentTouchRepeatMediaEntry().audioDataUrl), 0.72);
     return;
   }
 
-  await preloadTouchAudio();
-  const pool = touchAudioPools[card.id] ?? [];
+  const pool = await touchAudioPoolFor(card);
   const audio = selectTouchAudio(pool);
 
   if (!audio) {
@@ -5757,6 +6454,8 @@ function createTouchSpeechMachine(): SpeechStateMachine {
       })),
     targetWeight: (item) => adaptiveTargetWeight(touchProgress[item.id]),
     overallSuccessRate: () => overallSuccessRate(touchProgress),
+    waitingMs: guideDelay(12_000),
+    hintStepMs: guideDelay(12_000),
     promptText: ({ kind, item, hintLevel }) => touchPromptText(kind, item?.id, item?.label, hintLevel),
     onStateChange: handleTouchSpeechState,
     onPrompt: handleTouchSpeechPrompt,
@@ -5771,6 +6470,7 @@ function createTouchSpeechMachine(): SpeechStateMachine {
     onHint: (event) => {
       recordTouchHintUsage(event.item.id, event.hintLevel);
       trackTouchAnalyticsDetail('hint', event.item.id, { hintLevel: event.hintLevel });
+      trackAction('touch-hint', undefined, touchCardActionContext(event.item.id, 'hint'));
     }
   });
 }
@@ -5831,7 +6531,7 @@ function handleTouchSpeechState(snapshot: SpeechMachineSnapshot): void {
   applyTouchPofiState(snapshot.state);
   renderTouchCards();
   if (snapshot.prompt) {
-    setTouchStatus(snapshot.prompt);
+    setTouchStatus();
   }
   if (snapshot.state === 'idle' && document.querySelector<HTMLElement>('.app-shell')?.dataset.activeView === 'touch') {
     touchIdleRecoveryTimer = window.setTimeout(() => {
@@ -5844,7 +6544,7 @@ function handleTouchSpeechState(snapshot: SpeechMachineSnapshot): void {
 }
 
 function handleTouchSpeechPrompt(event: SpeechPromptEvent): void {
-  setTouchStatus(event.text);
+  setTouchStatus();
   if (event.kind === 'attention' || event.kind === 'retry' || event.kind === 'hint') {
     playSoftTouchTone();
   }
@@ -5857,6 +6557,7 @@ async function handleTouchSpeechSound(event: SpeechSoundEvent): Promise<void> {
   }
 
   const variation = touchVariationForSpeechSound(card, event);
+  supersedeVoiceQueue();
   activeTouchWeather = TOUCH_WEATHER_EFFECTS[randomBetween(0, TOUCH_WEATHER_EFFECTS.length - 1)];
   renderTouchSelection(variation, true);
   await playTouchCardSound(card, event.intent === 'success' ? 'pofi' : 'word', event.intent === 'success' ? 0.9 : 0.78, variation.text);
@@ -6012,8 +6713,25 @@ function handleTouchCardPress(cardId: string, element?: HTMLElement): void {
     showTouchCue(element);
   }
   if (touchSpeechMachine) {
+    const stateBeforeSubmit = touchSpeechSnapshot?.state;
+    const targetId = touchSpeechSnapshot?.targetId;
+    const acceptsTouch = Boolean(stateBeforeSubmit && ['targeting', 'waiting', 'hint'].includes(stateBeforeSubmit));
+    if (!acceptsTouch) {
+      trackAction('touch-busy-tap', element, touchCardActionContext(targetId));
+      return;
+    }
+    supersedeVoiceQueue();
+    const correctTargetPress =
+      card.id === targetId;
     touchSpeechMachine.submit(card.id);
-    trackAction(card.id === touchSpeechSnapshot?.targetId ? 'touch-correct' : 'touch-offtarget', element);
+    if (!correctTargetPress) {
+      void handleTouchCardPlayback(card, 'word', 'normal');
+    }
+    trackAction(
+      card.id === targetId ? 'touch-correct' : 'touch-offtarget',
+      element,
+      touchCardActionContext(targetId ?? card.id, card.id === targetId ? undefined : 'softRedirect')
+    );
     return;
   }
 
@@ -6028,7 +6746,7 @@ function handleTouchPofiPress(element?: HTMLElement): void {
   }
   if (touchSpeechMachine) {
     touchSpeechMachine.nudge();
-    trackAction('touch-guide', element);
+    trackAction('touch-guide', element, touchCardActionContext(touchSpeechSnapshot?.targetId, 'hint'));
     return;
   }
 
@@ -6123,6 +6841,21 @@ async function readRawTouchRepeatMediaPayload(): Promise<unknown> {
   }
 }
 
+async function writeRawTouchRepeatMediaPayload(payload: EncryptedTouchRepeatMediaVault): Promise<void> {
+  if (!('indexedDB' in window)) {
+    throw new Error('indexeddb-unavailable');
+  }
+
+  const db = await openTouchDb();
+  await new Promise<void>((resolve, reject) => {
+    const transaction = db.transaction(TOUCH_DB_STORE, 'readwrite');
+    transaction.objectStore(TOUCH_DB_STORE).put(payload, TOUCH_REPEAT_MEDIA_KEY);
+    transaction.addEventListener('complete', () => resolve());
+    transaction.addEventListener('error', () => reject(transaction.error ?? new Error('media-vault-write-failed')));
+    transaction.addEventListener('abort', () => reject(transaction.error ?? new Error('media-vault-write-aborted')));
+  });
+}
+
 async function writeTouchRepeatMediaLibrary(): Promise<void> {
   if (!('indexedDB' in window)) {
     setTouchParentStatus('Bu tarayıcı yerel medya kaydını desteklemiyor.');
@@ -6150,8 +6883,7 @@ async function writeTouchRepeatMediaLibrary(): Promise<void> {
 }
 
 function isEncryptedTouchRepeatMediaVault(value: unknown): value is EncryptedTouchRepeatMediaVault {
-  const entry = value as Partial<EncryptedTouchRepeatMediaVault> | undefined;
-  return entry?.version === TOUCH_REPEAT_MEDIA_VAULT_VERSION && typeof entry.salt === 'string' && typeof entry.iv === 'string' && typeof entry.data === 'string';
+  return isEncryptedMediaVaultPayload(value) && value.version === TOUCH_REPEAT_MEDIA_VAULT_VERSION;
 }
 
 function normalizeTouchRepeatMediaLibrary(value: unknown): TouchRepeatMediaLibrary {
@@ -6327,7 +7059,8 @@ async function initializeTouchSettings(): Promise<void> {
   touchSettings = normalizeTouchSettings(stored);
   await initializeTouchRepeatMediaVault();
   selectedTouchCardId = enabledTouchCards()[0]?.id ?? touchSettings.cards[0]?.id ?? 'baba';
-  touchAudioPreload = undefined;
+  touchAudioPools = {};
+  touchAudioPoolLoads = {};
   renderTouchCards();
   renderParentTouchSettings();
   renderTouchProgressTable();
@@ -6464,6 +7197,8 @@ function renderTouchRepeatMediaPanel(): void {
   const vaultPass = document.querySelector<HTMLInputElement>('[data-touch-media-vault-pass]');
   const vaultUnlock = document.querySelector<HTMLButtonElement>('[data-touch-media-vault-unlock]');
   const vaultLock = document.querySelector<HTMLButtonElement>('[data-touch-media-vault-lock]');
+  const vaultExport = document.querySelector<HTMLButtonElement>('[data-touch-media-vault-export]');
+  const vaultImport = document.querySelector<HTMLButtonElement>('[data-touch-media-vault-import]');
   const recordButtons = document.querySelectorAll<HTMLButtonElement>('[data-touch-repeat-record]');
   const entry = currentTouchRepeatMediaEntry();
   const card = repeatFocusCard();
@@ -6487,6 +7222,12 @@ function renderTouchRepeatMediaPanel(): void {
   }
   if (vaultPass) {
     vaultPass.disabled = !touchRepeatMediaCryptoSupported();
+  }
+  if (vaultExport) {
+    vaultExport.disabled = !touchRepeatMediaVaultExists || !('indexedDB' in window);
+  }
+  if (vaultImport) {
+    vaultImport.disabled = !touchRepeatMediaCryptoSupported() || !('indexedDB' in window);
   }
 
   if (support) {
@@ -6602,6 +7343,61 @@ function lockTouchRepeatMediaVault(): void {
   touchRepeatMediaLibrary = {};
   renderParentTouchSettings();
   setTouchParentStatus('Medya kasası kilitlendi.');
+}
+
+async function exportTouchRepeatMediaVault(): Promise<void> {
+  try {
+    const raw = await readRawTouchRepeatMediaPayload();
+    if (!isEncryptedTouchRepeatMediaVault(raw)) {
+      setTouchParentStatus('Dışa aktarılacak şifreli medya kasası bulunamadı.');
+      return;
+    }
+
+    const backup = createMediaVaultBackup(raw);
+    const blob = new Blob([JSON.stringify(backup)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = mediaVaultBackupFileName();
+    link.hidden = true;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    setTouchParentStatus('Şifreli medya kasası yedeği indirildi. Kasa şifrenizi ayrı ve güvenli saklayın.');
+  } catch {
+    setTouchParentStatus('Şifreli medya kasası yedeği hazırlanamadı.');
+  }
+}
+
+function openTouchRepeatMediaVaultImport(): void {
+  document.querySelector<HTMLInputElement>('[data-touch-media-vault-file]')?.click();
+}
+
+async function importTouchRepeatMediaVault(file: File): Promise<void> {
+  if (file.size > TOUCH_REPEAT_MEDIA_BACKUP_MAX_BYTES) {
+    setTouchParentStatus('Yedek dosyası beklenen sınırdan büyük. En fazla 128 MB dosya seçin.');
+    return;
+  }
+
+  try {
+    const backup = parseMediaVaultBackup(await file.text());
+    if (touchRepeatMediaVaultExists && !window.confirm('Mevcut şifreli medya kasası bu yedekle değiştirilsin mi?')) {
+      setTouchParentStatus('Yedek yükleme iptal edildi; mevcut kasa korundu.');
+      return;
+    }
+
+    await writeRawTouchRepeatMediaPayload(backup.vault);
+    touchRepeatMediaVaultKey = undefined;
+    touchRepeatMediaLibrary = {};
+    touchRepeatPendingPlainMediaLibrary = {};
+    touchRepeatMediaVaultSalt = backup.vault.salt;
+    touchRepeatMediaVaultExists = true;
+    renderParentTouchSettings();
+    setTouchParentStatus('Şifreli yedek yüklendi. Kayıtları görmek için yedeğin kasa şifresini girin.');
+  } catch {
+    setTouchParentStatus('Yedek yüklenemedi. Geçerli bir MinaPlay şifreli kasa dosyası seçin.');
+  }
 }
 
 function escapeHtml(value: string): string {
@@ -6826,6 +7622,11 @@ function normalizeExternalMediaUrl(value: string): string {
 }
 
 async function toggleTouchRepeatRecording(kind: TouchRepeatMediaKind): Promise<void> {
+  if ((kind === 'audio' || kind === 'video') && !appPermissionSettings.microphone) {
+    const status = document.querySelector<HTMLElement>('[data-touch-media-vault-status]');
+    if (status) status.textContent = 'Mikrofon kullanımı Kontrol bölümünden kapatılmış.';
+    return;
+  }
   if (touchRepeatRecorder) {
     stopTouchRepeatRecording();
     return;
@@ -7049,6 +7850,7 @@ function renderParentMetrics(): void {
                 <span><b>Bağımsız</b><em>${stats.correct}</em></span>
                 <span><b>Destekle</b><em>${stats.softRedirects}</em></span>
               </div>
+              <div class="module-detail-note">${createPofiSupportTypeSummary([stats]).join(' · ')}</div>
               <span class="parent-bar-track" aria-hidden="true"><span style="width: ${activityRate}%"></span></span>
             </article>`;
           })
@@ -7077,6 +7879,7 @@ function renderParentMetrics(): void {
   renderParentTodaySummary(state);
   renderParentInsight(state);
   renderParentGuidance(state);
+  renderParentDetailAnalysis(state);
 }
 
 function renderParentTodaySummary(state: AnalyticsState): void {
@@ -7111,7 +7914,9 @@ function renderParentTodaySummary(state: AnalyticsState): void {
               <div class="parent-module-bar">
                 <div>
                   <strong>${module.label}</strong>
-                  <small>${module.opens} açılış · ${module.actions} eylem</small>
+                  <small>${module.opens} açılış · ${module.actions} eylem${
+                    module.topSupportTarget ? ` · odak ${module.topSupportTarget.label}` : ''
+                  }</small>
                 </div>
                 <span class="parent-bar-track" aria-hidden="true"><span style="width: ${module.activityRate}%"></span></span>
               </div>`
@@ -7127,6 +7932,20 @@ function renderParentTodaySummary(state: AnalyticsState): void {
         <span style="--value: ${summary.supportRate}%"><b>Destekle</b><em>${summary.supportRate}%</em></span>
       </div>
       <small>Bağımsız deneme çocuğun kendi yaptığı olumlu seçimdir; destekle deneme yardım aldıktan sonra tamamlanan denemedir.</small>
+    </article>
+    <article class="parent-today-card">
+      <span>Pofi destek türleri</span>
+      <ul class="parent-word-level-list">
+        ${summary.supportTypeSummary.map((entry) => `<li><strong>${entry}</strong><span>Bugünkü oyun akışından</span></li>`).join('')}
+      </ul>
+      <small>${summary.fatigueSummary}</small>
+    </article>
+    <article class="parent-today-card">
+      <span>Detaylı destek izi</span>
+      <ul class="parent-word-level-list">
+        ${summary.supportDetailSummary.map((entry) => `<li><strong>${entry}</strong><span>Kelime/mod kırılımı</span></li>`).join('')}
+      </ul>
+      <small>Detaylar çocuk ekranına yazı bindirmeden, Pofi'nin rehber rolünü aile için ayrıştırır.</small>
     </article>
     <article class="parent-today-card">
       <span>Önerilen kelimeler</span>
@@ -7146,6 +7965,34 @@ function renderParentTodaySummary(state: AnalyticsState): void {
         ${summary.plan.map((step) => `<li>${step}</li>`).join('')}
       </ol>
     </article>`;
+}
+
+function renderParentDetailAnalysis(state: AnalyticsState): void {
+  const container = document.querySelector<HTMLElement>('[data-parent-detail-analysis]');
+  if (!container) {
+    return;
+  }
+
+  const labels = Object.fromEntries(touchSettings.cards.map((card) => [card.id, card.word]));
+  const analysis = createParentDetailAnalysis(state, touchProgress, matchProgress, labels);
+  container.innerHTML = `
+    <article class="parent-detail-priority" data-priority="${analysis.priorityLabel}">
+      <span>Bugünün odak kararı</span>
+      <strong>${analysis.focusLabel} · ${analysis.priorityLabel}</strong>
+      <small>${analysis.reason}</small>
+    </article>
+    <div class="parent-detail-analysis-grid">
+      ${analysis.rows
+        .map(
+          (row) => `
+            <article>
+              <span>${row.label}</span>
+              <strong>${row.value}</strong>
+              <small>${row.note}</small>
+            </article>`
+        )
+        .join('')}
+    </div>`;
 }
 
 function renderParentInsight(state: AnalyticsState): void {
@@ -7281,6 +8128,152 @@ async function renderDeviceStatus(): Promise<void> {
   }
 }
 
+function tabletInstallUrl(): string {
+  return window.location.origin;
+}
+
+function appRunsStandalone(): boolean {
+  return window.matchMedia('(display-mode: standalone)').matches || Boolean((navigator as NavigatorWithStandalone).standalone);
+}
+
+function renderTabletInstallStatus(): void {
+  const url = document.querySelector<HTMLElement>('[data-tablet-install-url]');
+  const note = document.querySelector<HTMLElement>('[data-tablet-install-note]');
+  const status = document.querySelector<HTMLElement>('[data-tablet-install-status]');
+  const action = document.querySelector<HTMLButtonElement>('[data-tablet-install-action]');
+  if (!url || !note || !status || !action) {
+    return;
+  }
+
+  url.textContent = tabletInstallUrl();
+
+  if (appRunsStandalone()) {
+    action.disabled = true;
+    action.textContent = 'Kuruldu';
+    note.textContent = 'MinaPlay ana ekrandan uygulama gibi açılıyor.';
+    status.textContent = 'Tablet uygulaması hazır.';
+    return;
+  }
+
+  if (deferredInstallPrompt) {
+    action.disabled = false;
+    action.textContent = 'Uygulamayı yükle';
+    note.textContent = 'Bu tarayıcı doğrudan uygulama kurulumunu destekliyor.';
+    status.textContent = 'Kurulum hazır. Düğmeye basıp onaylayın.';
+    return;
+  }
+
+  action.disabled = true;
+  action.textContent = 'Menüden ekle';
+  note.textContent = 'Huawei Browser, Chrome veya Edge menüsünden Ana ekrana ekle seçeneğini kullanın.';
+  status.textContent = 'Tablette bu adresi açın; tarayıcı menüsünden ana ekrana ekleyin.';
+}
+
+function renderAppUpdateStatus(): void {
+  const version = document.querySelector<HTMLElement>('[data-app-update-version]');
+  const note = document.querySelector<HTMLElement>('[data-app-update-note]');
+  const status = document.querySelector<HTMLElement>('[data-app-update-status]');
+  const action = document.querySelector<HTMLButtonElement>('[data-app-update-action]');
+  if (!version || !note || !status || !action) {
+    return;
+  }
+
+  const apkUrl = new URL(APP_UPDATE_APK_URL, window.location.origin).href;
+  version.textContent = APP_UPDATE_VERSION;
+  note.textContent = window.Capacitor?.Plugins?.MinaPlayKiosk?.downloadAndInstallUpdate
+    ? 'MinaPlay güncellemeyi uygulama içinde indirir ve Android kurulum ekranını açar.'
+    : `APK adresi: ${apkUrl}`;
+  action.hidden = true;
+  status.textContent = 'Yeni sürüm olup olmadığını kontrol edin.';
+}
+
+async function checkForAppUpdate(): Promise<void> {
+  const status = document.querySelector<HTMLElement>('[data-app-update-status]');
+  const checks = document.querySelectorAll<HTMLButtonElement>('[data-app-update-check]');
+  const downloads = document.querySelectorAll<HTMLButtonElement>('[data-app-update-action], [data-app-update-quick]');
+  checks.forEach((button) => {
+    button.disabled = true;
+    button.textContent = 'Kontrol ediliyor…';
+  });
+  try {
+    const response = await fetch(APP_UPDATE_METADATA_URL, { cache: 'no-store' });
+    if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) {
+      throw new Error('Update metadata is unavailable');
+    }
+    const release = (await response.json()) as { version?: string };
+    const available = Boolean(release.version && release.version !== APP_VERSION);
+    downloads.forEach((button) => {
+      button.hidden = !available;
+    });
+    if (status) {
+      status.textContent = available ? `Yeni sürüm hazır: v${release.version}` : `MinaPlay güncel: v${APP_VERSION}`;
+    }
+  } catch {
+    downloads.forEach((button) => {
+      button.hidden = false;
+    });
+    if (status) {
+      status.textContent = 'Sürüm bilgisi alınamadı. Güncellemeyi indirerek devam edebilirsiniz.';
+    }
+  } finally {
+    checks.forEach((button) => {
+      button.disabled = false;
+      button.textContent = 'Güncellemeyi kontrol et';
+    });
+  }
+}
+
+async function openAppUpdateDownload(): Promise<void> {
+  const apkUrl = new URL(APP_UPDATE_APK_URL, window.location.origin).href;
+  const status = document.querySelector<HTMLElement>('[data-app-update-status]');
+  const buttons = document.querySelectorAll<HTMLButtonElement>('[data-app-update-action], [data-app-update-quick]');
+  if (status) {
+    status.textContent = 'Güncelleme MinaPlay içinde indiriliyor. Lütfen bekleyin…';
+  }
+  buttons.forEach((button) => {
+    button.disabled = true;
+    button.textContent = 'İndiriliyor…';
+  });
+
+  const nativeUpdater = window.Capacitor?.Plugins?.MinaPlayKiosk?.downloadAndInstallUpdate;
+  try {
+    if (nativeUpdater) {
+      const result = await nativeUpdater({ url: apkUrl });
+      if (status) {
+        status.textContent =
+          result.status === 'permission_required'
+            ? 'Açılan ekranda “Bu kaynaktan izin ver” seçeneğini açın, MinaPlay’e dönün ve Güncellemeyi indir düğmesine tekrar basın.'
+            : 'Android güncelleme ekranı açıldı. Güncelle/Yükle onayını verin.';
+      }
+      return;
+    }
+    window.location.href = apkUrl;
+  } catch (error) {
+    if (status) {
+      const detail = error instanceof Error && error.message ? ` (${error.message})` : '';
+      status.textContent = `Güncelleme tamamlanamadı${detail}. Yeniden deneyin.`;
+    }
+  } finally {
+    buttons.forEach((button) => {
+      button.disabled = false;
+      button.textContent = 'Güncellemeyi indir';
+    });
+  }
+}
+
+async function installTabletApp(): Promise<void> {
+  if (!deferredInstallPrompt) {
+    renderTabletInstallStatus();
+    return;
+  }
+
+  const prompt = deferredInstallPrompt;
+  deferredInstallPrompt = undefined;
+  await prompt.prompt();
+  await prompt.userChoice.catch(() => undefined);
+  renderTabletInstallStatus();
+}
+
 function parentModuleLabel(name: string): string {
   const labels: Record<string, string> = {
     touch: 'Dokun',
@@ -7325,7 +8318,46 @@ function registerServiceWorker(): void {
   });
 }
 
+function registerTabletInstallPrompt(): void {
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferredInstallPrompt = event as BeforeInstallPromptEvent;
+    renderTabletInstallStatus();
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = undefined;
+    renderTabletInstallStatus();
+  });
+
+  window.addEventListener('load', renderTabletInstallStatus);
+}
+
+let viewportLayoutFrame = 0;
+
+function syncTabletViewport(): void {
+  const shell = document.querySelector<HTMLElement>('.app-shell');
+  const height = Math.round(window.visualViewport?.height ?? window.innerHeight);
+  document.documentElement.style.setProperty('--minaplay-viewport-height', `${height}px`);
+  shell?.setAttribute('data-viewport-settling', 'true');
+  window.cancelAnimationFrame(viewportLayoutFrame);
+  viewportLayoutFrame = window.requestAnimationFrame(() => {
+    viewportLayoutFrame = window.requestAnimationFrame(() => {
+      const settledHeight = Math.round(window.visualViewport?.height ?? window.innerHeight);
+      document.documentElement.style.setProperty('--minaplay-viewport-height', `${settledHeight}px`);
+      shell?.removeAttribute('data-viewport-settling');
+      if (shell?.dataset.activeView === 'touch') {
+        void renderTouchCards();
+      }
+    });
+  });
+}
+
 function boot(): void {
+  syncTabletViewport();
+  window.addEventListener('resize', syncTabletViewport);
+  window.addEventListener('orientationchange', syncTabletViewport);
+  window.visualViewport?.addEventListener('resize', syncTabletViewport);
   document.addEventListener('click', (event) => {
     const target = event.target instanceof Element ? event.target : undefined;
     const touchCardTrigger = target?.closest<HTMLElement>('[data-touch-card-id]');
@@ -7337,6 +8369,8 @@ function boot(): void {
     const touchRepeatMediaDelete = target?.closest<HTMLElement>('[data-touch-repeat-media-delete]');
     const touchMediaVaultUnlock = target?.closest<HTMLElement>('[data-touch-media-vault-unlock]');
     const touchMediaVaultLock = target?.closest<HTMLElement>('[data-touch-media-vault-lock]');
+    const touchMediaVaultExport = target?.closest<HTMLElement>('[data-touch-media-vault-export]');
+    const touchMediaVaultImport = target?.closest<HTMLElement>('[data-touch-media-vault-import]');
     const touchCardDelete = target?.closest<HTMLElement>('[data-touch-card-delete]');
     const touchCardMove = target?.closest<HTMLElement>('[data-touch-card-move]');
     const touchImageSelect = target?.closest<HTMLElement>('[data-touch-image-select]');
@@ -7364,6 +8398,10 @@ function boot(): void {
     }
 
     if (mirrorRepeat) {
+      if (!mirrorCameraStream && mirrorCameraRequested) {
+        mirrorCameraRequested = false;
+        void ensureMirrorCamera();
+      }
       mirrorFlowToken += 1;
       enterMirrorExercise(mirrorFlowToken);
       return;
@@ -7441,6 +8479,16 @@ function boot(): void {
       return;
     }
 
+    if (touchMediaVaultExport) {
+      void exportTouchRepeatMediaVault();
+      return;
+    }
+
+    if (touchMediaVaultImport) {
+      openTouchRepeatMediaVaultImport();
+      return;
+    }
+
     if (touchRepeatRecord?.dataset.touchRepeatRecord) {
       void toggleTouchRepeatRecording(touchRepeatRecord.dataset.touchRepeatRecord === 'video' ? 'video' : 'audio');
       return;
@@ -7492,13 +8540,18 @@ function boot(): void {
       const activeView = document.querySelector<HTMLElement>('.app-shell')?.dataset.activeView;
       const isBottomNavTrigger = Boolean(viewTrigger.closest('.bottom-nav'));
       const isBrandHomeTrigger = viewTrigger.classList.contains('brand-home') && requestedView === 'home';
-      if (activeView === 'sleep' && sleepMusicRunning && requestedView !== 'sleep') {
+      if (activeView === 'sleep' && sleepMusicRunning && requestedView !== 'sleep' && !isBrandHomeTrigger) {
         return;
       }
-      if (shouldLockChildNavigation(activeView) && !isBrandHomeTrigger) {
+      if (shouldLockChildNavigation(activeView) && !isBrandHomeTrigger && !isChildMode(requestedView)) {
         return;
       }
-      activateView(isBottomNavTrigger && requestedView === activeView ? 'home' : requestedView);
+      const nextView = isBottomNavTrigger && requestedView === activeView ? 'home' : requestedView;
+      if (activeView === 'parent' && nextView !== 'parent') {
+        void leaveParentAndActivate(nextView);
+        return;
+      }
+      activateView(nextView);
       return;
     }
 
@@ -7506,6 +8559,15 @@ function boot(): void {
 
   document.addEventListener('change', (event) => {
     const targetElement = event.target instanceof Element ? event.target : undefined;
+    const vaultBackupFile = targetElement instanceof HTMLInputElement && targetElement.hasAttribute('data-touch-media-vault-file')
+      ? targetElement
+      : undefined;
+    if (vaultBackupFile?.files?.[0]) {
+      void importTouchRepeatMediaVault(vaultBackupFile.files[0]).finally(() => {
+        vaultBackupFile.value = '';
+      });
+      return;
+    }
     const repeatFocus = targetElement instanceof HTMLSelectElement ? targetElement.closest<HTMLSelectElement>('[data-touch-repeat-focus]') : undefined;
     if (repeatFocus) {
       touchSettings.repeat = normalizeTouchRepeatSettings({ ...touchSettings.repeat, focusCardId: repeatFocus.value }, touchSettings.cards);
@@ -7515,6 +8577,13 @@ function boot(): void {
 
     const target = targetElement instanceof HTMLInputElement ? targetElement : undefined;
     if (!target) {
+      return;
+    }
+
+    if (target.dataset.appPermission === 'camera' || target.dataset.appPermission === 'microphone') {
+      appPermissionSettings = { ...appPermissionSettings, [target.dataset.appPermission]: target.checked };
+      localStorage.setItem('minaplay-app-permissions-v1', JSON.stringify(appPermissionSettings));
+      if (!appPermissionSettings.camera) stopMirrorCamera();
       return;
     }
 
@@ -7598,6 +8667,8 @@ function boot(): void {
     void toggleSleepMusic(event.currentTarget instanceof HTMLElement ? event.currentTarget : undefined);
   });
 
+  document.addEventListener('minaplay:native-back', handleNativeBackButton);
+
   const sleepSurface = document.querySelector<HTMLElement>('[data-sleep-surface]');
   sleepSurface?.addEventListener('click', (event) => {
     const clickedToggle = event.target instanceof HTMLElement && Boolean(event.target.closest('[data-sleep-toggle]'));
@@ -7608,22 +8679,62 @@ function boot(): void {
   });
   const parentGestureZone = document.querySelector<HTMLElement>('[data-parent-gesture-zone]');
   parentGestureZone?.addEventListener('pointerdown', (event) => {
-    parentGestureZone.setPointerCapture(event.pointerId);
-    handleParentGesturePointerDown(event);
+    try {
+      parentGestureZone.setPointerCapture(event.pointerId);
+    } catch {
+      // Older WebViews can reject pointer capture; touch fallback below still handles the gate.
+    }
+    beginParentGesture(event.clientX, event.clientY);
+  });
+  parentGestureZone?.addEventListener('click', (event) => {
+    event.preventDefault();
   });
   parentGestureZone?.addEventListener('pointermove', (event) => {
-    handleParentGesturePointerMove(event);
+    updateParentGesture(event.clientY);
   });
   parentGestureZone?.addEventListener('pointerup', (event) => {
-    handleParentGesturePointerUp(event);
+    finishParentGesture(event.clientY);
   });
   parentGestureZone?.addEventListener('pointercancel', resetParentGesture);
   parentGestureZone?.addEventListener('pointerleave', (event) => {
-    handleParentGesturePointerMove(event);
+    updateParentGesture(event.clientY);
     if (!parentGestureReadyForPull) {
       resetParentGesture();
     }
   });
+  parentGestureZone?.addEventListener(
+    'touchstart',
+    (event) => {
+      const touch = event.touches.item(0);
+      if (!touch) {
+        return;
+      }
+      event.preventDefault();
+      beginParentGesture(touch.clientX, touch.clientY);
+    },
+    { passive: false }
+  );
+  parentGestureZone?.addEventListener(
+    'touchmove',
+    (event) => {
+      const touch = event.touches.item(0);
+      if (!touch) {
+        return;
+      }
+      event.preventDefault();
+      updateParentGesture(touch.clientY);
+    },
+    { passive: false }
+  );
+  parentGestureZone?.addEventListener(
+    'touchend',
+    (event) => {
+      const touch = event.changedTouches.item(0);
+      event.preventDefault();
+      finishParentGesture(touch?.clientY);
+    },
+    { passive: false }
+  );
 
   document.querySelector<HTMLInputElement>('[data-child-lock-enabled]')?.addEventListener('change', (event) => {
     const input = event.currentTarget as HTMLInputElement;
@@ -7640,21 +8751,50 @@ function boot(): void {
   });
 
   document.querySelector<HTMLElement>('[data-parent-gesture-save]')?.addEventListener('click', () => {
-    const tapsInput = document.querySelector<HTMLInputElement>('[data-parent-gesture-taps]');
+    const pinInput = document.querySelector<HTMLInputElement>('[data-parent-pin-setting]');
     const pullInput = document.querySelector<HTMLInputElement>('[data-parent-gesture-pull]');
-    const parentTapCount = Math.min(6, Math.max(2, Number(tapsInput?.value ?? childLockSettings.parentTapCount)));
+    const parentPin = /^\d{4}$/.test(pinInput?.value.trim() ?? '') ? pinInput!.value.trim() : childLockSettings.parentPin;
     const parentPullDistance = Math.min(180, Math.max(40, Number(pullInput?.value ?? childLockSettings.parentPullDistance)));
-    childLockSettings = { ...childLockSettings, parentTapCount, parentPullDistance };
+    childLockSettings = { ...childLockSettings, parentPin, parentPullDistance };
     writeChildLockSettings(childLockSettings);
     resetParentGesture();
     renderChildLockSettings();
   });
 
+  document.querySelector<HTMLFormElement>('[data-parent-pin-form]')?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    submitParentPin();
+  });
+  document.querySelector<HTMLElement>('[data-parent-pin-cancel]')?.addEventListener('click', closeParentPinModal);
+
   document.querySelector<HTMLElement>('[data-child-profile-save]')?.addEventListener('click', saveChildProfileFromPanel);
 
   document.querySelector<HTMLElement>('[data-parent-secret-accept]')?.addEventListener('click', acceptParentSecretIntro);
 
+  document.querySelector<HTMLButtonElement>('[data-tablet-install-action]')?.addEventListener('click', () => {
+    void installTabletApp();
+  });
+  document.querySelector<HTMLButtonElement>('[data-app-update-action]')?.addEventListener('click', openAppUpdateDownload);
+  document.querySelector<HTMLButtonElement>('[data-app-update-quick]')?.addEventListener('click', openAppUpdateDownload);
+  document.querySelectorAll<HTMLButtonElement>('[data-app-update-check]').forEach((button) => {
+    button.addEventListener('click', checkForAppUpdate);
+  });
+
   document.querySelector<HTMLElement>('[data-module-visibility-save]')?.addEventListener('click', saveModuleVisibilitySettingsFromPanel);
+
+  document.querySelector<HTMLElement>('[data-pofi-guide-frequency-save]')?.addEventListener('click', () => {
+    const frequencyMultiplier = Number(document.querySelector<HTMLSelectElement>('[data-pofi-guide-frequency]')?.value);
+    pofiGuideSettings = normalizePofiGuideSettings({ frequencyMultiplier });
+    writePofiGuideSettings();
+    renderMvpModuleSettings();
+    const status = document.querySelector<HTMLElement>('[data-pofi-guide-frequency-status]');
+    if (status) {
+      status.textContent =
+        pofiGuideSettings.frequencyMultiplier === 1
+          ? 'Pofi normal yönlendirme ritminde çalışacak.'
+          : `Pofi yönlendirmeleri ${pofiGuideSettings.frequencyMultiplier} kat daha sık çalışacak.`;
+    }
+  });
 
   document.querySelector<HTMLElement>('[data-mirror-plan-save]')?.addEventListener('click', () => {
     const preset = document.querySelector<HTMLSelectElement>('[data-mirror-plan-preset]')?.value;
@@ -7700,12 +8840,22 @@ function boot(): void {
   preloadPofiParts();
   childLockSettings = readChildLockSettings();
   childProfile = readChildProfile();
+  try {
+    appPermissionSettings = { ...appPermissionSettings, ...JSON.parse(localStorage.getItem('minaplay-app-permissions-v1') ?? '{}') };
+  } catch {
+    appPermissionSettings = { camera: true, microphone: true };
+  }
+  document.querySelectorAll<HTMLInputElement>('[data-app-permission]').forEach((input) => {
+    const key = input.dataset.appPermission as 'camera' | 'microphone';
+    input.checked = appPermissionSettings[key];
+  });
   touchProgress = readTouchProgress();
   touchMastery = readTouchMastery();
   matchProgress = readMatchProgress();
   mirrorPlanSettings = readMirrorPlanSettings();
   sleepSettings = readSleepSettings();
   moduleVisibilitySettings = readModuleVisibilitySettings();
+  pofiGuideSettings = readPofiGuideSettings();
   sentenceProgress = readSentenceProgress();
   publishTouchMasteryForMatching();
   renderPofiAvatars();
@@ -7715,6 +8865,8 @@ function boot(): void {
   showParentSecretIntroIfNeeded();
   renderParentMetrics();
   void renderDeviceStatus();
+  renderTabletInstallStatus();
+  renderAppUpdateStatus();
   renderTouchProgressTable();
   renderMatchProgressTable();
   renderMvpModuleSettings();
@@ -7722,7 +8874,8 @@ function boot(): void {
   renderSentenceGame();
   renderStory();
   renderTouchCards();
-  void initializeTouchSettings().then(() => preloadTouchAudio());
+  void initializeTouchSettings();
+  registerTabletInstallPrompt();
   registerServiceWorker();
 }
 

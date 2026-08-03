@@ -203,7 +203,7 @@ describe('SpeechStateMachine', () => {
     expect(hints).toEqual([1, 2, 3]);
   });
 
-  test('uses the calm 10, 20 and 30 second idle cadence by default', () => {
+  test('uses the calm 12, 24 and 36 second idle cadence by default', () => {
     const hints: number[] = [];
     const machine = new SpeechStateMachine({
       items: () => items,
@@ -214,16 +214,16 @@ describe('SpeechStateMachine', () => {
     machine.start();
     vi.advanceTimersByTime(1740);
 
-    vi.advanceTimersByTime(9999);
+    vi.advanceTimersByTime(11999);
     expect(hints).toEqual([]);
 
     vi.advanceTimersByTime(1);
     expect(hints).toEqual([1]);
 
-    vi.advanceTimersByTime(10_000);
+    vi.advanceTimersByTime(12_000);
     expect(hints).toEqual([1, 2]);
 
-    vi.advanceTimersByTime(10_000);
+    vi.advanceTimersByTime(12_000);
     expect(hints).toEqual([1, 2, 3]);
   });
 

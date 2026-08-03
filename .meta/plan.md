@@ -2,7 +2,7 @@
 name: plan
 description: MinaPlay projesinin bugünkü yürütme yönünü, aktif odağını ve yakın çalışma sırasını tanımlar.
 created: 2026-04-17
-updated: 2026-06-26
+updated: 2026-08-03
 ---
 
 # Plan
@@ -177,7 +177,7 @@ Faz 6 sonucu:
 
 Durum:
 
-- aktif
+- tamamlandı
 
 Karar:
 
@@ -193,10 +193,7 @@ Kapanan paketler:
 
 - 7-1: Dokun odak tekrarına şifreli medya kasası, kısa ses/video kaydı ve dış medya linki alanı eklendi
 - 7-2: ebeveyn sesi çocuk tekrar akışına yalnız Parent panel izniyle ve kasa açıkken bağlandı; video otomatik oynatma kapalı kaldı
-
-Aktif paket:
-
-- 7-3: şifre unutma riskine karşı arka kapısız, şifreli yedek/dışa aktarma ve manuel cihaz QA checklist'i tasarlamak
+- 7-3: arka kapısız şifreli yedek/dışa aktarma akışı ve Android, iOS Safari/PWA, masaüstü Chrome gerçek cihaz QA checklist'i tamamlandı
 
 Faz 7 ara sonucu:
 
@@ -211,6 +208,9 @@ Faz 7 ara sonucu:
 - ebeveyn sesi çocuk tekrarında yalnız `Çocuk tekrarında ebeveyn sesini kullan` seçeneği açıksa, medya kasası açıksa ve ilgili kelime için ses kaydı varsa kullanılır
 - video kaydı çocuk ekranında otomatik oynatılmaz; yalnız Parent panel önizlemesinde kalır
 - gizlilik notu Parent panel medya alanında görünür: kayıtlar buluta yüklenmez, YouTube'a gönderilmez ve video çocuk ekranında otomatik oynatılmaz
+- şifreli kasa düz medya, dış link veya kasa şifresi sızdırmadan JSON yedek olarak indirilebilir ve aynı şifreyle başka cihaza geri yüklenebilir
+- mevcut kasa içe aktarma öncesinde ebeveyn onayı olmadan değiştirilmez
+- gerçek cihaz kontrol listesi `MinaPlay/docs/media-vault-device-qa.md` içinde Android, iOS Safari/PWA ve masaüstü Chrome için hazırdır
 - build, lint, 34 unit test ve 31 Playwright e2e testi başarılıdır
 - masaüstü/telefon Düzenle sekmesi medya UI ve ebeveyn sesi izni görsel QA/yatay taşma ölçümüyle doğrulanmıştır
 
@@ -218,7 +218,7 @@ Faz 7 ara sonucu:
 
 - aktif uygulama hedefi `/Users/umitaydin/Documents/MinaGrow/MinaPlay` olarak korunur
 - Faz 1, Faz 2, Faz 3, Faz 4, Faz 5 ve Faz 6 kapanışları doğrulanmış kabul edilir
-- Faz 7 aktif yürütme fazıdır; sıradaki hedef şifreli medya yedeği/dışa aktarma kararı ve manuel gerçek cihaz QA checklist'idir
+- Faz 7 tamamlandı; sıradaki ürün geliştirme hedefi yeni faz kararı olarak ayrıca açılır
 - `MinaPlay` içinde build/lint/test/e2e hattı kararlı tutulur
 - yeni iş açılırken çocuk yüzeyi kapsamı büyütülmeden önce Parent panel, Pofi state ve local-first veri sınırları korunur
 - Dokun tekrarında odak kelime, ritim çeşidi ve ebeveynin ek içerik notları local-first sınırda tutulur

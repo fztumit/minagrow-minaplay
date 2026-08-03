@@ -19,6 +19,224 @@
     Inter, ui-rounded, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
+/* FINAL v1.0.27 tablet Touch contract — keep after every legacy rule. */
+#view-touch .touch-card { visibility: hidden !important; opacity: 0 !important; transition: none !important; }
+#view-touch .touch-card.touch-card-ready { visibility: visible !important; opacity: 1 !important; }
+#view-touch .touch-card-label,
+#view-touch .touch-card-variation,
+#view-touch .touch-card-dots { display: none !important; }
+#view-touch .touch-card-image-wrap { display: grid !important; place-items: center !important; min-height: 0 !important; overflow: hidden !important; }
+#view-touch .touch-card-image-wrap img { display: block !important; width: 92% !important; height: 92% !important; object-fit: contain !important; }
+#view-touch .touch-card-word { display: block !important; font-size: clamp(1.4rem, 3vmin, 2.25rem) !important; line-height: 1 !important; text-align: center !important; }
+
+@media (min-width: 561px) and (orientation: portrait) {
+  #view-touch .touch-ritual-surface {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: minmax(0, 48fr) minmax(0, 52fr) !important;
+    gap: 14px !important;
+    padding: 12px 20px 14px !important;
+    overflow: hidden !important;
+  }
+  #view-touch .touch-pofi-button,
+  #view-touch [data-touch-state] .touch-pofi-button,
+  #view-touch .touch-speaking .touch-pofi-button {
+    position: relative !important;
+    inset: auto !important;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    place-self: center !important;
+    width: min(76vw, 580px) !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+    translate: none !important;
+    transform: none !important;
+    animation: none !important;
+  }
+  #view-touch .touch-pofi-button .surface-pofi.large {
+    width: min(72vw, 70dvh, 560px) !important;
+    height: auto !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    aspect-ratio: 16 / 9 !important;
+  }
+  #view-touch .touch-card-grid {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+    gap: clamp(14px, 2.5vw, 24px) !important;
+    width: min(92vw, 760px) !important;
+    height: 100% !important;
+    padding: 0 !important;
+    place-self: stretch center !important;
+    overflow: hidden !important;
+  }
+  #view-touch .touch-card {
+    grid-template-rows: minmax(0, 1fr) auto !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    padding: clamp(10px, 1.8vmin, 18px) !important;
+    transform: none !important;
+  }
+}
+
+/* Hidden is a behavioral state and must win over every responsive display rule. */
+[hidden] { display: none !important; }
+.app-shell .mode-card[hidden],
+.app-shell .bonus-strip[hidden],
+.app-shell .bottom-nav button[hidden],
+.app-shell [aria-hidden="true"][hidden] { display: none !important; }
+
+@media (min-width: 561px) and (orientation: landscape) {
+  #view-touch .touch-ritual-surface {
+    display: grid !important;
+    grid-template-columns: minmax(0, 42fr) minmax(0, 58fr) !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+    gap: clamp(18px, 2.4vw, 34px) !important;
+    padding: clamp(14px, 2vmin, 24px) clamp(18px, 2.5vw, 34px) !important;
+    overflow: hidden !important;
+  }
+  #view-touch .touch-pofi-button,
+  #view-touch [data-touch-state] .touch-pofi-button,
+  #view-touch .touch-speaking .touch-pofi-button {
+    position: relative !important;
+    inset: auto !important;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    place-self: center !important;
+    width: 100% !important;
+    height: min(86dvh, 620px) !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+    translate: none !important;
+    transform: none !important;
+    animation: none !important;
+  }
+  #view-touch .touch-pofi-button .surface-pofi.large {
+    width: min(36vw, 68dvh, 480px) !important;
+    height: auto !important;
+    max-width: 94% !important;
+    max-height: 94% !important;
+    aspect-ratio: 16 / 9 !important;
+  }
+  #view-touch .touch-card-grid {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+    gap: clamp(14px, 1.8vw, 26px) !important;
+    width: 100% !important;
+    height: min(82dvh, 640px) !important;
+    padding: 0 !important;
+    place-self: center stretch !important;
+    overflow: hidden !important;
+  }
+  #view-touch .touch-card {
+    grid-template-rows: minmax(0, 1fr) auto !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    padding: clamp(10px, 1.6vmin, 18px) !important;
+    transform: none !important;
+  }
+}
+
+/* Final tablet visual contract: keep the child-facing artwork visible and balanced. */
+#view-touch .touch-weather {
+  z-index: 1 !important;
+}
+
+#view-touch .touch-card-image-wrap {
+  position: relative !important;
+  z-index: 3 !important;
+  isolation: isolate !important;
+}
+
+#view-touch [data-touch-runtime-image] {
+  position: relative !important;
+  z-index: 4 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
+#view-touch .touch-card-word {
+  position: relative !important;
+  z-index: 5 !important;
+}
+
+#view-story .story-object-row {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+#view-story .story-scene-image-wrap {
+  position: absolute !important;
+  inset: 4% !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 92% !important;
+  height: 92% !important;
+  overflow: hidden !important;
+  aspect-ratio: auto !important;
+  z-index: 2 !important;
+}
+
+#view-story .story-scene-image {
+  position: relative !important;
+  inset: auto !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  transform: none !important;
+  aspect-ratio: auto !important;
+}
+#view-story .story-choice-grid:empty { display: none !important; }
+
+@media (min-width: 561px) and (orientation: portrait) {
+  #view-sentence .sentence-mode-switch {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    width: min(52vw, 360px) !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    z-index: 8 !important;
+  }
+}
+
+@media (min-width: 561px) and (orientation: landscape) {
+  .app-shell[data-active-view="home"] .mode-grid {
+    gap: 4px clamp(10px, 1.8vw, 24px) !important;
+    padding: 0 clamp(12px, 2vw, 28px) !important;
+  }
+
+  .app-shell[data-active-view="home"] .mode-card {
+    display: grid !important;
+    grid-template-rows: minmax(0, 1fr) auto !important;
+    place-items: center !important;
+  }
+
+  .app-shell[data-active-view="home"] .mode-card .mode-art {
+    width: min(18vw, 24dvh, 210px) !important;
+    height: min(18vw, 24dvh, 210px) !important;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
@@ -626,17 +844,19 @@ h2 {
 
 .sleep-moon {
   position: absolute;
+  z-index: 2;
   top: clamp(22px, 5vw, 50px);
   left: clamp(24px, 5vw, 68px);
   width: clamp(92px, 13vw, 164px);
   height: auto;
   transform-origin: 50% 50%;
   filter: drop-shadow(0 0 34px rgba(255, 235, 168, 0.42));
-  animation: sleep-moon-real-descent 3600s linear infinite;
+  animation: sleep-moon-sky-wander 180s linear infinite;
 }
 
 .sleep-star {
   position: absolute;
+  z-index: 1;
   border-radius: 999px;
   pointer-events: none;
 }
@@ -702,18 +922,155 @@ h2 {
   animation-delay: -1.2s;
 }
 
+.sleep-star.star-h {
+  top: 20%;
+  left: 10%;
+  width: 2px;
+  height: 2px;
+  opacity: 0.7;
+  animation-delay: -3.8s;
+}
+
+.sleep-star.star-i {
+  top: 38%;
+  left: 44%;
+  width: 2px;
+  height: 2px;
+  animation-delay: -1.1s;
+}
+
+.sleep-star.star-j {
+  top: 16%;
+  left: 72%;
+  width: 3px;
+  height: 3px;
+  opacity: 0.62;
+  animation-delay: -4.2s;
+}
+
+.sleep-star.star-k {
+  top: 72%;
+  left: 80%;
+  width: 2px;
+  height: 2px;
+  animation-delay: -2.2s;
+}
+
+.sleep-star.star-l {
+  top: 84%;
+  left: 54%;
+  width: 3px;
+  height: 3px;
+  opacity: 0.55;
+  animation-delay: -0.4s;
+}
+
+.sleep-star.star-m {
+  top: 42%;
+  left: 8%;
+  width: 2px;
+  height: 2px;
+  animation-delay: -5.2s;
+}
+
+.sleep-star.star-n {
+  top: 8%;
+  left: 46%;
+  width: 2px;
+  height: 2px;
+  opacity: 0.72;
+  animation-delay: -2.8s;
+}
+
+.sleep-star.star-o {
+  top: 88%;
+  left: 18%;
+  width: 2px;
+  height: 2px;
+  animation-delay: -1.9s;
+}
+
+.sleep-shooting-star {
+  position: absolute;
+  z-index: 1;
+  width: 112px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(255, 248, 220, 0.96), transparent);
+  filter: drop-shadow(0 0 8px rgba(255, 245, 196, 0.72));
+  opacity: 0;
+  transform: translate3d(0, 0, 0) rotate(-18deg);
+  animation: sleep-shooting-star 10s linear infinite;
+}
+
+.sleep-shooting-star.shooting-a {
+  top: 18%;
+  left: 70%;
+  animation-delay: -5s;
+}
+
+.sleep-shooting-star.shooting-b {
+  top: 44%;
+  left: 18%;
+  width: 86px;
+  animation-duration: 14s;
+  animation-delay: -14s;
+}
+
+.sleep-haze-cloud {
+  position: absolute;
+  z-index: 0;
+  width: min(52vw, 720px);
+  height: min(22vw, 260px);
+  border-radius: 48% 52% 45% 55% / 58% 42% 60% 40%;
+  background:
+    radial-gradient(ellipse at 18% 56%, rgba(255, 255, 255, 0.24) 0 24%, transparent 48%),
+    radial-gradient(ellipse at 44% 42%, rgba(255, 255, 255, 0.34) 0 30%, transparent 58%),
+    radial-gradient(ellipse at 72% 58%, rgba(225, 237, 255, 0.22) 0 26%, transparent 54%),
+    radial-gradient(ellipse at 52% 68%, rgba(199, 216, 248, 0.14) 0 42%, transparent 70%);
+  filter: blur(18px);
+  opacity: 0;
+  mix-blend-mode: screen;
+  transform: translate3d(-20vw, 0, 0) scale(1);
+  animation: sleep-haze-cloud-drift 34s ease-in-out infinite;
+}
+
+.sleep-haze-cloud.cloud-a {
+  top: 10%;
+  left: -18%;
+  animation-delay: -8s;
+}
+
+.sleep-haze-cloud.cloud-b {
+  top: 48%;
+  left: -28%;
+  width: min(64vw, 860px);
+  height: min(26vw, 300px);
+  animation-duration: 42s;
+  animation-delay: -34s;
+}
+
+.sleep-haze-cloud.cloud-c {
+  top: 72%;
+  left: -22%;
+  width: min(44vw, 620px);
+  height: min(18vw, 220px);
+  animation-duration: 38s;
+  animation-delay: -56s;
+}
+
 .sleep-pofi-wrap {
   position: absolute;
   z-index: 2;
-  top: 52%;
-  left: 18%;
-  width: min(46vw, 430px);
-  min-width: 240px;
+  top: 50%;
+  left: 50%;
+  width: min(40vw, 360px);
+  min-width: 220px;
   aspect-ratio: 16 / 9;
   --sleep-pofi-width: 54%;
   --sleep-floating-scale: 1.1;
-  transform: translate(-50%, -50%);
-  animation: sleep-pofi-cloud-path 1200s linear infinite;
+  transform: translate3d(-12vw, 4vh, 0) rotate(-1.2deg);
+  animation: sleep-pofi-cloud-path 26s linear infinite;
   pointer-events: none;
 }
 
@@ -736,18 +1093,18 @@ h2 {
 }
 
 .sleep-floating-pofi .pofi-body {
-  animation: sleep-pofi-breathe 5.8s ease-in-out infinite;
+  animation: sleep-pofi-breathe 4.6s ease-in-out infinite;
   transform-origin: 50% 72%;
 }
 
 .sleep-floating-pofi .pofi-face,
 .sleep-floating-pofi .pofi-effect,
 .sleep-floating-pofi .pofi-hands {
-  animation-duration: 8s;
+  animation-duration: 5.4s;
 }
 
 .sleep-surface[data-sleep-running="true"] .sleep-floating-pofi .pofi-body {
-  animation-duration: 6.2s;
+  animation-duration: 4.8s;
 }
 
 .sleep-toggle {
@@ -772,6 +1129,10 @@ h2 {
   backdrop-filter: blur(14px);
 }
 
+.sleep-toggle[hidden] {
+  display: none !important;
+}
+
 .sleep-toggle-icon {
   width: 42px;
   height: 42px;
@@ -787,20 +1148,36 @@ h2 {
   background: rgba(255, 244, 206, 0.2);
 }
 
-.app-shell[data-active-view="sleep"]:has(.sleep-surface[data-sleep-running="true"]) {
+.app-shell[data-active-view="sleep"] {
   padding: 0;
   overflow: hidden;
 }
 
-.app-shell[data-active-view="sleep"]:has(.sleep-surface[data-sleep-running="true"]) .topbar,
-.app-shell[data-active-view="sleep"]:has(.sleep-surface[data-sleep-running="true"]) #view-sleep > .back-home,
-.app-shell[data-active-view="sleep"]:has(.sleep-surface[data-sleep-running="true"]) .bottom-nav,
+.app-shell[data-active-view="sleep"] .topbar,
+.app-shell[data-active-view="sleep"] #view-sleep > .back-home,
+.app-shell[data-active-view="sleep"] .bottom-nav,
 .sleep-surface[data-sleep-running="true"] .sleep-toggle {
   opacity: 0;
   pointer-events: none;
 }
 
-.sleep-surface[data-sleep-running="true"] {
+.app-shell[data-active-view="sleep"] #view-sleep.module-view.active {
+  display: block;
+  min-height: 100dvh;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.app-shell[data-active-view="sleep"].view-transitioning #view-sleep.module-view.active {
+  animation: none;
+}
+
+.app-shell[data-active-view="sleep"] .sleep-surface {
   position: fixed;
   inset: 0;
   z-index: 100;
@@ -812,16 +1189,16 @@ h2 {
   cursor: pointer;
 }
 
-.sleep-surface[data-sleep-running="true"] .sleep-moon {
+.app-shell[data-active-view="sleep"] .sleep-moon {
   top: clamp(28px, 5vw, 70px);
   left: clamp(30px, 6vw, 92px);
   width: clamp(112px, 14vw, 210px);
 }
 
-.sleep-surface[data-sleep-running="true"] .sleep-pofi-wrap {
-  width: min(46vw, 480px);
-  min-width: 280px;
-  animation-duration: 1200s;
+.app-shell[data-active-view="sleep"] .sleep-pofi-wrap {
+  width: min(38vw, 390px);
+  min-width: 220px;
+  animation-duration: 26s;
 }
 
 .sleep-surface[data-sleep-running="true"] .sleep-toggle-icon {
@@ -3627,11 +4004,47 @@ h2 {
   border-right: 1px solid rgba(82, 64, 101, 0.08);
 }
 
-.parent-rail-brand {
-  color: #2e78d6;
-  font-size: clamp(1.5rem, 2vw, 2.15rem);
-  font-weight: 1000;
-  letter-spacing: -0.05em;
+.parent-rail-header {
+  display: grid;
+  gap: 12px;
+}
+
+.parent-home-brand {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-width: 0;
+  min-height: 72px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: inset 0 0 0 1px rgba(82, 64, 101, 0.08);
+  cursor: pointer;
+}
+
+.parent-home-brand img {
+  display: block;
+  width: min(100%, 190px);
+  height: auto;
+  max-height: 62px;
+  object-fit: contain;
+}
+
+.parent-home-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 18px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #7c5cff, #6539d8);
+  box-shadow: 0 12px 24px rgba(101, 57, 216, 0.22);
+  font: inherit;
+  font-weight: 950;
+  cursor: pointer;
 }
 
 .parent-tabs {
@@ -3761,6 +4174,26 @@ h2 {
   gap: 24px;
   align-items: start;
   margin-top: 0;
+}
+
+.parent-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.parent-update-pill {
+  min-height: 46px;
+  padding: 11px 18px;
+  border: 0;
+  border-radius: 999px;
+  color: #fff;
+  background: linear-gradient(135deg, #ee6c73, #d94f78);
+  box-shadow: 0 10px 22px rgba(217, 79, 120, 0.22);
+  font: inherit;
+  font-weight: 950;
+  cursor: pointer;
 }
 
 .parent-overview,
@@ -4006,6 +4439,57 @@ h2 {
 .parent-today-card.plan {
   grid-column: 1 / -1;
   background: rgba(255, 248, 228, 0.9);
+}
+
+.parent-detail-analysis {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.parent-detail-priority,
+.parent-detail-analysis-grid article {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(82, 64, 101, 0.08);
+  border-radius: 18px;
+}
+
+.parent-detail-priority {
+  background: linear-gradient(135deg, rgba(255, 248, 228, 0.94), rgba(237, 246, 255, 0.9));
+}
+
+.parent-detail-priority[data-priority="Yüksek"] {
+  background: linear-gradient(135deg, rgba(255, 236, 226, 0.94), rgba(255, 248, 228, 0.9));
+}
+
+.parent-detail-analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.parent-detail-analysis span {
+  color: #7b728a;
+  font-size: 0.76rem;
+  font-weight: 1000;
+  text-transform: uppercase;
+}
+
+.parent-detail-analysis strong {
+  color: #4d3670;
+  font-size: clamp(1rem, 1.45vw, 1.22rem);
+  line-height: 1.18;
+}
+
+.parent-detail-analysis small {
+  color: #6d6480;
+  font-size: 0.86rem;
+  font-weight: 850;
+  line-height: 1.36;
 }
 
 .parent-today-card ol {
@@ -4455,11 +4939,31 @@ h2 {
   }
 
   .parent-rail {
-    grid-template-rows: auto;
+    grid-template-rows: auto auto;
     gap: 14px;
     padding: 18px;
     border-right: 0;
     border-bottom: 1px solid rgba(82, 64, 101, 0.08);
+  }
+
+  .parent-rail-header {
+    grid-template-columns: minmax(170px, 0.58fr) minmax(150px, 0.42fr);
+    align-items: center;
+  }
+
+  .parent-home-brand {
+    min-height: 64px;
+    padding: 8px 12px;
+  }
+
+  .parent-home-brand img {
+    width: min(100%, 220px);
+    max-height: 58px;
+  }
+
+  .parent-home-action {
+    min-height: 54px;
+    white-space: nowrap;
   }
 
   .parent-tabs {
@@ -4496,6 +5000,10 @@ h2 {
   }
 
   .parent-insight-body {
+    grid-template-columns: 1fr;
+  }
+
+  .parent-detail-analysis-grid {
     grid-template-columns: 1fr;
   }
 
@@ -4769,8 +5277,6 @@ h2 {
   .sleep-pofi-wrap {
     width: min(76vw, 340px);
     min-width: 220px;
-    left: 22%;
-    top: 60%;
   }
 
   .sleep-toggle {
@@ -5228,13 +5734,14 @@ h2 {
 @media (prefers-reduced-motion: reduce) {
   .sleep-moon,
   .sleep-pofi-wrap,
-  .sleep-floating-pofi .pofi-body {
+  .sleep-floating-pofi .pofi-body,
+  .sleep-haze-cloud,
+  .sleep-shooting-star {
     animation: none;
   }
 
   .sleep-pofi-wrap {
-    left: 50%;
-    top: 55%;
+    transform: translate3d(-50%, -45%, 0);
   }
 
   .peekaboo-surface .surface-pofi,
@@ -5364,17 +5871,25 @@ h2 {
   }
 }
 
-@keyframes sleep-moon-real-descent {
+@keyframes sleep-moon-sky-wander {
   0% {
-    transform: translate3d(0, -2vh, 0) rotate(-3deg) scale(1);
+    transform: translate3d(0, 0, 0) rotate(-3deg) scale(1);
+  }
+
+  22% {
+    transform: translate3d(18vw, 9vh, 0) rotate(2deg) scale(0.99);
   }
 
   50% {
-    transform: translate3d(4vw, 33vh, 0) rotate(3deg) scale(0.985);
+    transform: translate3d(46vw, 3vh, 0) rotate(6deg) scale(0.97);
+  }
+
+  74% {
+    transform: translate3d(28vw, 24vh, 0) rotate(1deg) scale(0.985);
   }
 
   100% {
-    transform: translate3d(8vw, 66vh, 0) rotate(8deg) scale(0.96);
+    transform: translate3d(0, 0, 0) rotate(-3deg) scale(1);
   }
 }
 
@@ -5393,33 +5908,83 @@ h2 {
 
 @keyframes sleep-pofi-cloud-path {
   0% {
-    left: 38%;
-    top: 58%;
-    transform: translate(-50%, -50%) rotate(-1.6deg);
+    transform: translate3d(-12vw, 4vh, 0) rotate(-1.2deg);
   }
 
-  24% {
-    left: 72%;
-    top: 28%;
-    transform: translate(-50%, -50%) rotate(1.2deg);
+  18% {
+    transform: translate3d(8vw, -6vh, 0) rotate(0.8deg);
   }
 
-  52% {
-    left: 68%;
-    top: 62%;
-    transform: translate(-50%, -50%) rotate(0.6deg);
+  38% {
+    transform: translate3d(18vw, 3vh, 0) rotate(0.4deg);
   }
 
-  76% {
-    left: 34%;
-    top: 74%;
-    transform: translate(-50%, -50%) rotate(-1deg);
+  58% {
+    transform: translate3d(4vw, 10vh, 0) rotate(-0.6deg);
+  }
+
+  80% {
+    transform: translate3d(-16vw, -2vh, 0) rotate(0.9deg);
   }
 
   100% {
-    left: 38%;
-    top: 58%;
-    transform: translate(-50%, -50%) rotate(-1.6deg);
+    transform: translate3d(-12vw, 4vh, 0) rotate(-1.2deg);
+  }
+}
+
+@keyframes sleep-shooting-star {
+  0%,
+  72% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) rotate(-18deg);
+  }
+
+  76% {
+    opacity: 0.86;
+  }
+
+  82% {
+    opacity: 0;
+    transform: translate3d(-32vw, 18vh, 0) rotate(-18deg);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(-32vw, 18vh, 0) rotate(-18deg);
+  }
+}
+
+@keyframes sleep-haze-cloud-drift {
+  0% {
+    opacity: 0;
+    border-radius: 48% 52% 45% 55% / 58% 42% 60% 40%;
+    transform: translate3d(-22vw, 0, 0) scale(0.9, 0.78) skewX(-4deg);
+  }
+
+  18% {
+    opacity: 0.18;
+  }
+
+  36% {
+    opacity: 0.36;
+    border-radius: 58% 42% 62% 38% / 44% 56% 40% 60%;
+    transform: translate3d(26vw, -4vh, 0) scale(1.18, 0.94) skewX(5deg);
+  }
+
+  58% {
+    opacity: 0.24;
+    border-radius: 42% 58% 50% 50% / 62% 38% 54% 46%;
+    transform: translate3d(58vw, 2vh, 0) scale(1.04, 1.16) skewX(-2deg);
+  }
+
+  76% {
+    opacity: 0.08;
+  }
+
+  100% {
+    opacity: 0;
+    border-radius: 50% 50% 44% 56% / 48% 52% 58% 42%;
+    transform: translate3d(110vw, -2vh, 0) scale(0.96, 0.82) skewX(3deg);
   }
 }
 
@@ -6280,6 +6845,37 @@ h2 {
   margin-top: 18px;
 }
 
+.tablet-install-card {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.tablet-install-info {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.tablet-install-info span {
+  color: #7b728a;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.tablet-install-info strong {
+  color: #4d3670;
+  font-size: clamp(0.96rem, 2vw, 1.12rem);
+  overflow-wrap: anywhere;
+}
+
+.tablet-install-info small {
+  color: #7b728a;
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
 .safety-toggle {
   display: flex;
   align-items: flex-start;
@@ -6344,6 +6940,10 @@ h2 {
 }
 
 @media (max-width: 680px) {
+  .tablet-install-card {
+    grid-template-columns: 1fr;
+  }
+
   .repeat-settings-card {
     grid-template-columns: 1fr;
   }
@@ -6373,12 +6973,13 @@ h2 {
 
 .parent-gesture-zone {
   position: fixed;
-  z-index: 210;
+  z-index: 2147483000;
   top: 0;
   left: 0;
-  width: 96px;
-  height: 96px;
+  width: 160px;
+  height: 160px;
   background: transparent;
+  pointer-events: auto;
   touch-action: none;
 }
 
@@ -7575,7 +8176,7 @@ h2 {
     z-index: 12;
     top: var(--match-pofi-top);
     left: var(--match-pofi-left);
-    width: clamp(300px, 38vw, 420px);
+    width: clamp(174px, 22vw, 244px);
     transform: translate(-50%, 0) rotate(var(--match-pofi-lean, 0deg));
   }
 
@@ -7586,7 +8187,7 @@ h2 {
 
   #view-match .match-target {
     position: absolute;
-    top: clamp(128px, 22dvh, 184px);
+    top: clamp(188px, 28dvh, 252px);
     left: 50%;
     width: min(32vw, 208px);
     height: min(32vw, 208px);
@@ -8967,3 +9568,3271 @@ h2 {
     width: min(100%, 178px);
   }
 }
+
+@media (min-width: 761px) {
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]):not([data-active-view="sleep"]) {
+    display: grid;
+    grid-template-rows: 64px minmax(0, 1fr);
+    height: 100dvh;
+    min-height: 0;
+    padding: 8px 12px 10px;
+    overflow: hidden;
+  }
+
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]):not([data-active-view="sleep"]) .topbar {
+    height: 58px;
+    margin-bottom: 6px;
+    padding: 5px 14px;
+    border-radius: 30px;
+  }
+
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]):not([data-active-view="sleep"]) .topbar-logo {
+    width: min(34vw, 250px);
+    height: 42px;
+  }
+
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]):not([data-active-view="sleep"]) .minagrow-logo,
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]):not([data-active-view="sleep"]) .sipesystem-logo,
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]):not([data-active-view="sleep"]) .parent-entry,
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]):not([data-active-view="sleep"]) .topbar-home {
+    display: none;
+  }
+
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]):not([data-active-view="sleep"]) main {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]):not([data-active-view="sleep"]) .module-view.active {
+    width: 100%;
+    max-width: none;
+    min-height: 0;
+    height: calc(100dvh - 82px);
+    margin: 0;
+    padding: 6px;
+    background: rgba(255, 253, 250, 0.48);
+    border-radius: 28px;
+    overflow: hidden;
+  }
+
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]):not([data-active-view="sleep"]) .play-surface {
+    width: 100%;
+    min-height: 0;
+    height: 100%;
+    border-radius: 28px;
+  }
+
+  #view-touch .touch-ritual-surface,
+  #view-match .match-surface,
+  #view-sentence .sentence-surface,
+  #view-story .story-surface,
+  #view-mirror .mirror-surface {
+    min-height: 0;
+    height: 100%;
+    max-height: none;
+  }
+
+  #view-touch.module-view {
+    padding: 6px;
+  }
+
+  #view-touch .touch-ritual-surface {
+    padding: 12px 18px 18px;
+  }
+
+  #view-match.module-view,
+  #view-sentence.module-view,
+  #view-story.module-view,
+  #view-mirror.module-view {
+    padding: 6px;
+  }
+
+  #view-match .match-surface,
+  #view-sentence .sentence-surface,
+  #view-story .story-surface,
+  #view-mirror .mirror-surface {
+    padding-top: 10px;
+    padding-bottom: 18px;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1180px) {
+  #view-touch .touch-ritual-surface {
+    display: block;
+    padding: 10px 14px 16px;
+    overflow: hidden;
+  }
+
+  #view-touch .touch-pofi-button {
+    top: 14px;
+    left: 50%;
+    width: clamp(150px, 18vw, 210px);
+    transform: translateX(-50%);
+  }
+
+  #view-touch .touch-speaking .touch-pofi-button {
+    top: 18px;
+    transform: translateX(-50%) scale(1.02);
+  }
+
+  #view-touch .touch-card-grid {
+    top: clamp(220px, 29dvh, 310px);
+    bottom: 18px;
+    width: min(calc(100% - 24px), 1040px);
+    padding: 8px 12px 18px;
+    align-items: center;
+    transform: translateX(-50%);
+  }
+
+  #view-touch .touch-card {
+    flex-basis: clamp(156px, 20vw, 212px);
+  }
+
+  #view-sentence .sentence-surface {
+    display: grid;
+    grid-template-columns: minmax(150px, 0.52fr) minmax(320px, 1fr);
+    grid-template-rows: minmax(48px, auto) minmax(0, 1fr) minmax(110px, auto);
+    gap: 12px 16px;
+    padding: 12px 16px 18px;
+  }
+
+  #view-sentence .sentence-pofi-button {
+    position: relative;
+    top: auto;
+    left: auto;
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    align-self: center;
+    justify-self: center;
+    width: clamp(140px, 17vw, 205px);
+    transform: none;
+  }
+
+  #view-sentence .sentence-card {
+    position: relative;
+    top: auto;
+    left: auto;
+    grid-column: 2;
+    grid-row: 2;
+    width: min(42vw, 380px);
+    min-height: min(42vw, 380px);
+    transform: none;
+  }
+
+  #view-sentence .sentence-choice-grid {
+    grid-column: 2;
+    grid-row: 3;
+  }
+
+  #view-sentence .sentence-surface[data-sentence-mode="board"] {
+    grid-template-columns: minmax(128px, 0.34fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  #view-sentence .sentence-surface[data-sentence-mode="board"] .sentence-pofi-button {
+    grid-row: 1;
+    width: clamp(126px, 15vw, 168px);
+  }
+
+  #view-sentence .sentence-surface[data-sentence-mode="board"] .sentence-choice-grid {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(96px, 1fr));
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    width: min(100%, 720px);
+    max-height: none;
+    overflow: visible;
+    padding: 0;
+    transform: none;
+  }
+
+  #view-story .story-surface {
+    display: grid;
+    grid-template-columns: minmax(150px, 0.5fr) minmax(320px, 1fr);
+    grid-template-rows: minmax(0, 1fr) minmax(112px, auto) 14px;
+    gap: 12px 16px;
+    padding: 12px 16px 18px;
+  }
+
+  #view-story .story-pofi-button {
+    position: relative;
+    top: auto;
+    left: auto;
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    align-self: center;
+    justify-self: center;
+    width: clamp(150px, 18vw, 220px);
+    transform: none;
+  }
+
+  #view-story .story-scene {
+    position: relative;
+    top: auto;
+    left: auto;
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    width: min(42vw, 360px);
+    min-height: min(42vw, 360px);
+    transform: none;
+  }
+
+  #view-story .story-choice-grid {
+    position: relative;
+    top: auto;
+    left: auto;
+    grid-column: 2;
+    grid-row: 2;
+    width: min(100%, 560px);
+    padding: 0;
+    overflow: visible;
+    transform: none;
+  }
+
+  #view-mirror .mirror-surface {
+    grid-template-columns: minmax(150px, 0.42fr) minmax(360px, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    align-items: center;
+    padding: 12px 16px 18px;
+  }
+
+  #view-mirror .mirror-pofi-card .surface-pofi.large {
+    width: clamp(150px, 18vw, 220px);
+    min-width: 0;
+  }
+
+  #view-mirror .mirror-camera-card {
+    align-self: start;
+    min-height: min(58dvh, 620px);
+    max-height: calc(100dvh - 132px);
+  }
+
+  #view-mirror .mirror-video {
+    min-height: min(58dvh, 620px);
+  }
+}
+
+@media (max-width: 760px) {
+  .parent-gesture-zone {
+    width: 150px;
+    height: 150px;
+  }
+
+  .app-shell[data-active-view="sleep"] .sleep-pofi-wrap {
+    width: min(56vw, 250px);
+    min-width: 156px;
+  }
+}
+
+/* Huawei tablet field overrides: maximize child play area and keep Parent reachable. */
+.parent-gesture-zone {
+  top: max(12px, env(safe-area-inset-top));
+  left: max(8px, env(safe-area-inset-left));
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
+  background: rgba(255, 253, 250, 0.72);
+  border: 1px solid rgba(210, 92, 92, 0.32);
+  box-shadow: 0 12px 28px rgba(70, 67, 79, 0.14);
+  backdrop-filter: blur(10px);
+}
+
+.parent-gesture-zone::before {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #d15858;
+  font-size: 1.7rem;
+  font-weight: 950;
+  content: "P";
+}
+
+@media (min-width: 761px) {
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]) {
+    display: block;
+    width: 100vw;
+    height: 100dvh;
+    min-height: 100dvh;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]) .topbar,
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]) .bottom-nav {
+    display: none !important;
+  }
+
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]) main {
+    width: 100vw;
+    height: 100dvh;
+    min-height: 100dvh;
+    overflow: hidden;
+  }
+
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]) .module-view.active {
+    position: fixed;
+    inset: 0;
+    display: block;
+    width: 100vw;
+    height: 100dvh;
+    min-height: 100dvh;
+    max-width: none;
+    margin: 0;
+    padding: 8px 8px 8px max(82px, calc(env(safe-area-inset-left) + 82px));
+    overflow: hidden;
+    background: rgba(255, 253, 250, 0.34);
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]) .play-surface {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    border-radius: 24px;
+  }
+
+  #view-touch .touch-ritual-surface {
+    display: block;
+    padding: 10px 14px 14px;
+  }
+
+  #view-touch .touch-pofi-button {
+    top: 16px !important;
+    left: 50% !important;
+    z-index: 20;
+    width: min(34vw, 300px) !important;
+    min-width: 220px;
+    opacity: 1;
+    transform: translateX(-50%) !important;
+  }
+
+  #view-touch .touch-pofi-button .surface-pofi.large {
+    width: 100% !important;
+    opacity: 1;
+  }
+
+  #view-touch .touch-card-grid {
+    top: clamp(230px, 30dvh, 340px) !important;
+    bottom: 18px !important;
+    width: min(calc(100% - 28px), 1160px) !important;
+    padding: 8px 12px 16px !important;
+  }
+
+  #view-match .match-surface {
+    display: grid;
+    grid-template-columns: minmax(190px, 0.42fr) minmax(260px, 0.58fr);
+    grid-template-rows: minmax(220px, 0.46fr) minmax(180px, 0.54fr);
+    gap: 10px 16px;
+    padding: 12px 16px 18px;
+  }
+
+  #view-match .match-pofi-button {
+    top: 54px !important;
+    left: 22% !important;
+    width: min(25vw, 260px) !important;
+    min-width: 190px;
+  }
+
+  #view-match .match-target {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    width: min(34vw, 340px);
+    height: min(34vw, 340px);
+    min-height: 240px;
+  }
+
+  #view-match .match-choice-grid {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    align-self: center;
+    width: min(100%, 980px);
+    padding-top: 8px;
+    transform: none;
+  }
+
+  #view-mirror .mirror-surface {
+    display: grid;
+    grid-template-columns: minmax(180px, 0.32fr) minmax(360px, 0.68fr);
+    grid-template-rows: minmax(0, 1fr);
+    gap: 14px;
+    padding: 12px 16px 18px;
+  }
+
+  #view-mirror .mirror-pofi-card {
+    min-height: 0;
+    height: 100%;
+  }
+
+  #view-mirror .mirror-pofi-card .surface-pofi.large {
+    width: min(26vw, 260px);
+    min-width: 180px;
+  }
+
+  #view-mirror .mirror-camera-card,
+  #view-mirror .mirror-video {
+    min-height: 0;
+    height: 100%;
+  }
+
+  #view-sentence .sentence-surface {
+    display: grid;
+    grid-template-columns: minmax(190px, 0.36fr) minmax(360px, 0.64fr);
+    grid-template-rows: auto minmax(0, 1fr) minmax(112px, auto);
+    gap: 12px 18px;
+    padding: 12px 16px 18px;
+  }
+
+  #view-sentence .sentence-mode-switch {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  #view-sentence .sentence-pofi-button {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    align-self: center;
+    justify-self: center;
+    width: min(28vw, 280px);
+    min-width: 190px;
+  }
+
+  #view-sentence .sentence-card {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: center;
+    width: min(42vw, 420px);
+    min-height: min(42vw, 420px);
+  }
+
+  #view-sentence .sentence-choice-grid {
+    grid-column: 2;
+    grid-row: 3;
+    width: min(100%, 720px);
+    padding: 0;
+    transform: none;
+  }
+
+  #view-story .story-surface {
+    display: grid;
+    grid-template-columns: minmax(190px, 0.36fr) minmax(360px, 0.64fr);
+    grid-template-rows: minmax(0, 1fr) minmax(112px, auto) 16px;
+    gap: 12px 18px;
+    padding: 12px 16px 18px;
+  }
+
+  #view-story .story-pofi-button {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    align-self: center;
+    justify-self: center;
+    width: min(28vw, 280px);
+    min-width: 190px;
+  }
+
+  #view-story .story-scene {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    justify-self: center;
+    width: min(42vw, 430px);
+    min-height: min(42vw, 430px);
+  }
+
+  #view-story .story-choice-grid {
+    grid-column: 2;
+    grid-row: 2;
+    width: min(100%, 720px);
+    padding: 0;
+    transform: none;
+  }
+}
+
+@media (min-width: 761px) and (orientation: portrait) {
+  #view-touch .touch-card-grid {
+    align-items: start !important;
+    padding-top: clamp(28px, 4dvh, 56px) !important;
+  }
+
+  #view-touch .touch-card {
+    flex-basis: clamp(180px, 28vw, 240px);
+  }
+
+  #view-mirror .mirror-surface {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(190px, 0.28fr) minmax(0, 0.72fr);
+  }
+
+  #view-mirror .mirror-pofi-card {
+    width: min(100%, 720px);
+    justify-self: center;
+  }
+
+  #view-mirror .mirror-pofi-card .surface-pofi.large {
+    width: min(36vw, 300px);
+  }
+
+  #view-sentence .sentence-surface,
+  #view-story .story-surface {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(190px, 0.28fr) minmax(0, 0.54fr) minmax(112px, 0.18fr);
+  }
+
+  #view-sentence .sentence-mode-switch {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+  }
+
+  #view-sentence .sentence-pofi-button,
+  #view-story .story-pofi-button {
+    grid-column: 1;
+    grid-row: 1;
+    width: min(42vw, 330px);
+    min-width: 220px;
+  }
+
+  #view-sentence .sentence-card,
+  #view-story .story-scene {
+    grid-column: 1;
+    grid-row: 2;
+    width: min(58vw, 480px);
+    min-height: min(58vw, 480px);
+  }
+
+  #view-sentence .sentence-choice-grid,
+  #view-story .story-choice-grid {
+    grid-column: 1;
+    grid-row: 3;
+    justify-self: center;
+  }
+
+  #view-match .match-surface {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(230px, 0.34fr) minmax(0, 0.66fr);
+  }
+
+  #view-match .match-pofi-button {
+    top: 42px !important;
+    left: 28% !important;
+    width: min(34vw, 280px) !important;
+  }
+
+  #view-match .match-target {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: end;
+    margin-right: min(8vw, 72px);
+    width: min(38vw, 340px);
+    height: min(38vw, 340px);
+  }
+
+  #view-match .match-choice-grid {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 190px));
+    align-content: center;
+    justify-content: center;
+    justify-items: center;
+    gap: clamp(14px, 2vw, 22px);
+    width: 100% !important;
+    overflow: visible;
+    mask-image: none;
+  }
+
+  #view-match .match-choice {
+    width: min(100%, 190px);
+    min-height: 190px;
+    flex: none;
+  }
+
+  #view-story .story-scene-image-wrap,
+  #view-story .story-scene-image {
+    width: min(82%, 360px);
+    max-width: 360px;
+    max-height: 360px;
+  }
+}
+
+/* Parent gate: decorative star, hold 3s + pull down + PIN. */
+.parent-gesture-zone {
+  display: grid;
+  place-items: center;
+  width: 84px;
+  height: 84px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.parent-gesture-zone::before,
+.parent-gesture-zone::after {
+  content: none;
+}
+
+.parent-gesture-star {
+  display: block;
+  width: 54px;
+  aspect-ratio: 1;
+  background:
+    radial-gradient(circle at 42% 36%, rgba(255, 255, 255, 0.96) 0 12%, transparent 13%),
+    linear-gradient(145deg, rgba(255, 247, 176, 0.82), rgba(255, 202, 55, 0.74));
+  clip-path: polygon(50% 0%, 61% 31%, 95% 25%, 72% 51%, 91% 84%, 50% 69%, 9% 84%, 28% 51%, 5% 25%, 39% 31%);
+  filter:
+    drop-shadow(0 0 12px rgba(255, 236, 142, 0.58))
+    drop-shadow(0 8px 14px rgba(70, 67, 79, 0.12));
+  opacity: 0.58;
+  transform: scale(1);
+  transition: opacity 220ms ease, transform 220ms ease, filter 220ms ease;
+}
+
+.parent-gesture-zone:active .parent-gesture-star,
+.parent-gesture-zone.ready .parent-gesture-star {
+  opacity: 0.96;
+  transform: scale(1.12) rotate(8deg);
+  filter:
+    drop-shadow(0 0 22px rgba(255, 239, 154, 0.94))
+    drop-shadow(0 12px 20px rgba(70, 67, 79, 0.16));
+}
+
+@media (min-width: 761px) {
+  #view-touch [data-touch-level="3"] .touch-card-grid {
+    top: clamp(196px, 25dvh, 270px) !important;
+    bottom: 16px !important;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(clamp(128px, 12vw, 166px), 1fr)) !important;
+    grid-auto-rows: minmax(0, min(24dvh, 216px)) !important;
+    align-content: center;
+    align-items: stretch;
+    justify-content: center;
+    gap: clamp(12px, 1.5vw, 20px) !important;
+    width: min(calc(100% - 28px), 980px) !important;
+    max-height: calc(100dvh - 216px);
+    padding: 8px 12px 12px !important;
+    overflow: visible !important;
+    transform: translateX(-50%) !important;
+  }
+
+  #view-touch [data-touch-level="3"] .touch-card {
+    flex: none !important;
+    width: 100%;
+    height: min(24dvh, 216px) !important;
+    max-height: min(24dvh, 216px) !important;
+    min-width: 0;
+    min-height: 0;
+    aspect-ratio: auto !important;
+    padding: clamp(10px, 1.25vw, 16px);
+    border-radius: 28px;
+    gap: 6px;
+  }
+
+  #view-touch [data-touch-level="3"] .touch-card-image-wrap {
+    width: min(68%, 96px) !important;
+    max-height: 38% !important;
+  }
+
+  #view-touch [data-touch-level="3"] .touch-card-label {
+    font-size: clamp(1.06rem, 1.85vw, 1.55rem) !important;
+    line-height: 1.08;
+  }
+}
+
+.parent-pin-modal[hidden] {
+  display: none;
+}
+
+.parent-pin-modal {
+  position: fixed;
+  z-index: 2147483200;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(30, 24, 45, 0.28);
+  backdrop-filter: blur(12px);
+}
+
+.parent-pin-card {
+  display: grid;
+  gap: 14px;
+  width: min(420px, 100%);
+  padding: 26px;
+  color: #4d3670;
+  background: rgba(255, 253, 250, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  border-radius: 28px;
+  box-shadow: 0 24px 68px rgba(70, 67, 79, 0.2);
+}
+
+.parent-pin-card h2 {
+  margin: 0;
+  font-size: clamp(1.6rem, 4vw, 2.1rem);
+}
+
+.parent-pin-card input {
+  width: 100%;
+  min-height: 62px;
+  padding: 10px 18px;
+  color: #3f3159;
+  font-size: 1.8rem;
+  font-weight: 950;
+  text-align: center;
+  letter-spacing: 0.18em;
+  background: #fff;
+  border: 1px solid rgba(111, 91, 142, 0.18);
+  border-radius: 18px;
+}
+
+.parent-pin-status {
+  min-height: 1.2em;
+  margin: 0;
+  color: #c24b4b;
+  font-weight: 900;
+  text-align: center;
+}
+
+.parent-pin-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Final tablet contract: visible exit, real field use, no legacy P gate. */
+.parent-gesture-zone {
+  position: fixed;
+  z-index: 2147483000;
+  top: max(10px, env(safe-area-inset-top));
+  left: max(10px, env(safe-area-inset-left));
+  width: clamp(58px, 7vmin, 78px);
+  height: clamp(58px, 7vmin, 78px);
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.parent-gesture-zone::before,
+.parent-gesture-zone::after {
+  content: none !important;
+}
+
+.parent-gesture-star {
+  width: clamp(42px, 5.2vmin, 58px);
+  opacity: 0.68;
+}
+
+.child-home-button {
+  position: fixed;
+  z-index: 2147482990;
+  top: max(14px, env(safe-area-inset-top));
+  right: max(14px, env(safe-area-inset-right));
+  display: grid;
+  place-items: center;
+  width: clamp(54px, 6.4vmin, 74px);
+  height: clamp(54px, 6.4vmin, 74px);
+  padding: 0;
+  color: #5b3e88;
+  font-size: clamp(1.45rem, 3vmin, 2rem);
+  font-weight: 1000;
+  line-height: 1;
+  background: rgba(255, 253, 250, 0.64);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 999px;
+  box-shadow: 0 12px 30px rgba(70, 67, 79, 0.14);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app-shell[data-active-view="home"] .child-home-button,
+.app-shell[data-active-view="parent"] .child-home-button {
+  display: none;
+}
+
+@media (min-width: 761px) {
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]):not([data-active-view="sleep"]) .module-view.active {
+    padding: clamp(8px, 1vmin, 14px) !important;
+  }
+
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]):not([data-active-view="sleep"]) .play-surface {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    border-radius: clamp(20px, 2.2vmin, 34px) !important;
+  }
+
+  #view-touch .touch-ritual-surface {
+    display: grid !important;
+    grid-template-columns: minmax(360px, 0.46fr) minmax(420px, 0.54fr) !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: clamp(18px, 3vw, 52px) !important;
+    padding: clamp(24px, 4vmin, 52px) clamp(76px, 7vmin, 110px) clamp(22px, 4vmin, 46px) !important;
+  }
+
+  #view-touch .touch-pofi-button {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    justify-self: end !important;
+    align-self: center !important;
+    width: min(34vw, 420px) !important;
+    min-width: 280px !important;
+    transform: none !important;
+  }
+
+  #view-touch .touch-pofi-button .surface-pofi.large {
+    width: 100% !important;
+  }
+
+  #view-touch .touch-card-grid {
+    position: relative !important;
+    inset: auto !important;
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(220px, 1fr)) !important;
+    align-content: center !important;
+    justify-content: stretch !important;
+    gap: clamp(18px, 2.5vmin, 32px) !important;
+    width: min(100%, 760px) !important;
+    max-height: none !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    transform: none !important;
+  }
+
+  #view-touch .touch-card {
+    width: 100% !important;
+    min-height: clamp(250px, 31vmin, 380px) !important;
+    padding: clamp(18px, 2.5vmin, 30px) !important;
+    border-radius: clamp(28px, 3.4vmin, 44px) !important;
+  }
+
+  #view-touch .touch-card-image-wrap {
+    width: min(74%, 250px) !important;
+    min-height: clamp(130px, 18vmin, 220px) !important;
+  }
+
+  #view-touch .touch-card-label,
+  #view-touch .touch-card-word {
+    font-size: clamp(2rem, 4vmin, 3.5rem) !important;
+    line-height: 1 !important;
+  }
+
+  #view-match .match-surface,
+  #view-sentence .sentence-surface,
+  #view-story .story-surface,
+  #view-mirror .mirror-surface {
+    padding: clamp(20px, 3vmin, 42px) clamp(72px, 7vmin, 104px) clamp(20px, 3vmin, 42px) !important;
+  }
+
+  #view-match .match-surface {
+    grid-template-columns: minmax(280px, 0.42fr) minmax(460px, 0.58fr) !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+    align-items: center !important;
+  }
+
+  #view-match .match-pofi-button {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    justify-self: center !important;
+    width: min(30vw, 360px) !important;
+    min-width: 240px !important;
+    transform: none !important;
+  }
+
+  #view-match .match-target {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    align-self: start !important;
+    justify-self: center !important;
+    width: min(34vw, 420px) !important;
+    height: min(34vw, 420px) !important;
+    min-height: 280px !important;
+  }
+
+  #view-match .match-choice-grid {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    align-self: end !important;
+    justify-self: center !important;
+    grid-template-columns: repeat(2, minmax(190px, 240px)) !important;
+    width: min(100%, 560px) !important;
+    gap: clamp(16px, 2vmin, 28px) !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  #view-match .match-choice {
+    width: 100% !important;
+    min-height: clamp(190px, 23vmin, 260px) !important;
+  }
+
+  #view-sentence .sentence-surface,
+  #view-story .story-surface {
+    grid-template-columns: minmax(280px, 0.36fr) minmax(480px, 0.64fr) !important;
+    align-items: center !important;
+  }
+
+  #view-sentence .sentence-pofi-button,
+  #view-story .story-pofi-button {
+    width: min(30vw, 390px) !important;
+    min-width: 260px !important;
+  }
+
+  #view-sentence .sentence-card,
+  #view-story .story-scene {
+    width: min(42vw, 520px) !important;
+    min-height: min(42vw, 520px) !important;
+  }
+
+  #view-mirror .mirror-surface {
+    grid-template-columns: minmax(260px, 0.28fr) minmax(520px, 0.72fr) !important;
+    gap: clamp(18px, 3vmin, 36px) !important;
+  }
+
+  #view-mirror .mirror-pofi-card .surface-pofi.large {
+    width: min(28vw, 360px) !important;
+  }
+
+  #view-mirror .mirror-camera-card {
+    min-height: 0 !important;
+    height: 100% !important;
+  }
+}
+
+@media (min-width: 761px) and (orientation: portrait) {
+  #view-touch .touch-ritual-surface {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: minmax(230px, 0.34fr) minmax(0, 0.66fr) !important;
+    padding: clamp(72px, 7vmin, 96px) clamp(22px, 4vmin, 48px) clamp(20px, 3vmin, 38px) !important;
+  }
+
+  #view-touch .touch-pofi-button {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    justify-self: center !important;
+    width: min(46vw, 360px) !important;
+  }
+
+  #view-touch .touch-card-grid {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    width: min(100%, 720px) !important;
+  }
+
+  #view-touch .touch-card {
+    min-height: clamp(230px, 26vh, 340px) !important;
+  }
+
+  #view-match .match-surface {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: minmax(280px, 0.34fr) minmax(0, 0.66fr) !important;
+    align-items: stretch !important;
+    gap: clamp(16px, 2.4vmin, 28px) !important;
+    padding: clamp(74px, 8vmin, 104px) clamp(22px, 4vmin, 48px) clamp(20px, 3vmin, 38px) !important;
+  }
+
+  #view-match .match-pofi-button {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    justify-self: start !important;
+    width: min(34vw, 260px) !important;
+    min-width: 210px !important;
+  }
+
+  #view-match .match-target {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    justify-self: end !important;
+    width: min(44vw, 330px) !important;
+    height: min(44vw, 330px) !important;
+    min-height: 250px !important;
+    margin: 0 !important;
+  }
+
+  #view-match .match-choice-grid {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    align-self: center !important;
+    justify-self: center !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: clamp(14px, 2.4vmin, 24px) !important;
+    width: min(100%, 720px) !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  #view-match .match-choice {
+    width: 100% !important;
+    min-height: clamp(210px, 24vh, 300px) !important;
+  }
+
+  #view-sentence .sentence-surface,
+  #view-story .story-surface {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: minmax(230px, 0.26fr) minmax(0, 0.5fr) minmax(140px, 0.24fr) !important;
+    padding: clamp(74px, 8vmin, 104px) clamp(22px, 4vmin, 48px) clamp(20px, 3vmin, 38px) !important;
+  }
+
+  #view-sentence .sentence-pofi-button,
+  #view-story .story-pofi-button {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    justify-self: center !important;
+    width: min(42vw, 330px) !important;
+    min-width: 240px !important;
+  }
+
+  #view-sentence .sentence-card,
+  #view-story .story-scene {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    justify-self: center !important;
+    width: min(72vw, 460px) !important;
+    min-height: min(72vw, 460px) !important;
+  }
+
+  #view-sentence .sentence-choice-grid,
+  #view-story .story-choice-grid {
+    grid-column: 1 !important;
+    grid-row: 3 !important;
+    justify-self: center !important;
+    width: min(100%, 720px) !important;
+    overflow: visible !important;
+  }
+
+  #view-mirror .mirror-surface {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: minmax(220px, 0.25fr) minmax(0, 0.75fr) !important;
+    padding: clamp(74px, 8vmin, 104px) clamp(22px, 4vmin, 48px) clamp(20px, 3vmin, 38px) !important;
+  }
+
+  #view-mirror .mirror-pofi-card {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    min-height: 0 !important;
+  }
+
+  #view-mirror .mirror-pofi-card .surface-pofi.large {
+    width: min(42vw, 320px) !important;
+  }
+
+  #view-mirror .mirror-camera-card {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+  }
+}
+
+@media (min-width: 761px) {
+  #view-touch .touch-ritual-surface[data-touch-level="3"] {
+    padding: clamp(72px, 7vmin, 96px) clamp(18px, 3vmin, 36px) clamp(16px, 2.4vmin, 30px) !important;
+  }
+
+  #view-touch .touch-ritual-surface[data-touch-level="3"] .touch-card-grid {
+    position: relative !important;
+    inset: auto !important;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(clamp(126px, 11vw, 166px), 1fr)) !important;
+    grid-auto-rows: minmax(0, min(22dvh, 198px)) !important;
+    align-content: center !important;
+    align-items: stretch !important;
+    gap: clamp(10px, 1.4vmin, 16px) !important;
+    width: min(100%, 980px) !important;
+    max-height: 100% !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    transform: none !important;
+  }
+
+  #view-touch .touch-ritual-surface[data-touch-level="3"] .touch-card {
+    width: 100% !important;
+    height: min(22dvh, 198px) !important;
+    min-height: 0 !important;
+    max-height: min(22dvh, 198px) !important;
+    aspect-ratio: auto !important;
+    padding: clamp(8px, 1.1vmin, 14px) !important;
+    border-radius: clamp(22px, 2.4vmin, 32px) !important;
+    gap: 4px !important;
+  }
+
+  #view-touch .touch-ritual-surface[data-touch-level="3"] .touch-card-image-wrap {
+    width: min(64%, 88px) !important;
+    min-height: 0 !important;
+    max-height: 36% !important;
+  }
+
+  #view-touch .touch-ritual-surface[data-touch-level="3"] .touch-card-label,
+  #view-touch .touch-ritual-surface[data-touch-level="3"] .touch-card-word {
+    font-size: clamp(1rem, 1.75vmin, 1.42rem) !important;
+    line-height: 1.05 !important;
+  }
+}
+
+/* Parent panel must scroll inside the app shell on tablet WebView/PWA builds. */
+.app-shell[data-active-view="parent"] {
+  height: 100dvh !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.app-shell[data-active-view="parent"] main {
+  height: 100dvh !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+#view-parent.parent-panel.active {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 60 !important;
+  display: block !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  min-height: 0 !important;
+  max-height: 100dvh !important;
+  padding: clamp(10px, 1.8vw, 18px) clamp(10px, 2vw, 22px) max(72px, env(safe-area-inset-bottom)) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
+  border-radius: 0 !important;
+}
+
+#view-parent.parent-panel.active .parent-shell {
+  min-height: auto !important;
+}
+
+#view-parent.parent-panel.active .parent-dashboard,
+#view-parent.parent-panel.active .parent-main {
+  min-height: 0 !important;
+  overflow: visible !important;
+}
+
+/* Huawei portrait home: use the full screen and turn the lower band into Ceee. */
+@media (min-width: 561px) and (max-width: 900px) and (orientation: portrait) {
+  .app-shell[data-active-view="home"] {
+    position: fixed !important;
+    inset: 0 !important;
+    display: grid !important;
+    grid-template-rows: clamp(112px, 10.6dvh, 136px) minmax(0, 1fr) !important;
+    gap: clamp(8px, 1dvh, 12px) !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    padding: clamp(8px, 1.15dvh, 14px) clamp(16px, 3.2vw, 28px) !important;
+    overflow: hidden !important;
+  }
+
+  .app-shell[data-active-view="home"] .topbar {
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    border-radius: clamp(34px, 4.5vw, 48px) !important;
+  }
+
+  .app-shell[data-active-view="home"] .topbar-logo {
+    width: clamp(360px, 54vw, 500px) !important;
+    height: clamp(82px, 8.6dvh, 110px) !important;
+  }
+
+  .app-shell[data-active-view="home"] .minagrow-logo {
+    width: clamp(88px, 15vw, 130px) !important;
+    height: clamp(42px, 6.4vw, 62px) !important;
+  }
+
+  .app-shell[data-active-view="home"] .sipesystem-logo {
+    width: clamp(104px, 17vw, 150px) !important;
+    height: clamp(34px, 5.2vw, 52px) !important;
+  }
+
+  .app-shell[data-active-view="home"] main,
+  .app-shell[data-active-view="home"] #view-home {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+  }
+
+  .app-shell[data-active-view="home"] #view-home {
+    display: grid !important;
+    grid-template-rows: minmax(0, 1fr) clamp(148px, 15.5dvh, 190px) !important;
+    gap: clamp(8px, 1dvh, 12px) !important;
+  }
+
+  .app-shell[data-active-view="home"] .mode-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: auto repeat(3, minmax(0, 1fr)) !important;
+    align-items: center !important;
+    align-content: stretch !important;
+    gap: clamp(4px, 0.7dvh, 8px) clamp(46px, 8vw, 74px) !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    padding: clamp(14px, 1.8dvh, 24px) clamp(50px, 7.5vw, 78px) clamp(12px, 1.5dvh, 20px) !important;
+    border-radius: clamp(34px, 5vw, 48px) !important;
+  }
+
+  .app-shell[data-active-view="home"] .mode-card {
+    width: clamp(150px, 21.5vw, 188px) !important;
+    min-height: clamp(150px, 18dvh, 196px) !important;
+  }
+
+  .app-shell[data-active-view="home"] .mode-art {
+    width: clamp(150px, 21.5vw, 188px) !important;
+  }
+
+  .app-shell[data-active-view="home"] .mode-title {
+    font-size: clamp(1.1rem, 2.35vw, 1.48rem) !important;
+  }
+
+  .app-shell[data-active-view="home"] .home-prompt {
+    gap: clamp(2px, 0.6dvh, 8px) !important;
+  }
+
+  .app-shell[data-active-view="home"] .home-prompt img {
+    width: clamp(132px, 20vw, 186px) !important;
+  }
+
+  .app-shell[data-active-view="home"] .home-prompt p {
+    font-size: clamp(1.02rem, 2.35vw, 1.34rem) !important;
+  }
+
+  .app-shell[data-active-view="home"] .bonus-strip {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    margin: 0 !important;
+  }
+
+  .app-shell[data-active-view="home"] .bonus-motivation {
+    display: none !important;
+  }
+
+  .app-shell[data-active-view="home"] .bonus-cee {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, max-content) !important;
+    justify-content: center !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    padding-inline: clamp(28px, 7vw, 72px) !important;
+    text-align: left !important;
+    border-radius: clamp(30px, 4.4vw, 44px) !important;
+  }
+
+  .app-shell[data-active-view="home"] .bonus-cee .bonus-pofi {
+    width: clamp(92px, 15vw, 138px) !important;
+  }
+
+  .app-shell[data-active-view="home"] .bonus-cee .bonus-title {
+    font-size: clamp(1.42rem, 3.5vw, 2.25rem) !important;
+  }
+
+  .app-shell[data-active-view="home"] .bonus-cee .bonus-text {
+    font-size: clamp(1rem, 2.3vw, 1.34rem) !important;
+  }
+}
+
+/* Huawei compact tablet WebView can report ~600 CSS px; child modes still need fullscreen. */
+@media (max-width: 760px) {
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]):not([data-active-view="sleep"]) {
+    display: block !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]):not([data-active-view="sleep"]) .topbar,
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]):not([data-active-view="sleep"]) .bottom-nav {
+    display: none !important;
+  }
+
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]):not([data-active-view="sleep"]) main {
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    overflow: hidden !important;
+  }
+
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]):not([data-active-view="sleep"]) .module-view.active {
+    position: fixed !important;
+    inset: 0 !important;
+    display: block !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 8px 8px 8px max(72px, calc(env(safe-area-inset-left) + 72px)) !important;
+    overflow: hidden !important;
+    background: rgba(255, 253, 250, 0.34) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]):not([data-active-view="sleep"]) .play-surface {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    border-radius: 24px !important;
+  }
+
+  #view-touch .touch-ritual-surface {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: minmax(210px, 0.36fr) minmax(0, 0.64fr) !important;
+    gap: clamp(10px, 1.8dvh, 18px) !important;
+    padding: clamp(52px, 6dvh, 78px) clamp(18px, 4vw, 34px) clamp(16px, 2.4dvh, 26px) !important;
+  }
+
+  #view-touch .touch-pofi-button {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    justify-self: center !important;
+    width: min(58vw, 320px) !important;
+    min-width: 220px !important;
+    transform: none !important;
+  }
+
+  #view-touch .touch-card-grid {
+    position: relative !important;
+    inset: auto !important;
+    display: grid !important;
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    align-content: center !important;
+    align-items: stretch !important;
+    align-self: stretch !important;
+    justify-self: center !important;
+    width: min(100%, 680px) !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    gap: clamp(12px, 3vw, 22px) !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    transform: none !important;
+  }
+
+  #view-touch .touch-card {
+    width: 100% !important;
+    height: clamp(190px, 25dvh, 300px) !important;
+    min-height: clamp(190px, 25dvh, 300px) !important;
+    max-height: clamp(190px, 25dvh, 300px) !important;
+  }
+}
+
+@media (min-width: 761px) and (orientation: landscape) {
+  #view-match .match-surface {
+    grid-template-columns: minmax(260px, 0.36fr) minmax(0, 0.64fr) !important;
+    grid-template-rows: minmax(0, 0.56fr) minmax(0, 0.44fr) !important;
+    align-content: stretch !important;
+    align-items: stretch !important;
+    gap: clamp(18px, 3vmin, 40px) !important;
+    padding: clamp(18px, 3vmin, 36px) clamp(52px, 6vmin, 86px) clamp(18px, 3vmin, 36px) !important;
+  }
+
+  #view-match .match-pofi-button {
+    grid-column: 1 !important;
+    grid-row: 1 / 3 !important;
+    justify-self: center !important;
+    width: min(28vw, 340px) !important;
+    min-width: 220px !important;
+  }
+
+  #view-match .match-target {
+    position: relative !important;
+    inset: auto !important;
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    justify-self: center !important;
+    width: min(24vw, 300px) !important;
+    height: min(24vw, 300px) !important;
+    min-height: clamp(210px, 32vmin, 300px) !important;
+    transform: none !important;
+  }
+
+  #view-match .match-choice-grid {
+    position: relative !important;
+    inset: auto !important;
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    align-self: center !important;
+    justify-self: center !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    width: min(100%, 460px) !important;
+    gap: clamp(12px, 2vmin, 22px) !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    transform: none !important;
+  }
+
+  #view-match .match-choice {
+    width: 100% !important;
+    min-height: clamp(150px, 24vmin, 220px) !important;
+  }
+}
+
+/* v1.0.12 hard tablet child-mode contract: no legacy header crop, no 82px dead strip. */
+@media (min-width: 561px) {
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]):not([data-active-view="sleep"]) {
+    position: fixed !important;
+    inset: 0 !important;
+    display: block !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    max-height: 100dvh !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]):not([data-active-view="sleep"]) .topbar,
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]):not([data-active-view="sleep"]) .bottom-nav {
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+  }
+
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]):not([data-active-view="sleep"]) main {
+    position: fixed !important;
+    inset: 0 !important;
+    display: block !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    max-height: 100dvh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]):not([data-active-view="sleep"]) .module-view.active {
+    position: fixed !important;
+    inset: 0 !important;
+    display: block !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    max-height: 100dvh !important;
+    max-width: none !important;
+    padding: clamp(6px, 1vmin, 12px) !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    background: rgba(255, 253, 250, 0.18) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]):not([data-active-view="sleep"]) .play-surface {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    border-radius: clamp(18px, 2.2vmin, 30px) !important;
+  }
+}
+
+@media (min-width: 561px) and (orientation: portrait) {
+  #view-touch .touch-ritual-surface {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: minmax(260px, 0.36fr) minmax(0, 0.64fr) !important;
+    align-content: stretch !important;
+    align-items: stretch !important;
+    gap: clamp(10px, 1.6dvh, 18px) !important;
+    padding: clamp(62px, 7dvh, 92px) clamp(18px, 4vw, 44px) clamp(16px, 2.4dvh, 32px) !important;
+    overflow: hidden !important;
+  }
+
+  #view-touch .touch-pofi-button {
+    position: relative !important;
+    inset: auto !important;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    justify-self: center !important;
+    width: min(48vw, 380px) !important;
+    min-width: 240px !important;
+    max-width: 100% !important;
+    transform: none !important;
+  }
+
+  #view-touch .touch-pofi-button .surface-pofi.large {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  #view-touch .touch-card-grid {
+    position: relative !important;
+    inset: auto !important;
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    align-content: center !important;
+    align-items: stretch !important;
+    justify-content: center !important;
+    justify-self: center !important;
+    gap: clamp(12px, 2.6vw, 24px) !important;
+    width: min(100%, 760px) !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    transform: none !important;
+  }
+
+  #view-touch .touch-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: clamp(210px, 24dvh, 330px) !important;
+    max-height: clamp(210px, 24dvh, 330px) !important;
+  }
+}
+
+/* v1.0.15 learning-stage contract: one educational focus, no Pofi/card collision. */
+@media (min-width: 561px) {
+  .app-shell:not([data-active-view="home"]):not([data-active-view="parent"]):not([data-active-view="sleep"]) .module-view.active {
+    padding: clamp(6px, 1.2vmin, 12px) !important;
+  }
+
+  #view-touch .touch-ritual-surface,
+  #view-match .match-surface,
+  #view-sentence .sentence-surface,
+  #view-story .story-surface,
+  #view-mirror .mirror-surface {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    gap: clamp(14px, 2.2vmin, 28px) !important;
+    overflow: hidden !important;
+    border-radius: clamp(18px, 2.2vmin, 30px) !important;
+  }
+
+  #view-touch .touch-pofi-button,
+  #view-match .match-pofi-button,
+  #view-sentence .sentence-pofi-button,
+  #view-story .story-pofi-button,
+  #view-mirror .mirror-pofi-card {
+    position: relative !important;
+    inset: auto !important;
+    z-index: 3 !important;
+    align-self: center !important;
+    justify-self: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+  }
+
+  #view-match .match-target,
+  #view-sentence .sentence-card,
+  #view-story .story-scene,
+  #view-mirror .mirror-camera-card {
+    position: relative !important;
+    inset: auto !important;
+    z-index: 2 !important;
+    align-self: center !important;
+    justify-self: center !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+
+  #view-match .match-choice-grid,
+  #view-sentence .sentence-choice-grid,
+  #view-story .story-choice-grid {
+    position: relative !important;
+    inset: auto !important;
+    z-index: 2 !important;
+    align-self: center !important;
+    justify-self: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    transform: none !important;
+  }
+
+  #view-touch .touch-card-grid {
+    position: relative !important;
+    inset: auto !important;
+    z-index: 2 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    transform: none !important;
+  }
+}
+
+@media (min-width: 561px) and (orientation: portrait) {
+  #view-touch .touch-ritual-surface {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: clamp(190px, 26dvh, 300px) minmax(0, 1fr) !important;
+    align-content: stretch !important;
+    align-items: stretch !important;
+    padding: clamp(22px, 3dvh, 44px) clamp(18px, 3.8vw, 38px) clamp(18px, 2.4dvh, 30px) !important;
+  }
+
+  #view-touch .touch-pofi-button {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: min(46vw, 340px) !important;
+    min-width: 210px !important;
+    max-width: 100% !important;
+  }
+
+  #view-touch .touch-card-grid {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    align-content: start !important;
+    align-items: stretch !important;
+    justify-self: center !important;
+    gap: clamp(12px, 2.5vw, 22px) !important;
+    width: min(100%, 760px) !important;
+    height: 100% !important;
+    max-height: 100% !important;
+  }
+
+  #view-touch .touch-card {
+    width: 100% !important;
+    min-height: clamp(240px, 30dvh, 370px) !important;
+    max-height: clamp(240px, 30dvh, 370px) !important;
+    padding: clamp(14px, 2vmin, 26px) !important;
+  }
+
+  #view-match .match-surface {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: clamp(270px, 38dvh, 405px) minmax(0, 1fr) !important;
+    align-content: stretch !important;
+    align-items: stretch !important;
+    padding: clamp(18px, 2.5dvh, 36px) clamp(18px, 3.8vw, 38px) clamp(18px, 2.4dvh, 30px) !important;
+  }
+
+  #view-match .match-pofi-button {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    justify-self: start !important;
+    width: min(34vw, 265px) !important;
+    min-width: 190px !important;
+  }
+
+  #view-match .match-target {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    justify-self: end !important;
+    width: min(43vw, 330px) !important;
+    height: min(43vw, 330px) !important;
+    min-height: clamp(210px, 29dvh, 315px) !important;
+    max-height: min(43vw, 330px) !important;
+  }
+
+  #view-match .match-choice-grid {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    align-self: start !important;
+    width: min(100%, 720px) !important;
+    gap: clamp(12px, 2.4vw, 22px) !important;
+  }
+
+  #view-match .match-choice {
+    width: 100% !important;
+    min-height: clamp(210px, 26dvh, 305px) !important;
+    max-height: clamp(210px, 26dvh, 305px) !important;
+    padding: clamp(12px, 2vmin, 22px) !important;
+  }
+
+  #view-sentence .sentence-surface,
+  #view-story .story-surface {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: clamp(170px, 23dvh, 270px) minmax(0, 1fr) clamp(104px, 15dvh, 160px) !important;
+    align-content: stretch !important;
+    align-items: stretch !important;
+    padding: clamp(18px, 2.5dvh, 34px) clamp(18px, 3.8vw, 38px) clamp(16px, 2.2dvh, 28px) !important;
+  }
+
+  #view-sentence .sentence-pofi-button,
+  #view-story .story-pofi-button {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: min(38vw, 300px) !important;
+    min-width: 190px !important;
+  }
+
+  #view-sentence .sentence-card,
+  #view-story .story-scene {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    align-self: start !important;
+    width: min(62vw, 430px) !important;
+    min-height: min(62vw, 430px) !important;
+    max-height: min(46dvh, 430px) !important;
+  }
+
+  #view-sentence .sentence-choice-grid,
+  #view-story .story-choice-grid {
+    grid-column: 1 !important;
+    grid-row: 3 !important;
+    align-self: center !important;
+    width: min(100%, 700px) !important;
+  }
+
+  #view-mirror .mirror-surface {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: clamp(170px, 24dvh, 260px) minmax(0, 1fr) !important;
+    align-content: stretch !important;
+    align-items: stretch !important;
+    padding: clamp(18px, 2.5dvh, 34px) clamp(18px, 3.8vw, 38px) clamp(18px, 2.4dvh, 30px) !important;
+  }
+
+  #view-mirror .mirror-pofi-card {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: min(100%, 720px) !important;
+    min-height: 0 !important;
+  }
+
+  #view-mirror .mirror-pofi-card .surface-pofi.large {
+    width: min(42vw, 300px) !important;
+  }
+
+  #view-mirror .mirror-camera-card {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    align-self: stretch !important;
+    width: min(100%, 760px) !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+}
+
+@media (min-width: 561px) and (orientation: landscape) {
+  #view-touch .touch-ritual-surface {
+    display: grid !important;
+    grid-template-columns: minmax(230px, 0.38fr) minmax(0, 0.62fr) !important;
+    grid-template-rows: 1fr !important;
+    align-items: center !important;
+    padding: clamp(18px, 3vmin, 34px) clamp(28px, 5vmin, 64px) !important;
+  }
+
+  #view-touch .touch-pofi-button {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: min(32vw, 380px) !important;
+    min-width: 210px !important;
+  }
+
+  #view-touch .touch-card-grid {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    align-content: center !important;
+    justify-self: center !important;
+    gap: clamp(14px, 2vmin, 26px) !important;
+    width: min(100%, 610px) !important;
+  }
+
+  #view-touch .touch-card {
+    min-height: clamp(220px, 34vmin, 330px) !important;
+    max-height: clamp(220px, 34vmin, 330px) !important;
+  }
+
+  #view-match .match-surface {
+    display: grid !important;
+    grid-template-columns: minmax(240px, 0.34fr) minmax(0, 0.66fr) !important;
+    grid-template-rows: minmax(0, 0.52fr) minmax(0, 0.48fr) !important;
+    align-items: stretch !important;
+    padding: clamp(18px, 3vmin, 34px) clamp(42px, 5vmin, 72px) !important;
+  }
+
+  #view-match .match-pofi-button {
+    grid-column: 1 !important;
+    grid-row: 1 / 3 !important;
+    width: min(28vw, 330px) !important;
+    min-width: 210px !important;
+  }
+
+  #view-match .match-target {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    width: min(25vw, 300px) !important;
+    height: min(25vw, 300px) !important;
+    min-height: clamp(200px, 30vmin, 285px) !important;
+  }
+
+  #view-match .match-choice-grid {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    width: min(100%, 500px) !important;
+    gap: clamp(12px, 2vmin, 22px) !important;
+  }
+
+  #view-match .match-choice {
+    min-height: clamp(150px, 24vmin, 215px) !important;
+    max-height: clamp(150px, 24vmin, 215px) !important;
+  }
+
+  #view-sentence .sentence-surface,
+  #view-story .story-surface {
+    display: grid !important;
+    grid-template-columns: minmax(230px, 0.34fr) minmax(0, 0.66fr) !important;
+    grid-template-rows: minmax(0, 1fr) clamp(104px, 18vmin, 150px) !important;
+    align-items: stretch !important;
+    padding: clamp(18px, 3vmin, 34px) clamp(42px, 5vmin, 72px) !important;
+  }
+
+  #view-sentence .sentence-pofi-button,
+  #view-story .story-pofi-button {
+    grid-column: 1 !important;
+    grid-row: 1 / 3 !important;
+    width: min(28vw, 330px) !important;
+    min-width: 210px !important;
+  }
+
+  #view-sentence .sentence-card,
+  #view-story .story-scene {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    width: min(38vw, 430px) !important;
+    min-height: min(38vw, 430px) !important;
+    max-height: min(54dvh, 430px) !important;
+  }
+
+  #view-sentence .sentence-choice-grid,
+  #view-story .story-choice-grid {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    width: min(100%, 620px) !important;
+  }
+
+  #view-mirror .mirror-surface {
+    display: grid !important;
+    grid-template-columns: minmax(230px, 0.28fr) minmax(0, 0.72fr) !important;
+    grid-template-rows: 1fr !important;
+    align-items: stretch !important;
+    padding: clamp(18px, 3vmin, 34px) clamp(42px, 5vmin, 72px) !important;
+  }
+
+  #view-mirror .mirror-pofi-card {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+    min-height: 0 !important;
+  }
+
+  #view-mirror .mirror-pofi-card .surface-pofi.large {
+    width: min(26vw, 320px) !important;
+  }
+
+  #view-mirror .mirror-camera-card {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    align-self: stretch !important;
+    width: min(100%, 760px) !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+}
+
+/* v1.0.22: Pofi-first learning stages and protected sleep exit. */
+.app-shell[data-active-view="sleep"][data-sleep-running="true"] .child-home-button {
+  display: none !important;
+}
+
+#view-sentence .sentence-mode-switch {
+  position: absolute !important;
+  z-index: 20 !important;
+  top: clamp(12px, 2vmin, 22px) !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+}
+
+#view-story .story-scene-image-wrap,
+#view-story .story-scene-image {
+  width: 96% !important;
+  height: 96% !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+
+#view-story .story-object-row {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+#view-story .story-object {
+  width: min(42%, 220px) !important;
+  height: min(72%, 220px) !important;
+}
+
+#view-story .story-object .touch-toy,
+#view-story .story-object img {
+  width: 96% !important;
+  max-height: 96% !important;
+}
+
+@media (min-width: 561px) and (orientation: portrait) {
+  #view-sentence .sentence-surface {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: minmax(0, 0.48fr) minmax(0, 0.52fr) !important;
+    padding: clamp(58px, 7dvh, 82px) clamp(16px, 3vw, 30px) clamp(14px, 2dvh, 26px) !important;
+  }
+
+  #view-sentence .sentence-pofi-button {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: min(88vw, 680px) !important;
+    min-width: 0 !important;
+    max-height: 100% !important;
+  }
+
+  #view-sentence .sentence-card {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    align-self: center !important;
+    width: min(82vw, 620px) !important;
+    min-height: min(42dvh, 520px) !important;
+    max-height: 100% !important;
+  }
+
+  #view-sentence .sentence-surface[data-sentence-mode="board"] .sentence-pofi-button {
+    grid-row: 1 !important;
+    width: min(72vw, 560px) !important;
+  }
+
+  #view-sentence .sentence-choice-grid,
+  #view-sentence .sentence-surface[data-sentence-mode="board"] .sentence-choice-grid {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    align-self: stretch !important;
+    width: min(94vw, 760px) !important;
+    max-height: 100% !important;
+  }
+
+  #view-story .story-surface {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: minmax(0, 0.42fr) minmax(0, 0.45fr) minmax(72px, 0.13fr) !important;
+    padding: clamp(18px, 2.5dvh, 34px) clamp(16px, 3vw, 30px) clamp(14px, 2dvh, 26px) !important;
+  }
+
+  #view-story .story-pofi-button {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: min(94vw, 720px) !important;
+    min-width: 0 !important;
+    max-height: 100% !important;
+  }
+
+  #view-story .story-scene {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    align-self: stretch !important;
+    width: min(82vw, 620px) !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    padding: clamp(10px, 2vmin, 20px) !important;
+  }
+
+  #view-story .story-choice-grid {
+    grid-column: 1 !important;
+    grid-row: 3 !important;
+    align-self: center !important;
+  }
+
+  #view-mirror .mirror-surface {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: minmax(0, 0.48fr) minmax(0, 0.52fr) !important;
+    padding: clamp(14px, 2dvh, 28px) clamp(12px, 2.5vw, 24px) !important;
+  }
+
+  #view-mirror .mirror-pofi-card {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: min(96vw, 760px) !important;
+    height: 100% !important;
+  }
+
+  #view-mirror .mirror-pofi-card .surface-pofi.large {
+    width: min(92vw, 720px) !important;
+    max-height: 100% !important;
+  }
+
+  #view-mirror .mirror-camera-card {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+  }
+}
+
+@media (min-width: 561px) and (orientation: landscape) {
+  #view-sentence .sentence-surface,
+  #view-story .story-surface,
+  #view-mirror .mirror-surface {
+    display: grid !important;
+    grid-template-columns: minmax(0, 0.48fr) minmax(0, 0.52fr) !important;
+    grid-template-rows: 1fr !important;
+    padding: clamp(16px, 2.5vmin, 30px) clamp(22px, 3.5vmin, 42px) !important;
+  }
+
+  #view-sentence .sentence-pofi-button,
+  #view-story .story-pofi-button {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: min(46vw, 620px) !important;
+    min-width: 0 !important;
+    max-height: 92dvh !important;
+  }
+
+  #view-sentence .sentence-card,
+  #view-story .story-scene {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    width: min(46vw, 620px) !important;
+    min-height: min(74dvh, 620px) !important;
+    max-height: 88dvh !important;
+  }
+
+  #view-sentence .sentence-choice-grid,
+  #view-sentence .sentence-surface[data-sentence-mode="board"] .sentence-choice-grid,
+  #view-story .story-choice-grid {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    align-self: end !important;
+    width: min(48vw, 700px) !important;
+    max-height: 88dvh !important;
+  }
+
+  #view-mirror .mirror-pofi-card {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: min(46vw, 620px) !important;
+    height: 100% !important;
+  }
+
+  #view-mirror .mirror-pofi-card .surface-pofi.large {
+    width: min(44vw, 600px) !important;
+    max-height: 92dvh !important;
+  }
+
+  #view-mirror .mirror-camera-card {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+  }
+
+  #view-story .story-surface {
+    grid-template-rows: minmax(0, 0.78fr) minmax(90px, 0.22fr) !important;
+  }
+
+  #view-story .story-pofi-button {
+    grid-row: 1 / 3 !important;
+  }
+
+  #view-story .story-scene {
+    grid-row: 1 !important;
+    min-height: min(68dvh, 560px) !important;
+  }
+
+  #view-story .story-choice-grid {
+    grid-row: 2 !important;
+    align-self: center !important;
+  }
+}
+
+/* v1.0.26: stable first frame, active guides and livelier Pofi worlds. */
+#view-touch .touch-pofi-button,
+#view-touch [data-touch-state] .touch-pofi-button,
+#view-touch .touch-speaking .touch-pofi-button {
+  position: relative !important;
+  inset: auto !important;
+  left: auto !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  max-width: calc(100vw - 32px) !important;
+  margin-inline: auto !important;
+  translate: none !important;
+  transform: none !important;
+  animation-name: none !important;
+}
+
+#view-touch .touch-card-grid,
+#view-touch .touch-card,
+#view-touch .touch-card-image-wrap {
+  min-height: 0 !important;
+  transition: none !important;
+}
+
+#view-touch .touch-card {
+  grid-template-rows: minmax(0, 1fr) auto auto !important;
+  height: 100% !important;
+  transform: none !important;
+}
+
+#view-touch .touch-card-grid {
+  grid-auto-rows: minmax(0, 1fr) !important;
+  overflow: hidden !important;
+}
+
+#view-match .match-target,
+#view-match .match-choice {
+  padding: clamp(6px, 1vmin, 12px) !important;
+  background: rgba(255, 253, 250, 0.9) !important;
+  border: 2px solid rgba(255, 255, 255, 0.94) !important;
+  border-radius: clamp(18px, 2.5vmin, 30px) !important;
+  box-shadow: 0 16px 34px rgba(76, 60, 96, 0.11) !important;
+}
+
+#view-match .match-choice-grid {
+  gap: clamp(14px, 2vmin, 24px) !important;
+  padding: clamp(8px, 1.2vmin, 14px) !important;
+}
+
+#view-story .story-object-row {
+  position: relative !important;
+  display: block !important;
+  overflow: hidden !important;
+}
+
+#view-story .story-scene-image-wrap {
+  position: absolute !important;
+  inset: 4% !important;
+  width: 92% !important;
+  height: 92% !important;
+}
+
+#view-story .story-scene-image {
+  object-fit: contain !important;
+  object-position: center bottom !important;
+}
+
+#view-story .story-object {
+  position: absolute !important;
+  z-index: 3 !important;
+  left: 50% !important;
+  bottom: 3% !important;
+  width: min(54%, 300px) !important;
+  height: min(78%, 320px) !important;
+  transform: translateX(-50%) !important;
+}
+
+#view-story .story-speaking .pofi-mouth,
+#view-sentence .sentence-surface:not([data-sentence-mode="board"]) .pofi-mouth,
+#view-mirror [data-mirror-state="attention"] .pofi-mouth,
+#view-mirror [data-mirror-state="exercise"] .pofi-mouth,
+#view-mirror [data-mirror-state="success"] .pofi-mouth,
+#view-peekaboo [data-peekaboo-state="reveal"] .pofi-mouth {
+  animation: pofi-mouth-speaking 260ms ease-in-out infinite !important;
+}
+
+.app-shell[data-active-view="sleep"] .sleep-toggle {
+  top: clamp(18px, 2.5vw, 34px) !important;
+  right: 50% !important;
+  transform: translateX(50%) !important;
+}
+
+.app-shell[data-active-view="sleep"] .child-home-button {
+  top: clamp(18px, 2.5vw, 34px) !important;
+}
+
+.sleep-pofi-wrap {
+  width: min(76vw, 760px) !important;
+  min-width: 320px !important;
+  --sleep-pofi-width: 84% !important;
+  --sleep-floating-scale: 1.16 !important;
+  animation: sleep-pofi-near-far 30s ease-in-out infinite !important;
+}
+
+@keyframes sleep-pofi-near-far {
+  0%, 100% { transform: translate3d(-28vw, 10vh, 0) rotate(-1deg) scale(0.52); }
+  28% { transform: translate3d(-8vw, -10vh, 0) rotate(0.5deg) scale(0.88); }
+  52% { transform: translate3d(-2vw, -2vh, 0) rotate(0deg) scale(1.22); }
+  76% { transform: translate3d(14vw, 8vh, 0) rotate(0.8deg) scale(0.72); }
+}
+
+.peekaboo-surface .surface-pofi,
+.peekaboo-surface .surface-pofi.large {
+  width: min(82vw, 82dvh, 820px) !important;
+  --peekaboo-drift-x: clamp(150px, 30vw, 430px) !important;
+  --peekaboo-drift-y: clamp(90px, 22dvh, 220px) !important;
+  animation: peekaboo-pofi-playfield 13s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite !important;
+}
+
+@keyframes peekaboo-pofi-playfield {
+  0%, 100% { transform: translate3d(-34vw, 12vh, 0) rotate(-4deg) scale(0.72); }
+  16% { transform: translate3d(-10vw, -18vh, 20px) rotate(3deg) scale(1.02); }
+  34% { transform: translate3d(28vw, -8vh, 45px) rotate(5deg) scale(0.82); }
+  52% { transform: translate3d(20vw, 18vh, 15px) rotate(-3deg) scale(1.1); }
+  70% { transform: translate3d(-18vw, 14vh, 60px) rotate(4deg) scale(0.9); }
+  86% { transform: translate3d(-30vw, -10vh, 25px) rotate(-5deg) scale(1.04); }
+}
+
+/* v1.0.27: real Huawei tablet Touch layout, stable image-first cards. */
+#view-touch .touch-card {
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+#view-touch .touch-card.touch-card-ready {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+#view-touch .touch-card-label,
+#view-touch .touch-card-variation,
+#view-touch .touch-card-dots {
+  display: none !important;
+}
+
+#view-touch .touch-card-word {
+  display: block !important;
+  flex: none !important;
+  font-size: clamp(1.45rem, 3.2vmin, 2.35rem) !important;
+  line-height: 1 !important;
+  text-align: center !important;
+}
+
+#view-touch .touch-card-image-wrap {
+  display: grid !important;
+  place-items: center !important;
+  overflow: hidden !important;
+}
+
+#view-touch .touch-card-image-wrap img {
+  display: block !important;
+  width: 94% !important;
+  height: 94% !important;
+  object-fit: contain !important;
+}
+
+@media (min-width: 561px) and (orientation: portrait) {
+  #view-touch .touch-ritual-surface {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: minmax(0, 48fr) minmax(0, 52fr) !important;
+    gap: 14px !important;
+    padding: 12px 20px 14px !important;
+    overflow: hidden !important;
+  }
+
+  #view-touch .touch-pofi-button,
+  #view-touch [data-touch-state] .touch-pofi-button,
+  #view-touch .touch-speaking .touch-pofi-button {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    place-self: center !important;
+    width: min(76vw, 580px) !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    overflow: visible !important;
+  }
+
+  #view-touch .touch-pofi-button .surface-pofi.large {
+    width: min(72vw, 70dvh, 560px) !important;
+    height: auto !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    aspect-ratio: 16 / 9 !important;
+  }
+
+  #view-touch .touch-card-grid {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+    gap: clamp(14px, 2.5vw, 24px) !important;
+    width: min(92vw, 760px) !important;
+    height: 100% !important;
+    padding: 0 !important;
+    place-self: stretch center !important;
+  }
+
+  #view-touch .touch-card {
+    grid-template-rows: minmax(0, 1fr) auto !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    max-height: none !important;
+    padding: clamp(10px, 1.8vmin, 18px) !important;
+  }
+}
+
+@media (min-width: 561px) and (orientation: landscape) {
+  #view-touch .touch-ritual-surface {
+    display: grid !important;
+    grid-template-columns: minmax(0, 42fr) minmax(0, 58fr) !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+    gap: clamp(18px, 2.4vw, 34px) !important;
+    padding: clamp(14px, 2vmin, 24px) clamp(18px, 2.5vw, 34px) !important;
+    overflow: hidden !important;
+  }
+
+  #view-touch .touch-pofi-button,
+  #view-touch [data-touch-state] .touch-pofi-button,
+  #view-touch .touch-speaking .touch-pofi-button {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    place-self: center !important;
+    width: min(39vw, 78dvh, 540px) !important;
+    height: min(86dvh, 620px) !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    overflow: visible !important;
+  }
+
+  #view-touch .touch-pofi-button .surface-pofi.large {
+    width: min(37vw, 72dvh, 500px) !important;
+    height: auto !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    aspect-ratio: 16 / 9 !important;
+  }
+
+  #view-touch .touch-card-grid {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+    gap: clamp(14px, 1.8vw, 26px) !important;
+    width: 100% !important;
+    height: min(82dvh, 640px) !important;
+    padding: 0 !important;
+    place-self: center stretch !important;
+  }
+
+  #view-touch .touch-card {
+    grid-template-rows: minmax(0, 1fr) auto !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    max-height: none !important;
+    padding: clamp(10px, 1.6vmin, 18px) !important;
+  }
+}
+
+/* v1.0.16: keep the animated Touch guide inside short landscape tablet viewports. */
+@media (min-width: 561px) and (orientation: landscape) {
+  #view-touch .touch-pofi-button,
+  #view-touch [data-touch-state] .touch-pofi-button,
+  #view-touch .touch-speaking .touch-pofi-button {
+    position: relative !important;
+    inset: auto !important;
+    align-self: center !important;
+    justify-self: center !important;
+    width: min(28vw, 42dvh, 320px) !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    max-height: calc(100dvh - 48px) !important;
+    transform: none !important;
+    animation: none !important;
+  }
+
+  #view-touch .touch-pofi-button .surface-pofi.large {
+    width: 100% !important;
+    max-height: calc(100dvh - 48px) !important;
+  }
+}
+
+/* v1.0.23: full tablet learning stages and scannable Parent analytics. */
+.progress-visual {
+  display: block !important;
+  width: 100%;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(124, 92, 217, 0.12);
+}
+
+.progress-visual i {
+  display: block;
+  width: var(--progress, 0%);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #8f73dc, #55bfa5);
+}
+
+#view-story .story-speaking .pofi-mouth {
+  animation: pofi-mouth-speaking 260ms ease-in-out infinite !important;
+}
+
+#view-sentence .sentence-surface[data-sentence-mode="board"] .sentence-choice-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  grid-auto-rows: minmax(120px, 1fr) !important;
+  overflow-y: auto !important;
+  padding: 8px !important;
+}
+
+#view-sentence .sentence-board-card {
+  display: grid !important;
+  min-width: 0 !important;
+  min-height: 120px !important;
+}
+
+#view-sentence .sentence-board-image {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+@media (min-width: 561px) and (orientation: portrait) {
+  #view-touch .touch-ritual-surface,
+  #view-match .match-surface {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: minmax(0, 42fr) minmax(0, 58fr) !important;
+    gap: clamp(28px, 3dvh, 36px) !important;
+    padding: clamp(12px, 2dvh, 24px) clamp(14px, 2.5vw, 26px) !important;
+  }
+
+  #view-match .match-surface {
+    grid-template-rows: minmax(0, 30fr) minmax(110px, 18fr) minmax(0, 52fr) !important;
+  }
+
+  #view-touch .touch-pofi-button,
+  #view-match .match-pofi-button {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: min(82vw, 620px) !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    place-self: center !important;
+  }
+
+  #view-match .match-pofi-button {
+    position: relative !important;
+    inset: auto !important;
+    transform: none !important;
+    max-height: 100% !important;
+  }
+
+  #view-touch .touch-card-grid {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    width: min(94vw, 760px) !important;
+    height: 100% !important;
+    place-self: stretch center !important;
+  }
+
+  #view-match .match-target {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    align-self: center !important;
+    z-index: 4 !important;
+    width: min(34vw, 260px) !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+
+  #view-match .match-choice-grid {
+    grid-column: 1 !important;
+    grid-row: 3 !important;
+    width: min(94vw, 760px) !important;
+    height: 100% !important;
+    place-self: stretch center !important;
+    max-height: 100% !important;
+  }
+}
+
+@media (min-width: 561px) and (orientation: landscape) {
+  #view-touch .touch-ritual-surface,
+  #view-match .match-surface {
+    display: grid !important;
+    grid-template-columns: minmax(0, 42fr) minmax(0, 58fr) !important;
+    grid-template-rows: 1fr !important;
+    gap: clamp(12px, 2vw, 28px) !important;
+    padding: clamp(12px, 2.5vmin, 26px) !important;
+  }
+
+  #view-touch .touch-pofi-button,
+  #view-match .match-pofi-button {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: min(38vw, 78dvh, 520px) !important;
+    height: 100% !important;
+    max-height: 92dvh !important;
+    place-self: center !important;
+  }
+
+  #view-touch .touch-card-grid,
+  #view-match .match-choice-grid {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+    height: 100% !important;
+    place-self: stretch !important;
+  }
+
+  #view-match .match-target {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    align-self: end !important;
+    justify-self: center !important;
+    z-index: 4 !important;
+    width: min(18vw, 220px) !important;
+  }
+}
+
+@media (max-width: 980px) {
+  .parent-hero { align-items: start !important; }
+  .parent-hero-actions { width: 100%; display: grid !important; grid-template-columns: 1fr 1fr; }
+  .analysis-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .parent-today-summary,
+  .parent-insight,
+  .parent-guidance,
+  .parent-quick-actions { margin-top: 14px !important; }
+  .parent-work-summary span { max-width: 56ch; }
+}
+
+/* v1.0.24: communication board and balanced tablet card stages. */
+#view-sentence .sentence-surface[data-sentence-mode="board"] {
+  display: block !important;
+  padding: clamp(70px, 9dvh, 96px) clamp(12px, 2vw, 24px) clamp(12px, 2dvh, 24px) !important;
+}
+
+#view-sentence .sentence-surface[data-sentence-mode="board"] .sentence-pofi-button,
+#view-sentence .sentence-surface[data-sentence-mode="board"] .sentence-card,
+#view-sentence .sentence-surface[data-sentence-mode="board"] .sentence-context {
+  display: none !important;
+}
+
+#view-sentence .sentence-surface[data-sentence-mode="board"] .sentence-choice-grid {
+  position: static !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  grid-template-rows: repeat(3, minmax(0, 1fr)) !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  gap: clamp(8px, 1.4vmin, 16px) !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  transform: none !important;
+}
+
+#view-sentence .sentence-board-card {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  aspect-ratio: auto !important;
+  padding: 0 !important;
+  border-radius: clamp(16px, 2.5vmin, 28px) !important;
+}
+
+#view-sentence .sentence-board-image {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  border-radius: inherit !important;
+  transform: scale(1.04);
+}
+
+#view-touch .touch-card,
+#view-match .match-target,
+#view-match .match-choice {
+  overflow: hidden !important;
+}
+
+#view-touch .touch-card-image-wrap,
+#view-match .match-model-visual,
+#view-match .match-choice-visual {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+}
+
+#view-touch .touch-card-image-wrap img,
+#view-touch .touch-card-image-wrap .touch-toy,
+#view-match .match-model-visual img,
+#view-match .match-model-visual .touch-toy,
+#view-match .match-choice-visual img,
+#view-match .match-choice-visual .touch-toy {
+  width: 92% !important;
+  height: 92% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: contain !important;
+}
+
+#view-story .story-scene-image-wrap {
+  align-self: end !important;
+  height: 86% !important;
+}
+
+#view-story .story-scene-image {
+  object-fit: cover !important;
+  object-position: center bottom !important;
+}
+
+#view-story .story-object {
+  align-self: end !important;
+  height: 82% !important;
+  z-index: 2 !important;
+}
+
+@media (min-width: 561px) and (orientation: portrait) {
+  #view-touch .touch-ritual-surface {
+    grid-template-rows: minmax(0, 50fr) minmax(0, 50fr) !important;
+    gap: 24px !important;
+    padding-bottom: 8px !important;
+  }
+
+  #view-touch .touch-pofi-button {
+    width: min(88vw, 680px) !important;
+    overflow: visible !important;
+  }
+
+  #view-touch .touch-card-grid {
+    align-self: end !important;
+    height: 100% !important;
+    padding-bottom: 0 !important;
+  }
+
+  #view-match .match-surface {
+    grid-template-rows: minmax(0, 36fr) minmax(0, 25fr) minmax(0, 39fr) !important;
+    gap: 8px !important;
+  }
+
+  #view-match .match-target {
+    width: min(42vw, 300px) !important;
+    height: 100% !important;
+    place-self: center !important;
+  }
+
+  #view-match .match-choice-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    align-self: end !important;
+  }
+
+  #view-match .match-choice {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+}
+
+@media (min-width: 561px) and (orientation: landscape) {
+  #view-sentence .sentence-surface[data-sentence-mode="board"] .sentence-choice-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  #view-touch .touch-ritual-surface {
+    grid-template-columns: minmax(0, 48fr) minmax(0, 52fr) !important;
+  }
+
+  #view-match .match-surface {
+    grid-template-columns: minmax(0, 48fr) minmax(0, 52fr) !important;
+    grid-template-rows: minmax(0, 62fr) minmax(0, 38fr) !important;
+  }
+
+  #view-match .match-pofi-button {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+
+  #view-match .match-target {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    width: min(20vw, 250px) !important;
+    height: 100% !important;
+    place-self: center !important;
+  }
+
+  #view-match .match-choice-grid {
+    grid-column: 2 !important;
+    grid-row: 1 / 3 !important;
+    align-self: end !important;
+  }
+}
+
+/* v1.0.27 final tablet override */
+#view-touch .touch-card { visibility: hidden !important; opacity: 0 !important; transition: none !important; }
+#view-touch .touch-card.touch-card-ready { visibility: visible !important; opacity: 1 !important; }
+#view-touch .touch-card-label, #view-touch .touch-card-variation, #view-touch .touch-card-dots { display: none !important; }
+#view-touch .touch-card-image-wrap { display: grid !important; place-items: center !important; min-height: 0 !important; overflow: hidden !important; }
+#view-touch .touch-card-image-wrap img { width: 92% !important; height: 92% !important; object-fit: contain !important; }
+#view-touch .touch-card-word { display: block !important; font-size: clamp(1.4rem, 3vmin, 2.25rem) !important; line-height: 1 !important; text-align: center !important; }
+
+@media (min-width: 561px) and (orientation: portrait) {
+  #view-touch .touch-ritual-surface { display: grid !important; grid-template-columns: 1fr !important; grid-template-rows: minmax(0, 48fr) minmax(0, 52fr) !important; gap: 14px !important; padding: 12px 20px 14px !important; overflow: hidden !important; }
+  #view-touch .touch-pofi-button, #view-touch [data-touch-state] .touch-pofi-button, #view-touch .touch-speaking .touch-pofi-button { position: relative !important; inset: auto !important; grid-column: 1 !important; grid-row: 1 !important; place-self: center !important; width: min(76vw, 580px) !important; height: 100% !important; max-width: 100% !important; max-height: 100% !important; overflow: hidden !important; translate: none !important; transform: none !important; animation: none !important; }
+  #view-touch .touch-pofi-button .surface-pofi.large { width: min(72vw, 70dvh, 560px) !important; height: auto !important; max-width: 100% !important; max-height: 100% !important; aspect-ratio: 16 / 9 !important; }
+  #view-touch .touch-card-grid { grid-column: 1 !important; grid-row: 2 !important; display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; grid-template-rows: minmax(0, 1fr) !important; gap: clamp(14px, 2.5vw, 24px) !important; width: min(92vw, 760px) !important; height: 100% !important; padding: 0 !important; place-self: stretch center !important; overflow: hidden !important; }
+  #view-touch .touch-card { grid-template-rows: minmax(0, 1fr) auto !important; width: 100% !important; height: 100% !important; max-width: none !important; max-height: none !important; padding: clamp(10px, 1.8vmin, 18px) !important; transform: none !important; }
+}
+
+@media (min-width: 561px) and (orientation: landscape) {
+  #view-touch .touch-ritual-surface { display: grid !important; grid-template-columns: minmax(0, 42fr) minmax(0, 58fr) !important; grid-template-rows: minmax(0, 1fr) !important; gap: clamp(18px, 2.4vw, 34px) !important; padding: clamp(14px, 2vmin, 24px) clamp(18px, 2.5vw, 34px) !important; overflow: hidden !important; }
+  #view-touch .touch-pofi-button, #view-touch [data-touch-state] .touch-pofi-button, #view-touch .touch-speaking .touch-pofi-button { position: relative !important; inset: auto !important; grid-column: 1 !important; grid-row: 1 !important; place-self: center !important; width: 100% !important; height: min(86dvh, 620px) !important; max-width: 100% !important; max-height: 100% !important; overflow: hidden !important; translate: none !important; transform: none !important; animation: none !important; }
+  #view-touch .touch-pofi-button .surface-pofi.large { width: min(36vw, 68dvh, 480px) !important; height: auto !important; max-width: 94% !important; max-height: 94% !important; aspect-ratio: 16 / 9 !important; }
+  #view-touch .touch-card-grid { grid-column: 2 !important; grid-row: 1 !important; display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; grid-template-rows: minmax(0, 1fr) !important; gap: clamp(14px, 1.8vw, 26px) !important; width: 100% !important; height: min(82dvh, 640px) !important; padding: 0 !important; place-self: center stretch !important; overflow: hidden !important; }
+  #view-touch .touch-card { grid-template-rows: minmax(0, 1fr) auto !important; width: 100% !important; height: 100% !important; max-width: none !important; max-height: none !important; padding: clamp(10px, 1.6vmin, 18px) !important; transform: none !important; }
+}
+
+/* v1.0.29 final device contract */
+.app-shell[data-active-view="home"] #view-home { grid-template-rows: 1fr !important; }
+.app-shell[data-active-view="home"] .bonus-strip { display: none !important; }
+.app-shell[data-active-view="home"] .mode-grid { overflow: hidden !important; }
+.app-shell[data-active-view="home"] .mode-card.peekaboo .mode-icon { object-fit: contain !important; transform: scale(1.18); }
+.app-shell[data-active-view="home"] .home-prompt { display: none !important; }
+
+@media (min-width: 561px) and (orientation: portrait) {
+  .app-shell[data-active-view="home"] .mode-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(4, minmax(0, 1fr)) !important;
+    gap: clamp(12px, 2dvh, 24px) clamp(20px, 4vw, 46px) !important;
+    padding: clamp(20px, 3dvh, 36px) clamp(42px, 8vw, 82px) !important;
+  }
+  .app-shell[data-active-view="home"] .mode-card { position: relative !important; inset: auto !important; width: 100% !important; height: 100% !important; max-width: 290px !important; max-height: 290px !important; place-self: center !important; transform: none !important; }
+  .app-shell[data-active-view="home"] .mode-card.peekaboo { grid-column: 1 / 3 !important; width: min(44vw, 300px) !important; }
+
+  #view-match .match-surface { display: grid !important; grid-template-columns: 1fr !important; grid-template-rows: minmax(0, 31fr) minmax(0, 28fr) minmax(0, 41fr) !important; gap: 10px !important; padding: 12px 18px 16px !important; overflow: hidden !important; }
+  #view-match .match-pofi-button { position: relative !important; inset: auto !important; grid-column: 1 !important; grid-row: 1 !important; place-self: center !important; width: min(72vw, 560px) !important; height: 100% !important; max-height: 100% !important; overflow: hidden !important; transform: none !important; animation: none !important; }
+  #view-match .match-pofi-button .surface-pofi.large { width: min(68vw, 52dvh, 520px) !important; height: auto !important; max-width: 100% !important; max-height: 100% !important; }
+  #view-match .match-target { position: relative !important; inset: auto !important; grid-column: 1 !important; grid-row: 2 !important; place-self: center !important; width: min(42vw, 310px) !important; height: 100% !important; max-height: 100% !important; transform: none !important; }
+  #view-match .match-choice-grid { grid-column: 1 !important; grid-row: 3 !important; display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; grid-template-rows: minmax(0, 1fr) !important; gap: 18px !important; width: min(88vw, 700px) !important; height: 100% !important; padding: 0 !important; place-self: stretch center !important; }
+  #view-match .match-choice { width: 100% !important; height: 100% !important; max-width: none !important; max-height: none !important; }
+}
+
+@media (min-width: 561px) and (orientation: landscape) {
+  .app-shell[data-active-view="home"] .mode-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+    gap: clamp(12px, 2.5vmin, 24px) clamp(18px, 2.5vw, 38px) !important;
+    padding: clamp(18px, 3vmin, 32px) clamp(44px, 6vw, 90px) !important;
+  }
+  .app-shell[data-active-view="home"] .mode-card { position: relative !important; inset: auto !important; width: 100% !important; height: 100% !important; max-width: 240px !important; max-height: 240px !important; place-self: center !important; transform: none !important; }
+
+  #view-touch .touch-ritual-surface { display: grid !important; grid-template-columns: 1fr !important; grid-template-rows: minmax(0, 43fr) minmax(0, 57fr) !important; gap: 10px !important; padding: 10px 24px 14px !important; overflow: hidden !important; }
+  #view-touch .touch-pofi-button, #view-touch [data-touch-state] .touch-pofi-button, #view-touch .touch-speaking .touch-pofi-button { grid-column: 1 !important; grid-row: 1 !important; place-self: center !important; width: min(54vw, 72dvh, 620px) !important; height: 100% !important; max-width: 100% !important; max-height: 100% !important; overflow: hidden !important; }
+  #view-touch .touch-pofi-button .surface-pofi.large { width: min(50vw, 66dvh, 580px) !important; height: auto !important; max-width: 100% !important; max-height: 100% !important; }
+  #view-touch .touch-card-grid { grid-column: 1 !important; grid-row: 2 !important; display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; grid-template-rows: minmax(0, 1fr) !important; gap: clamp(18px, 2.5vw, 34px) !important; width: min(80vw, 900px) !important; height: 100% !important; padding: 0 !important; place-self: stretch center !important; }
+  #view-touch .touch-card { width: 100% !important; height: 100% !important; max-width: none !important; max-height: none !important; }
+
+  #view-match .match-surface { display: grid !important; grid-template-columns: minmax(0, 42fr) minmax(0, 58fr) !important; grid-template-rows: minmax(0, 44fr) minmax(0, 56fr) !important; gap: 12px 24px !important; padding: 14px 24px !important; overflow: hidden !important; }
+  #view-match .match-pofi-button { position: relative !important; inset: auto !important; grid-column: 1 !important; grid-row: 1 / 3 !important; place-self: center !important; width: 100% !important; height: 100% !important; max-width: 100% !important; max-height: 100% !important; overflow: hidden !important; transform: none !important; animation: none !important; }
+  #view-match .match-pofi-button .surface-pofi.large { width: min(38vw, 68dvh, 500px) !important; height: auto !important; max-width: 96% !important; max-height: 96% !important; }
+  #view-match .match-target { position: relative !important; inset: auto !important; grid-column: 2 !important; grid-row: 1 !important; place-self: center !important; width: min(24vw, 300px) !important; height: 100% !important; max-height: 100% !important; transform: none !important; }
+  #view-match .match-choice-grid { grid-column: 2 !important; grid-row: 2 !important; display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; grid-template-rows: minmax(0, 1fr) !important; gap: 18px !important; width: 100% !important; height: 100% !important; padding: 0 !important; place-self: stretch !important; }
+  #view-match .match-choice { width: 100% !important; height: 100% !important; max-width: none !important; max-height: none !important; }
+
+  #view-story .story-surface { display: grid !important; grid-template-columns: minmax(0, 48fr) minmax(0, 52fr) !important; grid-template-rows: minmax(0, 78fr) minmax(0, 22fr) !important; gap: 12px 22px !important; padding: 16px 26px !important; }
+  #view-story .story-pofi-button { grid-column: 1 !important; grid-row: 1 / 3 !important; place-self: center !important; width: min(46vw, 620px) !important; height: 100% !important; max-height: 100% !important; }
+  #view-story .story-scene { grid-column: 2 !important; grid-row: 1 !important; place-self: stretch !important; width: 100% !important; height: 100% !important; min-height: 0 !important; max-height: none !important; }
+  #view-story .story-choice-grid { grid-column: 2 !important; grid-row: 2 !important; place-self: center !important; width: 100% !important; }
+}
+
+.sleep-pofi-wrap { left: 50% !important; top: 50% !important; width: min(68vw, 680px) !important; min-width: 0 !important; --sleep-pofi-width: 78% !important; animation: sleep-pofi-contained 28s ease-in-out infinite !important; }
+@keyframes sleep-pofi-contained {
+  0%, 100% { transform: translate3d(-50%, -50%, 0) scale(0.62); }
+  28% { transform: translate3d(-62%, -62%, 0) scale(0.86); }
+  52% { transform: translate3d(-48%, -48%, 0) scale(1.08); }
+  76% { transform: translate3d(-36%, -40%, 0) scale(0.76); }
+}
+
+.app-shell[data-active-view="home"] .mode-card.peekaboo .mode-art {
+  display: grid !important;
+  place-items: center !important;
+  width: min(14vw, 20dvh, 190px) !important;
+  aspect-ratio: 1 !important;
+  overflow: hidden !important;
+  background: radial-gradient(circle at 50% 42%, #fff8c8 0 30%, #ffd66d 72%, #f7a93d 100%) !important;
+  border: 4px solid rgba(255, 255, 255, 0.92) !important;
+  border-radius: 50% !important;
+  box-shadow: 0 14px 28px rgba(169, 105, 36, 0.18) !important;
+}
+.app-shell[data-active-view="home"] .mode-card.peekaboo .mode-icon {
+  width: 145% !important;
+  height: 145% !important;
+  object-fit: contain !important;
+  transform: none !important;
+}
+
+/* v1.0.32 final child-stage contract */
+.pofi-avatar .pofi-face-team {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: block;
+  transform-origin: 50% 50%;
+  pointer-events: none;
+}
+
+.pofi-avatar .pofi-face-team > .pofi-face {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  transform: none !important;
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pofi-avatar .pofi-face-team {
+    animation: pofi-face-follow calc(var(--pofi-life-duration) * 1.15) ease-in-out infinite;
+  }
+}
+
+.pofi-avatar.pofi-expression-change .pofi-face-team {
+  animation: pofi-expression-pop 180ms cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+}
+
+#view-touch .touch-speaking .pofi-face-team,
+#view-sentence .sentence-speaking .pofi-face-team,
+#view-story .story-speaking .pofi-face-team,
+#view-mirror .mirror-speaking .pofi-face-team,
+#view-peekaboo [data-peekaboo-state="reveal"] .pofi-face-team {
+  animation: pofi-speaking-team 520ms ease-in-out infinite !important;
+}
+
+#view-sentence .sentence-surface:not(.sentence-speaking) .pofi-mouth,
+#view-mirror .mirror-surface:not(.mirror-speaking) .pofi-mouth,
+#view-story .story-surface:not(.story-speaking) .pofi-mouth {
+  animation: none !important;
+}
+
+#view-sentence .sentence-speaking .pofi-mouth,
+#view-mirror .mirror-speaking .pofi-mouth,
+#view-story .story-speaking .pofi-mouth {
+  animation: pofi-mouth-speaking 260ms ease-in-out infinite !important;
+}
+
+@keyframes pofi-speaking-team {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-0.7%) scale(1.012); }
+}
+
+.app-shell[data-active-view="home"] #view-home {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  overflow: hidden !important;
+  min-height: 0 !important;
+}
+
+.app-shell[data-active-view="home"] .mode-grid {
+  display: grid !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+.app-shell[data-active-view="home"] .mode-card {
+  position: relative !important;
+  inset: auto !important;
+  place-self: stretch !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  transform: none !important;
+}
+
+.app-shell[data-active-view="home"] .mode-card .mode-art {
+  width: auto !important;
+  height: min(82%, 260px) !important;
+  max-width: 100% !important;
+  aspect-ratio: 1 !important;
+}
+
+.app-shell[data-active-view="home"] .home-ceee-band {
+  position: relative !important;
+  inset: auto !important;
+  z-index: 1 !important;
+  display: grid !important;
+  grid-template-columns: minmax(92px, 34%) minmax(0, 1fr) !important;
+  align-items: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 4px clamp(18px, 4vw, 44px) !important;
+  border: 3px solid rgba(255, 255, 255, 0.92) !important;
+  border-radius: clamp(24px, 4vmin, 42px) !important;
+  background: linear-gradient(105deg, #fff4bd 0%, #ffd36f 58%, #ffb44f 100%) !important;
+  box-shadow: 0 12px 26px rgba(169, 105, 36, 0.18) !important;
+  overflow: hidden !important;
+  color: #713c15 !important;
+  text-align: left !important;
+}
+
+.home-ceee-pofi {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.home-ceee-pofi img {
+  width: min(155%, 260px);
+  height: min(155%, 220px);
+  object-fit: contain;
+}
+
+.home-ceee-copy {
+  display: grid;
+  gap: 2px;
+  align-content: center;
+}
+
+.home-ceee-copy strong {
+  font-size: clamp(1.9rem, 5vmin, 3.5rem);
+  line-height: 0.95;
+}
+
+.home-ceee-copy span {
+  font-size: clamp(0.95rem, 2.3vmin, 1.4rem);
+  font-weight: 800;
+}
+
+#view-touch .touch-ritual-surface,
+#view-sentence .sentence-surface,
+#view-story .story-surface,
+#view-mirror .mirror-surface {
+  min-width: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+#view-touch .touch-pofi-button,
+#view-touch .touch-card-grid,
+#view-sentence .sentence-pofi-button,
+#view-sentence .sentence-card,
+#view-sentence .sentence-choice-grid,
+#view-story .story-pofi-button,
+#view-story .story-scene,
+#view-story .story-choice-grid {
+  position: relative !important;
+  inset: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: none !important;
+  max-height: none !important;
+  transform: none !important;
+}
+
+#view-sentence .sentence-surface[data-sentence-mode="board"] .sentence-pofi-button,
+#view-sentence .sentence-surface[data-sentence-mode="board"] .sentence-card,
+#view-sentence .sentence-surface[data-sentence-mode="board"] .sentence-context {
+  display: none !important;
+}
+
+#view-sentence .sentence-surface[data-sentence-mode="board"] .sentence-choice-grid {
+  display: grid !important;
+  overflow: hidden !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.app-shell[data-active-view="sleep"] #view-sleep,
+.app-shell[data-active-view="sleep"] .sleep-surface,
+.app-shell[data-active-view="sleep"] .sleep-sky {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  clip-path: none !important;
+  overflow: hidden !important;
+  background-color: #101b61 !important;
+}
+
+.sleep-pofi-wrap {
+  left: 50% !important;
+  top: 52% !important;
+  width: min(72vw, 760px) !important;
+  max-width: 72vw !important;
+  --sleep-pofi-width: 86% !important;
+  animation: sleep-pofi-safe 30s ease-in-out infinite !important;
+}
+
+@keyframes sleep-pofi-safe {
+  0%, 100% { transform: translate3d(-50%, -50%, 0) scale(0.72); }
+  30% { transform: translate3d(-58%, -56%, 0) scale(0.92); }
+  55% { transform: translate3d(-50%, -50%, 0) scale(1.12); }
+  78% { transform: translate3d(-42%, -46%, 0) scale(0.84); }
+}
+
+@media (min-width: 561px) and (orientation: portrait) {
+  .app-shell[data-active-view="home"] #view-home {
+    grid-template-rows: minmax(0, 1fr) clamp(126px, 15dvh, 180px) !important;
+    gap: clamp(8px, 1.2dvh, 16px) !important;
+    padding: clamp(8px, 1.2dvh, 16px) 8px 0 !important;
+  }
+  .app-shell[data-active-view="home"] .mode-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(3, minmax(0, 1fr)) !important;
+    gap: clamp(6px, 1dvh, 14px) clamp(14px, 2.4vw, 28px) !important;
+    padding: 0 !important;
+  }
+  .app-shell[data-active-view="home"] .home-ceee-band { grid-row: 2 !important; }
+
+  #view-touch .touch-ritual-surface,
+  #view-sentence .sentence-surface,
+  #view-story .story-surface {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    padding: 10px 18px 14px !important;
+    gap: 24px !important;
+  }
+  #view-touch .touch-ritual-surface { grid-template-rows: minmax(0, 44fr) minmax(0, 56fr) !important; }
+  #view-touch .touch-pofi-button { grid-column: 1 !important; grid-row: 1 !important; width: min(78vw, 580px) !important; height: 100% !important; place-self: center !important; overflow: hidden !important; }
+  #view-touch .touch-card-grid { grid-column: 1 !important; grid-row: 2 !important; display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; grid-template-rows: minmax(0, 1fr) !important; width: min(92vw, 760px) !important; height: 100% !important; gap: 16px !important; place-self: stretch center !important; }
+
+  #view-sentence .sentence-surface,
+  #view-story .story-surface { grid-template-rows: minmax(0, 42fr) minmax(0, 58fr) !important; }
+  #view-sentence .sentence-pofi-button,
+  #view-story .story-pofi-button { grid-column: 1 !important; grid-row: 1 !important; width: min(82vw, 620px) !important; height: 100% !important; place-self: center !important; overflow: hidden !important; }
+  #view-sentence .sentence-card,
+  #view-story .story-scene { grid-column: 1 !important; grid-row: 2 !important; width: min(88vw, 700px) !important; height: 100% !important; place-self: stretch center !important; }
+  #view-story .story-choice-grid { grid-column: 1 !important; grid-row: 2 !important; align-self: end !important; width: min(82vw, 650px) !important; max-height: 34% !important; z-index: 5 !important; }
+  #view-sentence .sentence-mode-switch { top: 10px !important; }
+  #view-sentence .sentence-surface[data-sentence-mode="board"] { grid-template-rows: auto minmax(0, 1fr) !important; }
+  #view-sentence .sentence-surface[data-sentence-mode="board"] .sentence-choice-grid { grid-column: 1 !important; grid-row: 2 !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; grid-template-rows: repeat(3, minmax(0, 1fr)) !important; gap: 10px !important; }
+}
+
+@media (min-width: 561px) and (orientation: landscape) {
+  .app-shell[data-active-view="home"] #view-home {
+    grid-template-rows: minmax(0, 1fr) clamp(88px, 18dvh, 132px) !important;
+    gap: clamp(6px, 1.4dvh, 12px) !important;
+    padding: clamp(6px, 1.2dvh, 12px) clamp(14px, 2vw, 26px) !important;
+  }
+  .app-shell[data-active-view="home"] .mode-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+    gap: clamp(4px, 1dvh, 10px) clamp(18px, 3vw, 42px) !important;
+    padding: 0 clamp(34px, 6vw, 86px) !important;
+  }
+  .app-shell[data-active-view="home"] .mode-card .mode-art { height: min(78%, 190px) !important; }
+  .app-shell[data-active-view="home"] .home-ceee-band { grid-row: 2 !important; width: min(76vw, 900px) !important; place-self: center !important; grid-template-columns: minmax(120px, 28%) minmax(0, 1fr) !important; }
+
+  #view-touch .touch-ritual-surface {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: minmax(0, 42fr) minmax(0, 58fr) !important;
+    gap: 8px !important;
+    padding: 8px 24px 12px !important;
+  }
+  #view-touch .touch-pofi-button { grid-column: 1 !important; grid-row: 1 !important; width: min(54vw, 620px) !important; height: 100% !important; place-self: center !important; overflow: hidden !important; }
+  #view-touch .touch-pofi-button .surface-pofi { width: min(48vw, 64dvh, 580px) !important; max-width: 100% !important; max-height: 100% !important; }
+  #view-touch .touch-card-grid { grid-column: 1 !important; grid-row: 2 !important; display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; grid-template-rows: minmax(0, 1fr) !important; width: min(78vw, 920px) !important; height: 100% !important; gap: clamp(18px, 3vw, 36px) !important; place-self: stretch center !important; overflow: hidden !important; }
+  #view-touch .touch-card { height: 100% !important; padding: 8px 16px !important; }
+  #view-touch .touch-card-image-wrap img { width: 96% !important; height: 96% !important; }
+
+  #view-sentence .sentence-surface,
+  #view-story .story-surface {
+    display: grid !important;
+    grid-template-columns: minmax(0, 48fr) minmax(0, 52fr) !important;
+    grid-template-rows: minmax(0, 72fr) minmax(0, 28fr) !important;
+    gap: 10px 20px !important;
+    padding: 12px 24px !important;
+  }
+  #view-sentence .sentence-pofi-button,
+  #view-story .story-pofi-button { grid-column: 1 !important; grid-row: 1 / 3 !important; width: 100% !important; height: 100% !important; place-self: center !important; overflow: hidden !important; }
+  #view-sentence .sentence-card,
+  #view-story .story-scene { grid-column: 2 !important; grid-row: 1 / 3 !important; width: 100% !important; height: 100% !important; place-self: stretch !important; }
+  #view-story .story-choice-grid { grid-column: 2 !important; grid-row: 2 !important; align-self: end !important; width: 100% !important; max-height: 100% !important; z-index: 5 !important; }
+  #view-sentence .sentence-surface[data-sentence-mode="board"] { grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: auto minmax(0, 1fr) !important; }
+  #view-sentence .sentence-surface[data-sentence-mode="board"] .sentence-choice-grid { grid-column: 1 !important; grid-row: 2 !important; grid-template-columns: repeat(5, minmax(0, 1fr)) !important; grid-template-rows: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
+  .sleep-pofi-wrap { width: min(62vw, 720px) !important; max-width: 62vw !important; }
+}
+
+/* v1.0.32 final overrides — intentionally last in cascade. */
+[hidden] { display: none !important; }
+.app-shell[data-active-view="home"] .bonus-motivation { display: none !important; }
+#view-touch .touch-weather { z-index: 1 !important; }
+#view-touch .touch-card-image-wrap {
+  position: relative !important;
+  z-index: 3 !important;
+  display: grid !important;
+  place-items: center !important;
+  isolation: isolate !important;
+  overflow: visible !important;
+}
+#view-touch [data-touch-runtime-image] {
+  position: relative !important;
+  inset: auto !important;
+  z-index: 4 !important;
+  display: block !important;
+  width: 94% !important;
+  height: 94% !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  object-fit: contain !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+  transform: none !important;
+}
+#view-touch .touch-card-word { position: relative !important; z-index: 5 !important; }
+
+#view-story .story-object-row {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+#view-story .story-scene-image-wrap {
+  position: absolute !important;
+  inset: 3% !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 94% !important;
+  height: 94% !important;
+  overflow: hidden !important;
+}
+#view-story .story-scene-image {
+  position: relative !important;
+  inset: auto !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  transform: none !important;
+}
+
+@media (min-width: 561px) and (orientation: portrait) {
+  #view-sentence .sentence-mode-switch {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    z-index: 8 !important;
+  }
+}
+
+@media (min-width: 561px) and (orientation: landscape) {
+  .app-shell[data-active-view="home"] .mode-grid {
+    gap: 2px clamp(8px, 1.4vw, 18px) !important;
+    padding: 0 clamp(8px, 1.4vw, 18px) !important;
+  }
+  .app-shell[data-active-view="home"] .mode-card {
+    display: grid !important;
+    grid-template-rows: minmax(0, 1fr) auto !important;
+    place-items: center !important;
+  }
+  .app-shell[data-active-view="home"] .mode-card .mode-art {
+    width: min(16vw, 22dvh, 190px) !important;
+    height: min(16vw, 22dvh, 190px) !important;
+  }
+  .app-shell[data-active-view="home"] .mode-card .mode-art,
+  .app-shell[data-active-view="home"] .mode-card .mode-art * { pointer-events: none !important; }
+}
+
+#view-story .story-scene-image-wrap,
+#view-story .story-scene-image { aspect-ratio: auto !important; }
+#view-story .story-scene-image-wrap { z-index: 2 !important; }
+#view-story .story-choice-grid:empty { display: none !important; }
+
+@media (min-width: 561px) and (orientation: portrait) {
+  #view-sentence .sentence-mode-switch {
+    top: 10px !important;
+    left: 50% !important;
+    right: auto !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    width: min(52vw, 360px) !important;
+    transform: translateX(-50%) !important;
+  }
+}
+
+[hidden] { display: none !important; }
+.app-shell .mode-card[hidden],
+.app-shell .bonus-strip[hidden],
+.app-shell .bottom-nav button[hidden],
+.app-shell [aria-hidden="true"][hidden] { display: none !important; }

@@ -2,7 +2,7 @@
 name: phase-07
 description: MinaPlay içinde güvenli ses/video kayıt ve dış medya linki yönetimini tanımlar.
 created: 2026-06-26
-updated: 2026-06-26
+updated: 2026-08-03
 ---
 
 # Phase 07 - Güvenli Medya ve Kayıt
@@ -108,9 +108,22 @@ Kapanış ölçütü:
 - şifreli yedek/dışa aktarma kapsamı netleşir
 - iOS Safari, Android Chrome ve masaüstü Chrome için kamera/mikrofon/MediaRecorder manuel QA checklist'i hazırlanır
 
+Durum:
+
+- tamamlandı
+
+Kapanış sonucu:
+
+- medya kasasının mevcut AES-GCM şifreli zarfını düz medya veya kasa şifresi eklemeden JSON yedeğe aktaran akış eklendi
+- yedek, başka cihazda aynı kasa şifresiyle açılmak üzere Parent panelden içe aktarılabilir hale geldi
+- içe aktarma mevcut kasayı ebeveyn onayı olmadan değiştirmez
+- hatalı, düz veya beklenmeyen yedek yükleri reddedilir; yedek boyutu 128 MB ile sınırlandırılır
+- Android uygulama/Chrome, iOS Safari/PWA ve masaüstü Chrome için `docs/media-vault-device-qa.md` kontrol listesi hazırlandı
+- build, lint, 45 unit test ve odak Playwright dışa/içe aktarma senaryosu geçti
+
 ## Aktif Kapanış Hedefi
 
-Faz 7'nin aktif kapanış hedefi, medya kasası için arka kapısız şifreli yedek yaklaşımını ve gerçek cihaz QA checklist'ini netleştirmektir.
+Faz 7 tamamlandı. Bir sonraki aktif hedef yeni ürün/faz kararı olarak ayrıca açılmalıdır; gerçek cihaz kontrol listesi sürüm adayı hazırlanırken uygulanır.
 
 ## Kısa Kural
 

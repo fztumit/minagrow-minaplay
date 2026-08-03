@@ -1,13 +1,18 @@
-const CACHE_NAME = 'minaplay-assets-v37';
+const CACHE_NAME = 'minaplay-assets-v78';
 const APP_SHELL = [
   '/',
   '/offline.html',
-  '/style.css?v=20260623-7',
-  '/js/modules/main.js',
+  '/style.css?v=20260712-2',
+  '/v33.css?v=20260712-3',
+  '/v34.css?v=20260712-4',
+  '/js/modules/main.js?v=20260803-1',
+  '/js/modules/media-vault-backup.js',
+  '/sounds/pofi-guides/manifest.json',
   '/js/modules/touch-learning.js',
   '/js/modules/match-learning.js',
   '/js/modules/sentence-learning.js',
   '/js/modules/mvp-settings.js',
+  '/js/modules/pofi-contracts.js',
   '/js/modules/speech/index.js',
   '/assets/brand/minagrow-logo-runtime.png',
   '/assets/brand/minagrow-logo.png',
@@ -172,7 +177,12 @@ const APP_SHELL = [
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    await cache.addAll(APP_SHELL);
+    const manifest = await fetch('/sounds/pofi-guides/manifest.json').then((response) => response.json()).catch(() => ({}));
+    await cache.addAll([...new Set(Object.values(manifest))]);
+  })());
   self.skipWaiting();
 });
 

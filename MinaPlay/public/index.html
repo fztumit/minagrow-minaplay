@@ -9,9 +9,48 @@
       content="MinaPlay: 0-5 yaş için güvenli konuşma, taklit, duygu ve etkileşim PWA deneyimi."
     />
     <meta name="theme-color" content="#eef7f4" />
+    <script>
+      (() => {
+        if (window.location.protocol !== 'file:') {
+          return;
+        }
+
+        const localUrl = 'http://127.0.0.1:3100/';
+        const showServerNotice = () => {
+          document.documentElement.style.background = '#eef7f4';
+          document.addEventListener(
+            'DOMContentLoaded',
+            () => {
+              document.body.style.margin = '0';
+              document.body.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+              document.body.style.background = '#eef7f4';
+              document.body.innerHTML = `
+                <main style="min-height:100svh;display:grid;place-items:center;padding:24px;color:#20263f;text-align:center">
+                  <section style="max-width:520px;border-radius:28px;background:#fffdf6;padding:28px;box-shadow:0 18px 50px rgba(59,74,107,.16)">
+                    <h1 style="margin:0 0 12px;font-size:30px">MinaPlay server bekliyor</h1>
+                    <p style="margin:0 0 18px;font-size:18px;line-height:1.45">Bu dosya doğrudan açılınca görseller ve stiller yüklenmez. Uygulamayı local server adresinden açın.</p>
+                    <a href="${localUrl}" style="display:inline-block;border-radius:999px;background:#6847d8;color:white;text-decoration:none;font-weight:800;padding:12px 18px">MinaPlay'i aç</a>
+                  </section>
+                </main>
+              `;
+            },
+            { once: true }
+          );
+        };
+
+        const timeout = new Promise((_, reject) => window.setTimeout(reject, 900));
+        Promise.race([fetch(localUrl, { mode: 'no-cors', cache: 'no-store' }), timeout])
+          .then(() => {
+            window.location.replace(localUrl);
+          })
+          .catch(showServerNotice);
+      })();
+    </script>
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/assets/icons/app.png?v=20260621-1" type="image/png" />
-    <link rel="stylesheet" href="/style.css?v=20260627-1" />
+    <link rel="stylesheet" href="/style.css?v=20260712-2" />
+    <link rel="stylesheet" href="/v33.css?v=20260712-3" />
+    <link rel="stylesheet" href="/v34.css?v=20260712-4" />
   </head>
   <body>
     <div class="app-shell" data-active-view="home">
@@ -25,7 +64,12 @@
         </button>
         <img class="partner-logo sipesystem-logo" src="/assets/brand/sipesystem-kirmizi-beyaz.png?v=20260621-1" alt="SipeSystem" />
       </header>
-      <span class="parent-gesture-zone" data-parent-gesture-zone aria-hidden="true"></span>
+      <button class="parent-gesture-zone" type="button" data-parent-gesture-zone aria-label="Ebeveyn girişi">
+        <span class="parent-gesture-star" aria-hidden="true"></span>
+      </button>
+      <button class="child-home-button brand-home" type="button" data-view="home" aria-label="Ana ekrana dön">
+        <span aria-hidden="true">⌂</span>
+      </button>
 
       <main>
         <section class="view active" id="view-home" data-view-panel="home" aria-label="Ana ekran">
@@ -33,43 +77,43 @@
             <button class="mode-card touch" type="button" data-view="touch">
               <span class="mode-art">
                 <img class="mode-icon" src="/assets/icons/home/touch.png?v=20260621-1" alt="" />
+                <span class="mode-title">Dokun</span>
               </span>
-              <span class="mode-title">Dokun</span>
             </button>
 
             <button class="mode-card match" type="button" data-view="match">
               <span class="mode-art">
                 <img class="mode-icon" src="/assets/icons/home/match.png?v=20260621-1" alt="" />
+                <span class="mode-title">Eşleme</span>
               </span>
-              <span class="mode-title">Eşleme</span>
             </button>
 
             <button class="mode-card sentence" type="button" data-view="sentence">
               <span class="mode-art">
                 <img class="mode-icon" src="/assets/icons/home/sentence.png?v=20260621-1" alt="" />
+                <span class="mode-title">İfade</span>
               </span>
-              <span class="mode-title">İfade</span>
             </button>
 
             <button class="mode-card story" type="button" data-view="story">
               <span class="mode-art">
                 <img class="mode-icon" src="/assets/icons/home/story.png?v=20260621-1" alt="" />
+                <span class="mode-title">Hikaye</span>
               </span>
-              <span class="mode-title">Hikaye</span>
             </button>
 
             <button class="mode-card mirror" type="button" data-view="mirror">
               <span class="mode-art">
                 <img class="mode-icon" src="/assets/icons/home/mirror.png?v=20260621-1" alt="" />
+                <span class="mode-title">Ayna</span>
               </span>
-              <span class="mode-title">Ayna</span>
             </button>
 
             <button class="mode-card sleep" type="button" data-view="sleep">
               <span class="mode-art">
                 <img class="mode-icon" src="/assets/icons/home/sleep.png?v=20260621-1" alt="" />
+                <span class="mode-title">Uyku</span>
               </span>
-              <span class="mode-title">Uyku</span>
             </button>
 
             <div class="home-prompt" aria-hidden="true">
@@ -78,23 +122,16 @@
             </div>
           </div>
 
-          <section class="bonus-strip" aria-label="Motivasyon ve bonus oyun">
-            <div class="bonus-button bonus-motivation">
-              <img class="bonus-pofi" src="/assets/pofi/poses/playful.png?v=20260621-1" alt="" />
-              <span class="bonus-copy">
-                <span class="bonus-title">Harika gidiyorsun!</span>
-                <span class="bonus-text">Her gün biraz daha güçleniyorsun.</span>
-              </span>
-              <span class="bonus-star" aria-hidden="true">♥</span>
-            </div>
-            <button class="bonus-button bonus-cee" type="button" data-view="peekaboo">
-              <img class="bonus-pofi" src="/assets/pofi/poses/happy.png?v=20260621-1" alt="" />
-              <span class="bonus-copy">
-                <span class="bonus-title">Ceee</span>
-                <span class="bonus-text">Pofi ile ce-ee oyna.</span>
-              </span>
-            </button>
-          </section>
+          <button class="bonus-strip home-ceee-band" type="button" data-view="peekaboo" aria-label="Pofi ile ceee oyna">
+            <span class="home-ceee-pofi" aria-hidden="true">
+              <img src="/assets/pofi/poses/happy.png?v=20260621-1" alt="" />
+            </span>
+            <span class="home-ceee-copy">
+              <strong>Ceee</strong>
+              <span>Pofi seni bulabilecek mi?</span>
+            </span>
+          </button>
+
         </section>
 
         <section class="view module-view" id="view-touch" data-view-panel="touch" aria-label="Dokun modu">
@@ -190,6 +227,19 @@
               <span class="sleep-star star-e"></span>
               <span class="sleep-star star-f"></span>
               <span class="sleep-star star-g"></span>
+              <span class="sleep-star star-h"></span>
+              <span class="sleep-star star-i"></span>
+              <span class="sleep-star star-j"></span>
+              <span class="sleep-star star-k"></span>
+              <span class="sleep-star star-l"></span>
+              <span class="sleep-star star-m"></span>
+              <span class="sleep-star star-n"></span>
+              <span class="sleep-star star-o"></span>
+              <span class="sleep-shooting-star shooting-a"></span>
+              <span class="sleep-shooting-star shooting-b"></span>
+              <span class="sleep-haze-cloud cloud-a"></span>
+              <span class="sleep-haze-cloud cloud-b"></span>
+              <span class="sleep-haze-cloud cloud-c"></span>
             </div>
             <div class="sleep-pofi-wrap" aria-label="Pofi gökyüzünde süzülüyor">
               <div class="pofi-avatar sleep-floating-pofi" data-pofi-avatar data-pofi-state="sleepReady" aria-hidden="true"></div>
@@ -227,7 +277,12 @@
         <section class="view parent-panel" id="view-parent" data-view-panel="parent" aria-label="Ebeveyn paneli">
           <div class="parent-shell">
             <aside class="parent-rail" aria-label="Ebeveyn panel menüsü">
-              <div class="parent-rail-brand">MinaPlay</div>
+              <div class="parent-rail-header">
+                <button class="parent-home-brand brand-home" type="button" data-view="home" aria-label="Ana ekrana dön">
+                  <img src="/assets/brand/minaplay-logo-runtime.png?v=20260621-1" alt="MinaPlay" />
+                </button>
+                <button class="parent-home-action brand-home" type="button" data-view="home">Ana ekran</button>
+              </div>
               <div class="parent-tabs" role="tablist" aria-label="Ebeveyn panel bölümleri">
                 <button class="parent-tab active" type="button" role="tab" data-parent-tab="today" aria-selected="true">Bugün</button>
                 <button class="parent-tab" type="button" role="tab" data-parent-tab="edit" aria-selected="false">Düzenle</button>
@@ -246,7 +301,11 @@
                   <h2>Merhaba! 👋</h2>
                   <span>MinaPlay ile çocuğunuzun öğrenme yolculuğunu birlikte yönetelim.</span>
                 </div>
-                <button class="parent-settings-pill" type="button" data-parent-tab-target="control" data-parent-focus-target="[data-module-visibility-save]">Ayarlar</button>
+                <div class="parent-hero-actions">
+                  <button class="parent-update-pill" type="button" data-app-update-check>Güncellemeyi kontrol et</button>
+                  <button class="parent-update-pill" type="button" data-app-update-quick hidden>Güncellemeyi indir</button>
+                  <button class="parent-settings-pill" type="button" data-parent-tab-target="control" data-parent-focus-target="[data-module-visibility-save]">Ayarlar</button>
+                </div>
               </div>
               <div class="parent-dashboard">
             <section class="parent-overview" data-parent-tab-section="today" aria-label="Bugünün özeti">
@@ -294,9 +353,10 @@
               </section>
               <details class="parent-detail-drawer">
                 <summary>
-                  <span>Detayları göster</span>
-                  <small>İstatistikler, oturum geçmişi ve daha fazlası</small>
+                  <span>Detaylı analizi incele</span>
+                  <small>Öncelik, destek nedeni ve sonraki mod önerisi</small>
                 </summary>
+                <div class="parent-detail-analysis" data-parent-detail-analysis aria-live="polite"></div>
                 <div class="module-log" id="module-log" aria-live="polite"></div>
               </details>
               <section class="parent-guidance" aria-labelledby="parent-guidance-title">
@@ -392,6 +452,73 @@
               <details class="parent-work-block parent-safety-settings">
                 <summary class="parent-work-summary">
                   <div>
+                    <p class="eyebrow">Pofi rehberliği</p>
+                    <h3>Yönlendirme sıklığı</h3>
+                    <span>Çocuk yalnız çalışırken Pofi ne kadar sık hatırlatsın?</span>
+                  </div>
+                </summary>
+                <div class="parent-work-body">
+                  <div class="safety-settings-card module-settings-card">
+                    <label>
+                      Pofi yönlendirme ritmi
+                      <select data-pofi-guide-frequency>
+                        <option value="1">Normal</option>
+                        <option value="2">2 kat daha sık</option>
+                        <option value="3">3 kat daha sık</option>
+                        <option value="4">4 kat daha sık</option>
+                        <option value="5">5 kat daha sık</option>
+                      </select>
+                    </label>
+                    <small>Dokun, Eşleme, İfade ve Hikâye bölümlerindeki sessizlik sonrası hatırlatmaları etkiler.</small>
+                    <button class="soft-admin-button" type="button" data-pofi-guide-frequency-save>Yönlendirme sıklığını kaydet</button>
+                  </div>
+                  <p class="safety-parent-status" data-pofi-guide-frequency-status aria-live="polite"></p>
+                </div>
+              </details>
+              <details class="parent-work-block parent-safety-settings">
+                <summary class="parent-work-summary">
+                  <div>
+                    <p class="eyebrow">Huawei tablet</p>
+                    <h3 id="tablet-install-title">Tarayıcı kısayolu</h3>
+                    <span>Tarayıcı sürümünü ana ekrana ekler. APK ile kurulu tablette gerekli değildir.</span>
+                  </div>
+                </summary>
+                <div class="parent-work-body">
+                  <div class="safety-settings-card tablet-install-card">
+                    <div class="tablet-install-info">
+                      <span>Tablet adresi</span>
+                      <strong data-tablet-install-url>Hazırlanıyor</strong>
+                      <small data-tablet-install-note>Tableti aynı Wi-Fi ağına bağlayın ve bu adresi tarayıcıda açın.</small>
+                    </div>
+                    <button class="soft-admin-button" type="button" data-tablet-install-action>Kısayol ekle</button>
+                  </div>
+                  <p class="safety-parent-status" data-tablet-install-status aria-live="polite"></p>
+                </div>
+              </details>
+              <details class="parent-work-block parent-safety-settings">
+                <summary class="parent-work-summary">
+                  <div>
+                    <p class="eyebrow">APK güncelleme</p>
+                    <h3 id="tablet-update-title">Uygulamayı güncelle</h3>
+                    <span>Yeni APK'yı tablete indirip mevcut uygulamanın üstüne kurun.</span>
+                  </div>
+                </summary>
+                <div class="parent-work-body">
+                  <div class="safety-settings-card tablet-install-card">
+                    <div class="tablet-install-info">
+                      <span>Güncel paket</span>
+                      <strong data-app-update-version>Hazırlanıyor</strong>
+                      <small data-app-update-note>İndirme açıldığında Android kurulum ekranında Güncelle/Yükle onayı verilir.</small>
+                    </div>
+                    <button class="soft-admin-button" type="button" data-app-update-check>Güncellemeyi kontrol et</button>
+                    <button class="soft-admin-button" type="button" data-app-update-action hidden>Güncellemeyi indir</button>
+                  </div>
+                  <p class="safety-parent-status" data-app-update-status aria-live="polite"></p>
+                </div>
+              </details>
+              <details class="parent-work-block parent-safety-settings">
+                <summary class="parent-work-summary">
+                  <div>
                     <p class="eyebrow">Tablet güvenli kullanım</p>
                     <h3 id="child-lock-title">Çocuk kilidi</h3>
                     <span>Çıkış, ekran açık kalma ve ebeveyn giriş hareketi.</span>
@@ -414,8 +541,8 @@
                       </span>
                     </label>
                     <label>
-                      Gizli dokunma
-                      <input type="number" min="2" max="6" step="1" data-parent-gesture-taps />
+                      Parent şifresi
+                      <input type="password" inputmode="numeric" autocomplete="off" maxlength="4" data-parent-pin-setting />
                     </label>
                     <label>
                       Aşağı çekme (px)
@@ -524,7 +651,7 @@
                     <label>
                       Uyku sesi
                       <select data-sleep-sound-setting>
-                        <option value="sleep-sequence">Ninniler sırayla</option>
+                        <option value="sleep-sequence">Ninniler karışık</option>
                         <option value="lullaby">Yumuşak ninni</option>
                         <option value="ocean">Okyanus</option>
                         <option value="white">Beyaz gürültü</option>
@@ -574,6 +701,16 @@
                   </div>
                 </summary>
                 <div class="parent-work-body">
+                  <div class="safety-settings-card module-settings-card">
+                    <label class="safety-toggle">
+                      <input type="checkbox" data-app-permission="camera" checked />
+                      <span>Kamera kullanımı<small>Ayna bölümünün kameraya erişmesine izin verir.</small></span>
+                    </label>
+                    <label class="safety-toggle">
+                      <input type="checkbox" data-app-permission="microphone" checked />
+                      <span>Mikrofon kullanımı<small>Parent ses kaydının mikrofona erişmesine izin verir.</small></span>
+                    </label>
+                  </div>
                   <div class="device-status-grid" data-device-status aria-live="polite"></div>
                   <p class="safety-parent-status" data-device-status-note>
                     Veriler bu cihazda saklanır; internet kesilirse kayıt ve oyun yüzeyi yerel çalışmaya devam eder.
@@ -644,6 +781,12 @@
                         <button class="soft-admin-button" type="button" data-touch-media-vault-unlock>Kasayı aç</button>
                         <button class="soft-admin-button" type="button" data-touch-media-vault-lock>Kasayı kilitle</button>
                       </div>
+                      <div class="repeat-media-actions">
+                        <button class="soft-admin-button" type="button" data-touch-media-vault-export>Şifreli yedeği indir</button>
+                        <button class="soft-admin-button" type="button" data-touch-media-vault-import>Şifreli yedeği yükle</button>
+                        <input type="file" accept="application/json,.json" data-touch-media-vault-file hidden />
+                      </div>
+                      <p class="recording-guide">Yedek dosyası şifrelidir; kasa şifresini içermez. Başka cihazda açmak için aynı şifre gerekir.</p>
                       <p class="touch-parent-status" data-touch-media-vault-status aria-live="polite"></p>
                     </div>
                     <div class="repeat-media-heading">
@@ -733,7 +876,68 @@
           <button class="soft-admin-button" type="button" data-parent-secret-accept>Anladım</button>
         </div>
       </div>
+      <div class="parent-pin-modal" data-parent-pin-modal hidden>
+        <form class="parent-pin-card" data-parent-pin-form role="dialog" aria-modal="true" aria-labelledby="parent-pin-title">
+          <p class="eyebrow">Ebeveyn girişi</p>
+          <h2 id="parent-pin-title">Şifre</h2>
+          <input
+            type="password"
+            inputmode="numeric"
+            autocomplete="off"
+            maxlength="4"
+            pattern="[0-9]*"
+            data-parent-pin-input
+            aria-label="Parent şifresi"
+          />
+          <p class="parent-pin-status" data-parent-pin-status aria-live="polite"></p>
+          <div class="parent-pin-actions">
+            <button class="soft-admin-button secondary" type="button" data-parent-pin-cancel>Vazgeç</button>
+            <button class="soft-admin-button" type="submit">Aç</button>
+          </div>
+        </form>
+      </div>
     </div>
-    <script type="module" src="/js/modules/main.js"></script>
+    <script type="module">
+      const MINAPLAY_BOOT_VERSION = '20260803-1';
+      const MINAPLAY_BOOT_KEY = 'minaplay.boot.version';
+
+      async function clearOldMinaPlayRuntime() {
+        if (localStorage.getItem(MINAPLAY_BOOT_KEY) === MINAPLAY_BOOT_VERSION) {
+          return;
+        }
+
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations().catch(() => []);
+          await Promise.all(registrations.map((registration) => registration.unregister().catch(() => false)));
+        }
+
+        if ('caches' in window) {
+          const keys = await caches.keys().catch(() => []);
+          await Promise.all(keys.filter((key) => key.startsWith('minaplay-')).map((key) => caches.delete(key).catch(() => false)));
+        }
+
+        localStorage.setItem(MINAPLAY_BOOT_KEY, MINAPLAY_BOOT_VERSION);
+      }
+
+      const criticalImages = [
+        '/assets/icons/home/touch.png', '/assets/icons/home/match.png', '/assets/icons/home/mirror.png',
+        '/assets/icons/home/sentence.png', '/assets/icons/home/story.png', '/assets/icons/home/sleep.png',
+        '/assets/pofi/parts/body/default-v01.png'
+      ];
+      await clearOldMinaPlayRuntime();
+      await Promise.all(criticalImages.map((src) => new Promise((resolve) => {
+        const image = new Image();
+        const done = () => resolve(true);
+        image.onload = done;
+        image.onerror = done;
+        image.src = src;
+        if (image.complete) done();
+      })));
+      await import(`/js/modules/main.js?v=${MINAPLAY_BOOT_VERSION}`);
+      document.documentElement.dataset.minaplayBoot = MINAPLAY_BOOT_VERSION;
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        document.documentElement.dataset.minaplayReady = 'true';
+      }));
+    </script>
   </body>
 </html>

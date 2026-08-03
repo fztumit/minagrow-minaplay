@@ -1,0 +1,238 @@
+/* MinaPlay v1.0.33 acceptance contract. Loaded after legacy style.css. */
+html:not([data-minaplay-ready="true"]) .app-shell { visibility: hidden !important; }
+
+.app-shell[data-active-view="home"] #view-home {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 8px !important;
+  overflow: hidden !important;
+}
+
+.app-shell[data-active-view="home"] .mode-grid {
+  position: relative !important;
+  display: grid !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.app-shell[data-active-view="home"] .mode-card {
+  position: relative !important;
+  inset: auto !important;
+  display: grid !important;
+  grid-template-rows: minmax(0, 1fr) auto !important;
+  place-items: center !important;
+  place-self: stretch !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: none !important;
+  max-height: none !important;
+  padding: 0 !important;
+  transform: none !important;
+}
+
+.app-shell[data-active-view="home"] .mode-card.touch,
+.app-shell[data-active-view="home"] .mode-card.match,
+.app-shell[data-active-view="home"] .mode-card.sentence,
+.app-shell[data-active-view="home"] .mode-card.story,
+.app-shell[data-active-view="home"] .mode-card.mirror,
+.app-shell[data-active-view="home"] .mode-card.sleep {
+  grid-column: auto !important;
+  grid-row: auto !important;
+}
+
+.app-shell[data-active-view="home"] .mode-art {
+  position: relative !important;
+  display: grid !important;
+  place-items: center !important;
+  width: var(--home-icon-size) !important;
+  height: var(--home-icon-size) !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  aspect-ratio: 1 !important;
+  overflow: visible !important;
+}
+
+.app-shell[data-active-view="home"] .mode-icon {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  transform: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.app-shell[data-active-view="home"] .mode-title {
+  width: auto !important;
+  min-width: 96px !important;
+  margin: -10px 0 0 !important;
+  padding: 4px 14px 7px !important;
+  font-size: clamp(1rem, 2.2vmin, 1.45rem) !important;
+  line-height: 1 !important;
+}
+
+.app-shell[data-active-view="home"] .home-ceee-band {
+  position: relative !important;
+  inset: auto !important;
+  display: grid !important;
+  grid-template-columns: minmax(110px, 30%) minmax(0, 1fr) !important;
+  align-items: center !important;
+  place-self: center !important;
+  width: min(94vw, 940px) !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 4px 22px !important;
+  overflow: hidden !important;
+}
+
+.app-shell[data-active-view="home"] .home-ceee-pofi img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+#view-touch .touch-ritual-surface {
+  display: grid !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+#view-touch .touch-card { visibility: hidden !important; opacity: 0 !important; }
+#view-touch .touch-card.touch-card-ready { visibility: visible !important; opacity: 1 !important; }
+#view-touch .touch-card-image-wrap { overflow: hidden !important; }
+#view-touch [data-touch-runtime-image] {
+  display: block !important;
+  width: 94% !important;
+  height: 94% !important;
+  object-fit: contain !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+}
+
+#view-mirror .mirror-surface,
+#view-story .story-surface {
+  display: grid !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+#view-mirror .mirror-camera-fallback:not(:empty) {
+  display: grid !important;
+  place-items: center !important;
+  padding: 24px !important;
+  color: #625477 !important;
+  font-size: clamp(1.05rem, 2.6vmin, 1.6rem) !important;
+  font-weight: 900 !important;
+  text-align: center !important;
+  background: radial-gradient(circle, #ffffff 0 20%, #e9f5ff 65%, #efe9ff 100%) !important;
+}
+
+#view-story .story-object-row,
+#view-story .story-scene-image-wrap,
+#view-story .story-scene-image {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  aspect-ratio: auto !important;
+}
+#view-story .story-scene-image { object-fit: contain !important; object-position: center !important; }
+#view-story .story-choice-grid:empty { display: none !important; }
+
+#view-peekaboo .peekaboo-surface .surface-pofi,
+#view-peekaboo .peekaboo-surface .surface-pofi.large {
+  left: 50% !important;
+  top: 50% !important;
+  width: min(64vw, 58dvh, 620px) !important;
+  translate: -50% -50% !important;
+  animation: v33-ceee-safe-flight 16s ease-in-out infinite !important;
+}
+
+@keyframes v33-ceee-safe-flight {
+  0%, 100% { transform: translate3d(-10vw, 7vh, 0) rotate(-2deg) scale(0.82); }
+  25% { transform: translate3d(8vw, -8vh, 0) rotate(2deg) scale(1); }
+  50% { transform: translate3d(11vw, 6vh, 0) rotate(-1deg) scale(0.9); }
+  75% { transform: translate3d(-8vw, -6vh, 0) rotate(1deg) scale(1.04); }
+}
+
+.app-shell .mode-card[hidden],
+.app-shell .bonus-strip[hidden],
+.app-shell .bottom-nav button[hidden],
+.app-shell [hidden] { display: none !important; }
+
+@media (min-width: 561px) and (orientation: portrait) {
+  .app-shell[data-active-view="home"] #view-home {
+    --home-icon-size: min(35vw, 20.5dvh, 255px);
+    grid-template-rows: minmax(0, 1fr) clamp(132px, 15dvh, 178px) !important;
+    gap: 8px !important;
+  }
+  .app-shell[data-active-view="home"] .mode-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(3, minmax(0, 1fr)) !important;
+    gap: 4px 12px !important;
+  }
+  #view-touch .touch-ritual-surface {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: minmax(0, 43fr) minmax(0, 57fr) !important;
+    gap: 16px !important;
+    padding: 10px 18px 12px !important;
+  }
+  #view-touch .touch-pofi-button { grid-column: 1 !important; grid-row: 1 !important; width: min(78vw, 590px) !important; height: 100% !important; place-self: center !important; overflow: hidden !important; }
+  #view-touch .touch-card-grid { grid-column: 1 !important; grid-row: 2 !important; display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; grid-template-rows: minmax(0, 1fr) !important; width: min(94vw, 760px) !important; height: 100% !important; gap: 14px !important; place-self: stretch center !important; overflow: hidden !important; }
+  #view-touch .touch-card { grid-template-rows: minmax(0, 1fr) auto !important; height: 100% !important; padding: 10px !important; }
+  #view-mirror .mirror-surface,
+  #view-story .story-surface { grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: minmax(0, 43fr) minmax(0, 57fr) !important; gap: 14px !important; padding: 10px 18px 12px !important; }
+  #view-mirror .mirror-pofi-card,
+  #view-story .story-pofi-button { grid-column: 1 !important; grid-row: 1 !important; width: min(84vw, 640px) !important; height: 100% !important; place-self: center !important; overflow: hidden !important; }
+  #view-mirror .mirror-camera-card,
+  #view-story .story-scene { grid-column: 1 !important; grid-row: 2 !important; width: min(90vw, 720px) !important; height: 100% !important; place-self: stretch center !important; overflow: hidden !important; }
+  #view-story .story-choice-grid { grid-column: 1 !important; grid-row: 2 !important; width: min(82vw, 650px) !important; align-self: end !important; justify-self: center !important; z-index: 5 !important; }
+}
+
+@media (min-width: 561px) and (orientation: landscape) {
+  .app-shell[data-active-view="home"] #view-home {
+    --home-icon-size: min(17vw, 23dvh, 190px);
+    grid-template-rows: minmax(0, 1fr) clamp(100px, 17dvh, 138px) !important;
+    gap: 7px !important;
+  }
+  .app-shell[data-active-view="home"] .mode-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+    gap: 2px 12px !important;
+  }
+  #view-touch .touch-ritual-surface {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: minmax(0, 40fr) minmax(0, 60fr) !important;
+    gap: 6px !important;
+    padding: 8px 24px 10px !important;
+  }
+  #view-touch .touch-pofi-button { grid-column: 1 !important; grid-row: 1 !important; width: min(54vw, 620px) !important; height: 100% !important; place-self: center !important; overflow: hidden !important; }
+  #view-touch .touch-card-grid { grid-column: 1 !important; grid-row: 2 !important; display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; grid-template-rows: minmax(0, 1fr) !important; width: min(80vw, 930px) !important; height: 100% !important; gap: 24px !important; place-self: stretch center !important; overflow: hidden !important; }
+  #view-touch .touch-card { grid-template-rows: minmax(0, 1fr) auto !important; height: 100% !important; padding: 8px 14px !important; }
+  #view-mirror .mirror-surface,
+  #view-story .story-surface { grid-template-columns: minmax(0, 47fr) minmax(0, 53fr) !important; grid-template-rows: minmax(0, 1fr) !important; gap: 18px !important; padding: 12px 24px !important; }
+  #view-mirror .mirror-pofi-card,
+  #view-story .story-pofi-button { grid-column: 1 !important; grid-row: 1 !important; width: 100% !important; height: 100% !important; place-self: stretch !important; overflow: hidden !important; }
+  #view-mirror .mirror-camera-card,
+  #view-story .story-scene { grid-column: 2 !important; grid-row: 1 !important; width: 100% !important; height: 100% !important; place-self: stretch !important; overflow: hidden !important; }
+  #view-story .story-choice-grid { grid-column: 2 !important; grid-row: 1 !important; width: 94% !important; align-self: end !important; justify-self: center !important; z-index: 5 !important; }
+}

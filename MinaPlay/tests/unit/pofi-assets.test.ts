@@ -33,4 +33,17 @@ describe('Pofi layered asset references', () => {
       expect(runtimeText, `${blocked} should not be referenced by Pofi runtime`).not.toContain(blocked);
     }
   });
+
+  test('commits face parts as one preloaded team and only animates speech while speaking', async () => {
+    const source = await readFile(resolve(process.cwd(), 'src/modules/main.ts'), 'utf8');
+    const styles = await readFile(resolve(process.cwd(), 'public/style.css'), 'utf8');
+
+    expect(source).toContain('ensurePofiFaceTeam');
+    expect(source).toContain('Promise.all(paths.map(preloadPofiAsset))');
+    expect(source).toContain("container.dataset.pofiPoseReady = 'true'");
+    expect(styles).toContain('.pofi-avatar .pofi-face-team > .pofi-face');
+    expect(styles).toContain('.sentence-surface:not(.sentence-speaking) .pofi-mouth');
+    expect(styles).toContain('.mirror-surface:not(.mirror-speaking) .pofi-mouth');
+    expect(styles).toContain('.story-surface:not(.story-speaking) .pofi-mouth');
+  });
 });

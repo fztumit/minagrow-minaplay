@@ -9,11 +9,15 @@ describe('PWA offline shell', () => {
     const serviceWorker = readFileSync(resolve(publicDir, 'sw.js'), 'utf8');
 
     expect(serviceWorker).toContain("'/offline.html'");
-    expect(serviceWorker).toContain("'/js/modules/main.js'");
+    expect(serviceWorker).toContain("'/js/modules/main.js?v=20260803-1'");
+    expect(serviceWorker).toContain("'/v34.css?v=20260712-4'");
+    expect(serviceWorker).toContain("'/sounds/pofi-guides/manifest.json'");
     expect(serviceWorker).toContain("'/js/modules/touch-learning.js'");
     expect(serviceWorker).toContain("'/js/modules/match-learning.js'");
     expect(serviceWorker).toContain("'/js/modules/sentence-learning.js'");
     expect(serviceWorker).toContain("'/js/modules/mvp-settings.js'");
+    expect(serviceWorker).toContain("'/js/modules/pofi-contracts.js'");
+    expect(serviceWorker).toContain("'/js/modules/media-vault-backup.js'");
     expect(serviceWorker).toContain("'/js/modules/speech/index.js'");
     expect(serviceWorker).toContain("'/assets/cards/objects/water.png'");
     expect(serviceWorker).toContain("'/assets/cards/people/dad.png'");

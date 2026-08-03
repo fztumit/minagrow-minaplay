@@ -1,0 +1,195 @@
+/* MinaPlay v1.0.34 tablet layout contract. Loaded after all legacy layers. */
+:root {
+  --minaplay-viewport-height: 100dvh;
+}
+
+.app-shell[data-active-view="home"] {
+  box-sizing: border-box !important;
+  width: 100vw !important;
+  height: var(--minaplay-viewport-height) !important;
+  min-height: 0 !important;
+  grid-template-rows: auto minmax(0, 1fr) !important;
+  padding: clamp(8px, 1.5vmin, 16px) clamp(12px, 4vw, 60px) !important;
+  overflow: hidden !important;
+}
+
+.app-shell[data-viewport-settling="true"][data-active-view="touch"] #view-touch .touch-ritual-surface {
+  visibility: hidden !important;
+}
+
+.app-shell[data-active-view="home"] .topbar {
+  box-sizing: border-box !important;
+  height: clamp(72px, 10dvh, 112px) !important;
+  margin-bottom: clamp(5px, 1dvh, 10px) !important;
+  padding-block: 6px !important;
+}
+
+.app-shell[data-active-view="home"] main,
+.app-shell[data-active-view="home"] #view-home {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.app-shell[data-active-view="home"] #view-home {
+  grid-template-rows: minmax(0, 1fr) clamp(104px, 15dvh, 154px) !important;
+  gap: clamp(5px, 1dvh, 9px) !important;
+  padding: 0 !important;
+}
+
+.app-shell[data-active-view="home"] .mode-grid {
+  min-height: 0 !important;
+  padding: clamp(2px, 0.7vmin, 7px) !important;
+}
+
+.app-shell[data-active-view="home"] .mode-card {
+  display: grid !important;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr) !important;
+  place-items: center !important;
+  overflow: visible !important;
+}
+
+.app-shell[data-active-view="home"] .mode-card[hidden],
+.app-shell[data-active-view="home"] .home-ceee-band[hidden] {
+  display: none !important;
+}
+
+.app-shell[data-active-view="home"] .mode-art {
+  position: relative !important;
+  width: var(--home-icon-size) !important;
+  height: var(--home-icon-size) !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  overflow: visible !important;
+}
+
+.app-shell[data-active-view="home"] .mode-art > .mode-title {
+  position: absolute !important;
+  left: 50% !important;
+  bottom: 3.5% !important;
+  z-index: 4 !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 55% !important;
+  min-width: 0 !important;
+  height: 15.5% !important;
+  margin: 0 !important;
+  padding: 0 3% !important;
+  transform: translateX(-50%) !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: clamp(0.78rem, 2.15vmin, 1.25rem) !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+.app-shell[data-active-view="home"] .home-ceee-band {
+  box-sizing: border-box !important;
+  width: min(94vw, 940px) !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  align-self: stretch !important;
+  overflow: hidden !important;
+}
+
+@media (min-width: 561px) and (orientation: portrait) {
+  .app-shell[data-active-view="home"] #view-home {
+    --home-icon-size: min(38vw, 22dvh, 268px);
+  }
+}
+
+@media (min-width: 561px) and (orientation: landscape) {
+  .app-shell[data-active-view="home"] {
+    padding-block: clamp(6px, 1.2vmin, 10px) !important;
+  }
+
+  .app-shell[data-active-view="home"] .topbar {
+    height: clamp(64px, 11dvh, 90px) !important;
+    margin-bottom: 5px !important;
+  }
+
+  .app-shell[data-active-view="home"] #view-home {
+    --home-icon-size: min(18vw, 26dvh, 190px);
+    grid-template-rows: minmax(0, 1fr) clamp(92px, 16dvh, 124px) !important;
+    gap: 5px !important;
+  }
+
+  .app-shell[data-active-view="home"] .mode-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0 clamp(8px, 1.4vw, 16px) !important;
+  }
+
+  #view-touch .touch-ritual-surface {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: minmax(0, 34fr) minmax(0, 66fr) !important;
+    gap: clamp(10px, 1.8dvh, 16px) !important;
+    padding: 8px clamp(18px, 2.5vw, 30px) 10px !important;
+  }
+
+  #view-touch .touch-pofi-button {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    z-index: 1 !important;
+    width: min(46vw, 500px) !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    place-self: center !important;
+    overflow: hidden !important;
+  }
+
+  #view-touch .touch-pofi-button .surface-pofi.large {
+    width: auto !important;
+    height: 92% !important;
+    max-width: 92% !important;
+    max-height: 92% !important;
+    aspect-ratio: 16 / 9 !important;
+    translate: none !important;
+    transform: none !important;
+    animation: none !important;
+  }
+
+  #view-touch .touch-card-grid {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    z-index: 2 !important;
+    width: min(82vw, 940px) !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    place-self: stretch center !important;
+    overflow: hidden !important;
+  }
+
+  #view-touch .touch-card {
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+}
+
+@media (min-width: 561px) and (orientation: landscape) and (max-height: 740px) {
+  .app-shell[data-active-view="home"] .topbar {
+    height: 64px !important;
+  }
+
+  .app-shell[data-active-view="home"] #view-home {
+    --home-icon-size: min(17vw, 25dvh, 174px);
+    grid-template-rows: minmax(0, 1fr) 96px !important;
+  }
+
+  .app-shell[data-active-view="home"] .home-ceee-copy strong {
+    font-size: clamp(1.55rem, 4.5vmin, 2.25rem) !important;
+  }
+
+  #view-touch .touch-ritual-surface {
+    grid-template-rows: minmax(0, 31fr) minmax(0, 69fr) !important;
+    gap: 10px !important;
+  }
+
+  #view-touch .touch-pofi-button {
+    width: min(41vw, 440px) !important;
+  }
+}

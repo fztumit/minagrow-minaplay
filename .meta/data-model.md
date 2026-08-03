@@ -2,7 +2,7 @@
 name: data-model
 description: MinaPlay projesinin temel veri yapısını, localStorage alanlarını, Pofi state modelini ve ilişki mantığını tanımlar.
 created: 2026-04-17
-updated: 2026-04-29
+updated: 2026-07-17
 ---
 
 # Veri Modeli
@@ -15,8 +15,8 @@ Ana karar:
 
 - merkezi veritabanı yoktur
 - hesap veya bulut senkronizasyonu yoktur
-- kalıcılık ağırlıklı olarak `localStorage` üstündedir
-- ses kayıtları data URL olarak yerelde tutulur
+- ayar ve ilerleme kalıcılığı ağırlıklı olarak `localStorage` üstündedir
+- ebeveyn ses/video kayıtları ve dış medya linkleri şifreli payload olarak IndexedDB içinde tutulur
 - Pofi state modeli runtime davranış sistemidir
 - Pofi presence modeli görünürlük, büyüklük ve dikkat çekme gücünü yönetir
 - test edilebilir state DOM attribute'ları ve `render_game_to_text` çıktısıyla görünür yapılır
@@ -51,20 +51,38 @@ Not:
 - storage key adları ürünleşme sırasında korunacaksa geriye uyumluluk sağlanır
 - `minaplay_*` ailesine geçiş yapılacaksa migration gerekir
 
-### CustomAudioMap
+### EncryptedMediaVault
 
-Kelime veya cümle için ebeveyn ses kaydını tutan haritadır.
+Dokun odak tekrarında ebeveynin eklediği kısa ses/video kaydını ve dış medya linkini şifreli olarak tutar.
 
 Mantık:
 
-- key normalize edilmiş kelime veya cümledir
-- value ses kaydının data URL değeridir
-- Dokun, Günlük Kelime, Cümle ve Hikaye modları bu haritayı ortak kullanabilir
+- kayıtlar kelime kartı kimliğine bağlıdır
+- ses ve video tarayıcı içinde kısa data URL girdilerine dönüştürülür, ardından tüm medya kütüphanesi AES-GCM ile şifrelenir
+- anahtar kasa şifresinden PBKDF2 + SHA-256 ile türetilir; şifre cihazda düz metin saklanmaz
+- şifreli zarf `minaplay_touch_repeat_media_v1` anahtarıyla `minaplay_touch_cards_v1` IndexedDB veritabanında tutulur
+- video çocuk ekranında otomatik oynatılmaz; ebeveyn sesi yalnız açık ebeveyn seçimi ve açık kasa ile Dokun tekrarında kullanılabilir
 
-Kritik not:
+Şifreli zarf:
 
-- bu yapı localStorage kapasitesine duyarlıdır
-- ileride export/import, IndexedDB veya daha sağlam storage kararı gerekebilir
+- `version`
+- `salt`
+- `iv`
+- `data`
+
+Yedek formatı:
+
+- `format`: `minaplay-media-vault-backup`
+- `version`: `1`
+- `exportedAt`
+- `vault`: şifreli zarfın kendisi
+
+Kritik kurallar:
+
+- yedek dosyası kasa şifresini, düz medya verisini veya düz dış linki içermez
+- içe aktarılan kasa aynı şifre olmadan açılamaz
+- mevcut kasa ebeveyn onayı olmadan yedekle değiştirilmez
+- şifre unutulursa arka kapı veya sıfırlama yoluyla kayıt kurtarma yoktur
 
 ### ListenProgress
 
@@ -163,6 +181,25 @@ Kural:
 - 20 saniye tepkisizlik ikinci hatırlatma olarak yorumlanır
 - 30 saniye tepkisizlik Pofi'nin düşünme, yardım etme, odak veya sahne presence davranışını tetikleyebilir
 - bu kayıt çocuğa başarısızlık olarak gösterilmez; Parent panelde dikkat ve tekrar ihtiyacı olarak yorumlanabilir
+
+### PofiGuideSettings
+
+Çocuk yalnız çalışırken Pofi'nin sessizlik sonrası ne sıklıkta yönlendirme yapacağını belirler.
+
+Alan:
+
+- `frequencyMultiplier`: `1`, `2`, `3`, `4`, `5`
+
+Storage key:
+
+- `minaplay_pofi_guide_settings_v1`
+
+Kurallar:
+
+- varsayılan değer `1` ile mevcut sakin ritmi korur
+- `2`–`5` değerleri mevcut yönlendirme bekleme sürelerini seçilen katsayıya böler
+- ayar Dokun, Eşleme, İfade ve Hikâye modlarının sessizlik sonrası hatırlatma/ipucu sürelerini etkiler
+- başarı, ödül, konuşma hızı, Ayna egzersiz süresi, Uyku ve Ceee oyun ritmi bu ayardan etkilenmez
 
 ### PofiBehaviorRule
 
@@ -606,7 +643,7 @@ Bu adaylar bugünkü local-first çekirdeğin kapsamına alınmaz.
 
 ## Veri Modeli Riskleri
 
-- localStorage kapasitesi ses kayıtları için sınırlıdır
+- IndexedDB kapasitesi ve cihaz boş alanı kısa ses/video kayıtları için yine sınırlıdır
 - aynı cihazda farklı çocuk profili ayrımı henüz net değildir
 - kayıtların yedeği kullanıcı alışkanlığına bağlıdır
 - normalize edilen Türkçe metinlerde karakter ve telaffuz hassasiyeti dikkat ister
@@ -618,7 +655,7 @@ Bu adaylar bugünkü local-first çekirdeğin kapsamına alınmaz.
 Açık adaylar:
 
 - çocuk profili kavramı eklenecek mi
-- ses kayıtları localStorage yerine IndexedDB'ye taşınacak mı
+- medya kasası yedeğinin ileride dosya paylaşım API'leriyle desteklenip desteklenmeyeceği
 - story pack içeriği koddan ayrı JSON veya admin yüzeyine alınacak mı
 - Pofi state geçişleri merkezi bir state manager ile mi yönetilecek
 - ilerleme verisi ileride backend'e senkronize edilecek mi

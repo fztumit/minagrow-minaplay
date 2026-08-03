@@ -1,4 +1,5 @@
 export type MirrorPlanPreset = 'balanced' | 'mouth-first' | 'expression-first';
+export type PofiGuideFrequencyMultiplier = 1 | 2 | 3 | 4 | 5;
 export const SLEEP_SOUND_PRESETS = [
   'sleep-sequence',
   'lullaby',
@@ -32,11 +33,16 @@ export interface SleepSettings {
   volume: number;
 }
 
+export interface PofiGuideSettings {
+  frequencyMultiplier: PofiGuideFrequencyMultiplier;
+}
+
 export type ModuleVisibilitySettings = Record<MvpModuleId, boolean>;
 
 export const MIRROR_PLAN_KEY = 'minaplay_mirror_plan_v1';
 export const SLEEP_SETTINGS_KEY = 'minaplay_sleep_settings_v1';
 export const MODULE_VISIBILITY_KEY = 'minaplay_module_visibility_v1';
+export const POFI_GUIDE_SETTINGS_KEY = 'minaplay_pofi_guide_settings_v1';
 export const MVP_MODULE_IDS: MvpModuleId[] = ['touch', 'match', 'sentence', 'story', 'mirror', 'sleep', 'peekaboo'];
 
 export const DEFAULT_MIRROR_PLAN: MirrorPlanSettings = {
@@ -47,6 +53,10 @@ export const DEFAULT_SLEEP_SETTINGS: SleepSettings = {
   sound: 'sleep-sequence',
   durationMinutes: 10,
   volume: 0.55
+};
+
+export const DEFAULT_POFI_GUIDE_SETTINGS: PofiGuideSettings = {
+  frequencyMultiplier: 1
 };
 
 export const DEFAULT_MODULE_VISIBILITY: ModuleVisibilitySettings = {
@@ -91,6 +101,22 @@ export function normalizeSleepSettings(raw: unknown): SleepSettings {
   };
 }
 
+export function normalizePofiGuideSettings(raw: unknown): PofiGuideSettings {
+  if (!isRecord(raw)) {
+    return { ...DEFAULT_POFI_GUIDE_SETTINGS };
+  }
+
+  return {
+    frequencyMultiplier: isPofiGuideFrequencyMultiplier(raw.frequencyMultiplier)
+      ? raw.frequencyMultiplier
+      : DEFAULT_POFI_GUIDE_SETTINGS.frequencyMultiplier
+  };
+}
+
+export function pofiGuideDelay(baseDelayMs: number, settings: PofiGuideSettings): number {
+  return Math.max(800, Math.round(baseDelayMs / settings.frequencyMultiplier));
+}
+
 export function normalizeModuleVisibility(raw: unknown): ModuleVisibilitySettings {
   if (!isRecord(raw)) {
     return { ...DEFAULT_MODULE_VISIBILITY };
@@ -121,6 +147,10 @@ function isSleepSound(value: unknown): value is SleepSoundPreset {
 
 function isSleepDuration(value: unknown): value is SleepSettings['durationMinutes'] {
   return value === 0 || value === 5 || value === 10 || value === 20 || value === 30;
+}
+
+function isPofiGuideFrequencyMultiplier(value: unknown): value is PofiGuideFrequencyMultiplier {
+  return value === 1 || value === 2 || value === 3 || value === 4 || value === 5;
 }
 
 function clampNumber(value: unknown, min: number, max: number, fallback: number): number {
