@@ -10,6 +10,10 @@
     "dev": "npm run build:client && tsx server.ts",
     "prestart": "npm run build",
     "start": "node dist/server.js",
+    "start:tablet": "HOST=0.0.0.0 PORT=3100 node dist/server.js",
+    "app:sync": "npm run build:client && npx cap sync android",
+    "android:open": "npm run app:sync && npx cap open android",
+    "android:debug": "npm run app:sync && node scripts/android-debug.mjs",
     "lint": "eslint \"server.ts\" \"src/**/*.ts\" \"tests/**/*.ts\"",
     "test": "vitest run tests/unit",
     "test:e2e": "playwright test tests/playwright",
@@ -21,6 +25,10 @@
     "morgan": "^1.10.0"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.4.1",
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.4.1",
+    "@capacitor/core": "^8.4.1",
     "@playwright/test": "^1.58.2",
     "@types/express": "^5.0.0",
     "@types/morgan": "^1.9.9",
