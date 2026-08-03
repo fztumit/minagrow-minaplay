@@ -488,15 +488,19 @@ test('tablet learning layouts keep Pofi, target and choices in one clear visual 
         }
         const pofi = rects.find((entry) => entry.selector.includes('pofi'))?.rect;
         const nonPofi = rects.filter((entry) => !entry.selector.includes('pofi')).map((entry) => entry.rect);
-        const nearestBelowGap = pofi
-          ? Math.min(...nonPofi.map((rect) => rect.top - pofi.bottom).filter((gap) => gap >= 0), 9999)
+        const nearestVerticalGap = pofi
+          ? Math.min(...nonPofi.map((rect) => {
+            if (rect.top >= pofi.bottom) return rect.top - pofi.bottom;
+            if (pofi.top >= rect.bottom) return pofi.top - rect.bottom;
+            return 0;
+          }), 9999)
           : 9999;
         const matchTarget = document.querySelector<HTMLElement>('#view-match .match-target')?.getBoundingClientRect();
         const matchChoices = document.querySelector<HTMLElement>('#view-match .match-choice-grid')?.getBoundingClientRect();
         return {
           allInside: rects.every(({ rect }) => rect.left >= -2 && rect.right <= window.innerWidth + 2 && rect.top >= -2 && rect.bottom <= window.innerHeight + 2),
           matchTargetChoiceGap: view === 'match' && matchTarget && matchChoices ? matchChoices.top - matchTarget.bottom : null,
-          nearestBelowGap,
+          nearestVerticalGap,
           overlapCount: overlaps.length
         };
       }, view);
@@ -506,8 +510,8 @@ test('tablet learning layouts keep Pofi, target and choices in one clear visual 
         expect(metrics.overlapCount, `${view} ${viewport.width}x${viewport.height}`).toBe(0);
       }
       if (view === 'touch' && viewport.width < viewport.height) {
-        expect(metrics.nearestBelowGap).toBeGreaterThanOrEqual(16);
-        expect(metrics.nearestBelowGap).toBeLessThanOrEqual(90);
+        expect(metrics.nearestVerticalGap).toBeGreaterThanOrEqual(16);
+        expect(metrics.nearestVerticalGap).toBeLessThanOrEqual(90);
       }
       if (view === 'match') {
         expect(metrics.matchTargetChoiceGap).not.toBeNull();
