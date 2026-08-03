@@ -463,6 +463,11 @@ test('tablet learning layouts keep Pofi, target and choices in one clear visual 
       await expect(page.locator('.app-shell')).toHaveAttribute('data-active-view', view);
       await page.waitForTimeout(350);
 
+      if (view === 'touch') {
+        await expect(page.locator('#view-touch .touch-pofi-button')).toBeVisible();
+        await expect(page.locator('#view-touch .touch-card').first()).toBeVisible();
+      }
+
       const metrics = await page.evaluate((view) => {
         const selectorMap: Record<string, string[]> = {
           touch: ['.touch-pofi-button', '.touch-card'],
