@@ -1,0 +1,9 @@
+.git
+.gitignore
+**/node_modules
+**/test-results
+**/playwright-report
+**/release-output
+MinaPlay/assets-source
+MinaPlay/android/.gradle
+MinaPlay/android/app/build
