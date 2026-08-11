@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 declare global {
   interface Window {
     __spokenTexts?: string[];
+    __androidExitCount?: number;
   }
 }
 
@@ -255,6 +256,97 @@ test('parent pin opens after holding the star without a captured drag', async ({
     (form as HTMLFormElement).requestSubmit();
   });
   await expect(page.locator('#view-parent')).toHaveClass(/active/);
+});
+
+test('iPhone star and Parent PIN expose the Guided Access exit path', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'userAgent', {
+      configurable: true,
+      value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148'
+    });
+    Object.defineProperty(navigator, 'platform', { configurable: true, value: 'iPhone' });
+    Object.defineProperty(navigator, 'maxTouchPoints', { configurable: true, value: 5 });
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+
+  await expect(page.locator('[data-parent-gesture-zone]')).toHaveAttribute('aria-label', 'Ebeveyn şifresiyle çıkış');
+  await openParentPinModalByHold(page);
+  await expect(page.locator('[data-parent-pin-title]')).toHaveText('Parent şifresi');
+  await expect(page.locator('[data-parent-pin-submit]')).toHaveText('Kilidi aç');
+
+  await page.fill('[data-parent-pin-input]', DEFAULT_PARENT_PIN);
+  await page.locator('[data-parent-pin-form]').evaluate((form) => {
+    (form as HTMLFormElement).requestSubmit();
+  });
+
+  await expect(page.locator('#view-parent')).toHaveClass(/active/);
+  await expect(page.locator('[data-ios-exit-guide]')).toBeVisible();
+  await expect(page.locator('[data-ios-exit-guide]')).toContainText('Yan düğmeye üç kez basın');
+  await page.click('[data-ios-exit-guide-close]');
+  await expect(page.locator('[data-ios-exit-guide]')).toBeHidden();
+
+  await openParentTab(page, 'Kontrol');
+  await openParentBlock(page, 'Çocuk kilidi');
+  await expect(page.locator('[data-ios-guided-access]')).toBeVisible();
+  await expect(page.locator('[data-child-lock-status]')).toContainText('Denetimli Erişim');
+});
+
+test('Android APK exits native child lock and returns to the launcher after Parent PIN', async ({ page }) => {
+  await page.addInitScript(() => {
+    const target = window as typeof window & { __androidExitCount?: number };
+    target.__androidExitCount = 0;
+    target.Capacitor = {
+      getPlatform: () => 'android',
+      Plugins: {
+        MinaPlayKiosk: {
+          exitToLauncher: async () => {
+            target.__androidExitCount = (target.__androidExitCount ?? 0) + 1;
+            return { exited: true };
+          }
+        }
+      }
+    };
+  });
+  await page.goto('/');
+
+  await openParentPinModalByHold(page);
+  await page.fill('[data-parent-pin-input]', DEFAULT_PARENT_PIN);
+  await page.locator('[data-parent-pin-form]').evaluate((form) => {
+    (form as HTMLFormElement).requestSubmit();
+  });
+
+  await expect.poll(() => page.evaluate(() => window.__androidExitCount)).toBe(1);
+  await expect(page.locator('[data-parent-pin-modal]')).toBeHidden();
+  await expect(page.locator('#view-home')).toHaveClass(/active/);
+  await expect(page.locator('#view-parent')).not.toHaveClass(/active/);
+});
+
+test('Android native exit failure falls back to the unlocked Parent panel', async ({ page }) => {
+  await page.addInitScript(() => {
+    const target = window as typeof window;
+    target.Capacitor = {
+      getPlatform: () => 'android',
+      Plugins: {
+        MinaPlayKiosk: {
+          exitToLauncher: async () => {
+            throw new Error('launcher unavailable');
+          }
+        }
+      }
+    };
+  });
+  await page.goto('/');
+
+  await openParentPinModalByHold(page);
+  await page.fill('[data-parent-pin-input]', DEFAULT_PARENT_PIN);
+  await page.locator('[data-parent-pin-form]').evaluate((form) => {
+    (form as HTMLFormElement).requestSubmit();
+  });
+
+  await expect(page.locator('#view-parent')).toHaveClass(/active/);
+  await expect(page.locator('[data-parent-exit-status]')).toBeVisible();
+  await expect(page.locator('[data-parent-exit-status]')).toContainText('Android çıkışı açılamadı');
 });
 
 test('parent panel has a clear MinaPlay logo and home exit on tablet', async ({ page }) => {
@@ -1557,7 +1649,7 @@ test('parent panel shows local-first device and offline readiness', async ({ pag
   await expect(page.locator('[data-tablet-install-url]')).toContainText('127.0.0.1');
   await expect(page.locator('[data-tablet-install-status]')).toContainText(/ana ekrana|Kurulum hazır|uygulaması hazır/i);
   await openParentBlock(page, 'Uygulamayı güncelle');
-  await expect(page.locator('[data-app-update-version]')).toContainText('v1.0.36');
+  await expect(page.locator('[data-app-update-version]')).toContainText('v1.0.37');
   await expect(page.locator('[data-app-update-note]')).toContainText('GitHub Releases');
   await expect(page.locator('[data-app-update-status]')).toContainText('kontrol edin');
   await openParentBlock(page, 'Offline ve izinler');
@@ -1659,9 +1751,9 @@ test('parent update check exposes only a newer validated stable release', async 
     contentType: 'application/json',
     body: JSON.stringify({
       channel: 'stable',
-      version: '1.0.37',
-      versionCode: 38,
-      apkUrl: 'https://github.com/fztumit/minagrow-minaplay/releases/download/v1.0.37/minaplay-v1.0.37.apk',
+      version: '1.0.38',
+      versionCode: 39,
+      apkUrl: 'https://github.com/fztumit/minagrow-minaplay/releases/download/v1.0.38/minaplay-v1.0.38.apk',
       sha256: 'b'.repeat(64),
       publishedAt: '2026-08-03T12:00:00.000Z'
     })
@@ -1673,7 +1765,7 @@ test('parent update check exposes only a newer validated stable release', async 
   await openParentBlock(page, 'Uygulamayı güncelle');
   await page.locator('[data-app-update-check]').last().click();
 
-  await expect(page.locator('[data-app-update-status]')).toContainText('Yeni güvenli sürüm hazır: v1.0.37');
+  await expect(page.locator('[data-app-update-status]')).toContainText('Yeni güvenli sürüm hazır: v1.0.38');
   await expect(page.locator('[data-app-update-action]')).toBeVisible();
   await expect(page.locator('[data-app-update-quick]')).toBeVisible();
 });
@@ -1685,8 +1777,8 @@ test('parent update check keeps download closed for current or unsafe metadata',
     contentType: 'application/json',
     body: JSON.stringify({
       channel: 'stable',
-      version: '1.0.37',
-      versionCode: 38,
+      version: '1.0.38',
+      versionCode: 39,
       apkUrl: 'http://unsafe.test/minaplay.apk',
       sha256: 'c'.repeat(64),
       publishedAt: '2026-08-03T12:00:00.000Z'
@@ -1724,9 +1816,9 @@ test('native update receives the validated URL and checksum and explains install
     contentType: 'application/json',
     body: JSON.stringify({
       channel: 'stable',
-      version: '1.0.37',
-      versionCode: 38,
-      apkUrl: 'https://github.com/fztumit/minagrow-minaplay/releases/download/v1.0.37/minaplay-v1.0.37.apk',
+      version: '1.0.38',
+      versionCode: 39,
+      apkUrl: 'https://github.com/fztumit/minagrow-minaplay/releases/download/v1.0.38/minaplay-v1.0.38.apk',
       sha256: 'd'.repeat(64),
       publishedAt: '2026-08-03T12:00:00.000Z'
     })
@@ -1741,7 +1833,7 @@ test('native update receives the validated URL and checksum and explains install
 
   await expect(page.locator('[data-app-update-status]')).toContainText('Bu kaynaktan izin ver');
   await expect.poll(() => page.evaluate(() => (window as typeof window & { __updateRequest?: unknown }).__updateRequest)).toEqual({
-    url: 'https://github.com/fztumit/minagrow-minaplay/releases/download/v1.0.37/minaplay-v1.0.37.apk',
+    url: 'https://github.com/fztumit/minagrow-minaplay/releases/download/v1.0.38/minaplay-v1.0.38.apk',
     sha256: 'd'.repeat(64)
   });
 });

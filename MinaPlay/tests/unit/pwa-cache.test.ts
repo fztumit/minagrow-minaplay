@@ -9,7 +9,7 @@ describe('PWA offline shell', () => {
     const serviceWorker = readFileSync(resolve(publicDir, 'sw.js'), 'utf8');
 
     expect(serviceWorker).toContain("'/offline.html'");
-    expect(serviceWorker).toContain("'/js/modules/main.js?v=20260803-2'");
+    expect(serviceWorker).toContain("'/js/modules/main.js?v=20260810-2'");
     expect(serviceWorker).toContain("'/v34.css?v=20260712-4'");
     expect(serviceWorker).toContain("'/sounds/pofi-guides/manifest.json'");
     expect(serviceWorker).toContain("'/js/modules/touch-learning.js'");

@@ -16,7 +16,7 @@ Mevcut production sertifikasının SHA-256 parmak izi `F3:E0:6C:5F:10:52:5F:E9:2
 
 Canlı stable yüzeyler:
 
-- Release: `https://github.com/fztumit/minagrow-minaplay/releases/tag/v1.0.36`
+- Release: `https://github.com/fztumit/minagrow-minaplay/releases/tag/v1.0.37`
 - Metadata: `https://minagrow-minaplay-production.up.railway.app/api/update`
 - Health: `https://minagrow-minaplay-production.up.railway.app/health`
 
@@ -25,7 +25,7 @@ Canlı stable yüzeyler:
 1. `release.json` içindeki `version` ve daima artan `versionCode` güncellenir.
 2. Build, lint, unit, e2e ve Android dry-run doğrulamaları tamamlanır.
 3. Değişiklik ana yayın branch'ine alınır.
-4. Sürümle birebir eşleşen tag oluşturulur: örneğin `v1.0.36`.
+4. Sürümle birebir eşleşen tag oluşturulur: örneğin `v1.0.37`.
 5. Tag push edildiğinde workflow imzalı APK, SHA-256 dosyası ve `minaplay-release.json` üretir.
 6. Railway `/api/update` yüzeyi GitHub'daki son stable metadata dosyasını doğrulayıp istemciye iletir.
 

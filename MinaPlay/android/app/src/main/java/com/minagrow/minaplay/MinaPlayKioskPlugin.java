@@ -75,6 +75,47 @@ public class MinaPlayKioskPlugin extends Plugin {
         });
     }
 
+    @PluginMethod
+    public void exitToLauncher(PluginCall call) {
+        Activity activity = getActivity();
+        if (activity == null) {
+            call.reject("Activity is not ready");
+            return;
+        }
+
+        activity.runOnUiThread(() -> {
+            try {
+                View focused = activity.getCurrentFocus();
+                if (focused != null) {
+                    InputMethodManager manager = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+                    if (manager != null) {
+                        manager.hideSoftInputFromWindow(focused.getWindowToken(), 0);
+                    }
+                    focused.clearFocus();
+                }
+                if (isLockTaskActive(activity)) {
+                    activity.stopLockTask();
+                }
+                if (isLockTaskActive(activity)) {
+                    call.reject("Android child lock could not be released");
+                    return;
+                }
+
+                JSObject result = new JSObject();
+                result.put("exited", true);
+                call.resolve(result);
+
+                Intent launcherIntent = new Intent(Intent.ACTION_MAIN);
+                launcherIntent.addCategory(Intent.CATEGORY_HOME);
+                launcherIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+                activity.startActivity(launcherIntent);
+                activity.moveTaskToBack(true);
+            } catch (IllegalArgumentException | IllegalStateException | SecurityException error) {
+                call.reject("Android launcher exit is unavailable", error);
+            }
+        });
+    }
+
     private void ensureDeviceOwnerLockTask(Activity activity) {
         DevicePolicyManager policyManager = (DevicePolicyManager) activity.getSystemService(Context.DEVICE_POLICY_SERVICE);
         if (policyManager == null || !policyManager.isDeviceOwnerApp(activity.getPackageName())) {

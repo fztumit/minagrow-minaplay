@@ -108,9 +108,11 @@ Tablette şu ayarı aç:
 4. MinaPlay'i aç, çocuk moduna veya Uyku moduna gir.
 5. Android sabitleme onayı çıkarsa onayla.
 
-İlk açılıştaki sistem penceresinde `Tamam` seçilmelidir. `Hayır, teşekkürler` seçilirse Android ekranı sabitlemez; bu durumda bildirim perdesi, Ana Ekran ve Son Uygulamalar açık kalır. Sabitleme kabul edildiğinde Parent yıldızı + PIN akışı yetişkin çıkışı olarak kullanılmaya devam eder.
+İlk açılıştaki sistem penceresinde `Tamam` seçilmelidir. `Hayır, teşekkürler` seçilirse Android ekranı sabitlemez; bu durumda bildirim perdesi, Ana Ekran ve Son Uygulamalar açık kalır. Sabitleme kabul edildiğinde Parent yıldızı + PIN akışı yetişkin çıkışı olarak kullanılır.
 
-Bu ayar açıkken çocuk kilidi MinaPlay ana ekranı ve çocuk modlarında Android `startLockTask()` çağrısıyla ekranı sabitler. Sabitleme yalnız doğru Parent PIN ile Parent panel açıldığında bırakılır.
+Bu ayar açıkken çocuk kilidi MinaPlay ana ekranı ve çocuk modlarında Android `startLockTask()` çağrısıyla ekranı sabitler. Sol üst yıldızdan doğru Parent PIN girildiğinde MinaPlay önce `stopLockTask()` ile ekran sabitlemeyi bırakır, ardından Android launcher'ını açıp kendi görevini arka plana alır. Böylece Huawei ve diğer Android cihazlarda çocuk Home/Son Uygulamalar hareketleriyle çıkamaz; ebeveyn ise uygulamayı Parent şifresiyle doğrudan kapatabilir.
+
+Native çıkış cihaz politikası nedeniyle gerçekleştirilemezse MinaPlay çocuk ekranında kilitli kalmak yerine Parent panelini açar ve Ana Ekran düğmesinin kullanılabileceğini bildirir.
 
 ### Parent PIN ile gerçek kiosk çıkışı
 
@@ -122,7 +124,7 @@ Bu işlem yalnız yeni kurulmuş/fabrika ayarına dönmüş ve üzerinde hesap e
 adb shell dpm set-device-owner com.minagrow.minaplay/.MinaPlayDeviceAdminReceiver
 ```
 
-Komut başarılı olduktan sonra MinaPlay çocuk kilidi uygulamayı lock-task allowlist'ine alır. Bu gerçek kiosk modunda uzun geri, Home, Son Uygulamalar ve bildirim perdesi çıkış yolu olmaz; kilidi MinaPlay yalnız doğru Parent PIN ile Parent alanına geçerken bırakır.
+Komut başarılı olduktan sonra MinaPlay çocuk kilidi uygulamayı lock-task allowlist'ine alır. Bu gerçek kiosk modunda uzun geri, Home, Son Uygulamalar ve bildirim perdesi çıkış yolu olmaz; kilidi MinaPlay yalnız doğru Parent PIN girildiğinde bırakır ve Android ana ekranına döner.
 
 Not: Railway güncellemesi bu native davranışı değiştirmez. Home/Kare tuşu davranışı için yeni APK'nın tablete tekrar kurulması gerekir.
 

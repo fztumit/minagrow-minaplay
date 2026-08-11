@@ -1,4 +1,4 @@
-const CACHE_NAME = 'minaplay-assets-v79';
+const CACHE_NAME = 'minaplay-assets-v81';
 const APP_SHELL = [
   '/',
   '/offline.html',
@@ -6,7 +6,7 @@ const APP_SHELL = [
   '/style.css?v=20260712-2',
   '/v33.css?v=20260712-3',
   '/v34.css?v=20260712-4',
-  '/js/modules/main.js?v=20260803-2',
+  '/js/modules/main.js?v=20260810-2',
   '/js/modules/media-vault-backup.js',
   '/js/modules/release.js',
   '/sounds/pofi-guides/manifest.json',

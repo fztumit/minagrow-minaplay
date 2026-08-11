@@ -64,7 +64,7 @@
         </button>
         <img class="partner-logo sipesystem-logo" src="/assets/brand/sipesystem-kirmizi-beyaz.png?v=20260621-1" alt="SipeSystem" />
       </header>
-      <button class="parent-gesture-zone" type="button" data-parent-gesture-zone aria-label="Ebeveyn girişi">
+      <button class="parent-gesture-zone" type="button" data-parent-gesture-zone aria-label="Ebeveyn şifresiyle çıkış">
         <span class="parent-gesture-star" aria-hidden="true"></span>
       </button>
       <button class="child-home-button brand-home" type="button" data-view="home" aria-label="Ana ekrana dön">
@@ -307,6 +307,7 @@
                   <button class="parent-settings-pill" type="button" data-parent-tab-target="control" data-parent-focus-target="[data-module-visibility-save]">Ayarlar</button>
                 </div>
               </div>
+              <p class="parent-exit-status" data-parent-exit-status role="status" hidden></p>
               <div class="parent-dashboard">
             <section class="parent-overview" data-parent-tab-section="today" aria-label="Bugünün özeti">
               <div class="parent-section-heading">
@@ -551,6 +552,16 @@
                     <button class="soft-admin-button" type="button" data-parent-gesture-save>Girişi kaydet</button>
                   </div>
                   <p class="safety-parent-status" data-child-lock-status aria-live="polite"></p>
+                  <aside class="ios-guided-access-card" data-ios-guided-access hidden aria-labelledby="ios-guided-access-title">
+                    <p class="eyebrow">iPhone sistem kilidi</p>
+                    <h4 id="ios-guided-access-title">Denetimli Erişim’i açın</h4>
+                    <ol>
+                      <li>Ayarlar → Erişilebilirlik → Denetimli Erişim bölümünden özelliği bir kez açın.</li>
+                      <li>MinaPlay ana ekrandayken yan düğmeye üç kez basıp Denetimli Erişim’i başlatın.</li>
+                      <li>Çıkmak için sol üstteki yıldıza dokunun ve Parent şifresini girin.</li>
+                    </ol>
+                    <p>MinaPlay kilidi açıldıktan sonra yan düğmeye üç kez basıp Face ID veya Denetimli Erişim parolasıyla oturumu bitirin.</p>
+                  </aside>
                 </div>
               </details>
               <details class="parent-work-block parent-safety-settings">
@@ -878,8 +889,8 @@
       </div>
       <div class="parent-pin-modal" data-parent-pin-modal hidden>
         <form class="parent-pin-card" data-parent-pin-form role="dialog" aria-modal="true" aria-labelledby="parent-pin-title">
-          <p class="eyebrow">Ebeveyn girişi</p>
-          <h2 id="parent-pin-title">Şifre</h2>
+          <p class="eyebrow" data-parent-pin-eyebrow>Ebeveyn girişi</p>
+          <h2 id="parent-pin-title" data-parent-pin-title>Şifre</h2>
           <input
             type="password"
             inputmode="numeric"
@@ -892,13 +903,22 @@
           <p class="parent-pin-status" data-parent-pin-status aria-live="polite"></p>
           <div class="parent-pin-actions">
             <button class="soft-admin-button secondary" type="button" data-parent-pin-cancel>Vazgeç</button>
-            <button class="soft-admin-button" type="submit">Aç</button>
+            <button class="soft-admin-button" type="submit" data-parent-pin-submit>Aç</button>
           </div>
         </form>
       </div>
+      <div class="ios-exit-guide" data-ios-exit-guide hidden>
+        <div class="ios-exit-guide-card" role="dialog" aria-modal="true" aria-labelledby="ios-exit-guide-title">
+          <p class="eyebrow">Çocuk kilidi açıldı</p>
+          <h2 id="ios-exit-guide-title">iPhone’dan güvenli çıkış</h2>
+          <p>Yan düğmeye üç kez basın. Ardından Face ID’yi veya Denetimli Erişim parolanızı kullanıp <strong>Bitir</strong>’e dokunun.</p>
+          <small>iPhone’un alttan yukarı sistem hareketini yalnız Apple’ın Denetimli Erişim özelliği kilitleyebilir.</small>
+          <button class="soft-admin-button" type="button" data-ios-exit-guide-close>Parent panelinde kal</button>
+        </div>
+      </div>
     </div>
     <script type="module">
-      const MINAPLAY_BOOT_VERSION = '20260803-2';
+      const MINAPLAY_BOOT_VERSION = '20260810-2';
       const MINAPLAY_BOOT_KEY = 'minaplay.boot.version';
 
       async function clearOldMinaPlayRuntime() {

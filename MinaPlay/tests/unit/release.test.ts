@@ -9,9 +9,9 @@ import { createReleaseMetadataLoader } from '../../src/services/release-service'
 
 const metadata = {
   channel: 'stable',
-  version: '1.0.37',
-  versionCode: 38,
-  apkUrl: 'https://github.com/fztumit/minagrow-minaplay/releases/download/v1.0.37/minaplay-v1.0.37.apk',
+  version: '1.0.38',
+  versionCode: 39,
+  apkUrl: 'https://github.com/fztumit/minagrow-minaplay/releases/download/v1.0.38/minaplay-v1.0.38.apk',
   sha256: 'a'.repeat(64),
   publishedAt: '2026-08-03T12:00:00.000Z'
 };
@@ -20,14 +20,14 @@ describe('release contract', () => {
   test('parses the bundled stable identity and compares numeric version codes', () => {
     const current = parseReleaseIdentity({
       channel: 'stable',
-      version: '1.0.36',
-      versionCode: 37,
+      version: '1.0.37',
+      versionCode: 38,
       metadataUrl: 'https://minagrow-minaplay-production.up.railway.app/api/update'
     });
     const latest = parseReleaseMetadata(metadata);
 
     expect(isReleaseNewer(latest, current)).toBe(true);
-    expect(isReleaseNewer({ versionCode: 37 }, current)).toBe(false);
+    expect(isReleaseNewer({ versionCode: 38 }, current)).toBe(false);
     expect(latest.sha256).toBe('a'.repeat(64));
   });
 
@@ -51,8 +51,8 @@ describe('release contract', () => {
       now: () => now
     });
 
-    await expect(loader.load()).resolves.toMatchObject({ versionCode: 38 });
-    await expect(loader.load()).resolves.toMatchObject({ version: '1.0.37' });
+    await expect(loader.load()).resolves.toMatchObject({ versionCode: 39 });
+    await expect(loader.load()).resolves.toMatchObject({ version: '1.0.38' });
     expect(fetcher).toHaveBeenCalledTimes(1);
 
     now = 1_501;
@@ -78,7 +78,7 @@ describe('release contract', () => {
     });
 
     await expect(loader.load()).rejects.toThrow(/HTTPS/);
-    await expect(loader.load()).resolves.toMatchObject({ versionCode: 38 });
+    await expect(loader.load()).resolves.toMatchObject({ versionCode: 39 });
     expect(fetcher).toHaveBeenCalledTimes(2);
   });
 });

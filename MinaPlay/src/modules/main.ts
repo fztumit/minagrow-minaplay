@@ -83,9 +83,11 @@ import {
 declare global {
   interface Window {
     Capacitor?: {
+      getPlatform?: () => string;
       Plugins?: {
         MinaPlayKiosk?: {
           setChildLockActive?: (options: { active: boolean }) => Promise<{ active?: boolean }>;
+          exitToLauncher?: () => Promise<{ exited?: boolean }>;
           keepFullscreen?: () => Promise<void>;
           dismissInput?: () => Promise<void>;
           speak?: (options: { text: string; rate: number; pitch: number; volume: number }) => Promise<{ spoken?: boolean }>;
@@ -2391,6 +2393,7 @@ function renderChildLockSettings(): void {
   const pinInput = document.querySelector<HTMLInputElement>('[data-parent-pin-setting]');
   const pullInput = document.querySelector<HTMLInputElement>('[data-parent-gesture-pull]');
   const status = document.querySelector<HTMLElement>('[data-child-lock-status]');
+  const iosGuide = document.querySelector<HTMLElement>('[data-ios-guided-access]');
   if (enabledInput) {
     enabledInput.checked = childLockSettings.enabled;
   }
@@ -2407,6 +2410,9 @@ function renderChildLockSettings(): void {
     status.textContent = childLockSettings.enabled
       ? parentGestureGuideText()
       : 'Çocuk kilidi kapalı. Modlar arasında normal geçiş yapılabilir.';
+  }
+  if (iosGuide) {
+    iosGuide.hidden = !isAppleMobileDevice();
   }
 }
 
@@ -2444,7 +2450,16 @@ function saveChildProfileFromPanel(): void {
 }
 
 function parentGestureGuideText(): string {
-  return `Sol üstteki yıldıza dokunun; ardından Parent şifresini girin.`;
+  if (isAppleMobileDevice()) {
+    return 'iPhone sistem çıkışını Denetimli Erişim kilitler. Çıkmak için sol üstteki yıldıza dokunun ve Parent şifresini girin.';
+  }
+  return 'Sol üstteki yıldıza dokunun; ardından Parent şifresini girin.';
+}
+
+function isAppleMobileDevice(): boolean {
+  const navigatorWithPlatform = navigator as Navigator & { platform?: string; maxTouchPoints?: number };
+  return /iPad|iPhone|iPod/i.test(navigator.userAgent)
+    || (navigatorWithPlatform.platform === 'MacIntel' && (navigatorWithPlatform.maxTouchPoints ?? 0) > 1);
 }
 
 function syncChildLockMode(view: ViewName | string | undefined = document.querySelector<HTMLElement>('.app-shell')?.dataset.activeView): void {
@@ -3310,6 +3325,26 @@ function playPeekabooVoice(): Promise<void> {
 
 function openParentWithUnlock(): void {
   activateView('parent');
+  if (isAppleMobileDevice()) {
+    document.querySelector<HTMLElement>('[data-ios-exit-guide]')?.removeAttribute('hidden');
+  }
+}
+
+async function exitNativeAndroidAfterParentPin(): Promise<'exited' | 'unavailable' | 'failed'> {
+  const capacitor = window.Capacitor;
+  const exitToLauncher = capacitor?.Plugins?.MinaPlayKiosk?.exitToLauncher;
+  const platform = capacitor?.getPlatform?.();
+  const nativeAndroid = platform === 'android' || (platform === undefined && /Android/i.test(navigator.userAgent));
+  if (!nativeAndroid || !exitToLauncher) {
+    return 'unavailable';
+  }
+
+  try {
+    const result = await exitToLauncher();
+    return result?.exited === false ? 'failed' : 'exited';
+  } catch {
+    return 'failed';
+  }
 }
 
 function showParentSecretIntroIfNeeded(): void {
@@ -3376,6 +3411,10 @@ function openParentPinModal(): void {
   const modal = document.querySelector<HTMLElement>('[data-parent-pin-modal]');
   const input = document.querySelector<HTMLInputElement>('[data-parent-pin-input]');
   const status = document.querySelector<HTMLElement>('[data-parent-pin-status]');
+  const eyebrow = document.querySelector<HTMLElement>('[data-parent-pin-eyebrow]');
+  const title = document.querySelector<HTMLElement>('[data-parent-pin-title]');
+  const submit = document.querySelector<HTMLButtonElement>('[data-parent-pin-submit]');
+  const exitStatus = document.querySelector<HTMLElement>('[data-parent-exit-status]');
   if (!modal || !input) {
     return;
   }
@@ -3384,6 +3423,19 @@ function openParentPinModal(): void {
   input.value = '';
   if (status) {
     status.textContent = '';
+  }
+  if (eyebrow) {
+    eyebrow.textContent = 'Güvenli çıkış';
+  }
+  if (title) {
+    title.textContent = 'Parent şifresi';
+  }
+  if (submit) {
+    submit.textContent = 'Kilidi aç';
+  }
+  if (exitStatus) {
+    exitStatus.hidden = true;
+    exitStatus.textContent = '';
   }
   modal.hidden = false;
   window.setTimeout(() => input.focus(), 80);
@@ -3416,13 +3468,24 @@ function pauseChildRuntimeForParentGate(): void {
   void stopSleepMusic();
 }
 
-function submitParentPin(): void {
+async function submitParentPin(): Promise<void> {
   const input = document.querySelector<HTMLInputElement>('[data-parent-pin-input]');
   const status = document.querySelector<HTMLElement>('[data-parent-pin-status]');
   const value = input?.value.trim() ?? '';
   if (value === childLockSettings.parentPin) {
     hideParentPinModal();
+    const androidExit = await exitNativeAndroidAfterParentPin();
+    if (androidExit === 'exited') {
+      return;
+    }
     openParentWithUnlock();
+    if (androidExit === 'failed') {
+      const exitStatus = document.querySelector<HTMLElement>('[data-parent-exit-status]');
+      if (exitStatus) {
+        exitStatus.hidden = false;
+        exitStatus.textContent = 'Android çıkışı açılamadı. Parent paneli güvenli biçimde açıldı; cihazın Ana Ekran düğmesini kullanabilirsiniz.';
+      }
+    }
     return;
   }
 
@@ -8796,9 +8859,12 @@ function boot(): void {
 
   document.querySelector<HTMLFormElement>('[data-parent-pin-form]')?.addEventListener('submit', (event) => {
     event.preventDefault();
-    submitParentPin();
+    void submitParentPin();
   });
   document.querySelector<HTMLElement>('[data-parent-pin-cancel]')?.addEventListener('click', closeParentPinModal);
+  document.querySelector<HTMLElement>('[data-ios-exit-guide-close]')?.addEventListener('click', () => {
+    document.querySelector<HTMLElement>('[data-ios-exit-guide]')?.setAttribute('hidden', '');
+  });
 
   document.querySelector<HTMLElement>('[data-child-profile-save]')?.addEventListener('click', saveChildProfileFromPanel);
 
